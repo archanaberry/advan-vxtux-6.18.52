@@ -1606,22 +1606,20 @@ gpu_opp_table: opp-table {
 				};
 			};
 
-			port@1 {
-				reg = <1>;
-				dcam_csi0_ep: endpoint {
-					remote-endpoint = <&csi0_isp_ep>;
-				};
-			};
-
-			port@2 {
-				reg = <2>;
-				dcam_csi1_ep: endpoint {
-					remote-endpoint = <&csi1_isp_ep>;
-				};
-			};
+			/* port@1/port@2 DIHAPUS 2026-10-09 (bukan sekadar warning):
+			 * keduanya menunjuk &csi0_isp_ep / &csi1_isp_ep, endpoint yang
+			 * SUDAH dimiliki overlay &isp (port@1/port@2 di bawah, komentar
+			 * "ISP additional ports for CSI inputs"). Satu endpoint tidak
+			 * bisa melayani dua master: dtc menandai kedua link ini
+			 * "not bidirectional", dan of_graph tak dipakai driver mana pun
+			 * di pipeline ini (hanya sprd_sensor_drv.c memakai of_graph,
+			 * untuk link sensor->CSI yang tidak tersentuh). Pipeline yang
+			 * benar sudah lengkap tanpa keduanya:
+			 *   sensor_main -> csi0 -> isp -> dcam (port@0 di atas)
+			 * Jadi hapus, jangan ditambal. */
 		};
 	};
-	};
+};
 
 
 	/* ISP additional ports for CSI inputs */

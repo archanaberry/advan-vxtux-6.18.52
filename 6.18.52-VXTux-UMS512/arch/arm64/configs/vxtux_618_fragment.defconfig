@@ -1009,6 +1009,27 @@ CONFIG_ZRAM_DEF_COMP_LZ4=y
 # System.map. deps are (USB || USB_GADGET) && HAS_IOMEM, all already satisfied.
 CONFIG_USB_MUSB_HDRC=y
 
+# --- USB_MUSB_SPRD_VXTUX (glue; blob musb_sprd.ko) ---
+# CELAH YANG DITUTUP 2026-10-09: HDRC di atas TIDAK cukup. Baris ini adalah
+# satu-satunya yang membuat objek glue benar-benar ter-compile; tanpanya
+# musb_sprd_vxtux.o tidak pernah dibangun, node DT board tidak punya driver,
+# dan USB mati total (bukan "build sukses" = jalan). Bukti, semuanya di pohon:
+#   - definisi: drivers/usb/musb/Kconfig:204, default n (karena itu HARUS
+#     diminta eksplisit di sini; klausa self-dependency B45 sudah dihapus,
+#     lihat komentar Kconfig:190-203)
+#   - wire: drivers/usb/musb/Makefile:49
+#     obj-$(CONFIG_USB_MUSB_SPRD_VXTUX) += musb_sprd_vxtux.o
+#   - sumber: drivers/usb/musb/musb_sprd_vxtux.c
+#   - of_match: musb_sprd_vxtux.c:1568 "sprd,sharkl5pro-musb"
+#   - node DT: ums512-1h10-vxtux.dts:676 compatible sama string itu
+#   - deps: USB_MUSB_HDRC=y (baris di atas), OF=y, EXTCON=y
+# USB_SPRD_DMA sengaja TIDAK diminta: ia hidup di dalam blok
+# `if !MUSB_PIO_ONLY` (Kconfig:181), dan P-MUSBPIO-1 (disetujui pemilik
+# 2026-09-25) menetapkan MUSB_PIO_ONLY=y karena musb_core menuntut
+# .dma_init/.dma_exit yang belum dimiliki glue. Jalur DMA menunggu tahap
+# lanjutan, bukan gap hari ini.
+CONFIG_USB_MUSB_SPRD_VXTUX=y
+
 # =====================================================================
 # PENUTUP CELAH LINKAGE — 2026-10-06
 #

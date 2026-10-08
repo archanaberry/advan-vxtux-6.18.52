@@ -45,7 +45,7 @@
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 103 | Deblob-derived driver integrations (all 103 verified) (｡•̀ᴗ-)✧ |
+| 101 | Deblob-derived driver integrations verified in tree + config (2026-10-09) |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
 | **103** | **Total tracked: 103 + 1 desu! (≧▽≦)** |
 
@@ -62,11 +62,11 @@
 | 5 | `arc4` | [crypto/arc4.c](6.18.52-VXTux-UMS512/crypto/arc4.c) | Mainline; ADA-verified in ledger |
 | 6 | `asix` | [drivers/net/usb/asix_common.c](6.18.52-VXTux-UMS512/drivers/net/usb/asix_common.c) | Mainline USB Ethernet; module |
 | 7 | `audio-dsp-dump` | [drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c) | SPRD port; module |
-| 8 | `audio-pipe` | [drivers/sound/soc/sprd/audiosipc/audio-pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-pipe.c) | UNPROVEN; requires runtime/System.map evidence |
+| 8 | `audio-pipe` | [drivers/sound/soc/sprd/audiosipc/audio-pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-pipe.c) | CONFIG SPRD_AUDIO_PIPE=y + DT node; runtime pending |
 | 9 | `audio_mem` | [drivers/sound/soc/sprd/audiomem/audio_mem.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiomem/audio_mem.c) | Path moved from donor layout; GPL fork source |
 | 10 | `audio_sipc` | [drivers/sound/soc/sprd/audiosipc/audio-sipc.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-sipc.c) | GPL fork port |
 | 11 | `ax88179_178a` | [drivers/net/usb/ax88179_178a.c](6.18.52-VXTux-UMS512/drivers/net/usb/ax88179_178a.c) | Mainline USB Ethernet; module |
-| 12 | `bq2560x-charger` | [drivers/power/supply/bq256xx_charger.c](6.18.52-VXTux-UMS512/drivers/power/supply/bq256xx_charger.c) | UNPROVEN; compatible alias is separately patched |
+| 12 | `bq2560x-charger` | [drivers/power/supply/bq256xx_charger.c](6.18.52-VXTux-UMS512/drivers/power/supply/bq256xx_charger.c) | CHARGER_BQ256XX=y; alias ti,bq2560x_chg verified in of_match + DT charger@6b |
 | 13 | `core` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | Composite `wcn_core` module; no standalone `core.c` |
 | 14 | `cpufreq_userspace` | [drivers/cpufreq/cpufreq_userspace.c](6.18.52-VXTux-UMS512/drivers/cpufreq/cpufreq_userspace.c) | Mainline |
 | 15 | `extcon-usb-gpio` | [drivers/extcon/extcon-usb-gpio.c](6.18.52-VXTux-UMS512/drivers/extcon/extcon-usb-gpio.c) | Mainline |
@@ -77,17 +77,17 @@
 | 20 | `gpio` | [drivers/gpio/gpio-sprd.c](6.18.52-VXTux-UMS512/drivers/gpio/gpio-sprd.c) | Tier A |
 | 21 | `hxchipset_83102e` | [drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c) | Himax public-tree source |
 | 22 | `ims_bridge` | [net/ims_bridge/Makefile](6.18.52-VXTux-UMS512/net/ims_bridge/Makefile) | Tier A; composite network module |
-| 23 | `ion_cma_heap` | [drivers/dma-buf/heaps/cma_heap.c](6.18.52-VXTux-UMS512/drivers/dma-buf/heaps/cma_heap.c) | UNPROVEN as a deblob replacement |
+| 23 | `ion_cma_heap` | [drivers/dma-buf/heaps/cma_heap.c](6.18.52-VXTux-UMS512/drivers/dma-buf/heaps/cma_heap.c) | DMABUF_HEAPS_CMA=y; mainline cma_heap |
 | 24 | `ion_ipc_trusty` | [drivers/dma-buf/sprd/ion_ipc_trusty.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/ion_ipc_trusty.c) | Noble substitute; ported 2026-10-07 |
 | 25 | `jpg` | [drivers/misc/sprd_jpg/sprd_jpg.c](6.18.52-VXTux-UMS512/drivers/misc/sprd_jpg/sprd_jpg.c) | SPRD JPEG port |
-| 26 | `leds-sc27xx-bltc` | [drivers/leds/leds-sc27xx-bltc.c](6.18.52-VXTux-UMS512/drivers/leds/leds-sc27xx-bltc.c) | UNPROVEN |
-| 27 | `ledtrig-pattern` | [drivers/leds/trigger/ledtrig-pattern.c](6.18.52-VXTux-UMS512/drivers/leds/trigger/ledtrig-pattern.c) | UNPROVEN |
+| 26 | `leds-sc27xx-bltc` | [drivers/leds/leds-sc27xx-bltc.c](6.18.52-VXTux-UMS512/drivers/leds/leds-sc27xx-bltc.c) | LEDS_SC27XX_BLTC=y + DT sc2730-bltc node |
+| 27 | `ledtrig-pattern` | [drivers/leds/trigger/ledtrig-pattern.c](6.18.52-VXTux-UMS512/drivers/leds/trigger/ledtrig-pattern.c) | LEDS_TRIGGER_PATTERN=y mainline |
 | 28 | `mcdt_hw` | [drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c) | Resolved through `sprd_mcdt_*` symbols |
 | 29 | `mipi_driver` | [drivers/unisoc_platform/debug_log/sharkl5/mipi_driver.c](6.18.52-VXTux-UMS512/drivers/unisoc_platform/debug_log/sharkl5/mipi_driver.c) | Noble substitute via radare2+ghidra (Tier B) |
 | 30 | `misc_sprd_uid` | [drivers/soc/sprd/soc_id/sprd_uid.c](6.18.52-VXTux-UMS512/drivers/soc/sprd/soc_id/sprd_uid.c) | Tier A |
-| 31 | `musb_hdrc` | [drivers/usb/musb/musb_core.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_core.c) | Noble substitute; linkage remains unverified |
-| 32 | `musb_sprd` | [drivers/usb/musb/musb_sprd_vxtux.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_sprd_vxtux.c) | Noble substitute; partial validation |
-| 33 | `novatek_ts_spi` | [drivers/input/touchscreen/novatek-nvt-ts-spi.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/novatek-nvt-ts-spi.c) | Noble substitute; not claimed as a one-to-one replacement |
+| 31 | `musb_hdrc` | [drivers/usb/musb/musb_core.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_core.c) | USB_MUSB_HDRC=y verified 2026-10-09 |
+| 32 | `musb_sprd` | [drivers/usb/musb/musb_sprd_vxtux.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_sprd_vxtux.c) | USB_MUSB_SPRD_VXTUX=y added 2026-10-09; of_match + DT node aligned |
+| 33 | `novatek_ts_spi` | [drivers/input/touchscreen/novatek-nvt-ts-spi.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/novatek-nvt-ts-spi.c) | TOUCHSCREEN_NOVATEK_NVT_TS=y + DT NVT-ts-spi node |
 | 34 | `phy-sprd-sharkl5Pro` | [drivers/phy/sprd/phy-sprd-ums512.c](6.18.52-VXTux-UMS512/drivers/phy/sprd/phy-sprd-ums512.c) | Tier A |
 | 35 | `pinctrl` | [drivers/pinctrl/sprd/pinctrl-sprd.c](6.18.52-VXTux-UMS512/drivers/pinctrl/sprd/pinctrl-sprd.c) | Tier A; shared source with next ledger entry |
 | 36 | `pinctrl-sprd` | [drivers/pinctrl/sprd/pinctrl-sprd.c](6.18.52-VXTux-UMS512/drivers/pinctrl/sprd/pinctrl-sprd.c) | Tier A; same source path as previous entry |
@@ -96,7 +96,7 @@
 | 39 | `pwm_bl` | [drivers/video/backlight/pwm_bl.c](6.18.52-VXTux-UMS512/drivers/video/backlight/pwm_bl.c) | Mainline PWM backlight |
 | 40 | `rtc-sc27xx` | [drivers/rtc/rtc-sc27xx.c](6.18.52-VXTux-UMS512/drivers/rtc/rtc-sc27xx.c) | Tier A |
 | 41 | `sc27xx-poweroff` | [drivers/power/reset/sc27xx-poweroff.c](6.18.52-VXTux-UMS512/drivers/power/reset/sc27xx-poweroff.c) | Tier A |
-| 42 | `sc27xx-vibra` | [drivers/input/misc/sc27xx-vibra.c](6.18.52-VXTux-UMS512/drivers/input/misc/sc27xx-vibra.c) | UNPROVEN |
+| 42 | `sc27xx-vibra` | [drivers/input/misc/sc27xx-vibra.c](6.18.52-VXTux-UMS512/drivers/input/misc/sc27xx-vibra.c) | INPUT_SC27XX_VIBRA=y + DT sc2730-vibrator |
 | 43 | `sc27xx_adc` | [drivers/iio/adc/sc27xx_adc.c](6.18.52-VXTux-UMS512/drivers/iio/adc/sc27xx_adc.c) | Tier A |
 | 44 | `sc27xx_fuel_gauge` | [drivers/power/supply/sc27xx_fuel_gauge.c](6.18.52-VXTux-UMS512/drivers/power/supply/sc27xx_fuel_gauge.c) | Tier A |
 | 45 | `sc27xx_tsensor_thermal` | [drivers/thermal/sprd/sc27xx_tsensor_thermal.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sc27xx_tsensor_thermal.c) | Tier A |
@@ -108,8 +108,8 @@
 | 51 | `snd-soc-sprd-codec-sc2730-power` | [drivers/sound/soc/sprd/codec/sprd-audio-power.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/sprd-audio-power.c) | Tier A; shared source with next entry |
 | 52 | `snd-soc-sprd-codec-sc2730-power-dev` | [drivers/sound/soc/sprd/codec/sprd-audio-power.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/sprd-audio-power.c) | Tier A; same source path as previous entry |
 | 53 | `snd-soc-sprd-dummy-codec` | [drivers/sound/soc/sprd/codec/dummy-codec.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/dummy-codec.c) | Tier A |
-| 54 | `snd-soc-sprd-vbc-fe` | [drivers/sound/soc/sprd/dai_v4/vbc-dai.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-dai.c) | UNPROVEN |
-| 55 | `snd-soc-sprd-vbc-v4` | [drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c) | UNPROVEN |
+| 54 | `snd-soc-sprd-vbc-fe` | [drivers/sound/soc/sprd/dai_v4/vbc-dai.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-dai.c) | VXTUX_SND_SPRD_VBC_V4=y + DT sharkl5-vbc |
+| 55 | `snd-soc-sprd-vbc-v4` | [drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c) | VXTUX_SND_SPRD_VBC_V4=y + DT sharkl5-vbc |
 | 56 | `spi-sprd` | [drivers/spi/spi-sprd.c](6.18.52-VXTux-UMS512/drivers/spi/spi-sprd.c) | Tier A |
 | 57 | `sprd-charger-manager` | [drivers/power/supply/sprd/sprd_charger_manager.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_charger_manager.c) | Tier A |
 | 58 | `sprd-compr-2stage-dma` | [drivers/dma/sprd-dma.c](6.18.52-VXTux-UMS512/drivers/dma/sprd-dma.c) | Tier A; shares implementation with `sprd-dma` |
@@ -125,10 +125,10 @@
 | 68 | `sprd_audcp_boot` | [drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c) | Tier A/B symbol evidence |
 | 69 | `sprd_audcp_dvfs` | [drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c) | Compiled 2026-10-04 |
 | 70 | `sprd_battery_info` | [drivers/power/supply/sprd/sprd_battery_info.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_battery_info.c) | NOT-CONFIGURED deliberately |
-| 71 | `sprd_camera` | [drivers/media/platform/sprd/pipeline/sprd_dcam.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_dcam.c) | UNPROVEN; ledger correction dated 2026-10-05 |
+| 71 | `sprd_camera` | [drivers/media/platform/sprd/pipeline/sprd_dcam.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_dcam.c) | VIDEO_SPRD_DCAM=y; camera graph fixed 2026-10-09 (was non-bidirectional) |
 | 72 | `sprd_camsys_pw_domain` | [drivers/pmdomain/sprd/sprd_camsys_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_camsys_pw_domain.c) | Power-domain port |
 | 73 | `sprd_cp_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
-| 74 | `sprd_cpp` | [drivers/media/platform/sprd/pipeline/sprd_isp.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_isp.c) | UNPROVEN; ledger correction dated 2026-05 |
+| 74 | `sprd_cpp` | [drivers/media/platform/sprd/pipeline/sprd_isp.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_isp.c) | NOT-PORTED: no CPP config/source in tree; no DT node |
 | 75 | `sprd_cpu_cooling` | [drivers/thermal/sprd/sprd_cpu_cooling.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sprd_cpu_cooling.c) | Tier A |
 | 76 | `sprd_ddr_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
 | 77 | `sprd_flash_drv` | [drivers/sprd/flash/flash_drv.c](6.18.52-VXTux-UMS512/drivers/sprd/flash/flash_drv.c) | Tier A |
@@ -153,10 +153,10 @@
 | 96 | `twofish_generic` | [crypto/twofish_generic.c](6.18.52-VXTux-UMS512/crypto/twofish_generic.c) | Mainline |
 | 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A |
 | 98 | `virt-dma` | [drivers/dma/virt-dma.c](6.18.52-VXTux-UMS512/drivers/dma/virt-dma.c) | Tier A shared DMA helper |
-| 99 | `vsp` | [drivers/pmdomain/sprd/vsp_regs.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/vsp_regs.c) | VSP domain support; see adjacent VSP headers and gate driver |
+| 99 | `vsp` | [drivers/pmdomain/sprd/vsp_regs.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/vsp_regs.c) | PARTIAL: pw-domain/regs only (SPRD_VSP_PW_DOMAIN=m); codec not ported, no DT node |
 | 100 | `wcn_bsp` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | WCN platform module composition; no standalone `bsp.c` found |
 | 101 | `zram` | [drivers/block/zram/zram_drv.c](6.18.52-VXTux-UMS512/drivers/block/zram/zram_drv.c) | N/A/absence entry in the supplied tally; corrected 2026-10-05 |
-| 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | UNPROVEN in the supplied tally; corrected 2026-10-05 |
+| 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | ZRAM=y + zsmalloc in mm/ |
 | 103 | `panfrost` | [drivers/gpu/drm/panfrost/panfrost_gpu.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/panfrost/panfrost_gpu.c) | Separate open-source GPU driver; Mali-G52 MP2 / Gondul replacement |
 
 ---
@@ -179,6 +179,16 @@ make O=out ARCH=arm64 olddefconfig
 make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
 DTB: `out/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb`
+
+## 📝 Changelog | 変更履歴
+
+### 2026-10-09 — tree restore + gap closing
+- **Tree restored**: commit deblob sempat over-prune 37.103 file (semua DTS, drivers/gpu, dma-buf, iio, media, iommu, clk, crypto, block, defconfig). Dipulihkan penuh dari branch codespace + `.config` port (`dac18ecfa`). Nol file hilang permanen.
+- **`.config` lengkap**: merge `vxtux_618_fragment.defconfig` resmi — membawa TRUSTY family, SPRD_ION/JPG/SENSOR/DMA, USB gadget, MUSB_HDRC, CHARGER_BQ256XX, TOUCHSCREEN_NOVATEK_NVT_TS, SPRD_AUDIO_PIPE, DMABUF_HEAPS_CMA.
+- **Gap USB ditutup**: `CONFIG_USB_MUSB_SPRD_VXTUX=y` ditambahkan ke fragment — tanpa baris itu `musb_sprd_vxtux.o` tak pernah ter-compile padahal node DT `sprd,sharkl5pro-musb` ada (USB mati total). Bukti: Kconfig:204, Makefile:49, of_match:1568, DTS:676.
+- **Camera graph diperbaiki**: port@1/port@2 dcam (dua master pada endpoint csi yang sama → "not bidirectional") dihapus. Pipeline: sensor → CSI → ISP → DCAM. DTB rebuild: 0 error, 5 warning kosmetik.
+- **DTB rebuilt**: `ums512-1h10-vxtux.dtb` (44.630B) dari DTS terkoreksi — node panfrost `arm,mali-bifrost`, jpg-codec, isp/csi, novatek+himax touch, trusty, iommu semua terverifikasi via strings.
+- **Sisa gap jujur**: `vsp` codec (infra pw-domain ada, codec belum) dan `sprd_cpp` (belum ada config/source). Sisanya: driver+config+DT node lengkap, menunggu bukti runtime di hardware.
 
 ## 🔧 Status | 状態
 
