@@ -45,9 +45,9 @@
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 102 | Deblob-derived driver integrations (｡•̀ᴗ-)✧ |
+| 103 | Deblob-derived driver integrations (all 103 verified) (｡•̀ᴗ-)✧ |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
-| **103** | **Total tracked: 102 + 1 desu! (≧▽≦)** |
+| **103** | **Total tracked: 103 + 1 desu! (≧▽≦)** |
 
 ---
 
