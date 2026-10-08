@@ -2,8 +2,6 @@
 
 <div align="center">
 
-[VXTux-chan](archanaberry/vxtux_chan.png)
-
 ### Linux 6.18.52 for Advan Tab VX Lite (T1030) desu~ (≧▽≦)/
 
 `ARM64` / `Unisoc UMS512-T618` / `VXTux`
@@ -13,6 +11,11 @@
 *Halo nyaa~ Hello nyaa~ こんにちはなの~ 💕*
 
 </div>
+
+---
+<center>
+  <img src="archanaberry/vxtux_chan.png" width="50%">
+</center>
 
 ---
 
@@ -204,9 +207,9 @@ cd 6.18.52-VXTux-UMS512
 make O=out ARCH=arm64 defconfig
 
 (
-	cd out
-	sh ../scripts/kconfig/merge_config.sh -m .config \
-		../arch/arm64/configs/vxtux_618_fragment.defconfig
+        cd out
+        sh ../scripts/kconfig/merge_config.sh -m .config \
+                ../arch/arm64/configs/vxtux_618_fragment.defconfig
 )
 
 make O=out ARCH=arm64 olddefconfig
