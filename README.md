@@ -11,8 +11,9 @@
 </div>
 
 ---
-
+<center>
 <img src="archanaberry/vxtux_chan.png" width="200">
+</center>
 
 ## Tentang proyek | About
 
