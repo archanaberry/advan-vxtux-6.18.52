@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# vxtux_618_qemu.defconfig - FRAGMEN VALIDASI QEMU (B31/H5, 2026-09-25)
+#
+# INI BUKAN pengganti vxtux_618_fragment.defconfig (produksi; JANGAN disentuh,
+# lihat docs/SESSION_STATE.md §5). Berkas ini khusus untuk memvalidasi kernel
+# yang sama di QEMU `-M virt` sebelum menyentuh hardware:
+#   1. UDC sintetis (dummy_hcd) supaya jalur gadget/ttyGS0/FunctionFS bisa
+#      diuji DI DALAM guest (QEMU tidak punya MUSB; host Windows tidak akan
+#      melihat perangkat - batas ini ditulis di laporan readiness).
+#   2. i2c-sprd ditambahkan node bus-nya di DTS (H6) -> driver perlu =y.
+#   3. VIRTIO* sebenarnya sudah =y di r9; dicantumkan eksplisit supaya
+#      fragment ini BERDIKIRI (fail-safe bila basis berubah).
+#
+# Semua simbol di bawah ada di Kconfig 6.18 pohon kita (dicek 2026-09-25):
+#   drivers/usb/gadget/udc/Kconfig:428   USB_DUMMY_HCD
+#   drivers/i2c/busses/Kconfig:1154      I2C_SPRD (r9 masih n -> H6)
+#   drivers/usb/gadget/Kconfig           USB_CONFIGFS* (sudah y di r9)
+
+# --- 1) UDC sintetis untuk QEMU -------------------------------------------
+CONFIG_USB_DUMMY_HCD=y
+
+# --- 2) i2c controller (DTS baru H6: i2c0/1/3/4 di 0x713/4/6/700000) -------
+CONFIG_I2C_SPRD=y
+
+# --- 3) rantai gadget yang diuji (idempoten dengan r9, ditegaskan) ---------
+#  CATATAN gate_fragment (bukti, bukan gaya): USB_LIBCOMPOSITE, USB_F_FS dan
+#  USB_F_ACM adalah simbol TANPA PROMPT - nilainya murni `select` dari
+#  USB_CONFIGFS(_F_FS/_ACM). Menulisnya eksplisit membuat gerbang D5 HIDDEN
+#  gagal, dan memang sia-sia: sudah terpilih otomatis.
+CONFIG_USB_GADGET=y
+CONFIG_USB_CONFIGFS=y
+CONFIG_USB_CONFIGFS_F_FS=y
+CONFIG_USB_CONFIGFS_ACM=y

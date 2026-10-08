@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/vendor_abi — ABI provider for vendor 5.4 blob modules.
+
+config VXTUX_VENDOR_ABI
+	bool "Global arm64 5.4 ABI provider + CFI handler (vendor blob modules)"
+	depends on ARM64
+	default n
+	help
+	  Vendor blob modules (5.4.210) import symbols that no longer exist in 6.18.
+	  This provider supplies them again with 5.4 semantics,
+	  all exported with EXPORT_SYMBOL (not _GPL) like vendor kernel,
+	  and built BUILT-IN (=y) — not =m — because:
+	    * `kimage_vaddr` must point to kernel image _text (symbol
+	      image cannot be referenced from module);
+	    * `cpu_number` per-CPU must live in kernel per-CPU area, so that
+	      cross-module references resolve like 5.4 (arch/arm64/kernel/
+	      smp.c 5.4: DEFINE_PER_CPU_READ_MOSTLY + EXPORT_PER_CPU_SYMBOL).
+	  Installed symbols (full proof at top of each file):
+	    cpu_hwcaps, cpu_hwcap_keys, arm64_const_caps_ready
+	    kimage_vaddr, cpu_number
+	    __ubsan_handle_cfi_check_fail_abort
+	    cfg80211_get_bss (if CFG80211 enabled)
+	  Honest limit: this is ABI provider for BLOB, not replacement for source
+	  DE-SHIM policy (include/vxtux/compat_618.h still removed and maintained
+	  tools/re/verify_compat_618.py). See docs/vendor_abi_20260926.md.
+
+config VXTUX_VENDOR_ABI_CFG80211
+	tristate "5.4 cfg80211_get_bss shim (value follows CFG80211)"
+	depends on VXTUX_VENDOR_ABI && CFG80211
+	default CFG80211
+	help
+	  Vendor blob 5.4 (sprd_wlan_combo) imports cfg80211_get_bss(); in 6.18
+	  that function is static inline calling __cfg80211_get_bss owned by
+	  net/wireless/ — see vendor_abi_cfg80211.c header for oracle proof.
+
+	  This symbol value INTENTIONALLY FOLLOWS CFG80211, not absolutely built-in,
+	  because two measured cases differ:
+	    * CFG80211=y -> shim =y. Symbol __cfg80211_get_bss owned by image
+	      (built-in), so built-in shim resolves it at vmlinux link.
+	    * CFG80211=m -> shim =m (vendor_abi_cfg80211.ko module). This is defect
+	      B45 (2026-09-27): provider =y while CFG80211=m makes link
+	      vmlinux fail —
+	        ld.lld: error: undefined symbol: __cfg80211_get_bss
+	        >>> referenced by vendor_abi_cfg80211.c:53
+	      (relink2 device 2026-09-27 00:04; CFG80211=m on r9 AND r10-qemu,
+	      so built-in path always wrong for this board).
+
+	  Honest limit: as module, cfg80211_get_bss symbol only available
+	  AFTER this module loads — blob module importing it must load
+	  afterwards (softdep/modules-load.d not yet created; need proof blob correctly
+	  tested on device). If CFG80211=n, shim not built at all.

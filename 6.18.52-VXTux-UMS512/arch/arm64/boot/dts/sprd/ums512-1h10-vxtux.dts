@@ -1,0 +1,2030 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Unisoc UMS512-1H10 VXTux board — Advan Tab VX Lite T1030
+ * LinDroid/VXTux v1.0 — kernel 6.18-VXTux-UMS512
+ *
+ * First-boot minimal: console UART1 + eMMC + USB (glue MUSB VXTux).
+ * Node usb = replika DT live stok (soc/aon/usb@5fff0000, dump 2026-09-16);
+ * compatible stok dipertahankan — musb-sprd-vxtux bind by-compatible.
+ * Panel/touch/WiFi/BT menyusul setelah gate C4 (boot uji slot b).
+ */
+/dts-v1/;
+
+#include "ums512.dtsi"
+#include "ums512-1h10-vxtux-wcn.dtsi"
+/* PMIC SC2730 (bukan sc2731): alamat anak hasil dump FDT stok, lihat
+ * arch/arm64/boot/dts/sprd/sc2730.dtsi + docs/pmic_sc2730.md */
+#include "sc2730.dtsi"
+
+/* Modem control-processor nodes (sprd_cproc / sprd_cp_dump).
+ *
+ * Port 2026-10-04. The stock FDT on this device has no node carrying
+ * "sprd,scproc" or "sprd,scproc_pubcp", so the ported drivers cannot probe and
+ * /vendor/bin/modem_control has no /proc/cptl/ to talk to.
+ *
+ * ums512-modem-2h10.dtsi is derived from the vendor's own
+ * gpl-source/dts_sprd/arch/arm64/boot/dts/sprd/ums512-modem.dtsi, which carries
+ * the marker comment "Tab A7 T618 code for SR-AX6189A-01-480". Every syscon
+ * register in it was checked against the stock DTS: the reference's phandle form
+ * and this device's scalar syscon0..syscon5 form are the same register/value
+ * pairs. aon_apb_regs and pmu_apb_regs are already defined by ums512.dtsi,
+ * included above.
+ */
+#include "ums512-modem-2h10.dtsi"
+#include <dt-bindings/input/input.h>
+
+/* HW spinlock AON — dipakai PMIC eFuse + ADC (property `hwlocks`).
+ * Alamat & jam dari FDT stok: /soc/aon/hwspinlock@327f0000,
+ * clocks = <&aonapb_gate CLK_SPLK_EB> (id 25). */
+&aon {
+	/* Alamat reg relatif terhadap bus aon@32000000 (unit address mengikuti
+	 * konvensi kbuild simple-bus: reg anak relatif). */
+	hwlock: hwspinlock@7f0000 {
+		compatible = "sprd,hwspinlock-r3p0";
+		reg = <0x7f0000 0x10000>;
+		#hwlock-cells = <1>;
+		clocks = <&aonapb_gate CLK_SPLK_EB>;
+		clock-names = "enable";
+	};
+
+	/* AP GPIO controller — label `ap_gpio` yang diharapkan wcn.dtsi.
+	 * Bukti FDT stok: /soc/aon/gpio@32070000, compatible
+	 * "sprd,sharkl5Pro-gpio"/"sprd,sc9860-gpio" (driver mainline
+	 * drivers/gpio/gpio-sprd.c), IRQ GIC 61. Sama-sama dipakai gpio-eic-sprd
+	 * untuk 4 bank EIC di 0x32020000..0xc0 (ditambah H6 2026-09-25, lihat
+	 * blok EIC di bawah - alamat dari FDT stok, bukan tebakan). */
+	ap_gpio: gpio@70000 {
+		compatible = "sprd,sharkl5Pro-gpio", "sprd,sc9860-gpio";
+		reg = <0x70000 0x10000>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 61 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+	/* P1 tahap-2 (2026-09-27): pin controller Sharkl5Pro/UMS512.
+	 *
+	 * Compatible & alamat: (1) FDT stok punya /soc/aon/pinctrl@32450000
+	 * compatible "sprd,sharkl5Pro-pinctrl" (blobs/fdt_live.compats.tsv:137,
+	 * dump 2026-09-16); (2) of_match blob vendor
+	 * blobs/vendor_modules/pinctrl-sprd-sharkl5Pro.ko = string yang sama
+	 * (llvm-strings) - jadi node ini bind ke driver P1 baru, bukan ke
+	 * driver SC9860 ("sprd,pinctrl"/sc9860 yang MISC-nya 0x4020).
+	 *
+	 * PANJANG JENDELA 0x3000 - diputuskan dari aritmetika tabel, bukan
+	 * disalin: seluruh 393 entri tabel memakai alamat < 0x6c8
+	 * (GLOBAL 4*reg <= 0x30, COMMON 0x34+4n <= 0x2c4, MISC 0x434+4n <= 0x6c4;
+	 * dihitung pinctrl-sprd.c:1016-1032 dan diuji ulang
+	 * tools/re/verify_pinctrl_sharkl5pro.py -> "seluruh 393 alamat di dalam
+	 * jendela"). Konstanta SC9860 0x4020 justru DI LUAR jendela ini. Fork
+	 * sharkl5Pro.dtsi:1818 menulis 0x10000 - lebih besar dari jendela
+	 * device nyata, tidak ada bukti yang menuntutnya, jadi tidak dipakai.
+	 *
+	 * Reg relatif: &aon punya ranges = <0 0x0 0x32000000 0x1000000>
+	 * (ums512.dtsi:873-877), jadi 0x450000 -> 0x32450000; ini konvensi
+	 * yang sama dengan hwlock@7f0000 dan gpio@70000 di atas.
+	 *
+	 * Tanpa konsumen pinmux dulu (tidak ada pinctrl-N di pohon ini): probe
+	 * hanya ioremap (pinctrl-sprd.c:1060), baca daftar grup (1081, nol anak
+	 * -> langsung return 0), lalu pinctrl_register (1104). Tidak ada
+	 * writel di jalur probe (writel hanya di set_mux/config, 432/736/741),
+	 * jadi node ini TIDAK BISA mengubah mux pin console/eMMC yang sedang
+	 * dipakai. Bukti hidupnya nanti: dmesg "sprd-pinctrl-sharkl5pro" +
+	 * 393 pin terdaftar. */
+	pin_controller: pinctrl@450000 {
+		compatible = "sprd,sharkl5Pro-pinctrl";
+		reg = <0x450000 0x3000>;
+		status = "okay";
+
+		/* P1 tahap-3 (2026-09-30): 11 grup pin dari KEBENARAN PERANGKET.
+		 *
+		 * Sumber: FDT stok device /soc/aon/pinctrl@32450000 pada
+		 * archive/versions/v1_G/vb_stock.dts.txt:1865-1935 (grup + phandle
+		 * 0x5e..0x68). Tabel yang sama diringkas di
+		 * docs/p1_pinctrl_sharkl5pro_bukti_20260927.md 3.1 dan isinya cocok
+		 * byte-per-byte dengan dump stok. Bandingkan juga
+		 * gpl-source/dts_sprd/.../sharkl5Pro.dtsi:1819-1866 (fork vendor):
+		 * nama grup, pins, dan sprd,control identik.
+		 *
+		 * PENEMPATAN (bukan tebakan): grup WAJIB anak node pinctrl, bukan
+		 * anak node konsumen vbc@33480000. Dua bukti di sumber kernel ini:
+		 *   (1) pinctrl-sprd.c:969-988 hanya meng-enumerate anak dan cucu
+		 *       np = sprd_pctl->dev->of_node, yaitu node pinctrl ini, jadi
+		 *       grup di bawah vbc tidak akan TERDAFTAR sama sekali;
+		 *   (2) drivers/pinctrl/devicetree.c:126-159 (dt_to_map_one_config)
+		 *       mencari provider dengan MENELUSURI ke atas lewat
+		 *       of_get_next_parent dari node grup, jadi dari vbc@33480000
+		 *       jalurnya vbc -> / -> root = -ENODEV dan pinctrl-N di vbc_v4
+		 *       tidak punya peta state (kelas gagal diam-diam).
+		 * Stok device dan dtsi fork keduanya menaruh grup di bawah node
+		 * pinctrl; itu yang ditulis di sini. Konsumennya (vbc_v4) tetap
+		 * seperti stok: pinctrl-0..10 + pinctrl-names di node itu.
+		 *
+		 * sprd,control BUKAN fitur fork yang perlu diport: mainline
+		 * pinctrl-sprd.c:863-866 sudah memuat
+		 * {"sprd,control", SPRD_PIN_CONFIG_CONTROL, 0} di sprd_dt_params[]
+		 * dan mendaftarkannya lewat sprd_pinctrl_desc.custom_params (879-880);
+		 * jalur set-nya pinctrl-sprd.c:620-622. Keempat pin yang dipakai
+		 * bertipe GLOBAL_CTRL_PIN, syarat apply-nya terpenuhi.
+		 *
+		 * Hanya 4 pin dari 393 yang dirujuk; urutan dan nilai disalin apa
+		 * adanya dari FDT stok, tidak disusun ulang. */
+		vbc_iis3_0: vbc-iis3-0 {
+			pins = "SHARKL5PRO_IIS_INF0_SYS_SEL";
+			sprd,control = <0x0e>;
+		};
+
+		vbc_iism0_0: vbc-iism0-0 {
+			pins = "SHARKL5PRO_IIS_INF0_SYS_SEL";
+			sprd,control = <0x0f>;
+		};
+
+		vbc_iis_to_pad: vbc-iis-to-pad {
+			pins = "SHARKL5PRO_VBC_IIS_INF_SYS_SEL";
+			sprd,control = <0x00>;
+		};
+
+		vbc_iis_to_aon_usb: vbc-iis-to-aon-usb {
+			pins = "SHARKL5PRO_VBC_IIS_INF_SYS_SEL";
+			sprd,control = <0x01>;
+		};
+
+		vbc_iism0_1: vbc-iism0-1 {
+			pins = "SHARKL5PRO_IIS_INF1_SYS_SEL";
+			sprd,control = <0x0f>;
+		};
+
+		vbc_iism0_3: vbc-iism0-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x0f>;
+		};
+
+		vbc_iis0_3: vbc-iis0-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x0b>;
+		};
+
+		vbc_iis1_3: vbc-iis1-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x0c>;
+		};
+
+		vbc_iis2_3: vbc-iis2-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x0d>;
+		};
+
+		vbc_iis3_3: vbc-iis3-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x0e>;
+		};
+
+		ap_iis0_3: ap-iis0-3 {
+			pins = "SHARKL5PRO_IIS_INF3_SYS_SEL";
+			sprd,control = <0x00>;
+		};
+	};
+};
+
+/ {
+	model = "Advan Tab VX Lite T1030 (VXTux)";
+	compatible = "advan,t1030", "sprd,ums512-1h10", "sprd,ums512";
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+		/* H6 2026-09-25: alias i2c wajib - i2c-sprd.c:488 memanggil
+		 * of_alias_get_id("i2c") lalu i2c_add_numbered_adapter(); tanpa
+		 * alias, nr = -19 (-ENODEV) -> "add adapter failed" (bukti pola
+		 * "wrong serial alias id -19" pada sprd_serial di peta probe). */
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c3 = &i2c3;
+		i2c4 = &i2c4;
+		/* P2 2026-09-27: alias SPI wajib untuk spi-sprd.c:925
+		 * (of_alias_get_id("spi") -> bus_num; tanpa alias bus_num = -19).
+		 * Stok memakai alias yang sama: FDT live /aliases memuat
+		 * spi0=spi@800000, spi1=spi@900000, spi2=spi@a00000, spi3=spi@b00000,
+		 * spi4=/soc/aon/spi@32100000. Pohon ini baru memiliki SPI1 (touch). */
+		spi1 = &spi1;
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x80000000>;
+	};
+
+	chosen {
+		stdout-path = "serial1:115200n8";
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+/* EMMC storage (boot device) */
+&sdio3 {
+	status = "okay";
+	bus-width = <8>;
+	no-sdio;
+	no-sd;
+	non-removable;
+	cap-mmc-hw-reset;
+};
+
+/* ============================================================
+ * H6 2026-09-25: EXTCON USB yang benar. Premis lama (PTN5150) sudah
+ * TERBANTAHKAN: FDT stok memuat node /extcon-gpio ber-compatible
+ * "linux,extcon-usb-gpio" (vbus-gpio = PMIC EIC), bukan ptn5150.
+ * Driver: drivers/extcon/extcon-usb-gpio.c (of_match :268-272),
+ * CONFIG_EXTCON_USB_GPIO=y di r9. vbus-gpio stok = phandle 0x33 flag 0
+ * -> 0x33 = /soc/aon/spi@32100000/pmic@0/gpio@280 = pmic_eic (sc2730.dtsi).
+ * ============================================================ */
+/ {
+	extcon_usb: extcon-gpio {
+		compatible = "linux,extcon-usb-gpio";
+		vbus-gpio = <&pmic_eic 0 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+};
+
+/* ============================================================
+ * H6 2026-09-25: 4 bank EIC AON dari FDT stok (path & reg persis;
+ * alamat anak aon relatif 0x32000000): debounce 0x20000 (0x32020000,
+ * 4 bank @ +0x110000/+0x314000/+0x340000), latch 0x20080, async 0x200a0,
+ * sync 0x200c0 - IRQ GIC SPI 72 semua, #gpio-cells 2.
+ * Driver: drivers/gpio/gpio-eic-sprd.c (CONFIG_GPIO_EIC_SPRD=y) yang
+ * cocok dengan compatible sc9860-eic-{sync,async,latch,debounce}.
+ * ============================================================ */
+&aon {
+	eic_debounce: gpio@20000 {
+		compatible = "sprd,sharkl5pro-eic-debounce", "sprd,sc9860-eic-debounce";
+		reg = <0x20000 0x80>, <0x110000 0x80>, <0x314000 0x80>, <0x340000 0x80>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+	eic_latch: gpio@20080 {
+		compatible = "sprd,sharkl5pro-eic-latch", "sprd,sc9860-eic-latch";
+		reg = <0x20080 0x20>, <0x110080 0x20>, <0x314080 0x20>, <0x340080 0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+	eic_async: gpio@200a0 {
+		compatible = "sprd,sharkl5pro-eic-async", "sprd,sc9860-eic-async";
+		reg = <0x200a0 0x20>, <0x1100a0 0x20>, <0x3140a0 0x20>, <0x3400a0 0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+	eic_sync: gpio@200c0 {
+		compatible = "sprd,sharkl5pro-eic-sync", "sprd,sc9860-eic-sync";
+		reg = <0x200c0 0x20>, <0x1100c0 0x20>, <0x3140c0 0x20>, <0x3400c0 0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+	/* Tiada syscon baru di sini — awalnya saya menulis dua node (label
+	 * aon_apb_regs/anlg_phy_g2_regs) karena mengira pohon ini belum punya
+	 * keduanya (\"gap G10\" di docs/usb_hw_topology.md). SALAH: grep pertama
+	 * saya terpotong `head`, dan dtc langsung menangkapnya sebagai
+	 * duplicate_label. Keduanya SUDAH ADA di pohon kanonik:
+	 *   anlg_phy_g2_regs: syscon@323b0000 -> arch/arm64/boot/dts/sprd/
+	 *     ums512.dtsi:257  (compatible sprd,ums512-glbregs,syscon,simple-mfd;
+	 *     reg <0 0x323b0000 0 0x3000>)
+	 *   aon_apb_regs:     syscon@327d0000 -> ums512.dtsi:312 (sama,
+	 *     reg <0 0x327d0000 0 0x3000>)
+	 * Jadi node hsphy di bawah boleh langsung menunjuk label itu. Pelajaran
+	 * yang sama seperti semesta alat lain di repo ini: teks DTS tidak cukup
+	 * dibuktikan dengan grep, ia harus DIKOMPILASI. */
+
+	/* ============================================================
+	 * F3 2026-09-25: HS PHY USB (GERBANG stack USB) — pohon ini belum punya
+	 * node-nya, jadi driver phy-sprd-ums512 tak akan pernah di-bind.
+	 * Sumber nilai = FDT stok /soc/aon/hsphy@323b0000 (dump 2026-09-16)
+	 * + vendor gpl-source/dts_sprd/.../sharkl5Pro.dtsi:1808.
+	 *   compatible        : sprd,sharkl5-phy;sprd,sharkl5pro-phy (stok)
+	 *   sprd,syscon-enable: phandle 0xc  -> /soc/aon/syscon@327d0000
+	 *   sprd,syscon-anag2 : phandle 0x59 -> /soc/aon/syscon@323b0000
+	 *   vdd-supply        : phandle 0x126 -> LDO_VDDUSB33 ("vddusb33")
+	 *   sprd,vdd-voltage  : 0x2e8a10 = 3.050.000 uV  (vendor: 3.300.000 —
+	 *                       nilai papan yang dipakai, lihat topology §5/T4)
+	 *   extcon            : phandle 0x18f -> /extcon-gpio
+	 *   #phy-cells        : 0
+	 * SENGAJA TIDAK ditulis:
+	 *   - io-channels/io-channel-names dp=ch30 dm=ch31 (stok punya): driver
+	 *     port tidak memakai jalur ADC (deviasi #1 di kepala driver).
+	 *   - reg: node stok juga tidak punya (PHY dikendalikan lewat regmap,
+	 *     bukan ioremap), jadi unit address-nya tetap memakai nama stok.
+	 * ============================================================ */
+	hsphy: hsphy@323b0000 {
+		compatible = "sprd,sharkl5-phy", "sprd,sharkl5pro-phy";
+		sprd,syscon-enable = <&aon_apb_regs>;
+		sprd,syscon-anag2 = <&anlg_phy_g2_regs>;
+		vdd-supply = <&vddusb33>;
+		sprd,vdd-voltage = <3050000>;
+		extcon = <&extcon_usb>;
+		#phy-cells = <0>;
+		status = "okay";
+	};
+};
+
+/* ============================================================
+ * DISPLAY — DRM/KMS murni (tanpa fbdev)
+ * Alamat/IRQ dari DT stok (dump 2026-09-16): DPU 0x20300000 IRQ 27,
+ * DSI 0x20400000 IRQ 30/31. DPU kita = "dpu-r4p0" (fork sharkl5Pro).
+ * Jalur: DPU (CRTC/plane) -> DSI host -> panel DSI (vxtux,ums512-panel).
+ * Format utama: XR24 (XRGB8888) dan XB24 (XBGR8888), depth 24-bit.
+ * ============================================================ */
+/ {
+	display-subsystem {
+		compatible = "sprd,display-subsystem";
+		ports = <&dpu_out>;
+		status = "okay";
+	};
+};
+
+&soc {
+	dpu: dpu@20300000 {
+		compatible = "sprd,sharkl5pro-dpu", "sprd,ums512-dpu",
+			     "sprd,sharkl3-dpu";
+		reg = <0 0x20300000 0 0x1000>;
+		interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&apahb_gate CLK_DISPC_EB>;
+		status = "okay";
+
+		port {
+			dpu_out: endpoint {
+				remote-endpoint = <&dsi_in>;
+			};
+		};
+	};
+
+	dsi: dsi@20400000 {
+		compatible = "sprd,sharkl5pro-dsi-host", "sprd,ums512-dsi-host",
+			     "sprd,sharkl3-dsi-host";
+		reg = <0 0x20400000 0 0x1000>;
+		interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&apahb_gate CLK_DSI_EB>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				dsi_in: endpoint {
+					remote-endpoint = <&dpu_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				dsi_out: endpoint {
+					remote-endpoint = <&panel_in>;
+				};
+			};
+		};
+
+		panel@0 {
+			compatible = "vxtux,ums512-panel";
+			reg = <0>;
+			/* timings & init-sequence vendor diisi setelah
+			 * diekstrak dari DT/firmware stok (lihat drm_kms_map.md) */
+			status = "okay";
+
+			port {
+				panel_in: endpoint {
+					remote-endpoint = <&dsi_out>;
+				};
+			};
+		};
+	};
+
+	/* ============================================================
+ * H6 2026-09-25: node i2c dari FDT STOK (blobs/fdt_live.dtb, path
+ * /soc/apb@70000000/i2c@300000..700000). Bus apb@70000000 sudah ada di
+ * ums512.dtsi (uart0/1, sdio0/3) tapi TANPA i2c - tanpa ini touch/charger
+ * tidak mungkin hidup.
+ * Sumber angka (dump FDT stok 2026-09-16, dicek ulang 2026-09-25; dikoreksi
+ * B32 2026-09-25: alamat EFEKTIF = base bus apb 0x70000000 + offset unit
+ * (ranges <0 0 0x70000000 0x10000000>) -> i2c@400000 = 0x70400000, BUKAN
+ * 0x71400000. Versi pertama H6 salah membaca ini dan membuat SDIO 0x71400000
+ * EBUSY - tertangkap oleh eksperimen fixup B32):
+ *   i2c@300000 = 0x70300000 IRQ SPI11 gate=CLK_I2C0_EB(9)  mux=CLK_AP_I2C0(5) st=okay
+ *   i2c@400000 = 0x70400000 IRQ SPI12 gate=CLK_I2C1_EB(10) mux=CLK_AP_I2C1(6) st=okay
+ *   i2c@600000 = 0x70600000 IRQ SPI14 gate=CLK_I2C3_EB(12) mux=CLK_AP_I2C3(8) st=okay (bus touch)
+ *   i2c@700000 = 0x70700000 IRQ SPI15 gate=CLK_I2C4_EB(13) mux=CLK_AP_I2C4(9) st=okay (bus charger)
+ *   (i2c@500000 stok disabled - tidak ditulis)
+ * Driver: drivers/i2c/busses/i2c-sprd.c of_match HANYA "sprd,sc9860-i2c"
+ * (:637) - stok menaruhnya sebagai fallback, jadi di sini fallback juga.
+ * Jam: i2c-sprd WAJIB punya clock "enable" (probe return PTR_ERR bila
+ * tidak ada, i2c-sprd.c:471-477); "i2c"/"source" opsional (dev_warn).
+ * Properti `resets` FDT stok (apapb_gate) sengaja TIDAK disalin: driver
+ * i2c-sprd TIDAK membaca reset apa pun (grep devm_reset = 0 hit) dan
+ * apapb_gate 6.18 bukan reset-provider - resets tanpa pemilik = DT berbahaya.
+ * ============================================================ */
+/* F3 2026-09-25 — CACAT BLOKIR yang ditemukan saat DTS ini pertama kali
+ * benar-benar dikompilasi (cpp + dtc): blok `&soc` di atas belum ditutup
+ * sebelum `&soc` berikutnya, sehingga label-ref ini muncul di depth != 0 dan
+ * dtc menolak seluruh berkas dengan `syntax error` di baris ini. Artinya
+ * seluruh pekerjaan DTS H6 (i2c, display, dll) belum pernah bisa dibangun.
+ * Baris `};` di bawah = penutup blok i2c tadi. */
+};
+
+&soc {
+	i2c0: i2c@70300000 {
+		compatible = "sprd,ums512-i2c", "sprd,sc9860-i2c";
+		reg = <0 0x70300000 0 0x100>;
+		interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&apapb_gate CLK_I2C0_EB>, <&ap_clk CLK_AP_I2C0>,
+			 <&ext_26m>;
+		clock-names = "enable", "i2c", "source";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+	};
+
+	i2c1: i2c@70400000 {
+		compatible = "sprd,ums512-i2c", "sprd,sc9860-i2c";
+		reg = <0 0x70400000 0 0x100>;
+		interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&apapb_gate CLK_I2C1_EB>, <&ap_clk CLK_AP_I2C1>,
+			 <&ext_26m>;
+		clock-names = "enable", "i2c", "source";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+	};
+
+	/* bus touch i2c3. P2 2026-09-27 — sumber nilai = OVERLAY PABRIK
+	 * (E:/UMS512/backup/dtbo_a.bin, sha
+	 * 5f0b8054b7fd18f0a172d483361bc35d4fb9bfa7bace8d6948f2addc55c5c002;
+	 * entry DTBO id 0x1100 = board id papan ini, blob overlay sha
+	 * 491182feee321179bb8823cad8f82cb70268e194fa165100644f4f066c303220,
+	 * salinan: blobs/dtbo_1h10_0x1100.dtb). Base DTB stok menaruh bus ini
+	 * `status = "disabled"` — overlay-lah yang men-`okay`-kan, jadi jangan
+	 * menyalin status dari base. */
+	i2c3: i2c@70600000 {
+		compatible = "sprd,ums512-i2c", "sprd,sc9860-i2c";
+		reg = <0 0x70600000 0 0x100>;
+		interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&apapb_gate CLK_I2C3_EB>, <&ap_clk CLK_AP_I2C3>,
+			 <&ext_26m>;
+		clock-names = "enable", "i2c", "source";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		/* Touch jalur-1 = Himax (overlay id 0x1100 fragment@4 → &i2c3).
+		 * Overlay TIDAK menulis `status` di anak ini → tersedia (default DT),
+		 * jadi di sini pun sengaja tidak ditulis (paritas perilaku).
+		 * Pin IRQ/RESET = ap_gpio 144/145, IDENTIK dengan jalur Novatek di
+		 * SPI1 (overlay fragment@6) — papan ini memang menyediakan DUA jalur
+		 * touch; chip yang terpasang ditentukan saat probe bus.
+		 * Koordinat stok 0x4b0 x 0x7d0 = 1200 x 2000.
+		 * Node ini SUDAH AKTIF: driver in-tree
+		 * drivers/input/touchscreen/sprd/hx83102e/hxchipset/ (Himax
+		 * hxcommon) cocok dengan "himax,hxcommon"
+		 * (himax_platform.c: himax_match_table) dan kini terdaftar
+		 * sebagai i2c_driver, jadi bisa bind ke i2c3 di bawah ini.
+		 * Catatan: mainline drivers/input/touchscreen/himax_hx83112b.c
+		 * TIDAK cocok (IC berbeda, hx83112b != hx83102e); yang cocok
+		 * adalah port hx83102e ini. */
+		touchscreen_hx@48 {
+			compatible = "himax,hxcommon";
+			reg = <0x48>;
+			himax,irq-gpio = <&ap_gpio 144 GPIO_ACTIVE_HIGH>;
+			himax,rst-gpio = <&ap_gpio 145 GPIO_ACTIVE_HIGH>;
+			himax,display-coords = <0 1200 0 2000>;
+			himax,panel-coords = <0 1200 0 2000>;
+		};
+	};
+
+	/* bus charger (stok: bq2560x di sini) */
+	i2c4: i2c@70700000 {
+		compatible = "sprd,ums512-i2c", "sprd,sc9860-i2c";
+		reg = <0 0x70700000 0 0x100>;
+		interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&apapb_gate CLK_I2C4_EB>, <&ap_clk CLK_AP_I2C4>,
+			 <&ext_26m>;
+		clock-names = "enable", "i2c", "source";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		/* Node charger STOK (ground truth FDT live device:
+		 * /soc/apb@70000000/i2c@700000/charger@6b, compatible
+		 * "ti,bq2560x_chg", sama dengan vendor overlay
+		 * ums512-2h10-overlay.dts:601-610). Properti stok lengkap:
+		 *   irq-gpio = <pmic_eic 122 0>   (IRQ INT charger, driver vendor
+		 *          membaca lewat gpio_to_irq; mainline memakai client->irq
+		 *          — ditambahkan belakangan setelah EIC-IRQ dipastikan)
+		 *   extcon = <0x18f> (= /extcon-gpio yang sama dgn extcon_usb kita)
+		 *   monitored-battery + charger-thermal-zone (jalur charger-manager
+		 *          vendor — tidak ada padanannya di boot Linux murni)
+		 *   phys = <0x5c> (&hsphy — mainline bq256xx ambil PHY by-type,
+		 *          bukan by-reference, jadi properti ini tak dibaca)
+		 *   otg-vbus { regulator-name="vddvbus" } — REGULATOR OTG milik
+		 *          driver vendor (devm_regulator_register). KOREKSI catatan
+		 *          lama USB node di bawah: phandle 0x199 yang dirujuk
+		 *          vbus-supply stok BUKAN rail PMIC, melainkan regulator
+		 *          vddvbus dari charger ini.
+		 * Sumber GPL driver vendor bq2560x tidak ada (ledger: re-only),
+		 * jadi dipakai mainline bq256xx (CONFIG_CHARGER_BQ256XX=y):
+		 *   - RE blob bq2560x-charger.ko (B45, 2026-09-26): probe hanya
+		 *     menyentuh REG00-REG0B (mov w1,#0xb = REG0B, PN/DEV_REV)
+		 *     dan TIDAK pernah menyentuh CONTROL_4/0x0c -> keluarga
+		 *     bq25600/01 (bq25611d/18/19 punya PART_INFORMATION sendiri).
+		 *   - mainline BQ25600: bq25600_regmap_config.max_register =
+		 *     BQ256XX_PART_INFORMATION (0x0b), reg_defaults berhenti di
+		 *     CONTROL_3, has_usb_detect=false -> cocok dengan temuan RE.
+		 *     KOREKSI (2026-09-30): tiga baris sebelumnya di sini
+		 *     mengklaim "compatible tetap `ti,bq25600`, TIDAK ada alias
+		 *     yang ditambahkan". Klaim itu tidak cocok dengan berkas
+		 *     mana pun di pohon dan sudah usang. Yang benar-benar ada:
+		 *       (a) bq256xx_charger.c di baris ke-1869 punya entri
+		 *           { .compatible = "ti,bq2560x_chg", .data =
+		 *             &bq256xx_chip_info_tbl[BQ25600] } di
+		 *           bq256xx_of_match[];
+		 *       (b) node charger@6b di bawah memakai string persis itu,
+		 *           bukan `ti,bq25600`.
+		 *     Jadi string DT stok dipertahankan (tidak perlu menebas
+		 *     overlay vendor) dan alias itu diarahkan ke entri BQ25600 -
+		 *     setara memetakan ke `ti,bq25600`, hanya tanpa mengedit DT.
+		 *   - ti,watchdog-timeout-ms sengaja tidak ditulis: default
+		 *     mainline = DISABLE (stok memakai alarm feed-work; tanpa
+		 *     charger-manager tidak ada yang feed -> watchdog off lebih
+		 *     stabil untuk boot Linux murni).
+		 */
+charger@6b {
+		compatible = "ti,bq2560x_chg";
+		reg = <0x6b>;
+		interrupt-parent = <&ap_gpio>;
+		interrupts = <0x7a 2>;
+		monitored-battery = <&bat>;
+		status = "okay";
+
+		usb_otg_vbus: usb-otg-vbus {
+			regulator-name = "usb_otg_vbus";
+		};
+	};
+	};
+
+	/* ============================================================
+	 * P2 2026-09-27 — SPI1 + touch jalur-2 (Novatek). Bukan tebakan: sumber
+	 * nilai = OVERLAY PABRIK entry DTBO id 0x1100 (backup E:/UMS512/backup/
+	 * dtbo_a.bin sha 5f0b8054b7fd18f0a172d483361bc35d4fb9bfa7bace8d6948f2addc55c5c002;
+	 * blob overlay sha 491182feee321179bb8823cad8f82cb70268e194fa165100644f4f066c303220,
+	 * salinan repo: blobs/dtbo_1h10_0x1100.dtb).
+	 * fragment@6 → &spi1: overlay menulis `__overlay__ { status = "okay" }`
+	 * lalu anak `touchscreen@0` — artinya BUS SPI1 di-`okay`-kan oleh overlay
+	 * (base DTB stok: spi@900000 `status = "disabled"`), sama polanya dengan
+	 * i2c3 untuk Himax. Dua jalur touch memang disediakan papan ini.
+	 *
+	 * Alamat efektif: base bus apb 0x70000000 + offset stok 0x900000 =
+	 * 0x70900000 (ranges <0 0 0x70000000 0x10000000>; kaidah yang sama yang
+	 * membuat i2c@600000 = 0x70600000 — pernah salah dibaca di sesi B32).
+	 * IRQ: GIC_SPI 6, LEVEL_HIGH (stok `interrupts = <0 6 4>`).
+	 * Jam — phandle stok di-RESOLVE, bukan disalin buta:
+	 *   enable = <&apapb_gate CLK_SPI1_EB>  (stok <0x3 0x6>; makro = 6)
+	 *   spi    = <&ap_clk CLK_AP_SPI1>      (stok <0x4 0xb>; makro = 11)
+	 *   source = <&pll2 CLK_TWPLL_192M>     (stok <&pll2 0x3>; 0x3 = makro
+	 *            CLK_TWPLL_192M, dan twpll-192m ADA di daftar parent
+	 *            spi_parents ums512-clk.c:508 — jadi clk_set_parent sah;
+	 *            kalau nanti gagal, driver hanya jatuh ke default 26 MHz).
+	 * Driver: drivers/spi/spi-sprd.c, of_match "sprd,sc9860-spi" (:1067),
+	 * WAJIB clock "enable" (:875, return PTR_ERR kalau tak ada) dan alias
+	 * "spi" (:925 of_alias_get_id) — keduanya disiapkan di sini. DMA
+	 * (rx_chn/tx_chn) sengaja TIDAK ditulis: node stok pun tidak punya, dan
+	 * tanpa DMA driver hanya memberi warning lalu jalan tanpa DMA (:906).
+	 *
+	 * CATATAN JUJUR: belum ada driver in-tree untuk compatible
+	 * "novatek,NVT-ts-spi" (mainline novatek-nvt-ts.c = I2C, nt11205/
+	 * nt36672a). Node ini DORMANT sampai driver/blob ada; ia ditulis untuk
+	 * PARITAS DT dengan pabrik dan dijaga gate T41 (DT ↔ overlay).
+	 * ============================================================ */
+	spi1: spi@70900000 {
+		compatible = "sprd,ums512-spi", "sprd,sc9860-spi";
+		reg = <0 0x70900000 0 0x1000>;
+		interrupts = <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&apapb_gate CLK_SPI1_EB>, <&ap_clk CLK_AP_SPI1>,
+			 <&pll2 CLK_TWPLL_192M>;
+		clock-names = "enable", "spi", "source";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		/* Pin IRQ/RESET identik dengan node Himax di i2c3 (ap_gpio
+		 * 144/145) — bukti tambahan bahwa papan mengaktifkan DUA jalur
+		 * untuk satu konektor touch; chip terpasang diputuskan saat probe. */
+		touchscreen@0 {
+			compatible = "novatek,NVT-ts-spi";
+			reg = <0>;
+			spi-max-frequency = <10000000>;
+			spi-cpol;
+			spi-cpha;
+			novatek,irq-gpio = <&ap_gpio 144 GPIO_ACTIVE_HIGH>;
+			novatek,reset-gpio = <&ap_gpio 145 GPIO_ACTIVE_HIGH>;
+			novatek,swrst-n8-addr = <0x3f0fe>;
+			novatek,spi-rd-fast-addr = <0x3f310>;
+			status = "okay";
+		};
+	};
+
+	/* F3 2026-09-25 — CACAT BLOKIR ke-2, ditemukan oleh dtc: di sini dulu ada
+	 * `};` yang menutup blok `&soc` ini terlalu awal, sehingga node usb,
+	 * chipid_regs, socid, mcdt, dan aon_mailbox di bawah jatuh ke ARAS BERKAS
+	 * (depth 0) dan ditolak dtc ("syntax error"). Penutup yang benar adalah
+	 * `};` di akhir blok (setelah aon_mailbox). Baris penutup palsu itu
+	 * dihapus; tidak ada properti/node yang hilang karenanya. */
+
+	/* USB OTG — replika node stok; dr-mode=peripheral (adb gadget v1) */
+	usb: usb@5fff0000 {
+		compatible = "sprd,sharkl5pro-musb", "sprd,sharkl3-musb";
+		reg = <0 0x5fff0000 0 0x2000>;
+		interrupts = <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "mc";
+		clocks = <&aonapb_gate CLK_OTG_UTMI_EB>;
+		clock-names = "core_clk";
+		/* H6: FDT stok punya dua phandle extcon (extcon-gpio + sc2730-typec).
+		 * B40 (2026-09-26): kini KEDUANYA ada driver — glue v3.1
+		 * mendaftarkan dua notifier (id/gpio→USB_HOST, typec→USB/USB_HOST
+		 * + role Type-C); kedua extcon = sumber VBUS. */
+		extcon = <&extcon_usb>, <&sc27xx_typec>;
+		/* F3 2026-09-25: rantai PHY. FDT stok: usb-phy = <&hsphy>
+		 * (phandle 0x5c), phy-names = "usb". Tanpa dua properti ini glue
+		 * hanya punya xceiv sintetis (musb_sprd_vxtux.c:118) dan PHY tak
+		 * pernah dipakai — catatan yang sama sudah ditulis di baris 106. */
+		usb-phy = <&hsphy>;
+		phy-names = "usb";
+		/* Stok menulis `dr-mode` (tanda hubung, nilai "peripheral"), tetapi
+		 * mainline usb_get_dr_mode() membaca `dr_mode`
+		 * (drivers/usb/common/common.c:209) — properti stok diabaikan
+		 * seluruh pohon mainline. Ditulis dengan nama underscore; nilainya
+		 * tetap sama seperti stok & vendor sharkl5Pro.dtsi:1982. */
+		dr_mode = "peripheral";
+		multipoint = "true";
+		wakeup-source;
+		vbus-supply = <&usb_otg_vbus>;
+		status = "okay";
+	};
+
+	/* chipid syscon di 0x402e0000 — mainline tidak punya node ini;
+	 * alamat dari fork sc9863a (aon_apb_regs vendor) */
+	chipid_regs: syscon@402e0000 {
+		compatible = "sprd,ums512-chipid", "syscon";
+		reg = <0 0x402e0000 0 0x100>;
+	};
+
+	/* soc-id: pembaca identitas SoC — nilai properti dari dump DT live
+	 * stok (soc/aon/socid@402e00e0, 2026-09-16) */
+	socid@402e00e0 {
+		compatible = "sprd,soc-id";
+		reg = <0 0x402e00e0 0 0x20>;
+		chip_id = <&chipid_regs 0xe0 0xffffffff>;
+		plat_id = <&chipid_regs 0xe8 0xffffffff>;
+		implement_id = <&chipid_regs 0xf0 0xffffffff>;
+		manufacture_id = <&chipid_regs 0xf4 0xffffffff>;
+		version_id = <&chipid_regs 0xf8 0xffffffff>;
+		status = "okay";
+	};
+
+	/* ============================================================
+	 * AUDIO CORE (B4b) + provider mailbox vendor.
+	 * Ground truth: fork GPL sharkl5Pro-fork.dtsi (SoC sama, T618).
+	 * ============================================================ */
+
+	/* MCDT Multi-Channel Data Transfer: 0x33490000, IRQ 182 (fork:
+	 * mcdt@33490000). Compatible hanya yang cocok driver port VXTux
+	 * (mcdt_hw.c r1p0); mainline sprd-mcdt hanya cocok dengan
+	 * "sprd,sc9860-mcdt" sehingga tidak ada dua driver di satu node. */
+	mcdt@33490000 {
+		compatible = "sprd,sharkl5-mcdt", "sprd,sharkl5pro-mcdt";
+		reg = <0 0x33490000 0 0x170>;
+		interrupts = <GIC_SPI 182 IRQ_TYPE_LEVEL_HIGH>;
+		sprd,ap-addr-offset = <0x32000000>;
+		sprd,syscon-agcp-ahb = <&audcp_ahb_regs>;
+		status = "okay";
+	};
+
+	/* Controller mailbox (mainline drivers/mailbox/sprd-mailbox.c).
+	 * Dua compatible: vendor "sprd,mailbox" (dari fork) + mainline,
+	 * supaya node ini bind ke driver mana pun yang tersedia.
+	 * Register/IRQ dari fork (0x320a0000 / 82-84). */
+	aon_mailbox: mailbox@320a0000 {
+		compatible = "sprd,mailbox", "sprd,sc9860-mailbox";
+		reg = <0 0x320a0000 0 0x8000>,
+		      <0 0x320a8000 0 0x8000>;
+		interrupts = <GIC_SPI 82 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 83 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>;
+		#mbox-cells = <1>;
+		sprd,sensor = <6>;
+		sprd,core-cnt = <7>;
+		sprd,version = <3>;
+		status = "okay";
+	};
+};
+
+/* B45 (2026-09-26): DIRELOKASI ke aras berkas — B40 dulu menulis blok ini DI
+ * DALAM badan &soc (indentasi tab), yang ditolak dtc: referensi &label di dalam
+ * badan node menghasilkan "syntax error" (dtc lama 458.2: "syntax error",
+ * FATAL ERROR: Unable to parse input tree). Tidak pernah ketahuan sebelumnya
+ * karena salinan panggung ini tidak pernah lolos dtc — build kemarin memakai
+ * DTS flat yang belum memuat blok B40. Latenasi ditutup B45. */
+&sc27xx_typec {
+	status = "okay";
+};
+
+/* ============================================================
+ * EKFUSE CACHE + UID + HWFEATURE — node ROOT (persis stok)
+ * Nilai dari dump DT live stok 2026-09-16.
+ * ============================================================ */
+/ {
+	/* Manajer memori audio (driver audiomem/audio_mem.c). Judul prop
+	 * disalin apa adanya dari fork sharkl5Pro-fork.dtsi: alokasi DDR32
+	 * (0x87500000..), IRAM AP/DSP, dan region dump DSP. */
+	audio-mem-mgr {
+		compatible = "sprd,audio-mem-sharkl5", "sprd,audio-mem-sharkl5pro";
+		ddr32-ap-dsp-map-offset = <0x0>;
+		sprd,ddr32-dma = <0x87500000 0x200000>;
+		sprd,ddr32-dspmemdump = <0x87700000 0x80000>;
+		sprd,cmdaddr = <0x87780000 0x400>;
+		sprd,smsg-addr = <0x87780400 0xa10>;
+		sprd,shmaddr-aud-str = <0x87780e10 0x400>;
+		sprd,shmaddr-dsp-vbc = <0x87781210 0x1400>;
+		sprd,shmaddr-nxp = <0x87782610 0x400>;
+		sprd,shmaddr-dsp-smartpa = <0x87782a10 0x1000>;
+		sprd,shmaddr-reg-dump = <0x87783a10 0x400>;
+		sprd,iram-ap-base = <0x33800000>;
+		sprd,iram-dsp-base = <0x01800000>;
+		sprd,offload-addr = <0x33800000 0x5c00>;
+		sprd,normal-captue-linklilst-node1 = <0x33805e00 0x200>;
+		sprd,normal-captue-data = <0x33806000 0x1e00>;
+		sprd,normal-captue-linklilst-node2 = <0x33807e00 0x200>;
+		sprd,audcp-aon-iram = <0xa400 0x1000>;
+		status = "okay";
+	};
+
+	/* Audio SIPC ke AGDSP — properti disalin apa adanya dari fork
+	 * sharkl5Pro-fork.dtsi:2127 (mailbox-core 5 = AGDSP). */
+	audio-sipc {
+		compatible = "sprd,audio_sipc";
+		sprd,mailbox-core = <5>;
+		status = "okay";
+	};
+
+	/* Audio pipe voice/effect/recordproc/bthal — fork sharkl5Pro-fork.dtsi:2216. */
+	audio_pipe_voice {
+		compatible = "sprd,audio_pipe_voice";
+		sprd,writesync = <0>;
+		sprd,maxuserwritebufsize = <0>;
+		sprd,channel = <2>;
+		status = "okay";
+	};
+	audio_pipe_effect {
+		compatible = "sprd,audio_pipe_effect";
+		sprd,writesync = <1>;
+		sprd,maxuserwritebufsize = <1024>;
+		sprd,channel = <8>;
+		status = "okay";
+	};
+	audio_pipe_voiceproc {
+		compatible = "sprd,audio_pipe_recordproc";
+		sprd,writesync = <1>;
+		sprd,maxuserwritebufsize = <1024>;
+		sprd,channel = <9>;
+		status = "okay";
+	};
+	audio_pipe_bthal {
+		compatible = "sprd,audio_pipe_bthal";
+		sprd,writesync = <0>;
+		sprd,maxuserwritebufsize = <0>;
+		sprd,channel = <11>;
+		status = "okay";
+	};
+
+	/* === ASoC B4f (fork GPL sound/soc/sprd -> drivers/vxtux/sound/asoc) === */
+	/* VBC v4 codec-DAI — fork sharkl5Pro-fork.dtsi:1128 (aslinya di bawah bus
+	 * agcp; di sini di root, driver hanya of_match + reg + syscon). */
+	vbc_v4: vbc@33480000 {
+		compatible = "sprd,sharkl5-vbc", "sprd,sharkl5pro-vbc";
+		#sound-dai-cells = <1>;
+		reg = <0 0x33480000 0 0x1000>;
+		sprd,syscon-agcp-ahb = <&audcp_ahb_regs>;
+		sprd,vbc-phy-offset = <0x32000000>;
+		/* iis pin map - urutan = pinctrl-0..10, sama dengan FDT stok */
+		pinctrl-names = "vbc-iis3-0", "vbc-iism0-0", "vbc-iis-to-pad", "vbc-iis-to-aon-usb", "vbc-iism0-1", "vbc-iism0-3", "vbc-iis0-3", "vbc-iis1-3", "vbc-iis2-3", "vbc-iis3-3", "ap-iis0-3";
+		pinctrl-0 = <&vbc_iis3_0>;
+		pinctrl-1 = <&vbc_iism0_0>;
+		pinctrl-2 = <&vbc_iis_to_pad>;
+		pinctrl-3 = <&vbc_iis_to_aon_usb>;
+		pinctrl-4 = <&vbc_iism0_1>;
+		pinctrl-5 = <&vbc_iism0_3>;
+		pinctrl-6 = <&vbc_iis0_3>;
+		pinctrl-7 = <&vbc_iis1_3>;
+		pinctrl-8 = <&vbc_iis2_3>;
+		pinctrl-9 = <&vbc_iis3_3>;
+		pinctrl-10 = <&ap_iis0_3>;
+		status = "okay";
+	};
+
+	/* FE-DAI + pcm-routing platform — fork sharkl5Pro-fork.dtsi:2119-2127. */
+	sprd_fe_dai: sprd-fe-dai {
+		compatible = "sprd,fe-dai";
+		#sound-dai-cells = <1>;
+		status = "okay";
+	};
+
+	sprd_route_pcm: sprd-routing-pcm {
+		compatible = "sprd,pcm-routing";
+		#sound-dai-cells = <0>;
+		status = "okay";
+	};
+
+	/* Codec analog SC2730. Di pohon vendor node ini anak MFD PMIC SC2730;
+	 * rantai PMIC belum ada di DTS ini (dai lihat docs/status §B4f) — node
+	 * root dulu untuk build/DTB; probe runtime mengikuti rantai PMIC. */
+	sprd_codec: sc2730-codec {
+		compatible = "sprd,sc2730-audio-codec";
+		status = "okay";
+	};
+
+	/* Mesin kartu — vbc-rxpx-codec-sc27xx.c (of_match fork
+	 * vbc-rxpx-codec-sc27xx.c:148, data v4_2730). */
+	sound_vbc_v4_sprd_codec: sound-vbc-v4-codec-sc2730 {
+		compatible = "sprd,vbc-v4-codec-sc2730";
+		status = "okay";
+	};
+
+	/* Provider API mailbox vendor (shim drivers/vxtux/sipc/sprd_mbox_vendor.c).
+	 * Indeks ke-N pada daftar mboxes = core id N; controller memakai sel itu
+	 * sebagai tujuan (sprd,core-cnt = 7 -> id 0..7 tersedia). */
+	vxtux_mbox: vxtux-mbox-client {
+		compatible = "sprd,vxtux-mbox-client";
+		mboxes = <&aon_mailbox 0>, <&aon_mailbox 1>,
+			 <&aon_mailbox 2>, <&aon_mailbox 3>,
+			 <&aon_mailbox 4>, <&aon_mailbox 5>,
+			 <&aon_mailbox 6>, <&aon_mailbox 7>;
+		status = "okay";
+	};
+
+	efuse@800 {
+		compatible = "sprd,ums512-cache-efuse", "sprd,ums312-cache-efuse";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x0 0x800 0x0 0x3ff>;
+
+		uid_start: uid-start@5c {
+			reg = <0x5c 0x4>;
+		};
+
+		uid_end: uid-end@58 {
+			reg = <0x58 0x4>;
+		};
+	};
+
+	sprd_uid {
+		compatible = "sprd-uid";
+		nvmem-cells = <&uid_start &uid_end>;
+		nvmem-cell-names = "uid_start", "uid_end";
+		status = "okay";
+	};
+
+	hwfeature {
+		auto {
+			chipid = "UMS512-AC";
+			efuse = "T618";
+			efuse_raw = "0";
+			chipid_raw = "3";
+		};
+
+		lwfq {
+			type = "0";
+		};
+	};
+
+	/* ============================================================
+	 * B46 (2026-09-27): PAKET BATRE — battery + charger-manager.
+	 * Sumber properti: overlay pabrik blobs/dtbo_1h10_0x1100.dtb
+	 * (sha 491182feee321179...), fragment (target-path /), TANPA nilai yang
+	 * ditebak: dump persis ada di work/node_dump/battery.txt dan
+	 * work/node_dump/charger-manager.txt (alat --dump-node
+	 * gate_dt_overlay_parity.py, phandle internal overlay ter-resolve).
+	 * ============================================================ */
+
+	/* Data baterai (parser mainline power_supply_core.c "simple-battery").
+	 * Dilabel `bat`: monitored-battery overlay = <ph:3> = /fragment/__overlay__/
+	 * battery; konsumen akhirnya power_supply_get_battery_info() via
+	 * fwnode_find_reference("monitored-battery") (power_supply_core.c:590).
+	 * 40 properti disalin APA ADANYA (termasuk tabel OCV/Jeita/resistansi). */
+	bat: battery {
+		compatible = "simple-battery";
+		charge-full-design-microamp-hours = <6100000>;
+		charge-term-current-microamp = <120000>;
+		constant-charge-voltage-max-microvolt = <4330000>;
+		factory-internal-resistance-micro-ohms = <81000>;
+		voltage-min-design-microvolt = <3500000>;
+		fullbatt-voltage = <4300000>;
+		fullbatt-current = <120000>;
+		first-fullbatt-current = <135000>;
+		fullbatt-track-end-vol = <4300000>;
+		fullbatt-track-end-cur = <130000>;
+		first-calib-voltage = <3610000>;
+		first-calib-capacity = <40>;
+		batt-ovp-threshold-microvolt = <4800000>;
+		ocv-capacity-celsius = <20>;
+		ocv-capacity-table-0 = <4300000 100 4259000 95 4201000 90 4147000 85 4094000 80 4057000 75 3983000 70 3957000 65 3921000 60 3871000 55 3836000 50 3813000 45 3797000 40 3783000 35 3772000 30 3761000 25 3744000 20 3721000 15 3683000 10 3651000 5 3450000 0>;
+		voltage-temp-table = <1110270 800 999440 850 890430 900 785590 950 687630 1000 598220 1050 517680 1100 446100 1150 383390 1200 328950 1250 281840 1300 241480 1350 207030 1400 177580 1450 152490 1500 131160 1550 113000 1600 97790 1650>;
+		capacity-temp-table = <45 100 25 100 10 98 0 93 4294967286 85 4294967276 64>;
+		resistance-temp-table = <45 77 25 100 10 546 0 769 4294967286 892 4294967276 923>;
+		battery-internal-resistance-celsius = <4294967276 4294967286 0 10 25 35 45 55>;
+		battery-internal-resistance-table-0 = <1224 1224 1140 1084 1034 1001 994 992 992 992 996 1002 1010 1024 1045 1072 1180 1393 1756 2461 4272>;
+		battery-internal-resistance-table-1 = <893 893 818 767 743 705 685 684 678 675 672 673 679 691 709 734 765 799 839 899 1092>;
+		battery-internal-resistance-table-2 = <407 407 402 423 429 428 409 416 408 395 390 390 393 398 405 416 431 452 492 585 730>;
+		battery-internal-resistance-table-3 = <381 381 378 371 366 374 358 364 349 332 327 329 334 340 350 366 386 417 475 585 771>;
+		battery-internal-resistance-table-4 = <182 182 179 179 179 181 182 195 194 173 164 164 167 171 175 174 172 179 187 244 311>;
+		battery-internal-resistance-table-5 = <168 168 175 172 171 171 173 184 176 153 147 147 150 153 156 152 149 154 158 206 255>;
+		battery-internal-resistance-table-6 = <123 123 122 122 123 126 130 138 143 120 115 116 119 124 129 120 117 119 117 139 156>;
+		battery-internal-resistance-table-7 = <106 106 106 106 108 110 113 119 128 107 104 105 108 112 117 107 106 107 105 127 140>;
+		battery-internal-resistance-ocv-table = <4300000 4259000 4221000 4169000 4118000 4072000 4022000 3983000 3942000 3892000 3857000 3833000 3813000 3797000 3783000 3766000 3746000 3723000 3683000 3651000 3450000>;
+		charge-sdp-current-microamp = <500000 500000>;
+		charge-dcp-current-microamp = <2000000 2000000>;
+		charge-cdp-current-microamp = <1150000 1150000>;
+		charge-unknown-current-microamp = <1200000 1200000>;
+		cap-calib-energy-density-ocv-table = <3350000 3800000 4150000 4350000>;
+		cap-track-energy-density-ocv-table = <3400000 3722000>;
+		dcp-jeita-temp-table = <900 910 0 4350000 1150 1180 700000 4350000 1450 1420 2000000 4350000 1550 1540 500000 4350000>;
+		sdp-jeita-temp-table = <900 910 0 4350000 1150 1180 700000 4350000 1450 1420 2000000 4350000 1550 1540 500000 4350000>;
+		cdp-jeita-temp-table = <900 910 0 4350000 1150 1180 700000 4350000 1450 1420 2000000 4350000 1550 1540 500000 4350000>;
+		unknown-jeita-temp-table = <900 910 0 4350000 1150 1180 700000 4350000 1450 1420 2000000 4350000 1550 1540 500000 4350000>;
+	};
+
+	/* Charger manager (driver mainline drivers/power/supply/charger-manager.c,
+	 * CONFIG_CHARGER_MANAGER=y di r9; of_match "charger-manager").
+	 * DEVIASI SATU-SATUNYA dari overlay (disengaja, dengan alasan):
+	 *   overlay: cm-chargers = "bq2560x_charger" — NAMA psy driver VENDOR
+	 *            (blob bq2560x-charger.ko). Driver in-tree bq256xx
+	 *            mendaftar "bq256xx-charger" (bq256xx_charger.c:1247).
+	 *            Menyalin mentah = charger-manager menunggu psy yang tak
+	 *            pernah ada (defer permanen, tanpa error).
+	 *   port   : cm-chargers = "bq256xx-charger" (nama psy in-tree).
+	 * cm-fuel-gauge "sc27xx-fgu" SAMA dengan psy in-tree
+	 * (sc27xx_fuel_gauge.c:764) — disalin apa adanya.
+	 * cm-thermal-zone "board-thmzone" by-name -> zona di bawah (PATCH 2).
+	 * monitored-battery = &bat (ph:3 di overlay).
+	 * SENGJAJA TIDAK disalin: #cm-cap-remap-table (komentar vendor, dtc
+	 * menolak '#' sebagai awal nama properti; driver mainline tidak membacanya).
+	 * phys = <&hsphy> milik node charger@6b di overlay, bukan milik
+	 * charger-manager; charger@6b port sudah punya rantai sendiri. */
+	charger-manager {
+		compatible = "charger-manager";
+		cm-name = "battery";
+		cm-poll-mode = <2>;
+		cm-poll-interval = <15000>;
+		cm-battery-stat = <2>;
+		cm-fullbatt-vchkdrop-ms = <30000>;
+		cm-fullbatt-vchkdrop-volt = <60000>;
+		cm-fullbatt-capacity = <100>;
+		cm-chargers = "bq256xx-charger";
+		cm-fuel-gauge = "sc27xx-fgu";
+		cm-battery-cold = <200>;
+		cm-battery-cold-in-minus;
+		cm-battery-hot = <600>;
+		cm-battery-temp-diff = <10>;
+		cm-charging-max = <21600000>;
+		cm-discharging-max = <2700000>;
+		cm-wdt-interval = <60>;
+		cm-shutdown-voltage = <3400000>;
+		cm-tickle-time-out = <300>;
+		cm-one-cap-time = <30>;
+		cm-thermal-zone = "board-thmzone";
+		cm-charge-voltage-max = <6500000>;
+		cm-charge-voltage-drop = <700000>;
+		monitored-battery = <&bat>;
+	};
+
+	/* ============================================================
+	 * B46: PAKET TERMAL — sensor ADC generik + zona board-thmzone.
+	 * Sumber properti: overlay pabrik (fragment, target-path /), dump
+	 * work/node_dump/thermal-sensor.txt & board-thmzone.txt; bukti konsumen:
+	 * drivers/thermal/thermal-generic-adc.c (CONFIG_GENERIC_ADC_THERMAL=y di
+	 * r9), CONFIG_SC27XX_ADC=y, &pmic_adc sudah ada (sc2730.dtsi:55).
+	 * ============================================================ */
+
+	/* Sensor suhu via ADC PMIC channel 1 (io-channel spec: <&ref> <arg>).
+	 * temperature-lookup-table disalin APA ADANYA (15 sel: millicelsius
+	 * negatif ditulis sebagai u32 4294927xxx — persis overlay; dtc memuat
+	 * apa adanya dan driver membaca u32 array). Driver generic-adc-thermal
+	 * menghitung suhu dari nilai ADC (io-channels). */
+	generic_adc_thermal: thermal-sensor {
+		compatible = "generic-adc-thermal";
+		#thermal-sensor-cells = <0>;
+		io-channels = <&pmic_adc 1>;
+		io-channel-names = "sensor-channel";
+		temperature-lookup-table = <4294927554 1131 4294937519 1110 4294947816 1074 4294962617 983 10110 838 24805 654 44922 413 54903 316 64895 238 74884 178 84883 133 94883 100 104880 75 114889 57 124872 43>;
+	};
+};
+
+/* Zona thermal board — target overlay fragment@0 = thm_zone
+ * (/thermal-zones/board-thmzone di FDT stok, typec_fdt.json:20439).
+ * thermal-sensors = <ph:5> = node thermal-sensor di atas.
+ * cm-thermal-zone = "board-thmzone" (charger-manager di atas) by-name —
+ * OF thermal mendaftar zona dengan nama node, jadi string itu HARUS sama
+ * dengan nama node zona di bawah (bukti kegagalan jika beda: charger-manager
+ * cm_wdt tidak menemukan zona, polling mati diam).
+ * polling-delay/passive = 0 (persis overlay; sensor lokal, tanpa polling). */
+/ {
+	thermal-zones {
+		board-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&generic_adc_thermal>;
+		};
+	};
+};
+
+/* ============================================================
+ * GPU Mali-G52 MP2 (Bifrost/Gondul) @ 850 MHz — UMS512/T618
+ * Driver: drivers/gpu/drm/panfrost (CONFIG_DRM_PANFROST)
+ *
+ * CORRECTION 2026-10-01: this node previously claimed Mali-G57 and offered
+ * "arm,mali-g57" as a compatible. That was wrong on two counts, both now
+ * verified against the stock DT and against the in-tree Panfrost:
+ *
+ *  1. "arm,mali-g57" is not in panfrost_drv.c's dt_match[] at all, and there
+ *     is no G57 entry in panfrost_gpu.c's GPU_MODEL() table, so Panfrost could
+ *     never have probed this node regardless of the silicon.
+ *  2. The silicon is a G52. panfrost_model_cmp() masks the id with 0xf00f, so
+ *     the measured 0x7402 becomes 0x7002, which is exactly
+ *     GPU_MODEL(g52, 0x7002). G57 lives in the 0x9xxx family.
+ *     "Gondul" is the Bifrost codename, not Valhall; the "Mali-G57" string
+ *     inside the vendor DDK blob is a driver-family label, not silicon.
+ *
+ * Stock DT ground truth (blobs/fdt_live.dtb, /soc/mm/gpu@60000000):
+ *   compatible       = "arm,mali-bifrost", "sprd,mali-gondul"
+ *   reg              = 0x60000000 / 0x100000
+ *   interrupts       = <0 60 4> x3, interrupt-names = "JOB", "MMU", "GPU"
+ *   operating-points = 384/512/614.4/768/850 MHz (freq KHz pairs, 2nd = uV)
+ *   gpu-supply       = present
+ *
+ * Panfrost requires THREE named interrupts (job, mmu, gpu) and a
+ * "mali"-named supply, plus operating-points-v2, or probe fails. The old node
+ * had one interrupt named "gpu", so it could not have worked either way.
+ * ============================================================ */
+/ {
+	gpu: gpu@60000000 {
+		/* Panfrost binding only. The vendor DDK compatible was removed
+		 * 2026-10-08 together with its driver; only "arm,mali-bifrost"
+		 * remains, which is what panfrost_drv.c dt_match[] matches on. */
+		compatible = "arm,mali-bifrost";
+		reg = <0x0 0x60000000 0x0 0x100000>;
+
+		/* Stock DT has three identical SPI interrupts, named JOB/MMU/GPU.
+		 * Panfrost requests them by index in this exact order. */
+		interrupts = <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "job", "mmu", "gpu";
+
+		/* D1, 2026-09-30: only &gpu_clk resolves.  &gpu_core_eb / &gpu_mem_eb /
+	 * &gpu_sys_eb have no target: ums512.dtsi defines gpu_clk (line 384) but
+	 * no GPU gate controller node exists in any dts/dtsi of this SoC, so
+	 * dtc failed with "Reference to non-existent node or label".  The three
+	 * gate clocks are commented out rather than invented; restore them when
+	 * the gate node is defined.
+	 * clocks = <&gpu_clk>, <&gpu_core_eb>, <&gpu_mem_eb>, <&gpu_sys_eb>;
+	 * clock-names = "gpu", "core", "mem", "sys"; */
+	clocks = <&gpu_clk 0>;
+	clock-names = "gpu";
+
+	assigned-clocks = <&gpu_clk 0>;
+	assigned-clock-rates = <850000000>;
+
+	/* The GPU power gate lives in the PMU APB syscon, not in the PMIC: the
+	 * stock DT (/soc/mm/gpu@60000000) says
+	 *     top_force_shutdown = <&pmu_apb_regs 0x30 0x2000000>;
+	 * sprd_gpu_pw_domain.c (drivers/pmdomain/sprd) owns that cell and hands
+	 * it to this device as a power domain, so the gate is released before
+	 * probe and asserted again on detach. */
+	power-domains = <&gpu_pd>;
+
+	/* The rest of the vendor DT's GPU syscon knobs are deliberately NOT
+	 * wired here: with no Mali driver left in the tree they have no
+	 * consumer, and pointing them at the wrong node would only look like
+	 * configuration. Stock values for the record (both cells are
+	 * reg, mask; the phandles are the stock ones):
+	 *   mem_repaired_flag = <&aon_apb_regs 0x83c 0xffffffff>
+	 *   gpu_qos_sel = <&gpu_apb_regs 0x10 0x10000>
+	 *   gpu_qos = <&gpu_apb_regs 0x10 0xffff>
+	 *   dvfs_index_cfg = <&gpu_dvfs_apb_regs 0x8c 0x7>
+	 *   sw_dvfs_ctrl = <&gpu_dvfs_apb_regs 0x20 0x171>
+	 *   freq_upd_cfg = <&gpu_dvfs_apb_regs 0xa4 0x3>
+	 *   core_index0_map .. core_index7_map =
+	 *                  <&gpu_dvfs_apb_regs 0x48 .. 0x64 0x1c000>
+	 *   dcdc_mm_voltage3 = <&top_dvfs_apb_regs 0xe8 0x1ff>
+	 * The vendor OPP source (sprd,dvfs-lists / sprd,dvfs-default on the stock
+	 * node) is superseded by gpu_opp_table below. */
+
+	/* D1, 2026-09-30: &smmu has no target -- no SMMU node exists in
+	 * ums512.dtsi or any other dtsi of this SoC.  The iommu_isp/iommu_dcam
+	 * nodes below are sprd,iommuvau-* units, a different binding, so they are
+	 * not substituted here.  Restore when a real SMMU node exists.
+	 * iommus = <&smmu 0>; */
+
+	/* DVFS OPP table — from vendor sprd,dvfs-lists (4 elems per entry:
+	 * freq(KHz), volt(uV), clk_idx, div). Populated by platform probe. */
+	#cooling-cells = <2>;
+	cooling-min-state = <0>;
+	cooling-max-state = <4>;
+
+	/* Operating points for devfreq — static mainline OPPs consumed by
+	 * panfrost_devfreq via dev_pm_opp_of_add_table(). */
+	operating-points-v2 = <&gpu_opp_table>;
+
+	status = "okay";
+};
+
+/* GPU power gate: the PMU-APB force-shutdown latch named by the stock DT on
+ * the GPU node. Consumers attach it through the GPU node's power-domains. */
+gpu_pd: power-domain {
+	compatible = "sprd,sharkl5pro-gpu-domain";
+	top_force_shutdown = <&pmu_apb_regs 0x30 0x2000000>;
+	#power-domain-cells = <0>;
+};
+
+gpu_opp_table: opp-table {
+	compatible = "operating-points-v2";
+	opp-shared;
+
+	/* Values from the vendor sprd,dvfs-lists / sprd,dvfs-default tables.
+	 *
+	 * The vendor's bin selectors (<0x1> BIN1 / <0x2> BIN2) are deliberately
+	 * absent. Mainline only honours that kind of filter when the platform
+	 * supplies a speed-bin value through a "speed-bin" nvmem cell, which
+	 * this SoC has none of: with the selector present, every OPP would be
+	 * dropped, dev_pm_opp_of_add_table() would return -ENOENT, and
+	 * panfrost_devfreq_init() would abort the probe. */
+	opp-384000000 {
+		opp-hz = /bits/ 64 <384000000>;
+		opp-microvolt = <700000>;
+	};
+	opp-512000000 {
+		opp-hz = /bits/ 64 <512000000>;
+		opp-microvolt = <750000>;
+	};
+	opp-614400000 {
+		opp-hz = /bits/ 64 <614400000>;
+		opp-microvolt = <800000>;
+	};
+	opp-768000000 {
+		opp-hz = /bits/ 64 <768000000>;
+		opp-microvolt = <850000>;
+	};
+	opp-850000000 {
+		opp-hz = /bits/ 64 <850000000>;
+		opp-microvolt = <900000>;
+	};
+};
+};
+
+/* ============================================================
+ * CAMERA SENSORS (BATCH-CAM) — sensor utama (belakang) di i2c0@0x20
+ * dan sensor depan (selfie) di i2c1@0x5a.
+ * Firmware evidence: gc8034 (8MP, rear), gc5025 (5MP, front).
+ * Driver: drivers/vxtux/camera/sensors/gc5025.c, gc8034.c (port from GPL).
+ * ============================================================ */
+
+/* Rear camera sensor (main) on i2c0 */
+&i2c0 {
+	sensor-main@20 {
+		compatible = "galaxycore,gc8034";
+		reg = <0x20>;
+		status = "okay";
+
+		/* Power supplies from PMIC SC2730 */
+		vddcammot-supply = <&vddcammot>;
+		vddcamd-supply = <&vddcamd1>;
+		vddcama-supply = <&vddcama1>;
+		vddio-supply = <&vddcamio>;
+
+		/* Clocks from vendor DT */
+		clocks = <&apapb_gate CLK_I2C0_EB>, <&ap_clk CLK_AP_I2C0>,
+			 <&ext_26m>;
+		clock-names = "clk_srcsensor_eb", "clk_96m", "clk_76m8",
+			      "clk_48m", "clk_26m";
+
+		/* GPIO controls */
+		reset-gpios = <&ap_gpio 94 GPIO_ACTIVE_HIGH>;
+		pwdn-gpios = <&ap_gpio 32 GPIO_ACTIVE_LOW>;
+
+		/* Port/CSI link */
+		port {
+			sensor_main_ep: endpoint {
+				remote-endpoint = <&csi0_ep>;
+				bus-type = <3>; /* CSI-2 */
+				data-lanes = <2>;
+				clock-lane = <1>;
+			};
+		};
+	};
+};
+
+/* Front camera sensor (sub) on i2c1 */
+&i2c1 {
+	sensor-sub@5a {
+		compatible = "galaxycore,gc05a2";
+		reg = <0x5a>;
+		status = "okay";
+
+		/* Power supplies from PMIC SC2730 */
+		vddcammot-supply = <&vddcammot>;
+		vddcamd-supply = <&vddcamd0>;
+		vddcama-supply = <&vddcama0>;
+		vddio-supply = <&vddcamio>;
+
+		/* Clocks from vendor DT */
+		clocks = <&apapb_gate CLK_I2C1_EB>, <&ap_clk CLK_AP_I2C1>,
+			 <&ext_26m>;
+		clock-names = "clk_srcsensor_eb", "clk_96m", "clk_76m8",
+			      "clk_48m", "clk_26m";
+
+		/* GPIO controls */
+		reset-gpios = <&ap_gpio 95 GPIO_ACTIVE_HIGH>;
+		pwdn-gpios = <&ap_gpio 33 GPIO_ACTIVE_LOW>;
+
+		/* Port/CSI link */
+		port {
+			sensor_sub_ep: endpoint {
+				remote-endpoint = <&csi1_ep>;
+				bus-type = <3>; /* CSI-2 */
+				data-lanes = <1>;
+				clock-lane = <1>;
+			};
+		};
+	};
+};
+
+/* ============================================================
+ * CAMERA FLASH (BATCH-CAM) — sprd_flash_drv ABI shim
+ * Driver: drivers/vxtux/flash/sprd_flash_drv.c
+ * ============================================================ */
+/ {
+	camera_flash: camera-flash {
+	compatible = "sprd,camera-flash";
+	status = "okay";
+
+	/* Flash LED connected to PMIC SC2730 BLTC */
+	flash-leds {
+		flash {
+			label = "flash";
+			led-max-microamp = <1500000>;
+			flash-max-microamp = <1500000>;
+			flash-max-timeout-us = <1000000>;
+			type = "flash";
+		};
+		torch {
+			label = "torch";
+			led-max-microamp = <200000>;
+			type = "torch";
+		};
+	};
+};
+};
+
+/* ============================================================
+ * CAMERA SYSTEM POWER DOMAIN (BATCH-CAM) — sprd_camsys_pw_domain
+ * ABI shim providing sprd_glb_mm_pw_on/off_cfg
+ * Driver: drivers/vxtux/power/sprd_camsys_pw_domain.c
+ * ============================================================ */
+/ {
+	camsys_pw_domain: camsys-pw-domain {
+	compatible = "sprd,camsys-pw-domain";
+	status = "okay";
+
+	/* Power domain controlled via PMIC SC2730 syscon */
+	syscon = <&sc2730_pmic>;
+
+	/* Clock control -- DISABLED (D7, 2026-09-30).
+	 * CLK_MM_CAM_EB and CLK_CAM are not defined in
+	 * include/dt-bindings/clock/sprd,ums512-clk.h (the MM gate block ends at
+	 * CLK_MM_CPHY_EB=19 and has no CAM entry; the mm_clk block has no CAM
+	 * entry either), so cpp leaves them as bare identifiers and dtc then
+	 * rejects the cell expression.  No index was invented: restore this line
+	 * once the real rail name and index are known.
+	 * clocks = <&mm_gate CLK_MM_CAM_EB>, <&mm_clk CLK_CAM>; */
+};
+};
+
+/* ============================================================
+ * CAMERA PIPELINE — ISP + CSI + DCAM (BATCH-CAM)
+ * From vendor sharkl5Pro.dtsi (2026-09-27 dump)
+ * ============================================================ */
+
+&soc {
+	/* Camera IOMMUs */
+	iommu_isp: iommu@620ff000 {
+		compatible = "sprd,iommuvau-isp";
+		reg = <0 0x620ff000 0 0x80>;
+		sprd,iova-base = <0x40000000>;
+		sprd,iova-size = <0x20000000>;
+		#iommu-cells = <0>;
+		status = "okay";
+	};
+
+	iommu_dcam: iommu@6290f000 {
+		compatible = "sprd,iommuvau-dcam";
+		reg = <0 0x6290f000 0 0x80>;
+		sprd,iova-base = <0x40000000>;
+		sprd,iova-size = <0x40000000>;
+		#iommu-cells = <0>;
+		status = "okay";
+	};
+
+	/* --------------------------------------------------------
+	 * JPEG codec (CONFIG_SPRD_JPG, drivers/misc/sprd_jpg/)
+	 *
+	 * Reconstructed from the stock UMS512 DTB, node
+	 * /soc/mm/jpg-codec@62700000 (decompile read on device at
+	 * /data/local/tmp/dtsx/fdt.dts):
+	 *
+	 *   compatible  = "sprd,sharkl5pro-jpg"   <- in the driver's
+	 *        of_match_table (sprd_jpg.c), so this is a real bind, not
+	 *        an invented string (cf. the sprd_camsys_pw_domain defect).
+	 *   reg          = <0x62700000 0xc000>
+	 *   interrupts   = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>
+	 *   reset-syscon      = <&mm_ahb_regs  0x04 0x02>
+	 *   aon-apb-eb-syscon = <&aon_apb_regs 0x00 0x200>
+	 *   iommus       = <&iommu_jpg>
+	 *
+	 * compatible on the iommu node is "sprd,iommu-v1", the ONLY string in
+	 * drivers/iommu/sprd-iommu.c's of_match_table. (The pre-existing
+	 * iommu_isp / iommu_dcam nodes in this file use "sprd,iommuvau-*" and
+	 * therefore never match -- a separate, still-open defect, not fixed
+	 * here.)
+	 *
+	 * NOTE on the syscon properties: the stock node has TWO separate
+	 * phandle properties, each <phandle reg mask>, and no
+	 * syscons/syscon-names pair. The 5.4 driver reached them through
+	 * syscon_regmap_lookup_by_name(np, "aon_apb_eb") / ("reset"), and
+	 * the port therefore does of_parse_phandle_with_args() on these two
+	 * property names directly. Copying the syscons/syscon-names list
+	 * shim used by sprd_camsys_pw_domain here would leave every regmap
+	 * NULL while probe still returned success.
+	 *
+	 * Clock indices are the raw ids from the stock `clocks` property,
+	 * translated through include/dt-bindings/clock/sprd,ums512-clk.h:
+	 *   aonapb_gate 7  = CLK_MM_EB        -> jpg_domain_eb
+	 *   mm_gate     1  = CLK_MM_JPG_EB    -> jpg_dev_eb
+	 *   mm_gate     7  = CLK_MM_CKG_EB    -> jpg_ckg_eb
+	 *   mm_clk      6  = CLK_JPG          -> jpg_clk
+	 *   pll2        16 = CLK_TWPLL_76M8   -> clk_src_76m8
+	 *   pll2        10 = CLK_TWPLL_128M   -> clk_src_128m
+	 *   pll2         9 = CLK_TWPLL_256M   -> clk_src_256m
+	 *   pll2         2 = CLK_TWPLL_384M   -> clk_src_384m
+	 * -------------------------------------------------------- */
+	iommu_jpg: iommu@62700300 {
+		compatible = "sprd,iommu-v1";
+		reg = <0 0x62700300 0 0x80>;
+		sprd,iova-base = <0x60000000>;
+		sprd,iova-size = <0x10000000>;
+		#iommu-cells = <0>;
+		status = "okay";
+	};
+
+	jpg: jpg-codec@62700000 {
+		compatible = "sprd,sharkl5pro-jpg";
+		/* &soc is #address-cells = <2>, #size-cells = <2>: 4 reg cells. */
+		reg = <0 0x62700000 0 0xc000>;
+		interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		reset-syscon = <&mm_ahb_regs 0x04 0x02>;
+		aon-apb-eb-syscon = <&aon_apb_regs 0x00 0x200>;
+		iommus = <&iommu_jpg>;
+		clocks = <&aonapb_gate 7>, <&mm_gate 1>, <&mm_gate 7>,
+			 <&mm_clk 6>,
+			 <&pll2 16>, <&pll2 10>, <&pll2 9>, <&pll2 2>;
+		clock-names = "jpg_domain_eb", "jpg_dev_eb", "jpg_ckg_eb",
+			      "jpg_clk",
+			      "clk_src_76m8", "clk_src_128m",
+			      "clk_src_256m", "clk_src_384m";
+		status = "okay";
+	};
+
+	/* ISP (Image Signal Processor) */
+	isp: isp@62000000 {
+		compatible = "sprd,sharkl5pro-isp", "sprd,isp";
+		reg = <0 0x62000000 0 0x100000>;
+		interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "ispch0", "ispch1";
+		clocks = <&mm_clk 0>, <&mm_gate 0>, <&mm_clk 1>,
+			 <&pll2 0>, <&pll2 1>, <&pll2 2>,
+			 <&pll2 3>, <&pll2 4>, <&pll2 5>;
+		clock-names = "isp_eb", "isp_axi_eb", "isp_clk",
+			      "isp_clk_256m", "isp_clk_307m2",
+			      "isp_clk_384m", "isp_clk_468m",
+			      "isp_clk_512m", "isp_clk_parent";
+		syscons = <&mm_ahb_regs 0 0>, <&mm_ahb_regs 0 0>,
+			  <&mm_ahb_regs 0 0>, <&mm_ahb_regs 0 0>;
+		syscon-names = "reset", "isp_ahb_reset",
+			       "isp_vau_reset", "isp_enable";
+		sprd,cam-ahb-syscon = <&mm_ahb_regs>;
+		sprd,isp-count = <1>;
+		iommus = <&iommu_isp>;
+		status = "okay";
+
+		port {
+			isp_out: endpoint {
+				remote-endpoint = <&dcam_isp_ep>;
+			};
+		};
+	};
+
+	/* CSI-0 (rear camera, 2-lane) */
+	csi0: csi@62300000 {
+		compatible = "sprd,sharkl5pro-csi", "sprd,csi-controller";
+		reg = <0 0x62300000 0 0x1000>;
+		interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mm_gate 0>, <&mm_gate 1>, <&mm_clk 2>;
+		clock-names = "clk_mipi_csi_gate_eb", "clk_csi_eb",
+			      "mipi_csi_src_eb";
+		sprd,aon-apb-syscon = <&aon_apb_regs>;
+		sprd,cam-ahb-syscon = <&mm_ahb_regs>;
+		sprd,anlg-phy-g10-controller = <&anlg_phy_g2_regs>;
+		sprd,csi-id = <0>;
+		sprd,dcam-id = <0>;
+		sprd,ip-version = <0x200>;
+		iommus = <&iommu_isp>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				csi0_ep: endpoint {
+					remote-endpoint = <&sensor_main_ep>;
+					bus-type = <3>; /* CSI-2 */
+					data-lanes = <2>;
+					clock-lane = <1>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				csi0_isp_ep: endpoint {
+					remote-endpoint = <&isp_csi0_ep>;
+				};
+			};
+		};
+	};
+
+	/* CSI-1 (front camera, 1-lane) */
+	csi1: csi@62400000 {
+		compatible = "sprd,sharkl5pro-csi", "sprd,csi-controller";
+		reg = <0 0x62400000 0 0x1000>;
+		interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mm_gate 0>, <&mm_gate 1>, <&mm_clk 2>;
+		clock-names = "clk_mipi_csi_gate_eb", "clk_csi_eb",
+			      "mipi_csi_src_eb";
+		sprd,aon-apb-syscon = <&aon_apb_regs>;
+		sprd,cam-ahb-syscon = <&mm_ahb_regs>;
+		sprd,anlg-phy-g10-controller = <&anlg_phy_g2_regs>;
+		sprd,csi-id = <1>;
+		sprd,dcam-id = <1>;
+		sprd,ip-version = <0x200>;
+		iommus = <&iommu_isp>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				csi1_ep: endpoint {
+					remote-endpoint = <&sensor_sub_ep>;
+					bus-type = <3>; /* CSI-2 */
+					data-lanes = <1>;
+					clock-lane = <1>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				csi1_isp_ep: endpoint {
+					remote-endpoint = <&isp_csi1_ep>;
+				};
+			};
+		};
+	};
+
+	/* DCAM (Digital Camera) */
+	dcam: dcam@62900000 {
+		compatible = "sprd,sharkl5pro-cam", "sprd,sharkl5pro-dcam";
+		reg = <0 0x62900000 0 0x1000>,
+		      <0 0x62901000 0 0x1000>,
+		      <0 0x62902000 0 0x1000>,
+		      <0 0x62903000 0 0x1000>;
+		reg-names = "dcam0_reg", "dcam1_reg", "dcam2_reg", "axi_ctrl_reg";
+		interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 58 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "dcam0", "dcam1", "dcam2";
+		clocks = <&mm_gate 0>, <&mm_clk 3>, <&pll2 0>,
+			 <&pll2 1>, <&pll2 2>, <&pll2 3>,
+			 <&pll2 4>, <&pll2 5>, <&mm_gate 1>,
+			 <&mm_clk 4>, <&pll2 6>, <&pll2 7>,
+			 <&pll2 8>, <&pll2 9>;
+		clock-names = "dcam_eb", "dcam_clk", "dcam_clk_192m",
+			      "dcam_clk_256m", "dcam_clk_307m2",
+			      "dcam_clk_384m", "dcam_clk_468m",
+			      "dcam_clk_parent", "dcam_axi_eb",
+			      "dcam_axi_clk", "dcam_axi_clk_256m",
+			      "dcam_axi_clk_307m2", "dcam_axi_clk_384m",
+			      "dcam_axi_clk_468m", "dcam_axi_clk_parent";
+		syscons = <&mm_ahb_regs 0 0>, <&mm_ahb_regs 0 0>,
+			  <&mm_ahb_regs 0 0>, <&mm_ahb_regs 0 0>;
+		syscon-names = "dcam_all_reset", "dcam0_reset",
+			       "dcam1_reset", "dcam2_reset";
+		sprd,cam-ahb-syscon = <&mm_ahb_regs>;
+		sprd,isp = <&isp>;
+		sprd,dcam-count = <3>;
+		sprd,dcam-superzoom = <2>;
+		sprd,project-id = <3>;
+		iommus = <&iommu_dcam>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				dcam_isp_ep: endpoint {
+					remote-endpoint = <&isp_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				dcam_csi0_ep: endpoint {
+					remote-endpoint = <&csi0_isp_ep>;
+				};
+			};
+
+			port@2 {
+				reg = <2>;
+				dcam_csi1_ep: endpoint {
+					remote-endpoint = <&csi1_isp_ep>;
+				};
+			};
+		};
+	};
+	};
+
+
+	/* ISP additional ports for CSI inputs */
+&isp {
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@1 {
+			reg = <1>;
+			isp_csi0_ep: endpoint {
+				remote-endpoint = <&csi0_isp_ep>;
+			};
+		};
+
+		port@2 {
+			reg = <2>;
+			isp_csi1_ep: endpoint {
+				remote-endpoint = <&csi1_isp_ep>;
+			};
+		};
+};
+};
+
+/* MIPI CSI PHYs */
+&anlg_phy_g2_regs {
+	mipi_csi_phy0: mipi-csi-phy@0 {
+		compatible = "sprd,mipi-csi-phy";
+		reg = <0 0x323f0000 0 0x1000>;
+		#phy-cells = <0>;
+		status = "okay";
+	};
+
+	mipi_csi_phy1: mipi-csi-phy@1 {
+		compatible = "sprd,mipi-csi-phy";
+		reg = <0 0x323f1000 0 0x1000>;
+		#phy-cells = <0>;
+		status = "okay";
+	};
+
+	mipi_csi_phy2: mipi-csi-phy@2 {
+		compatible = "sprd,mipi-csi-phy";
+		reg = <0 0x323f2000 0 0x1000>;
+		#phy-cells = <0>;
+		status = "okay";
+	};
+};
+
+/* MM gate clocks: NO local override.
+ * A previous revision overrode compatible to "sprd,sharkl5pro-mm-gate" and
+ * relabelled clock-output-names. Both were wrong:
+ *   - drivers/clk/sprd/ums512-clk.c matches only "sprd,ums512-mm-gate-clk";
+ *     "sprd,sharkl5pro-mm-gate" appears nowhere in the driver, so every
+ *     <&mm_gate N> consumer (isp, csi0, csi1, dcam) would defer forever.
+ *   - the names were also wrong: index 0 is CLK_MM_CPP_EB, not clk_mm_isp_eb.
+ * ums512.dtsi already declares this node correctly, so leave it alone.
+ */
+
+/* =====================================================================
+ * GPIO KEYS — Power/Volume buttons
+ * Uses PMIC EIC (pmic_eic) for power key, AP GPIO for volume keys
+ * ===================================================================== */
+/* GPIO KEYS -- node dasar + label (D1-kelas, ditemukan 2026-09-30 saat
+ * verifikasi dtc; BLOKIR YANG SAMA dengan &sprd_marlin3 / &sprd_sensorhub,
+ * jadi tidak ada dalam daftar 6 defect awal).
+ *
+ * Node `gpio-keys` TIDAK ADA di mana pun di arch/arm64/boot/dts/sprd/,
+ * sehingga referensi di bawah tidak punya target.
+ *
+ * Bukti node ini benar-benar ada di DT stok blobs/fdt_live.dtb:
+ *   - nama node `gpio-keys` di offset 1388 (blok struktur)
+ *   - anak `key-power` di offset 1464 dengan label "Power Key"
+ *   - anak `key-volumeup` dengan label "Volume Up Key"
+ * Pola sama dipakai dua board lain di direktori yang sama:
+ * sp9860g-1h10.dts:36 dan qemu-ums512-t1030.dts:259, keduanya
+ * `gpio-keys { compatible = "gpio-keys"; ... }`. Driver mainline
+ * drivers/input/keyboard/gpio_keys.c:832 of_match = "gpio-keys".
+ *
+ * KENAPA labelnya gpio_keys (garis bawah), BUKAN gpio-keys (strip): leksikal
+ * dtc scripts/dtc/dtc-lexer.l:14 mendefinisikan
+ *     LABEL  [a-zA-Z_][a-zA-Z0-9_]*
+ * dan aturan <*>&{LABEL} (baris 209) -> DT_LABEL_REF. Tanda hub TIDAK
+ * termasuk, jadi `&gpio-keys` adalah galat LEKSIKAL keras di dtc mana
+ * pun -- bukan sekadar label tak terdefinisi. Nama NODE tetap gpio-keys
+ * agar sama seperti stok.
+ *
+ * status = "disabled": node dasar tidak boleh aktif sebelum papan
+ * menyalakannya; blok &gpio_keys di bawah yang mengaktifkannya.
+ * ===================================================================== */
+/ {
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+		status = "disabled";
+	};
+};
+
+&gpio_keys {
+	/* The base node is declared status = "disabled" so it cannot probe before
+	 * the board enables it; this override is the one that turns it on. */
+	status = "okay";
+
+	power {
+		label = "power";
+		gpios = <&pmic_eic 0 GPIO_ACTIVE_HIGH>; /* PMIC EIC IRQ 0 = power key */
+		linux,code = <KEY_POWER>;
+		wakeup-source;
+	};
+	volume-up {
+		label = "volume-up";
+		gpios = <&ap_gpio 96 GPIO_ACTIVE_HIGH>; /* Volume up */
+		linux,code = <KEY_VOLUMEUP>;
+	};
+	volume-down {
+		label = "volume-down";
+		gpios = <&ap_gpio 97 GPIO_ACTIVE_HIGH>; /* Volume down */
+		linux,code = <KEY_VOLUMEDOWN>;
+	};
+};
+
+/* =====================================================================
+ * SENSORHUB IIO SENSORS — Individual sensor nodes under sensorhub
+ * Connected via SIP mailbox to sensor MCU
+ * ===================================================================== */
+&sprd_sensorhub {
+	/* Accelerometer + Gyro (LSM6DSO/LSM6DS3) */
+	lsm6dso@6a {
+		compatible = "st,lsm6dso";
+		reg = <0x6a>;
+		status = "okay";
+		interrupt-parent = <&ap_gpio>;
+		interrupts = <100 IRQ_TYPE_LEVEL_HIGH>; /* INT1 */
+		mount-matrix = <1 0 0 0 1 0 0 0 1>;
+	};
+
+	/* Magnetometer (AK0991x) */
+	ak0991x@c {
+		compatible = "akm,ak0991x";
+		reg = <0x0c>;
+		status = "okay";
+		mount-matrix = <1 0 0 0 1 0 0 0 1>;
+	};
+
+	/* Proximity + ALS (APDS9930) */
+	apds9930@39 {
+		compatible = "avago,apds9930";
+		reg = <0x39>;
+		status = "okay";
+		interrupt-parent = <&ap_gpio>;
+		interrupts = <101 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	/* Barometer (BMP280) */
+	bmp280@76 {
+		compatible = "bosch,bmp280";
+		reg = <0x76>;
+		status = "okay";
+	};
+
+	/* Heart rate / Pulse ox (if present) */
+	/* max30102@57 {
+		compatible = "maxim,max30102";
+		reg = <0x57>;
+		status = "okay";
+	}; */
+};
+
+/* =====================================================================
+ * TOUCHSCREEN COMPATIBLE UPDATE — Match mainline drivers
+ * himax,hx83112b (I2C) and novatek,nt11205-ts (SPI) instead of
+ * himax,hxcommon and novatek,NVT-ts-spi
+ * ===================================================================== */
+/* Note: Keep original DT overlay compat for factory parity.
+ * Mainline drivers will be extended with additional compatible strings.
+ * See drivers/input/touchscreen/himax_hx83112b.c and novatek-nvt-ts.c
+ */
+
+
+/* =====================================================================
+ * MODEM / CELLULAR — Proprietary firmware interface
+ * Provides shared memory + IPC for vendor modem firmware
+ * Modem firmware: /dev/block/by-name/modem_a (26MB)
+ * ===================================================================== */
+&soc {
+	/* Modem shared memory TIDAK boleh ditulis di sini (D2, 2026-09-30).
+	 *
+	 * Node reserved-memory adalah node anak ROOT, bukan anak &soc:
+	 * di pohon mainline (drivers/of/base.c, unflatten_dt_nodes) node
+	 * reserved-memory dibaca dari root device tree. Menaruhnya di bawah
+	 * &soc menghasilkan /soc/reserved-memory yang tidak pernah dilihat
+	 * kernel -- bukan error dtc, jadi bisa lolos diam-diam.
+	 *
+	 * Salinan yang salah tempat ini juga menduplikasi label modem_shmem,
+	 * yang punya salinan kedua di blok /reserved-memory/ di bawah.
+	 * Blok yang dihapus TIDAK mengurangi isi apa pun: entri modem_shmem
+	 * yang ada di dalamnya (compatible, reg, no-map) identik dengan
+	 * entri yang dipertahankan di /reserved-memory/ di bawah.
+	 * ===================================================================== */
+	/* Modem IPC (SIPC-based) */
+	modem0: modem@0 {
+		compatible = "unisoc,modem";
+		reg = <0 0 0 0>; /* Placeholder */
+		mboxes = <&aon_mailbox 0>, <&aon_mailbox 1>;
+		mbox-names = "cp2ap", "ap2cp";
+		status = "okay";
+	};
+
+	modem1: modem@1 {
+		compatible = "unisoc,modem";
+		reg = <0 0 0 0>;
+		mboxes = <&aon_mailbox 2>, <&aon_mailbox 3>;
+		mbox-names = "cp2ap", "ap2cp";
+		status = "okay";
+	};
+};
+
+/* =====================================================================
+ * GNSS / GPS — Part of WCN but expose standalone interface
+ * ===================================================================== */
+&sprd_marlin3 {
+	gnss: gnss {
+		compatible = "sprd,gnss";
+		status = "okay";
+	};
+};
+
+/* =====================================================================
+ * SENSORHUB — Connect IIO sensors to sensorhub framework
+ * ===================================================================== */
+&sprd_sensorhub {
+	compatible = "sprd,sharkl5Pro-sensorhub", "sprd,sensor-hub";
+	status = "okay";
+
+	/* The individual sensor nodes are children of this node */
+	/* and will be probed via the sensorhub framework */
+};
+
+
+/* =====================================================================
+ * RESERVED MEMORY (D2, 2026-09-30) — SATU node, di root.
+ *
+ * Sebelumnya ada DUA node reserved-memory: satu di dalam &soc (hapus,
+ * lihat catatan di blok &soc di atas) dan satu di root (yang ini).
+ * Keduanya mendeklarasikan label modem_shmem, jadi dtc berhenti dengan
+ * duplicate_label. Entri modem_shmem tidak hilang: versi di &soc identik
+ * dengan yang di sini.
+ *
+ * Kelima entri stok (modem_shmem, widevine, cma_share, ramoops,
+ * rebootescrow) semuanya dipertahankan.
+ * ===================================================================== */
+/ {
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		modem_shmem: modem@df800000 {
+			compatible = "sprd,modem-shmem";
+			reg = <0 0xdf800000 0 0x08000000>;
+			no-map;
+		};
+
+		widevine: widevine@df400000 {
+			compatible = "shared-dma-pool";
+			reg = <0 0xdf400000 0 0x01040000>;
+			no-map;
+		};
+
+		/*
+		 * DIPERBAIKI 2026-10-06 terhadap DT stok (bukan terhadap donor).
+		 *
+		 * Sebelumnya node ini berbunyi compatible "shared-dma-pool" + reg +
+		 * no-map, TANPA reusable dan TANPA linux,cma-default. Itu salah, dan
+		 * akibatnya bisa dihitung: shared-dma-pool tanpa `reusable` tidak
+		 * membentuk area CMA, sementara `no-map` membuat 48 MB itu dibuang dari
+		 * peta linear Linux. Jadi 48 MB hilang dua kali -- bukan CMA, dan tidak
+		 * bisa dipakai siapa pun.
+		 *
+		 * Bentuk yang benar ada di DT yang BENAR-BENAR dipakai device ini,
+		 * work/stock_dt/base_vendor_boot.dtb (dibaca dengan
+		 * work/trusty_port_20261006/_fdt_dump.py):
+		 *   /reserved-memory/cma_share@f00000000
+		 *       compatible   = "shared-dma-pool"
+		 *       reg          = <0 0xf0000000 0 0x3000000>   (48 MB)
+		 *       reusable
+		 *       linux,cma-default
+		 * (Nama node stok memakai satu angka nol lebih: "f00000000". Unit address
+		 * di port ini dipertahankan apa adanya karena sudah dipakai phandle
+		 * label `cma_share` dan tidak berpengaruh pada reg.)
+		 *
+		 * Konsekuensi kedua: `linux,cma-default` membuat node INI menjadi area
+		 * CMA default, sehingga CONFIG_CMA_SIZE_MBYTES tidak lagi menentukan
+		 * ukuran area default (kernel/dma/contiguous.c memakai reg DT saat
+		 * properti ini ada). Baris CMA_SIZE_MBYTES=32 di fragment karena itu
+		 * tinggal nilai cadangan, bukan nilai yang berlaku.
+		 */
+		cma_share: cma_share@f0000000 {
+			compatible = "shared-dma-pool";
+			reg = <0 0xf0000000 0 0x03000000>;
+			reusable;
+			linux,cma-default;
+		};
+
+		/*
+		 * TOS shared memory (dipakai `sprd,tshm` di dalam node /trusty).
+		 * Nilai dari DT stok: /reserved-memory/sh-mem@b6000000
+		 * reg = <0 0xb6000000 0 0x100000> (1 MB), phandle 0xcf.
+		 * Tanpa properti lain -- stok memang HANYA punya reg di sini, dan itu
+		 * disengaja dipertahankan: sprd_shm.c memetakan region ini lewat
+		 * memory-region (misc device + dma_buf), jadi region ini harus tetap
+		 * terpetakan, bukan dibuang dengan `no-map`.
+		 */
+		tos_shm_reserved: sh-mem@b6000000 {
+			reg = <0 0xb6000000 0 0x00100000>;
+		};
+
+		ramoops: ramoops@fff80000 {
+			compatible = "ramoops";
+			reg = <0 0xfff80000 0 0x00040000>;
+			no-map;
+		};
+
+		rebootescrow: rebootescrow@fff70000 {
+			compatible = "pmem-region";
+			reg = <0 0xfff70000 0 0x00010000>;
+			no-map;
+		};
+	};
+};
+
+
+/* =====================================================================
+ * TRUSTY (TEE) — 2026-10-06
+ *
+ * KENAPA NODE INI DITAMBAH: empat driver di pohon ini hanya bisa probe kalau
+ * node ini ada, dan satu di antaranya -- blobs/vendor_modules/ion_ipc_trusty.ko
+ * -- adalah baris BLOCKED di ledger 103. Yang menunggu node ini:
+ *   drivers/trusty/trusty-core.c      "sprd,trusty-smc-v1"
+ *   drivers/trusty/trusty-irq.c       "sprd,trusty-irq-v1"
+ *   drivers/trusty/trusty-virtio.c    "sprd,trusty-virtio-v1"
+ *   drivers/trusty/trusty-log.c       "sprd,trusty-log-v1"
+ *   drivers/trusty/sprd_shm.c         "sprd,tshm"        (pakai tos_shm_reserved)
+ *   drivers/misc/trusty-tui.c         "sprd,trusty-tui-v1"
+ *
+ * BENTUKNYA BUKAN HASIL KARANGAN. Nilainya dibaca dari DT yang benar-benar
+ * dipakai device ini, work/stock_dt/base_vendor_boot.dtb, dengan dumper
+ * work/trusty_port_20261006/_fdt_dump.py (tanpa dtc di mesin ini). Node /trusty
+ * DI DT STOK SUDAH ADA -- sebelumnya dianggap tidak ada karena pencarian hanya
+ * dijalankan pada dtb_a.bin/dtb_v1.dtb/dtb_v4.dtb, yang memang tidak memuatnya
+ * (0 string "trusty"), sementara base_vendor_boot.dtb memuatnya lengkap:
+ *
+ *   /trusty                     compatible "sprd,trusty-smc-v1"
+ *   /trusty/irq                 compatible "sprd,trusty-irq-v1"
+ *       interrupt-templates = <&gic 0 0 0>, <&gic 1 1 8>, <&gic 1 0 4>
+ *       interrupt-ranges    = <0 15 0>, <16 31 1>, <32 223 2>
+ *   /trusty/virtio              compatible "sprd,trusty-virtio-v1"
+ *   /trusty/log                 compatible "sprd,trusty-log-v1"
+ *   /trusty/sprd-tshm           compatible "sprd,tshm"
+ *                               memory-region = <&tos_shm_reserved>  (phandle 0xcf)
+ *   /trusty/tui                 compatible "sprd,trusty-tui-v1"
+ *
+ * Angka di interrupt-templates yang tercetak "0x1 0x0 0x0 0x0 0x1 0x1 0x1 0x8
+ * 0x1 0x1 0x0 0x4" sama persis dengan bentuk simboliknya di bawah, dan phandle
+ * 0x1 itu &gic (dibuktikan: /soc/interrupt-controller@12000000 di DT stok
+ * ber-phandle 0x1, cocok dengan gic: interrupt-controller@12000000 di
+ * ums512.dtsi:163). Jadi ketiga template itu <&gic 0 0 IRQ_TYPE_NONE>,
+ * <&gic 1 GIC_PPI IRQ_TYPE_LEVEL_LOW>, <&gic 1 GIC_SPI IRQ_TYPE_LEVEL_HIGH> --
+ * bentuk yang juga dipakai donor GPL
+ * work/donors_20260930/bocchi_unisoc54/arch/arm64/boot/dts/sprd/ums512-mach.dtsi:575-605.
+ *
+ * Posisi: node trusty adalah anak ROOT (/trusty), bukan anak &soc -- begitu di
+ * DT stok maupun di donor, dan itu memang cara binding trusty-smc-v1 dibaca.
+ * ===================================================================== */
+/ {
+	trusty {
+		compatible = "sprd,trusty-smc-v1";
+
+		irq {
+			compatible = "sprd,trusty-irq-v1";
+			interrupt-parent = <&gic>;
+			interrupt-templates = <&gic 0 0 IRQ_TYPE_NONE>,
+					      <&gic 1 GIC_PPI IRQ_TYPE_LEVEL_LOW>,
+					      <&gic 1 GIC_SPI IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-ranges = < 0  15 0>,
+					   <16  31 1>,
+					   <32 223 2>;
+		};
+
+		virtio {
+			compatible = "sprd,trusty-virtio-v1";
+		};
+
+		log {
+			compatible = "sprd,trusty-log-v1";
+		};
+
+		sprd-tshm {
+			compatible = "sprd,tshm";
+			memory-region = <&tos_shm_reserved>;
+		};
+
+		tui {
+			compatible = "sprd,trusty-tui-v1";
+		};
+	};
+};
+

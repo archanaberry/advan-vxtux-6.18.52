@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_MAP
+	tristate "Unisoc map_user (mmap reserved memory, VXTux port)"
+	depends on OF
+	help
+	  Unisoc map_user misc driver (GPL 5.4 -> 6.18 port). Provides /dev/map_user
+	  for mmap reserved memory (faceid-mem) by vendor userspace. ABI ioctl
+	  kept identical to blob.

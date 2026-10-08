@@ -1,0 +1,19 @@
+CONFIG_CHARGER_SPRD_MANAGER: CP state machine, fast charger, JEITA, UVLO
+CONFIG_CRYPTO_ARC4: dep CRYPTO_USER_API_ENABLE_OBSOLETE=y
+CONFIG_CRYPTO_TWOFISH: `select CRYPTO_TWOFISH_COMMON`
+CONFIG_GPIO_PMIC_EIC_SPRD: pmic_eic @ gpio@280 -> battery-detect/FGU IRQ
+CONFIG_GPIO_SPRD: DT ums512-1h10-vxtux.dts:39 "sprd,sc9860-gpio"
+CONFIG_HWSPINLOCK_SPRD: provider `&hwlock` (adc/eFuse pakai hwlocks)
+CONFIG_INPUT_SC27XX_VIBRA: drivers/input/misc/sc27xx-vibra.c
+CONFIG_LEDS_SC27XX_BLTC: drivers/leds/leds-sc27xx-bltc.c (dep LEDS_CLASS=y)
+CONFIG_LEDS_TRIGGER_PATTERN: drivers/leds/trigger/ledtrig-pattern.c
+CONFIG_NVMEM_SC27XX_EFUSE: efuse@300 -> sel calib adc/fgu
+CONFIG_PINCTRL_SPRD_SHARKL5PRO: 393-pin table for sharkl5pro; pinctrl is
+CONFIG_POWER_RESET_SC27XX: drivers/power/reset/sc27xx-poweroff.c
+CONFIG_PWM_SPRD: "sprd,ums512-pwm"     @ drivers/pwm/pwm-sprd.c
+CONFIG_REGULATOR_SC2731: rail statis di sc2731-regulator.c (17 rail)
+CONFIG_RTC_DRV_SC27XX: drivers/rtc/rtc-sc27xx.c ("sprd,sc2731-rtc")
+CONFIG_SC27XX_ADC: drivers/iio/adc/sc27xx_adc.c (dep MFD + IIO)
+CONFIG_SPRD_DMA: "sprd,sc9860-dma"     @ drivers/dma/sprd-dma.c
+CONFIG_SPRD_THERMAL: "sprd,ums512-thermal"
+CONFIG_USB_GADGET_SPRD: RNDIS + U_ether: fastbootd RNDIS, tethering

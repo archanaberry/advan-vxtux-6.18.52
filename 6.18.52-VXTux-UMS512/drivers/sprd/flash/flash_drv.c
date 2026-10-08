@@ -343,6 +343,8 @@ static int sprd_flash_open(struct inode *node, struct file *file)
 
 	flash_dev = md->this_device->platform_data;
 
+	/* TODO */
+
 	file->private_data = (void *)flash_dev;
 
 	return 0;
@@ -357,6 +359,8 @@ static int sprd_flash_release(struct inode *node, struct file *file)
 	flash_dev = (struct flash_device *)file->private_data;
 	if (!flash_dev)
 		return -EFAULT;
+
+	/* TODO */
 
 	for (flash_idx = SPRD_FLASH_REAR; flash_idx < SPRD_FLASH_MAX;
 				 flash_idx++) {

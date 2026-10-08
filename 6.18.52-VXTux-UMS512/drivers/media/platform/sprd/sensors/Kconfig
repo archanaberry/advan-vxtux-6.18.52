@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config VIDEO_GC8034
+	tristate "GalaxyCore GC8034 8MP sensor support (VXTux)"
+	depends on I2C && VIDEO_V4L2_SUBDEV_API
+	select V4L2_CCI_I2C
+	help
+	  Driver for GalaxyCore GC8034 8MP CMOS image sensor.
+	  Used as rear camera on Advan T1030 (UMS512/T618).
+	  Supports 3264x2448 resolution, 2-lane CSI-2.
+
+config VIDEO_GC5025
+	tristate "GalaxyCore GC5025 5MP sensor support (VXTux)"
+	depends on I2C && VIDEO_V4L2_SUBDEV_API
+	select V4L2_CCI_I2C
+	help
+	  Driver for GalaxyCore GC5025 5MP CMOS image sensor.
+	  Rockchip-based driver for front/selfie camera.
+
+config VIDEO_S5K4H7YX
+	tristate "Samsung S5K4H7YX 8MP sensor support (VXTux)"
+	depends on I2C && VIDEO_V4L2_SUBDEV_API
+	select V4L2_CCI_I2C
+	help
+	  Driver for Samsung S5K4H7YX 8MP CMOS image sensor.
+
+config SPRD_SENSOR
+	tristate "SPRD camera sensor framework (CSI RX / sensor core)"
+	depends on I2C && VIDEO_V4L2_SUBDEV_API
+	help
+	  Spreadtrum camera sensor framework: the sensor core (misc device +
+	  thread), the sensor driver (power/clock/reset sequencing) and the CSI
+	  receiver. Ported 2026-10-04 from work/donorcatalog/mods-sprd/
+	  sprd/common/camera/sensor/.
+
+	  Without this symbol the directory is never entered by Kbuild -- the
+	  same silent-descent trap as drivers/soc/sprd/modem/.

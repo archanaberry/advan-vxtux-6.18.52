@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Self-contained MTD device drivers"
+	depends on MTD!=n
+	depends on HAS_IOMEM
+
+config MTD_DATAFLASH
+	tristate "Support for AT45xxx DataFlash"
+	depends on SPI_MASTER
+	help
+	  This enables access to AT45xxx DataFlash chips, using SPI.
+	  Sometimes DataFlash chips are packaged inside MMC-format
+	  cards; at this writing, the MMC stack won't handle those.
+
+config MTD_DATAFLASH_WRITE_VERIFY
+	bool "Verify DataFlash page writes"
+	depends on MTD_DATAFLASH
+	help
+	  This adds an extra check when data is written to the flash.
+	  It may help if you are verifying chip setup (timings etc) on
+	  your board.  There is a rare possibility that even though the
+	  device thinks the write was successful, a bit could have been
+	  flipped accidentally due to device wear or something else.
+
+config MTD_DATAFLASH_OTP
+	bool "DataFlash OTP support (Security Register)"
+	depends on MTD_DATAFLASH
+	help
+	  Newer DataFlash chips (revisions C and D) support 128 bytes of
+	  one-time-programmable (OTP) data.  The first half may be written
+	  (once) with up to 64 bytes of data, such as a serial number or
+	  other key product data.  The second half is programmed with a
+	  unique-to-each-chip bit pattern at the factory.
+
+config MTD_SLRAM
+	tristate "Uncached system RAM"
+	help
+	  If your CPU cannot cache all of the physical memory in your machine,
+	  you can still use it for storage or swap by using this driver to
+	  present it to the system as a Memory Technology Device.
+
+config MTD_PHRAM
+	tristate "Physical system RAM"
+	help
+	  This is a re-implementation of the slram driver above.
+
+	  Use this driver to access physical memory that the kernel proper
+	  doesn't have access to, memory beyond the mem=xxx limit, nvram,
+	  memory on the video card, etc...
+
+config MTD_MTDRAM
+	tristate "Test driver using RAM"
+	help
+	  This enables a test MTD device driver which uses vmalloc() to
+	  provide storage.  You probably want to say 'N' unless you're
+	  testing stuff.
+
+config MTDRAM_TOTAL_SIZE
+	int "MTDRAM device size in KiB"
+	depends on MTD_MTDRAM
+	default "4096"
+	help
+	  This allows you to configure the total size of the MTD device
+	  emulated by the MTDRAM driver.  If the MTDRAM driver is built
+	  as a module, it is also possible to specify this as a parameter when
+	  loading the module.
+
+config MTDRAM_ERASE_SIZE
+	int "MTDRAM erase block size in KiB"
+	depends on MTD_MTDRAM
+	default "128"
+	help
+	  This allows you to configure the size of the erase blocks in the
+	  device emulated by the MTDRAM driver.  If the MTDRAM driver is built
+	  as a module, it is also possible to specify this as a parameter when
+	  loading the module.
+
+config MTD_BLOCK2MTD
+	tristate "MTD using block device"
+	depends on BLOCK
+	help
+	  This driver allows a block device to appear as an MTD. It would
+	  generally be used in the following cases:
+
+	  Using Compact Flash as an MTD, these usually present themselves to
+	  the system as an ATA drive.
+	  Testing MTD users (eg JFFS2) on large media and media that might
+	  be removed during a write (using the floppy drive).
+
+endmenu

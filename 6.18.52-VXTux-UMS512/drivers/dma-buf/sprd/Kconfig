@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Unisoc (SPRD) dma-buf / ION pieces.
+
+config ION_IPC_TRUSTY
+	tristate "Unisoc ION <-> Trusty IPC client"
+	depends on TRUSTY_VIRTIO_IPC
+	help
+	  Transport adapter between the Unisoc ION allocator and the Trusty TEE.
+	  Ports the vendor blob ion_ipc_trusty.ko: it opens the TIPC channel
+	  "com.android.trusty.ion" and forwards ION messages to the secure world.
+
+	  This module is a pure CLIENT of the tipc_chan_* API. It provides no
+	  ION allocation itself and needs no ION core, so it is independent of
+	  CONFIG_SPRD_ION (which has no Kconfig definition in this tree, since
+	  ION was removed from mainline).
+
+	  The protocol was recovered from the vendor blob with radare2 and
+	  Ghidra; see drivers/dma-buf/sprd/ion_ipc_trusty.c for the provenance
+	  and for the three deliberate deviations from the blob.
+
+	  Say M to build the module (recommended while it is unproven at
+	  runtime), or Y to link it into the kernel. Say N if unsure.

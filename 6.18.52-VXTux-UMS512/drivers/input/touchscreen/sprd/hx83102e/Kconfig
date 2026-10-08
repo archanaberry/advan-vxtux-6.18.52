@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# touch/hx83102e/Kconfig — Himax hxchipset official touch point (GPL)
+# LinDroid/VXTux v1.0 — panel hx83102e (Advan T1030, DSI-1 1200x2000)
+#
+# RE 15 Sep 2026: blob hxchipset_83102e.ko = Himax public "hxcommon" tree
+# (func names identical: himax_chip_common_probe/_hx83102_init/etc).
+# Official source: HimaxSoftware/HX83112 framework + himax_ic_HX83102 from
+# MotorolaMobilityLLC/kernel-sprd (GPL) — complete in ./hxchipset/.
+#
+# TOUCHSCREEN_HIMAX_* symbols (COMMON, IC_*, DEBUG, INSPECT, ...) defined
+# in hxchipset/Kconfig — here only the missing parent symbol from tree.
+#
+# For this device build, set in defconfig (CORRECTION 18 Sep 2026):
+#   CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=y
+#   CONFIG_TOUCHSCREEN_HIMAX_COMMON=y
+#   CONFIG_TOUCHSCREEN_HIMAX_INCELL=y
+#   CONFIG_TOUCHSCREEN_HIMAX_IC_HX83102=y
+# Why =y not =m: IC type selected via `choice`, and `choice` in
+# Kconfig is always bool so cannot be enabled if parent is m.
+# With COMMON=m, choice never appears, INCELL becomes n, and
+# IC_HX83102 (depends on INCELL) also dies -> driver not compiled at all
+# without any message. Proven by tools/re/gate_fragment.py (gate D2).
+# Stock DT binding already matches: himax,hxcommon (himax_platform.c:1274).
+
+menuconfig TOUCHSCREEN_HIMAX_CHIPSET
+	tristate "Himax hxchipset touchscreen (VXTux UMS512 hx83102e)"
+	default n
+	help
+	  Himax hxcommon framework for HX83102E panel on Advan T1030.
+	  Say M for module (hxchipset_83102e.ko — same name as stock).
+
+source "drivers/input/touchscreen/sprd/hx83102e/hxchipset/Kconfig"

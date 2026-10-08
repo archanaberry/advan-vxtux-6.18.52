@@ -1,0 +1,348 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# configs/vxtux_618_fragment.defconfig — fragment kernel 6.18-VXTux-UMS512
+# LinDroid/VXTux v1.0 (design gen 3.0)
+#
+# Dipakai dengan:
+#   ./scripts/kconfig/merge_config.sh -m build/.config configs/vxtux_618_fragment.defconfig
+#   make O=build olddefconfig
+#
+# Basis: mainline 6.18 + fragment UNISOC (nilai kunci dari
+# configs/unisoc_fuzz_ums512_defconfig, diverifikasi sesi 5).
+
+# --- Identitas ---
+# uname -r = 6.18-VXTux-UMS512 (SUBLEVEL dikosongkan oleh integrate.sh)
+CONFIG_LOCALVERSION="-VXTux-UMS512"
+# AUTO=y menambahkan -g<hash> di pohon git — matikan agar nama deterministik
+# CONFIG_LOCALVERSION_AUTO is not set
+CONFIG_DEFAULT_HOSTNAME="vxtux"
+
+# gcc 15 (Alpine chroot) sangat ketat — warning jangan gagalkan build
+# CONFIG_WERROR is not set
+
+# --- VXTux drivers (repo drivers/vxtux/) ---
+CONFIG_VXTUX_DRIVERS=y
+# GPU 6.18: PANFROST mainline = jalur utama (in-tree, G52 didukung, DT patch kecil).
+# kbase DDK r34p0 (kirin mirror) = referensi ABI blob / opsi kompat — pending
+# de-Huawei (9 file + header hilang). C21Y gondul = r27p0 (ABI mismatch, jangan).
+# CONFIG_MALI_MIDGARD is not set
+# CONFIG_MALI_PLATFORM_NAME is not set
+CONFIG_DRM_PANFROST=y
+# CATATAN KONFIG (gate_fragment D2): keluarga Himax memilih tipe IC lewat
+# `choice`, dan `choice` di Kconfig SELALU bool -> tak bisa bernilai m. Bila
+# COMMON=m maka choice itu tak pernah tampil, INCELL/ONCELL jadi n, dan
+# IC_HX83102 (depends on INCELL) ikut mati sehingga driver tidak dikompilasi
+# sama sekali walau baris =m ditulis. Karena itu keluarga ini dibangun
+# built-in (=y); komentar "=m" di touch/hx83102e/Kconfig sudah dikoreksi.
+CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=y
+CONFIG_TOUCHSCREEN_HIMAX_COMMON=y
+CONFIG_TOUCHSCREEN_HIMAX_INCELL=y
+CONFIG_TOUCHSCREEN_HIMAX_IC_HX83102=y
+# chipone: TP alternatif (device ini Himax) — simbol internal (g_black_test,
+# Ctp_name, irq_to_desc, dst.) tidak diekspor di 6.18 → modpost gagal.
+# Nonaktif sampai port simbol selesai.
+# CONFIG_TOUCHSCREEN_CHIPONE is not set
+
+# --- Platform UNISOC in-tree (dari fork 5.4, port Fase 14) ---
+CONFIG_ARCH_SPRD=y
+CONFIG_SPRD_UMS512_CLK=y
+CONFIG_SPRD_IOMMU=m
+# ION dihapus dari mainline — Waydroid pakai dma-heap (gralloc minigbm)
+CONFIG_DMABUF_HEAPS=y
+CONFIG_DMABUF_HEAPS_SYSTEM=y
+CONFIG_DMABUF_HEAPS_CMA=y
+CONFIG_FUEL_GAUGE_SC27XX=y
+CONFIG_CHARGER_MANAGER=m
+# CONFIG_WCN_INTEG is not set
+# MENGAPA MATI (bukti build #9, 2026-09-23): menyalakannya menyeret lapisan
+# integrate 3.595 baris (boot/ + sipc/wcn_sipc) yang mendefinisikan API yang
+# SAMA dengan lapisan SDIO platform/ -> ld.lld "duplicate symbol" 20 simbol
+# (start_marlin, stop_marlin, module_bus_init, gnss_ops, ...). Perangkat ini
+# papan SDIO (DTS "sprd,sc2355-sdio-wifi"); blob wcn_bsp.ko miliknya
+# mendefinisikan semua simbol itu dari pohon SDIO. Konsumen yang tampak
+# membutuhkan INTEG (wcn_is_power_busy, wcn_get_aon_chip_id) sudah dipindahkan:
+# - gnss_power_busy attr -> TBC eksplisit (lihat gnss_common_ctl.c)
+# - rf.c wcn_get_aon_chip_id -> 100% di dalam #if IS_ENABLED(CONFIG_WCN_INTEG)
+CONFIG_WCN_BOOT=y
+# WCN papan ini = SC2355 lewat SDIO (bukti: blob wcn_bsp.ko memuat string
+# sdiohal_*; DTS device memuat "sprd,sc2355-sdio-wifi"). Jadi jalur benar =
+# SC23XX + SDIOHAL + WCN_SLP.
+# WCN_CORE = modul komposit inti platform/ (23 objek: power + bus SDIO + GNSS
+# control) — dibuat modular agar bisa di-insmod/diuji satu per satu di QEMU.
+# Pemilik bentuknya = wcn_integrate_boot.c versi blob SDIO (13 dari 20
+# simbol duplikat punya salinan identik di platform/).
+CONFIG_WCN_CORE=m
+CONFIG_SC23XX=y
+# SC2355 = pemilih header register chip (`#ifdef CONFIG_SC2355` di wcn_glb.h).
+# Tanpa ini, chip glb header tidak ikut dan puluhan makro register hilang.
+CONFIG_SC2355=y
+CONFIG_SDIOHAL=y
+CONFIG_WCN_SLP=y
+# BT + FM: satu-satunya dua sub-simbol WCN yang dibangun sebagai MODUL, karena
+# blob aslinya memang modul (sprdbt_tty.ko, sprd_fm.ko). Simbol dan nama modul
+# diambil dari pohon dalam-tree referensi (drivers/wcn/Kconfig di
+# gpl-source/hadenix_ums512_wcn), bukan dari Makefile vendor generasi-external.
+CONFIG_WCN_BLUETOOTH=m
+CONFIG_WCN_FM=m
+# WCN_UTILS wajib: tanpa ini wcn_debugfs.o tak pernah dibangun dan ekspor blob
+# `wcn_init_debugfs` hilang tanpa suara (lihat komentar platform/Kconfig).
+CONFIG_WCN_UTILS=y
+# CONFIG_WCN_SEC_VERIFY_STUB is not set (deviasi keamanan yang SENGAJA tidak
+# diambil: verifikasi citra BTWF/GNSS tetap butuh TEE; tanpa simbol itu
+# wcn_firmware_sec_verify() mengembalikan -EOPNOTSUPP sehingga citra bertanda
+# tangan tidak dimuat).
+CONFIG_DRM_SPRD=m
+
+# --- P4/B13: rantai dependensi + seluruh driver port yang WAJIB dikompilasi ---
+# Tanpa blok ini, olddefconfig membuang simbol driver vxtux secara diam-diam:
+# SPRD_MAILBOX (default y) hanya hidup bila SPRD_MBOX && MAILBOX aktif,
+# dan hampir semua driver port bergantung padanya (SIPC/audio/ASoC).
+# Catatan: nama lama CONFIG_UNISOC_AUDIO_* tidak ada di Kconfig port
+# (yang benar: CONFIG_SPRD_AUDIO_*) sehingga dulu tidak berefek.
+# Mainline: mailbox Spreadtrum + dma/allocator pendukung
+CONFIG_MAILBOX=y
+CONFIG_SPRD_MBOX=y
+CONFIG_SPRD_MAILBOX=y
+# CONFIG_GENERIC_ALLOCATOR tidak ditulis: simbol HIDDEN (tanpa prompt) dan sudah
+# di-`select` oleh ARM64, jadi baris eksplisit hanya menyesatkan (dibuang
+# olddefconfig, nilai efektifnya tetap y). Dijaga gerbang D5 gate_fragment.py.
+# ZSMALLOC adalah simbol HIDDEN (tanpa prompt) -> nilai yang ditulis langsung di
+# sini SELALU dibuang olddefconfig (terbukti: buildd/.config memuat "(tidak ada)"
+# untuk CONFIG_ZSMALLOC), dan akibatnya VXTUX_HYBRIDSWAP_REF ikut mati. Cara
+# benar: nyalakan pemakainya — ZRAM mem-`select ZSMALLOC` (ZSWAP juga bisa).
+CONFIG_ZRAM=y
+# CONFIG_TRUSTY dibuang: 6.18 mainline tidak punya drivers/trusty (diverifikasi
+# di pohon: direktori itu tidak ada, hanya drivers/tee), dan jalur trusty port
+# hanya untuk DISP (CONFIG_VXTUX_TRUSTY_DISP) yang kini lepas dari simbol itu.
+CONFIG_MFD_SC27XX_PMIC=y
+# SOUND adalah INDUK dari SND/SND_SOC (menuconfig tristate). Dengan SOUND=m,
+# CONFIG_SND=y turun diam-diam menjadi m (gerbang D2 gate_fragment). Dipatok y
+# agar seluruh stack suara benar-benar built-in sesuai niat port ASoC.
+CONFIG_SOUND=y
+CONFIG_SND=y
+CONFIG_SND_SOC=y
+# CONFIG_DRM_MIPI_DSI tidak ditulis: simbol HIDDEN, hidup lewat `select` dari
+# VXTUX_SPRD_DPU (jalur DSI port) — bukan diandalkan dari defconfig (gerbang D5).
+# SIPC (bus AP <-> CP/DSP) + anak-anaknya
+CONFIG_SPRD_SIPC=y
+# Mengapa inti SIPC TIDAK bisa =m (bukti scan call-graph 2026-09-23):
+# agdsp_access (=y, dipakai sound ASoC =y) memanggil smsg_* dari smsg.c;
+# audio-smsg.o hanya dibangun di bawah SPRD_AUDIO_SIPC (=y). =m di sini =
+# vmlinux undefined symbol. Yang modular dari keluarga SIPC: SWCNBLK di bawah.
+# SPRD_SIPC_{SPIPE,SPOOL,SETH} = transport MODEM (pipe/pool di atas sbuf/sblock,
+# Ethernet-over-shared-memory) TANPA satu pun sumber di pohon ini: Kconfig-nya
+# ada, tetapi nol arm Makefile dan nol rujukan .c/.h. Meng-`=y`-kannya adalah
+# klaim palsu - build tetap 0 error HANYA karena kodenya tak pernah dikompilasi.
+# Dimatikan 2026-09-22; gerbang `tools/re/audit_wiring.py` (kelas CONFIG-ZOMBIE)
+# kini menolak bila dinyalakan lagi. Nyalakan kembali hanya bila source
+# transport-nya benar-benar diporting (prioritas modem, sekarang P3/terakhir).
+# CONFIG_SPRD_SIPC_SPIPE is not set
+# CONFIG_SPRD_SIPC_SPOOL is not set
+# CONFIG_SPRD_SIPC_SETH is not set
+# SIPX zero-copy BELUM DIPORT (sipx.c tidak ada di pohon; sumbernya ada di
+# gpl-source/fork_t618/.../drivers/soc/sprd/modem/sipc/sipx.c). Simbol ini =y
+# sebelumnya membuat sipc_debugfs.o memanggil sipx_init_debugfs() yang tidak
+# punya definisi -> ld.lld "undefined symbol" saat link vmlinux.
+# CONFIG_SPRD_SIPC_ZERO_COPY_SIPX is not set
+CONFIG_SPRD_SIPC_SWCNBLK=m
+# SWCNBLK modular: konsumennya (wcn_sipc, lapisan integrate) tidak dibangun
+# di papan SDIO ini, jadi transportnya aman di-insmod/diuji terpisah.
+# Audio infra AGDSP/AGCP (port R1: agdsp_access + audio_sipc)
+CONFIG_SPRD_AUDIO_INFRA=y
+CONFIG_SPRD_AUDIO_MEMORY_MANAGER=y
+CONFIG_SPRD_AUDIO_AGDSP_ACCESS=y
+CONFIG_SPRD_AUDIO_SIPC=y
+# SIPC audio TETAP =y: audio-smsg.o-nya adalah penyedia smsg_* untuk
+# agdsp_access (=y) — rantai terpendek yang memaksa inti SIPC built-in.
+# DSP_DUMP + SAUDIO modular: konsumen mereka hanya saling antar-berkas di
+# dalam subtree audio (bukan sound =y), jadi aman jadi .ko untuk uji insmod.
+CONFIG_SPRD_AUDIO_DSP_DUMP=m
+CONFIG_SPRD_AUDIO_SAUDIO=m
+CONFIG_SPRD_AUDIO_CPBOOT=y
+CONFIG_SPRD_AUDIO_PIPE=y
+CONFIG_SPRD_AUDIO_VOICE_TRIGGER=y
+CONFIG_SPRD_AUDIO_MCDT=y
+# MCDT varian hardware (choice di audio/mcdt/Kconfig). UMS512/T1030 memakai
+# r1p0 (node DT "sprd,sharkl5-mcdt" cocok dengan mcdt_hw.c). Ditulis eksplisit
+# supaya pilihan varian tidak bergantung pada `default` -- dan supaya gerbang
+# bisa memverifikasi bahwa choice-nya benar-benar teresolusi.
+CONFIG_SPRD_AUDIO_MCDT_R1P0=y
+CONFIG_SPRD_HW_DEVICE_DVFS_AGCP=y
+# ASoC port (vbc-v4 + sc2730 + routing + kartu)
+# INDUK WAJIB: VXTUX_SND_SPRD_ASOC adalah menuconfig `default n` dan keenam
+# anaknya berada di dalam `if VXTUX_SND_SPRD_ASOC` -> tanpa baris ini semuanya
+# dibuang olddefconfig (cacat P4 yang ditangkap gerbang D2 gate_fragment).
+CONFIG_VXTUX_SND_SPRD_ASOC=y
+CONFIG_VXTUX_SND_SPRD_CARD=y
+CONFIG_VXTUX_SND_SPRD_DUMMY_CODEC=y
+CONFIG_VXTUX_SND_SPRD_SC2730_POWER=y
+CONFIG_VXTUX_SND_SPRD_PCM_ROUTING=y
+CONFIG_VXTUX_SND_SPRD_VBC_V4=y
+CONFIG_VXTUX_SND_SPRD_SC2730=y
+# soc/ + misc/ + disp/ + mm/ + sensor/ (port vxtux)
+CONFIG_SPRD_MAP=y
+CONFIG_SPRD_UID=y
+CONFIG_SPRD_SOCID=y
+CONFIG_SPRD_HWFEATURE=y
+CONFIG_SPRD_PMIC_SYSCON=y
+CONFIG_SPRD_USBPINMUX=y
+CONFIG_NVMEM_SPRD_CACHE_EFUSE=y
+CONFIG_DRM_PANEL_VXTUX_UMS512=y
+CONFIG_VXTUX_SPRD_DPU=y
+CONFIG_VXTUX_TRUSTY_DISP=y
+CONFIG_VXTUX_HYBRIDSWAP_REF=y
+# CONFIG_VXTUX_SC27XX_FUELGAUGE dihapus 2026-09-18: driver port-nya hanya
+# stub (probe tanpa power_supply, sprd_battery_get_info selalu nol) dan tidak
+# ada sumber vendor fuel gauge di repo. Batere dilayani mainline
+# CONFIG_FUEL_GAUGE_SC27XX=y di atas (compatible "sprd,sc2731-fgu").
+CONFIG_VXTUX_SENSORHUB=y
+
+# --- Dual sistem /systems/* ---
+CONFIG_BTRFS_FS=y
+CONFIG_BTRFS_FS_POSIX_ACL=y
+# catatan: kompresi zstd = default y di 6.18 (CONFIG_ZSTD_COMPRESS=y)
+CONFIG_F2FS_FS=y
+CONFIG_F2FS_FS_COMPRESSION=y
+CONFIG_BLK_DEV_LOOP=y
+CONFIG_BLK_DEV_LOOP_MIN_COUNT=8
+CONFIG_OVERLAY_FS=y
+CONFIG_TMPFS=y
+CONFIG_CGROUPS=y
+CONFIG_MEMCG=y
+CONFIG_CGROUP_FREEZER=y
+
+# --- Native Linux host (bukan Android-first) ---
+CONFIG_VT=y
+CONFIG_UNIX98_PTYS=y
+CONFIG_LEGACY_PTYS=n
+CONFIG_DEVMEM=y
+CONFIG_FUSE_FS=y
+CONFIG_USER_NS=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_IO_URING=y
+
+# --- DRM/KMS-only (jangan FBDEV Android-style) ---
+CONFIG_DRM=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_FB=n
+
+# (CONFIG_SPRD_SIPC sudah dinyatakan di blok SIPC di atas — duplikat dibuang)
+
+# --- Debug minimal untuk rilis (nanti dikurangi) ---
+CONFIG_DYNAMIC_DEBUG=y
+CONFIG_KALLSYMS_ALL=y
+
+# --- Thermal GPU (RE 2026-09-19) ---
+# sprd_gpu_cooling = model daya GPU hasil RE dari blob sprd_gpu_cooling.ko.
+# Menyediakan ABI create/destroy_gpu_cooling_device (EXPORT_SYMBOL) + callback
+# get_real_power untuk DEVFREQ_THERMAL. =y karena ekspornya harus sudah ada
+# saat DDK Mali melakukan probe (blob aslinya .ko, tapi urutan pemuatan
+# modul vendor diatur Android init -- di sini built-in lebih aman).
+CONFIG_VXTUX_SPRD_GPU_COOLING=y
+
+# ================================================================
+# DE-BLOB ACTIVATION (2026-09-22) — nyalakan driver MAINLINE yang
+# menganggur, bukan menulis port baru. Setiap gerbang `depends on`
+# diverifikasi terhadap device.config dan compatible-string dibaca
+# dari pohon 6.18 (bukan dari ingatan). Lihat docs/DEBLOB_STRATEGY.md.
+# BATAS: ini bukti STATIK (gate_fragment) — belum build/insmod.
+# ================================================================
+# --- PRASYARAT (bukan opsional): bus ADI -------------------------
+# `adi_bus` di arch/arm64/boot/dts/sprd/ums512.dtsi = "sprd,ums512-adi";
+# SATU-SATUNYA driver yang mem-bind-nya = drivers/spi/spi-sprd-adi.c.
+# Tanpa ini MFD_SC27XX_PMIC=y (sudah aktif) tak punya SPI master, sehingga
+# FGU/charger/RTC/ADC/vibra/LED/poweroff SC27xx tidak pernah probe.
+CONFIG_SPI_SPRD_ADI=y
+# --- Anak MFD_SC27XX_PMIC=y (dependensi sudah terpenuhi) ---------
+# CATATAN (terverifikasi 2026-09-23): node DTS sc2730.dtsi sudah menyebut
+# efuse/adc/eic/regulator/hwspinlock, tapi TIDAK ADA satu pun yang punya
+# `select` di Kconfig -> simbol-simbol ini WAJIB ditulis, kalau tidak nodenya
+# mati total (dan probe ADC/FGU gagal karena `hwlocks`/`nvmem-cells`/gpio
+# tidak bisa di-resolve).
+CONFIG_HWSPINLOCK_SPRD=y            # provider `&hwlock` (adc/eFuse pakai hwlocks)
+CONFIG_NVMEM_SC27XX_EFUSE=y         # efuse@300 -> sel calib adc/fgu
+CONFIG_GPIO_PMIC_EIC_SPRD=y         # gpio@280 (pmic_eic) -> bat-detect FGU
+CONFIG_REGULATOR_SC2731=y           # rail statis di sc2731-regulator.c (17 rail)
+CONFIG_SC27XX_ADC=y                 # drivers/iio/adc/sc27xx_adc.c (dep MFD + IIO)
+CONFIG_RTC_DRV_SC27XX=y             # drivers/rtc/rtc-sc27xx.c ("sprd,sc2731-rtc")
+CONFIG_POWER_RESET_SC27XX=y         # drivers/power/reset/sc27xx-poweroff.c
+CONFIG_INPUT_SC27XX_VIBRA=y         # drivers/input/misc/sc27xx-vibra.c
+CONFIG_LEDS_SC27XX_BLTC=y           # drivers/leds/leds-sc27xx-bltc.c (dep LEDS_CLASS=y)
+CONFIG_LEDS_TRIGGER_PATTERN=y       # drivers/leds/trigger/ledtrig-pattern.c
+# --- UMS512: compatible cocok PERSIS dengan driver mainline ------
+CONFIG_SPRD_THERMAL=y               # "sprd,ums512-thermal" @ drivers/thermal/sprd_thermal.c
+CONFIG_PWM_SPRD=y                   # "sprd,ums512-pwm"     @ drivers/pwm/pwm-sprd.c
+CONFIG_SPRD_DMA=y                   # "sprd,sc9860-dma"     @ drivers/dma/sprd-dma.c
+# --- Crypto: dua algoritma generik yang masih diminta userspace -
+CONFIG_CRYPTO_ARC4=y                # dep CRYPTO_USER_API_ENABLE_OBSOLETE=y
+CONFIG_CRYPTO_TWOFISH=y             # `select CRYPTO_TWOFISH_COMMON`
+# SENGAJA TIDAK dinyalakan (alasan di docs/DEBLOB_STRATEGY.md):
+#   PINCTRL_SPRD_SC9860 → generasi SC9860, bukan UMS512.
+#   PINCTRL_SPRD        → simbol TERSEMBUNYI (tristate tanpa prompt): hidup
+#                         hanya lewat `select` dari SC9860; menulisnya =y di
+#                         fragmen tidak berpengaruh apa pun.
+# --- Gerbang uji QEMU (qemu-system-aarch64 -M virt) -------------------------
+# -M virt memakai UART PL011 (ttyAMA0) + GICv3 + PSCI; tanpa ini kernel stok
+# SPRD tidak punya console di QEMU. Empat opsi ini tidak berpengaruh di device.
+CONFIG_SERIAL_AMBA_PL011=y
+CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_RD_GZIP=y
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+
+# RE reconstruction of sprd_power_manager.ko (vendor_ramdisk layer B)
+# Modular: 19 ekspor RE (sprd_mpm_*/sprd_pms_*) tanpa satu pun konsumen di
+# pohon (modules.dep blob menghubungkannya dari audio_sipc/spool/spipe yang
+# belum diport) — aman dan paling berguna sebagai modul uji insmod.
+CONFIG_SPRD_POWER_MANAGER=m
+
+# --- B29 (2026-09-24): driver in-tree yang CONFIG-nya mati padahal NODE DT-nya
+# sudah ada. Aturan DEBLOB_STRATEGY.md §4 dipakai apa adanya: "verifikasi
+# compatible dulu, jangan asal nyalakan". Yang lolos uji itu hanya dua baris:
+CONFIG_GPIO_SPRD=y                  # DT ums512-1h10-vxtux.dts:39 "sprd,sc9860-gpio"
+                                    #   == of_match gpio-sprd.c:265 (cocok)
+CONFIG_USB_MUSB_SPRD_VXTUX=y        # DT ums512-1h10-vxtux.dts:165 "sprd,sharkl5pro-musb"
+                                    #   == of_match musb_sprd_vxtux.c:384 (cocok)
+                                    #   dep: USB_MUSB_HDRC=y, OF=y, EXTCON=y (semua terpenuhi)
+# --- PROPOSAL P-MUSBPIO-1 (disetujui pemilik 2026-09-25: opsi A "dua duanya") ---
+# Perubahan : SATU baris di fragmen ini (bukan config device, bukan DTS).
+# Alasan    : musb_core.c:2421-2426 menuntut .dma_init/.dma_exit saat
+#             CONFIG_MUSB_PIO_ONLY tidak diset, sedangkan sprd_musb_ops
+#             (musb_sprd_vxtux.c:263-271) tidak punya keduanya -> probe MUSB
+#             gagal -ENODEV "DMA controller not set" SEBELUM sampai ke PHY.
+#             Alternatif "nyalakan DMA" terbukti MUSTAHIL in-tree:
+#             USB_INVENTRA_DMA hanya `depends on USB_MUSB_OMAP2PLUS ||
+#             USB_MUSB_MEDIATEK || USB_MUSB_JZ4740 || USB_MUSB_POLARFIRE_SOC`
+#             (musb/Kconfig), dan glue papan memakai USB_MUSB_SUNXI.
+# PASS tanpa flash: `qemu_probe_map.py --usb-gate` berhenti melaporkan musb
+#             sebagai kegagalan -ENODEV "DMA controller not set" pada Image
+#             berikutnya (sekarang belum bisa dibangun — lihat BLOCKER B-A).
+# FAIL      : errno sama muncul lagi di probe_map/insmod log.
+# Rollback  : hapus baris di bawah (satu baris, tanpa jejak lain).
+# Catatan   : PIO = tanpa DMA -> throughput turun, bukan risiko kebenaran.
+#             Jalur DMA vendor (sprd_musbhsdma.c, register +0x1000) tetap
+#             direncanakan sebagai opsi B dengan proposal terpisah, karena ia
+#             berkas driver baru + mengubah `depends on` simbol DMA.
+CONFIG_MUSB_PIO_ONLY=y
+
+# SENGAJA DITAHAN — bukan lupa, dan bukan "murah": masing-masing gagal di uji
+# "node DT + of_match dulu" sehingga menyalakannya hanya menghasilkan driver
+# yang terbangun tetapi tidak pernah probe (dan angka C2 yang menipu):
+#   SPI_SPRD             → tak ada node spi di DTS port (4 kemunculan "spi"
+#                          hanyalah hwspinlock); of_match menunggu node
+#                          "sprd,sc9860-spi" yang belum ditulis.
+#   SPRD_WATCHDOG        → tak ada node wdt; sc2730.dtsi:31 secara sadar tidak
+#                          menulis node untuk blok yang belum punya driver.
+#   CHARGER_BQ256XX      → node i2c bq2560x (DT live: 4-006b) belum ada di DTS port.
+#   PINCTRL_SPRD_SC9860  → of_match mainline HANYA "sprd,sc9860-pinctrl"
+#                          (pinctrl-sprd-sc9860.c:934), sedangkan DT vendor memakai
+#                          "sprd,pinctrl", dan DTS port belum punya node pinctrl:
+#                          ini pekerjaan DTS+RE, bukan satu baris config.
+#                          (PINCTRL_SPRD sendiri simbol tersembunyi — lihat catatan
+#                          sebelumnya di berkas ini; jangan ditulis di fragmen.)
+#   USB_ETH              → provider ABI blob `sprd_u_ether` sebenarnya USB_U_ETHER,
+#                          dan itu sudah `=m` di config; USB_ETH = gadget legacy
+#                          (KONSUMEN, bukan penutup celah). Pemetaan di
+#                          tools/compat_ci2.sh yang menunjuk USB_ETH perlu dikoreksi
+#                          dulu — lihat STATUS.md B29, jangan diakali lewat config.
