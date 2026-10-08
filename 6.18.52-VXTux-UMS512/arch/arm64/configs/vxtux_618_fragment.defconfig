@@ -837,6 +837,23 @@ CONFIG_SPRD_VSP_PW_DOMAIN=m
 # vsp_parse_dt() driver ini saat probe -- bukan duplikat definisi.
 CONFIG_SPRD_VSP=y
 
+# --- SPRD_CPP (cpp@62800000; blob sprd_cpp.ko) ---
+# Sumber vendor LENGKAP (13 file: cpp_core, cpp_ioctl, scale/rot/dma_drv +
+# sprd_cpp.h/sprd_img.h interface + sprd_mm.h) dari
+# work/donorcatalog/mods-sprd/sprd/common/camera/cpp/lite_r6p0 — diporting
+# 2026-10-09 ke drivers/media/platform/sprd/cpp/ (satu modul cpp.o, cocok
+# blob sprd_cpp.ko). Bukti, semuanya di pohon:
+#   - definisi: drivers/media/platform/sprd/cpp/Kconfig, default n
+#   - wire: drivers/media/platform/sprd/Makefile + cpp/Makefile
+#   - of_match: cpp_core.c:931 "sprd,cpp"
+#   - node DT: ums512-1h10-vxtux.dts cpp@62800000 (nilai dari stock
+#     fdt_live.dtb; clock CLK_MM_CPP_EB=0/CLK_CPP=5 dikonfirmasi dt-bindings)
+#   - deps: MFD_SYSCON=y (baris di atas); sprd_iommu.h + sprd_ion.h +
+#     video/sprd_mmsys_pw_domain.h semua sudah ada di pohon
+# select SPRD_CAMSYS_PW_DOMAIN: cpp_core.c memanggil sprd_cam_pw_on/off
+# (cpp_core.c:647/424) yang diekspor sprd_camsys_pw_domain.c.
+CONFIG_SPRD_CPP=y
+
 # --- SC2730 PMIC regulator (backport, upstream 6.20) ---
 # The 6.18 base predates drivers/regulator/sc2730-regulator.c, which is the only
 # mainline driver that knows the SC2730 rail names (dcdc-*/ldo-*) and carries

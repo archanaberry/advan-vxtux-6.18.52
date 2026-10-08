@@ -17,3 +17,7 @@ obj-$(CONFIG_VIDEO_SPRD_SENSORS)	+= sensors/
 # VSP (video-codec@20500000). Descend hanya sekali; objek vsp/ dibangun oleh
 # Makefile di dalam direktori itu sendiri.
 obj-$(CONFIG_SPRD_VSP)		+= vsp/
+
+# CPP (cpp@62800000). Descend hanya sekali; objek cpp/ dibangun oleh
+# Makefile di dalam direktori itu sendiri.
+obj-$(CONFIG_SPRD_CPP)		+= cpp/

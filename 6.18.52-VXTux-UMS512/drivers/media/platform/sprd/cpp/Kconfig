@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# SPRD CPP (Camera Post Processor) driver for UMS512/T618.
+#
+# Ported 2026-10-09 from work/donorcatalog/mods-sprd/sprd/common/camera/cpp/
+# lite_r6p0 (UNISOC vendor source, same SoC family). Files: cpp_core.c,
+# cpp_ioctl.c, scale_drv.c, rot_drv.c, dma_drv.c + headers. sprd_mm.h copied
+# from the tree's own sensors/sprd_sensor/ (same header the ported sensor
+# drivers use) so the include resolves without cross-dir -I flags.
+#
+# Node DT stock (fdt_live.dtb): cpp@62800000, compatible "sprd,cpp"
+# (of_match cpp_core.c:931). Probe wajib: reg, irq, clocks cpp_eb/cpp_clk/
+# cpp_clk_parent, phandle "sprd,cam-ahb-syscon" (-> mm_ahb_regs). cpp_qos
+# dan iommus opsional (driver default awrqos=0x1; tak pakai API iommu).
+#
+# sprd_cam_pw_on()/sprd_cam_pw_off() (cpp_core.c:647/424) diekspor oleh
+# drivers/pmdomain/sprd/sprd_camsys_pw_domain.c (EXPORT_SYMBOL_GPL) -- itu
+# sebabnya CPP TIDAK perlu power-domains sendiri; node cpp sengaja tanpa
+# properti itu (konsisten dengan node isp/dcam/jpg di pohon ini, dan
+# menghindari -EPROBE_DEFER kalau pw-domain tak bind).
+
+config SPRD_CPP
+	tristate "SPRD CPP driver"
+	depends on MFD_SYSCON
+	# sprd_cam_pw_on/off dibutuhkan cpp_core.c; tanpa symbol-nya link gagal.
+	select SPRD_CAMSYS_PW_DOMAIN
+	help
+	  Camera Post Processor (R6P0 lite) for Unisoc UMS512/T618: scale,
+	  rotate and dma blocks behind the camera pipeline. Misc device with
+	  the uapi in video/sprd_cpp.h. Replaces the sprd-cpp vendor blob
+	  (vendor_dlkm sprd_cpp.ko, 192 KB).

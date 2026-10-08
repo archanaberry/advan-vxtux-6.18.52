@@ -29,6 +29,7 @@ config MEDIA_SPRD_PIPELINE
 
 source "drivers/media/platform/sprd/sensors/Kconfig"
 source "drivers/media/platform/sprd/vsp/Kconfig"
+source "drivers/media/platform/sprd/cpp/Kconfig"
 
 # Pens_DOWN_SENSORS: satu-satunya penjaga descent ke sensors/. Dulu Makefile
 # punya tiga baris += sensors/ (satu per simbol sensor) dan kbuild menghitung

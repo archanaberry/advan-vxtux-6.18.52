@@ -1488,6 +1488,38 @@ gpu_opp_table: opp-table {
 		status = "okay";
 	};
 
+	/* CPP (Camera Post Processor) — ported 2026-10-09.
+	 * Driver: drivers/media/platform/sprd/cpp (CONFIG_SPRD_CPP), of_match
+	 * "sprd,cpp" (cpp_core.c:931). Node + nilai register dari stock
+	 * fdt_live.dtb (cpp@62800000).
+	 *
+	 * Clock: cpp_eb = mm_gate idx 0 (CLK_MM_CPP_EB=0 ✓ dt-bindings),
+	 * cpp_clk = mm_clk idx 5 (CLK_CPP=5 ✓), cpp_clk_parent = pll2 idx 2
+	 * (384m). cpp_axi_eb = mm_gate idx 3 VERBATIM stock — driver tidak
+	 * fetch clock ini (hanya cpp_eb/cpp_clk/cpp_clk_parent), entri kosmetik.
+	 *
+	 * sprd,cam-ahb-syscon = <&mm_ahb_regs> (syscon@62200000, phandle 0x13
+	 * stock): dipakai cpp_core.c untuk MM_AHB_RESET (0x04) — reset bits
+	 * (CPP_AHB_RESET_BIT 1<<16 dstc) identik dengan stock cpp_ahb_reset
+	 * <0x13 0x04 0x10000>.
+	 *
+	 * TANPA power-domains: cpp_core.c memanggil sprd_cam_pw_on/off
+	 * (library dari sprd_camsys_pw_domain.c, EXPORT_SYMBOL_GPL) — bukan
+	 * genpd. Konsisten dengan node isp/dcam/jpg di pohon ini.
+	 * TANPA iommus: driver tak pakai API iommu; compatible stock
+	 * "unisoc,iommuvaul5p-cpp" tak match sprd-iommu tree.
+	 * TANPA cpp_qos: of_parse_phandle opsional, driver default awrqos=0x1. */
+	cpp: cpp@62800000 {
+		compatible = "sprd,cpp";
+		/* &soc #address/#size-cells = <2>: 4 reg cells. */
+		reg = <0 0x62800000 0 0x1000>;
+		interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
+		sprd,cam-ahb-syscon = <&mm_ahb_regs>;
+		clocks = <&mm_gate 0>, <&mm_gate 3>, <&mm_clk 5>, <&pll2 2>;
+		clock-names = "cpp_eb", "cpp_axi_eb", "cpp_clk", "cpp_clk_parent";
+		status = "okay";
+	};
+
 	/* ISP (Image Signal Processor) */
 	isp: isp@62000000 {
 		compatible = "sprd,sharkl5pro-isp", "sprd,isp";
