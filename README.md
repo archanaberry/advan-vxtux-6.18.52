@@ -53,11 +53,6 @@
 
 ## 📋 Inventory per entri | Full 103 List desu~
 
-<details>
-<summary><b>✨ Click to expand 103 identifiers (102 + Panfrost) ✨</b></summary>
-
-<br>
-
 | # | Ledger ID | Source | Status |
 | ---: | --- | --- | --- |
 | 1 | `aes-ce-ccm` | `arch/arm64/crypto/aes-ce-ccm-glue.c` | Mainline + glue |
@@ -163,8 +158,6 @@
 | 101 | `zram` | `drivers/block/zram/zram_drv.c` | N/A corrected |
 | 102 | `zsmalloc` | `mm/zsmalloc.c` | UNPROVEN corrected |
 | 103 | `panfrost` | `drivers/gpu/drm/panfrost/panfrost_gpu.c` | Open GPU Mali-G52 MP2 ✨ |
-
-</details>
 
 ---
 
