@@ -12,6 +12,8 @@
 
 ---
 
+<img src="archanaberry/vxtux_chan.png" width="200">
+
 ## Tentang proyek | About
 
 VXTux is a device-focused Linux kernel tree for the **Advan Tab VX Lite T1030**. The target platform is Unisoc UMS512, also known as T618. The work combines upstream Linux drivers with carefully scoped platform ports and device-tree support.
