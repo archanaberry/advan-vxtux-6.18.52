@@ -1,63 +1,83 @@
-# VXTux
+# VXTux 💜✨
 
 <div align="center">
 
-**Linux 6.18.52 for Advan Tab VX Lite (T1030)**
+[VXTux-chan](archanaberry/vxtux_chan.png)
+
+### Linux 6.18.52 for Advan Tab VX Lite (T1030) desu~ (≧▽≦)/
 
 `ARM64` / `Unisoc UMS512-T618` / `VXTux`
 
-一歩ずつ、確実に。 Device-first kernel work, documented with care. `(^_^)/`
+**一歩ずつ、確実に。 Device-first kernel work, documented with care. (^_^)/**
+
+*Halo nyaa~ Hello nyaa~ こんにちはなの~ 💕*
 
 </div>
 
 ---
-<center>
-<img src="archanaberry/vxtux_chan.png" width="200">
-</center>
 
-## Tentang proyek | About
+## 🌸 Tentang proyek | About | プロジェクトについてなの
 
-VXTux is a device-focused Linux kernel tree for the **Advan Tab VX Lite T1030**. The target platform is Unisoc UMS512, also known as T618. The work combines upstream Linux drivers with carefully scoped platform ports and device-tree support.
+> **ID (Indonesia) — Imut version:** Halo halo~ (｡•́︿•̀｡) VXTux ini adalah kernel Linux yang fokus buat device kesayangan kita **Advan Tab VX Lite T1030** nyaa~ Platform targetnya Unisoc UMS512 yang juga dipanggil T618 desu! Kerjaannya gabungin driver upstream Linux yang baik hati sama port platform yang di-scope hati-hati dan support device-tree~ Bukan sekadar config dump loh! (｀・ω・´) Semua pilihan hardware itu nyambung sama DTS target, dependensi Kconfig, sama wiring build kalau source tree ngasih bukti nyaa~ ✨
 
-Bukan sekadar config dump: hardware-specific choices are tied to the target DTS, Kconfig dependencies, and build wiring wherever the source tree provides that evidence.
+> **EN (English) — Cute version:** Hewwooo~ (≧∇≦)/ VXTux is a super device-focused Linux kernel tree for our beloved **Advan Tab VX Lite T1030** nano~ The target platform is Unisoc UMS512, also known as T618 desu! The work combines kind upstream Linux drivers with carefully scoped platform ports and device-tree support nya~ Not just a config dump, okay? (｡>﹏<｡) Hardware-specific choices are tied to the target DTS, Kconfig dependencies, and build wiring wherever the source tree provides that evidence, desu!
 
-## Target
+> **JP (日本語) — 萌えバージョン:** こんにちはなの〜 (⁄˶´-`⁄)♡ VXTuxは、大好きな **Advan Tab VX Lite T1030** のためのデバイスファーストなLinuxカーネルツリーなの！ターゲットはUnisoc UMS512、別名T618なのです〜。 upstreamの優しいドライバーと、丁寧にスコープされたプラットフォームポート、そしてデバイスツリーサポートを組み合わせてるの！ただのconfig dumpじゃないんだからねっ！(๑•̀ㅂ•́)و✧ ハードウェア固有の選択は、ターゲットDTSやKconfig依存関係、ビルドの配線に紐づけて、ソースツリーが証拠をくれる限りちゃんと記録してるの、えへへ〜
 
-| Area | Target |
+---
+
+## 🎯 Target | ターゲットだよっ
+
+| Area | Target desu~ |
 | --- | --- |
-| Device | Advan Tab VX Lite T1030 |
+| Device | Advan Tab VX Lite T1030 📱 |
 | SoC | Unisoc UMS512 / T618 |
 | Architecture | ARM64 |
 | Kernel | Linux 6.18.52-VXTux-UMS512 |
-| Device tree | `ums512-1h10-vxtux.dtb` |
-| Graphics | Mali-G52 MP2 (Bifrost, vendor codename Gondul) via Panfrost |
+| Device tree | `ums512-1h10-vxtux.dtb` 🌟 |
+| Graphics | Mali-G52 MP2 (Bifrost, vendor codename Gondul) via Panfrost desu! |
 
-## Driver tally | ドライバー
+---
 
-| Count | Scope |
+## 💜 Driver tally | ドライバー集計なのっ | Hitungan driver
+
+<div align="center">
+
+| Count | Scope nyaa~ |
 | ---: | --- |
-| 102 | Deblob-derived driver integrations in the project tally |
-| 1 | Panfrost, the open-source kernel GPU driver replacing the vendor Mali Gondul DDK path |
-| **103** | **Tracked driver integrations: 102 + 1** |
+| 102 | Deblob-derived driver integrations in the project tally (｡•̀ᴗ-)✧ |
+| 1 | Panfrost, the open-source kernel GPU driver replacing the vendor Mali Gondul DDK path nyaa~ |
+| **103** | **Tracked driver integrations: 102 + 1 desu! (≧▽≦)** |
 
-Panfrost is counted separately from the 102 deblob-derived entries. This is a driver-integration count, **not** a count of GPU models. The current source snapshot does not include an itemized deblob ledger, so the 102 figure reflects the project tally rather than a reproducible per-driver list in this repository.
+</div>
 
-### Inventory per entri | Driver inventory
+> **ID:** Panfrost itu dihitung terpisah dari 102 entri deblob yaa~ Ini hitungan integrasi driver, **bukan** hitungan model GPU (´｡• ω •｡`) Snapshot source sekarang belum include ledger deblob yang terperinci, jadi angka 102 itu ngikutin project tally bukan list per-driver yang reproducible di repo ini, gomen ne~ (｡•́︿•̀｡)
 
-The following 102 identifiers preserve the supplied project ledger order. Source links point into the current kernel tree. Where an identifier is a composite module, alias, header-only entry, or donor name without a matching standalone file, the linked Kbuild file or nearest source is shown and the status says so. Duplicate source paths are intentional ledger records, not additional unique implementations.
+> **EN:** Panfrost is counted separately from the 102 deblob-derived entries, okay? This is a driver-integration count, **not** a count of GPU models, nano! The current source snapshot does not include an itemized deblob ledger, so the 102 figure reflects the project tally rather than a reproducible per-driver list in this repository, gomen~ (´｡• ᵕ •｡`)
 
-| # | Ledger ID | Source in this tree | Status / evidence |
+> **JP:** Panfrostは102のdeblob由来エントリとは別カウントなの！これはドライバー統合数のカウントで、**GPUモデル数のカウントじゃない**んだからねっ！現在のソーススナップショットは詳細なdeblob台帳を含んでいないので、102という数字はこのリポジトリで再現可能なドライバーごとのリストというより、プロジェクトの集計を反映したものなの、ごめんね〜 (｡>﹏<｡)
+
+---
+
+### 📋 Inventory per entri | Driver inventory | ドライバー在庫なの
+
+<details>
+<summary><b>Click to expand 102 identifiers desu~ (｡•̀ᴗ-)✧ / クリックしてねっ</b></summary>
+
+> Ledger order-nya dipertahanin biar auditable yaa~ Source links point into current kernel tree. Kalau identifier itu composite module, alias, header-only, atau donor name tanpa file standalone yang matching, yang di-link itu Kbuild file atau nearest source dan statusnya bilang gitu, desu! Duplicate source paths itu intentional ledger records, bukan additional unique implementations, okay? (｀・ω・´)
+
+| # | Ledger ID | Source in this tree | Status / evidence nyaa~ |
 | ---: | --- | --- | --- |
-| 1 | `aes-ce-ccm` | [arch/arm64/crypto/aes-ce-ccm-glue.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-ce-ccm-glue.c) | Mainline implementation plus ARM64 glue |
-| 2 | `aes-neon-blk` | [arch/arm64/crypto/aes-glue-neon.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-glue-neon.c) | Mainline; module form in ledger |
-| 3 | `agsd` | [drivers/sound/soc/sprd/agdsp_access/agdsp_access.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/agdsp_access/agdsp_access.c) | Re-mapped; Tier A/B evidence |
-| 4 | `apsys-dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | SPRD devfreq port |
+| 1 | `aes-ce-ccm` | [arch/arm64/crypto/aes-ce-ccm-glue.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-ce-ccm-glue.c) | Mainline implementation plus ARM64 glue desu! |
+| 2 | `aes-neon-blk` | [arch/arm64/crypto/aes-glue-neon.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-glue-neon.c) | Mainline; module form in ledger nyaa~ |
+| 3 | `agsd` | [drivers/sound/soc/sprd/agdsp_access/agdsp_access.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/agdsp_access/agdsp_access.c) | Re-mapped; Tier A/B evidence (｡•̀ᴗ-)✧ |
+| 4 | `apsys-dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | SPRD devfreq port desu! |
 | 5 | `arc4` | [crypto/arc4.c](6.18.52-VXTux-UMS512/crypto/arc4.c) | Mainline; ADA-verified in ledger |
-| 6 | `asix` | [drivers/net/usb/asix_common.c](6.18.52-VXTux-UMS512/drivers/net/usb/asix_common.c) | Mainline USB Ethernet; module |
+| 6 | `asix` | [drivers/net/usb/asix_common.c](6.18.52-VXTux-UMS512/drivers/net/usb/asix_common.c) | Mainline USB Ethernet; module nyaa~ |
 | 7 | `audio-dsp-dump` | [drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c) | SPRD port; module |
-| 8 | `audio-pipe` | [drivers/sound/soc/sprd/audiosipc/audio-pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-pipe.c) | UNPROVEN; requires runtime/System.map evidence |
+| 8 | `audio-pipe` | [drivers/sound/soc/sprd/audiosipc/audio-pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-pipe.c) | UNPROVEN; requires runtime/System.map evidence, gomen~ (｡•́︿•̀｡) |
 | 9 | `audio_mem` | [drivers/sound/soc/sprd/audiomem/audio_mem.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiomem/audio_mem.c) | Path moved from donor layout; GPL fork source |
-| 10 | `audio_sipc` | [drivers/sound/soc/sprd/audiosipc/audio-sipc.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-sipc.c) | GPL fork port |
+| 10 | `audio_sipc` | [drivers/sound/soc/sprd/audiosipc/audio-sipc.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-sipc.c) | GPL fork port desu! |
 | 11 | `ax88179_178a` | [drivers/net/usb/ax88179_178a.c](6.18.52-VXTux-UMS512/drivers/net/usb/ax88179_178a.c) | Mainline USB Ethernet; module |
 | 12 | `bq2560x-charger` | [drivers/power/supply/bq256xx_charger.c](6.18.52-VXTux-UMS512/drivers/power/supply/bq256xx_charger.c) | UNPROVEN; compatible alias is separately patched |
 | 13 | `core` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | Composite `wcn_core` module; no standalone `core.c` |
@@ -67,16 +87,16 @@ The following 102 identifiers preserve the supplied project ledger order. Source
 | 17 | `gnss_common_ctl_all` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_common_ctl.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_common_ctl.c) | Member of composite `wcn_core` |
 | 18 | `gnss_dbg` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_dbg.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_dbg.c) | Member of composite `wcn_core` |
 | 19 | `gnss_pmnotify_ctl` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_pmnotify_ctl.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_pmnotify_ctl.c) | Member of composite `wcn_core` |
-| 20 | `gpio` | [drivers/gpio/gpio-sprd.c](6.18.52-VXTux-UMS512/drivers/gpio/gpio-sprd.c) | Tier A |
+| 20 | `gpio` | [drivers/gpio/gpio-sprd.c](6.18.52-VXTux-UMS512/drivers/gpio/gpio-sprd.c) | Tier A desu! (≧▽≦) |
 | 21 | `hxchipset_83102e` | [drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c) | Himax public-tree source |
 | 22 | `ims_bridge` | [net/ims_bridge/Makefile](6.18.52-VXTux-UMS512/net/ims_bridge/Makefile) | Tier A; composite network module |
 | 23 | `ion_cma_heap` | [drivers/dma-buf/heaps/cma_heap.c](6.18.52-VXTux-UMS512/drivers/dma-buf/heaps/cma_heap.c) | UNPROVEN as a deblob replacement |
-| 24 | `ion_ipc_trusty` | [drivers/dma-buf/sprd/ion_ipc_trusty.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/ion_ipc_trusty.c) | Noble substitute; ported 2026-10-07 |
+| 24 | `ion_ipc_trusty` | [drivers/dma-buf/sprd/ion_ipc_trusty.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/ion_ipc_trusty.c) | Noble substitute; ported 2026-10-07 nyaa~ (｡•̀ᴗ-)✧ |
 | 25 | `jpg` | [drivers/misc/sprd_jpg/sprd_jpg.c](6.18.52-VXTux-UMS512/drivers/misc/sprd_jpg/sprd_jpg.c) | SPRD JPEG port |
 | 26 | `leds-sc27xx-bltc` | [drivers/leds/leds-sc27xx-bltc.c](6.18.52-VXTux-UMS512/drivers/leds/leds-sc27xx-bltc.c) | UNPROVEN |
 | 27 | `ledtrig-pattern` | [drivers/leds/trigger/ledtrig-pattern.c](6.18.52-VXTux-UMS512/drivers/leds/trigger/ledtrig-pattern.c) | UNPROVEN |
 | 28 | `mcdt_hw` | [drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c) | Resolved through `sprd_mcdt_*` symbols |
-| 29 | `mipi_driver` | Not present under the supplied `drivers/unisoc_platform/debug_log/sharkl5/` path | Noble substitute listed; source path absent from this snapshot |
+| 29 | `mipi_driver` | Not present under the supplied `drivers/unisoc_platform/debug_log/sharkl5/` path | Noble substitute listed; source path absent from this snapshot, gomen~ |
 | 30 | `misc_sprd_uid` | [drivers/soc/sprd/soc_id/sprd_uid.c](6.18.52-VXTux-UMS512/drivers/soc/sprd/soc_id/sprd_uid.c) | Tier A |
 | 31 | `musb_hdrc` | [drivers/usb/musb/musb_core.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_core.c) | Noble substitute; linkage remains unverified |
 | 32 | `musb_sprd` | [drivers/usb/musb/musb_sprd_vxtux.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_sprd_vxtux.c) | Noble substitute; partial validation |
@@ -141,7 +161,7 @@ The following 102 identifiers preserve the supplied project ledger order. Source
 | 91 | `sprd_wlan_combo` | [drivers/net/wireless/sprd/sprdwcn/wlan/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/wlan/Makefile) | SC2355 Wi-Fi port; module composition |
 | 92 | `sprdbt_tty` | [drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile) | HCI over tty-SDIO; composite module |
 | 93 | `thermal-generic-adc` | [drivers/thermal/thermal-generic-adc.c](6.18.52-VXTux-UMS512/drivers/thermal/thermal-generic-adc.c) | Mainline |
-| 94 | `trusty-tui` | [drivers/misc/trusty-tui.c](6.18.52-VXTux-UMS512/drivers/misc/trusty-tui.c) | Port of vendor `trusty-tui.ko` |
+| 94 | `trusty-tui` | [drivers/misc/trusty-tui.c](6.18.52-VXTux-UMS512/drivers/misc/trusty-tui.c) | Port of vendor `trusty-tui.ko` nyaa~ |
 | 95 | `twofish_common` | [crypto/twofish_common.c](6.18.52-VXTux-UMS512/crypto/twofish_common.c) | Mainline |
 | 96 | `twofish_generic` | [crypto/twofish_generic.c](6.18.52-VXTux-UMS512/crypto/twofish_generic.c) | Mainline |
 | 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A |
@@ -150,19 +170,33 @@ The following 102 identifiers preserve the supplied project ledger order. Source
 | 100 | `wcn_bsp` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | WCN platform module composition; no standalone `bsp.c` found |
 | 101 | `zram` | [drivers/block/zram/zram_drv.c](6.18.52-VXTux-UMS512/drivers/block/zram/zram_drv.c) | N/A/absence entry in the supplied tally; corrected 2026-10-05 |
 | 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | UNPROVEN in the supplied tally; corrected 2026-10-05 |
-| 103 | `panfrost` | [drivers/gpu/drm/panfrost/panfrost_gpu.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/panfrost/panfrost_gpu.c) | Separate open-source GPU driver; Mali-G52 MP2 / Gondul replacement |
+| 103 | `panfrost` | [drivers/gpu/drm/panfrost/panfrost_gpu.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/panfrost/panfrost_gpu.c) | Separate open-source GPU driver; Mali-G52 MP2 / Gondul replacement desu! ✨ |
 
-**Count:** 102 supplied deblob/port ledger identifiers + 1 Panfrost entry = **103 documented entries**. This number intentionally preserves aliases and shared source paths from the ledger; it is not a claim of 103 distinct, independently validated kernel modules. `UNPROVEN`, `NOT-CONFIGURED`, `N/A`, and source-not-present labels are retained so the tally stays auditable.
+</details>
 
-### Graphics note | GPU メモ
+> **Count desu:** 102 supplied deblob/port ledger identifiers + 1 Panfrost entry = **103 documented entries** nyaa~ (≧▽≦) This number intentionally preserves aliases and shared source paths from the ledger; it is not a claim of 103 distinct, independently validated kernel modules. `UNPROVEN`, `NOT-CONFIGURED`, `N/A`, and source-not-present labels are retained so the tally stays auditable, okay? (｡•̀ᴗ-)✧
 
-The T618 GPU is Mali-G52 MP2, not Mali-G57. The stock GPU ID `0x7402` is normalized by Panfrost's model comparison to `0x7002`, matching its G52 model entry. The target DTS uses the Panfrost binding `arm,mali-bifrost`; it does not expose the removed vendor DDK compatible.
+---
 
-Panfrost replaces the **kernel-side GPU driver**. Userspace graphics libraries are a separate layer and are not implied by this driver count.
+## 🎮 Graphics note | GPU メモなのっ
 
-## Build | ビルド
+> **ID:** GPU T618 itu Mali-G52 MP2, bukan Mali-G57 yaa~ (´｡• ω •｡`) Stock GPU ID `0x7402` itu dinormalisasi sama Panfrost model comparison jadi `0x7002`, matching G52 model entry nya desu! Target DTS pake binding Panfrost `arm,mali-bifrost`; dia gak expose removed vendor DDK compatible lagi kok!
 
-Use a clean kernel source tree. Kbuild rejects out-of-tree builds when a source-root `.config` is present. Install the usual kernel build dependencies, including `flex`, `bison`, and an AArch64 toolchain.
+> **EN:** The T618 GPU is Mali-G52 MP2, not Mali-G57, okay? (｡>﹏<｡) The stock GPU ID `0x7402` is normalized by Panfrost's model comparison to `0x7002`, matching its G52 model entry, nano! The target DTS uses the Panfrost binding `arm,mali-bifrost`; it does not expose the removed vendor DDK compatible.
+
+> **JP:** T618のGPUはMali-G57じゃなくてMali-G52 MP2なの！ストックのGPU ID `0x7402`はPanfrostのモデル比較で`0x7002`に正規化されて、G52のモデルエントリーにマッチするの〜！ターゲットDTSはPanfrostバインディングの`arm,mali-bifrost`を使ってて、削除されたベンダーDDKのcompatibleはもう公開してないの、えへへ〜
+
+> Panfrost replaces the **kernel-side GPU driver** desu~ Userspace graphics libraries are a separate layer and are not implied by this driver count, okay? (｡•̀ᴗ-)✧
+
+---
+
+## 🛠️ Build | ビルド方法なのっ | Cara build
+
+> **ID:** Pake clean kernel source tree yaa~ Kbuild nolak out-of-tree builds kalau ada `.config` di source-root (｡•́︿•̀｡) Install dulu build dependencies yang biasa, termasuk `flex`, `bison`, sama AArch64 toolchain nyaa~
+
+> **EN:** Use a clean kernel source tree, nano~ Kbuild rejects out-of-tree builds when a source-root `.config` is present (´｡• ᵕ •｡`) Install the usual kernel build dependencies, including `flex`, `bison`, and an AArch64 toolchain, desu!
+
+> **JP:** クリーンなカーネルソースツリーを使ってね〜 ソースルートに`.config`があるとKbuildがout-of-treeビルドを拒否しちゃうの (｡•́︿•̀｡) `flex`や`bison`、AArch64ツールチェーンを含む、いつものカーネルビルド依存関係をインストールしてねっ！
 
 ```sh
 cd 6.18.52-VXTux-UMS512
@@ -179,21 +213,58 @@ make O=out ARCH=arm64 olddefconfig
 make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
 
-The target DTB is written to:
+> Target DTB nya bakal ada di sini desu~ (≧▽≦)/
 
 ```text
 out/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb
 ```
 
-## Configuration notes | メモ
+---
 
-- The production fragment targets UMS512/T618. Qualcomm and MediaTek SoC selections are disabled for this target; their upstream driver sources are not deleted.
-- Generic PCI/PCIe, USB, mass-storage, eMMC, and UFS support remain available. The board DTS and current hardware wiring determine which devices bind at runtime.
-- The UMS512 board uses its Unisoc USB path and SDIO-based WCN configuration. Unused platform-specific options do not justify removing reusable driver source.
-- Firmware and device-tree sources remain in the kernel tree. Firmware availability and userspace requirements are device-image concerns and should be checked separately.
+## 📝 Configuration notes | メモだよっ
 
-## Status | 状態
+- **ID:** Production fragment itu targetnya UMS512/T618 yaa~ Seleksi SoC Qualcomm sama MediaTek dimatiin buat target ini; source driver upstreamnya gak dihapus kok, cuma dimatiin (｡•̀ᴗ-)✧
 
-This tree is under active bring-up. A config selection or successful DTB build alone does not prove that a driver has been validated on physical hardware; runtime support should be confirmed with probe logs and device tests.
+  **EN:** The production fragment targets UMS512/T618, nano~ Qualcomm and MediaTek SoC selections are disabled for this target; their upstream driver sources are not deleted.
 
-Issue reports and patches should include the exact board revision, kernel config, relevant `dmesg` output, and reproduction steps. どうぞよろしくお願いします。
+  **JP:** プロダクションフラグメントはUMS512/T618をターゲットにしてるの〜 このターゲットではQualcommとMediaTekのSoC選択は無効化されてるけど、upstreamのドライバーソース自体は削除されてないの！
+
+- **ID:** Support Generic PCI/PCIe, USB, mass-storage, eMMC, sama UFS tetep ada kok! Board DTS sama hardware wiring yang sekarang yang nentuin device mana yang nge-bind pas runtime, desu!
+
+  **EN:** Generic PCI/PCIe, USB, mass-storage, eMMC, and UFS support remain available, nano~ The board DTS and current hardware wiring determine which devices bind at runtime.
+
+  **JP:** 汎用PCI/PCIe、USB、マスストレージ、eMMC、UFSサポートはまだあるの！ボードDTSと現在のハードウェア配線が、ランタイム時にどのデバイスがバインドされるかを決めるの〜
+
+- **ID:** Board UMS512 pake Unisoc USB path sama SDIO-based WCN configuration nyaa~ Opsi yang gak kepake gak usah dijadiin alasan buat ngapus reusable driver source yaa! (｀・ω・´)
+
+  **EN:** The UMS512 board uses its Unisoc USB path and SDIO-based WCN configuration. Unused platform-specific options do not justify removing reusable driver source, okay?
+
+  **JP:** UMS512ボードはUnisocのUSBパスとSDIOベースのWCN設定を使ってるの！使われてないプラットフォーム固有のオプションは、再利用可能なドライバーソースを削除する理由にはならないんだからねっ！
+
+- **ID:** Firmware sama device-tree sources tetep ada di kernel tree kok~ Availability firmware sama kebutuhan userspace itu urusan device-image dan harus dicek terpisah yaa~ (｡•́︿•̀｡)
+
+  **EN:** Firmware and device-tree sources remain in the kernel tree. Firmware availability and userspace requirements are device-image concerns and should be checked separately, desu!
+
+  **JP:** ファームウェアとデバイスツリーソースはカーネルツリーに残ってるの！ファームウェアの可用性とユーザースペースの要件はデバイスイメージ側の関心事で、別途チェックしてねっ！
+
+---
+
+## 🔧 Status | 状態なのっ | Status desu~
+
+> **ID:** Tree ini lagi active bring-up nih~ (≧∇≦) Config selection atau DTB build yang sukses aja belum ngebuktiin kalau driver udah divalidasi di hardware fisik yaa~ Runtime support harus dikonfirmasi pake probe logs sama device tests, okay? (｡•̀ᴗ-)✧
+
+> **EN:** This tree is under active bring-up, nano~ A config selection or successful DTB build alone does not prove that a driver has been validated on physical hardware; runtime support should be confirmed with probe logs and device tests, desu! (´｡• ᵕ •｡`)
+
+> **JP:** このツリーは現在アクティブにbring-up中なの〜 config選択やDTBビルドが成功しただけでは、ドライバーが物理ハードウェアで検証されたことの証明にはならないの！ランタイムサポートはprobeログとデバイステストで確認してねっ！(｡>﹏<｡)
+
+Issue reports sama patches harus include exact board revision, kernel config, `dmesg` output yang relevan, sama reproduction steps yaa~ どうぞよろしくお願いしますなのっ！(≧▽≦)/💕
+
+---
+
+<div align="center">
+
+**VXTux-chan says: 一歩ずつ、確実に。がんばるぞいっ！(๑•̀ㅂ•́)و✧**
+
+*Made with 💜 by archanaberry for Advan Tab VX Lite comrades desu~*
+
+</div>
