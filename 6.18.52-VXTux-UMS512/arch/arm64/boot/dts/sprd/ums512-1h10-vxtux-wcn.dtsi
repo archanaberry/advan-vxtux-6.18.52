@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * ums512-1h10-vxtux-wcn.dtsi — node WCN Unisoc (WiFi/BT/GNSS/FM combo)
+ * Batch B7: dipakai oleh drivers/vxtux/net/wireless/sprdwcn (pengganti
+ * blob wcn_bsp.ko). Node ini TIDAK dibuat dari nol — propertinya diambil
+ * dari DT stok perangkat, bukan dikarang.
+ *
+ * PROVENANCE (yang sudah terverifikasi):
+ *   - Nama node          : "sprd-marlin3"
+ *                          bukti: DTB stok (`strings` blobs/fdt_live.dtb,
+ *                          2026-09-17) + sdiohal_main.c:944 melakukan
+ *                          of_find_node_by_name(NULL, "sprd-marlin3").
+ *   - compatible stok    : "unisoc,marlin3lite_sdio"
+ *                          bukti: blobs/fdt_live.dtb. Ada juga node
+ *                          "sprd,marlin3-fm" (blob sprd_fm terpisah, B8).
+ *   - Bootarga stok      : marlin.clktype=1, vddwcn (LDO_VDDWCN),
+ *                          power.from.extern=1.
+ *   - Nama properti GPIO : diambil dari kode driver yang DIBANGUN, bukan
+ *                          tebakan; wcn_boot.c:1039-1053 dan
+ *                          sdiohal_main.c:973-980. Empat GPIO wajib
+ *                          (reset/enable/irq gagal = probe gagal).
+ *   - Angka GPIO         : hasil dump DT stok 2026-09-17 (sesi binwalk/
+ *                          DT dump sebelumnya): 143, 94, 32, 95 sesuai
+ *                          urutan properti di bawah.
+ *
+ * YANG BELUM TERVERIFIKASI (jujur, jangan dibaca sebagai sudah beres):
+ *   - `sdhci-name` = &sdio0. Label sdio0 dipastikan ADA di ums512.dtsi
+ *     6.18 (dicek langsung di tree device), dan eMMC memang di sdio3
+ *     (lihat board DTS), jadi sdio0 adalah kandidat satu-satunya. Tetapi
+ *     pasangan controller<->WCN belum dibuktikan di perangkat hidup.
+ *     Kalau probe WCN mencetak "get host failed!!!", periksa ke sini
+ *     lebih dulu.
+ *   - label pengontrol GPIO `ap_gpio` diambil dari konvensi ums512.dtsi.
+ *     Kalau salah, kegagalannya KERAS di build (undefined label saat
+ *     dtc), jadi tidak bisa lolos diam-diam.
+ *   - blok PMIC (`wcn_get_pmic_config`) membaca array u32 per nama PMIC
+ *     dari node sprd_pmic; nilai untuk T1030 belum diambil. Tanpa itu
+ *     regulator WCN tidak akan di-set; firmware tidak akan boot.
+ *   - `sprd,btwf-file-name` / `sprd,gnss-file-name`: firmware WCN ada di
+ *     partisi modem stok (`wcnmodem`, `l_gnss_a`). Path di bawah adalah
+ *     titik mount partisi seperti pada stok; wajib dicek sebelum boot uji.
+ *
+ * STATUS: node sengaja "okay" supaya driver benar-benar di-bind dan
+ * kegagalannya terlihat di log. Kalau ada properti yang salah, yang
+ * terjadi adalah probe gagal + pesan err, bukan boot hang (probe hanya
+ * menyentuh GPIO/regulator).
+ */
+
+/ {
+	/* LABEL (D1, 2026-09-30): label sprd_marlin3 ditambahkan di sini,
+	 * BUKAN di DTS papan. Alasannya dua-duanya keras:
+	 *  (1) Node ini harus hidup di berkas .dtsi, bukan di .dts papan:
+	 *      vendor/umumnya menulis override `&sprd_marlin3` di board dts,
+	 *      sedangkan node aslinya milik SoC.
+	 *  (2) Nama labelNYA bukan pilihan kita. Bukti: string `sprd_marlin3`
+	 *      ada di blok string DTB stok blobs/fdt_live.dtb (offset 138776,
+	 *      di dalam size_dt_strings=15593), yaitu tabel __symbols__ label
+	 *      milikvendor. Nama node `sprd-marlin3` juga sudah dibuktikan di atas.
+	 *      Menggunakan nama lain berisiko tidak cocok dengan __symbols__ vendor.
+	 * Efek: dtc sempat gagal keras (undefined label) di
+	 * ums512-1h10-vxtux.dts (blok GNSS). */
+	sprd_marlin3: sprd-marlin3 {
+		compatible = "unisoc,marlin3lite_sdio", "sprd,marlin3";
+		status = "okay";
+
+		/* SDIO host tempat chip WCN menempel (lihat catatan di atas) */
+		sdhci-name = <&sdio0>;
+
+		/* Empat GPIO wajib. Urutan mengikuti pembacaan wcn_boot.c. */
+		m2-wakeup-ap-gpios	= <&ap_gpio 143 0>;
+		reset-gpios		= <&ap_gpio 94 0>;
+		enable-gpios		= <&ap_gpio 32 0>;
+		m2-to-ap-irq-gpios	= <&ap_gpio 95 0>;
+
+		/*
+		 * Opsional menurut driver (of_get_property / gpio_is_valid
+		 * hanya pr_info bila kosong). Sengaja TIDAK diisi nilai:
+		 * stok tidak mengeksposnya lewat dump yang kami punya.
+		 */
+		/* xtal-26m-clk-type-gpio = <&ap_gpio N 0>; */
+		/* xtal-26m-clk-type = "TCXO"; */
+
+		/* Stok: marlin.clktype=1 (bootarga) -> biarkan driver memakai
+		 * nilai dari command line; jangan dipaksa di DT. */
+
+		/* GPIO IRQ kedua (host wakeup BT) ada di node BT (blob
+		 * sprdbt_tty, B7b) — bukan properti node WCN. */
+
+		/* Firmware: partisi modem stok. */
+		sprd,btwf-file-name = "/dev/block/by-name/wcnmodem";
+		sprd,gnss-file-name = "/dev/block/by-name/l_gnss_a";
+
+		/* DMA (adma) dipakai jalur SDIO marlin3lite; pwrseq tidak
+		 * dipakai papan ini (tidak ada property di dump stok). */
+		adma-tx;
+		adma-rx;
+
+		/* isi kalau host SDIO butuh urutan power: pwrseq; */
+
+		/* Nilai stok tidak tersedia; biarkan 0 = default driver. */
+		/* sdio-func-def = <0>; */
+	};
+};

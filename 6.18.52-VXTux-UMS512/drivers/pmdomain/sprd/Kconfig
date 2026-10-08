@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_VSP_PW_DOMAIN
+	tristate "Unisoc VSP power domain"
+	depends on COMMON_CLK && MFD_SYSCON && REGULATOR
+	# This driver uses the generic PM domain API. PM_GENERIC_DOMAINS is a hidden bool
+	# in kernel/power/Kconfig that include/linux/pm_domain.h keys the real API off; with
+	# it off the header emits static-inline fallback stubs, which then collide with
+	# drivers/pmdomain/core.c. Every other pmdomain driver enables it with select, so
+	# do the same here.
+	select PM_GENERIC_DOMAINS
+	help
+	  Power-domain control for the Unisoc VSP video block. Replaces the
+	  sprd-vsp-pw-domain vendor blob.
+
+config SPRD_GPU_PW_DOMAIN
+	tristate "Unisoc T618 GPU power-domain gate"
+	# PM is a HARD requirement, not a convenience (audit 2026-10-08).
+	# include/linux/pm_domain.h:539 declares the real dev_pm_domain_attach()
+	# only under `#ifdef CONFIG_PM`; with PM=n line 556 defines a static-inline
+	# stub that just returns 0, so platform_probe() (drivers/base/platform.c:1399)
+	# never attaches a PM domain: the GPU node's power-domains property becomes
+	# inert, this driver's .power_on is never called, the PMU-APB force-shutdown
+	# latch stays asserted and nothing logs an error. `config PM`
+	# (kernel/power/Kconfig:205) has no `default y` and the arm64 base defconfig
+	# does not enable it, so without this dependency the symbol could be set to
+	# =y in a fragment and still build a gate that never opens -- silently.
+	# With it, such a fragment resolves the symbol to n and tools/re/gate_fragment.py
+	# reports D2 BLOCKED instead of a green run over a dead gate.
+	depends on PM && MFD_SYSCON && OF
+	# Same reason as SPRD_VSP_PW_DOMAIN/SPRD_CAMSYS_PW_DOMAIN: PM_GENERIC_DOMAINS
+	# is a hidden bool in kernel/power/Kconfig, and pm_domain.h emits static-inline
+	# fallback stubs with it off, which then collide with drivers/pmdomain/core.c.
+	select PM_GENERIC_DOMAINS
+	help
+	  Generic-PM-domain gate for the Unisoc T618 (sharkl5pro) GPU.
+	  Owns the PMU-APB "force shutdown" latch that the stock device tree
+	  names on the GPU node as
+	      top_force_shutdown = <&pmu_apb_regs 0x30 0x2000000>;
+	  so that the GPU driver releases it before probing and asserts it
+	  again when detached. Replaces the power-control half of the removed
+	  mali_gondul DDK; carries no Mali code.
+
+config SPRD_CAMSYS_PW_DOMAIN
+	tristate "Unisoc camera/MMSYS power domain"
+	depends on COMMON_CLK && MFD_SYSCON && HAS_IOMEM
+	# Same reason as SPRD_VSP_PW_DOMAIN: PM_GENERIC_DOMAINS lives in
+	# kernel/power/Kconfig as a hidden bool, and with it off pm_domain.h emits
+	# static-inline stubs that collide with drivers/pmdomain/core.c.
+	select PM_GENERIC_DOMAINS
+	help
+	  Camera/MMSYS power-domain control for the Unisoc T618 (sharkl5pro)
+	  multimedia subsystem. Replaces the sprd_camsys_pw_domain vendor blob
+	  and provides the sprd_cam_pw_* / sprd_glb_mm_pw_*_cfg helpers that
+	  sprd_camera and mmdvfs call.

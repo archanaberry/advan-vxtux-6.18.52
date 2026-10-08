@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-2.0
+# drivers/vxtux/soc/power_manager — RE reconstruction of the Unisoc modem
+# power manager (wakelock + resource arbitration for the SIPC family).
+# Evidence: docs/re_sprd_power_manager.md; blob 51,406 B in vendor_ramdisk.
+
+config SPRD_POWER_MANAGER
+	tristate "Unisoc modem power manager (RE)"
+	# Modular (bawaan m): 19 ekspor RE (sprd_mpm_*/sprd_pms_*) tanpa satu pun
+	# konsumen di pohon — paling berguna sebagai modul uji insmod; modules.dep
+	# blob menghubungkannya dari audio_sipc/spool/spipe yang belum diport.
+	default m
+	help
+	  RE reconstruction of sprd_power_manager.ko from the stock
+	  vendor_ramdisk (51,406 B). 23 SIPC-family modules (sipc-core, spool,
+	  spipe, sbuf, sblock, sensorhub, ...) depend on it per stock
+	  modules.dep; no vendor source exists, so this is built from
+	  disassembly. Behavior model: docs/re_sprd_power_manager.md.

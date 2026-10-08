@@ -1,0 +1,98 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/thermal/Kconfig — GPU power model from RE
+
+config VXTUX_SPRD_GPU_COOLING
+	tristate "Spreadtrum GPU devfreq cooling power model (RE)"
+	depends on DEVFREQ_THERMAL
+	help
+	  Unisoc (SPRD) GPU power model for devfreq_cooling, reconstructed
+	  from vendor blob sprd_gpu_cooling.ko (Android 13 / kernel 5.4.210).
+
+	  Provides two exports identical to blob:
+	    create_gpu_cooling_device()  -- called by GPU driver
+	    destroy_gpu_cooling_device()
+	  Model uses DT coefficients from node "sprd,mali-power-model"
+	  (sprd,temp-scale / sprd,voltage-scale / sprd,core-base /
+	   sprd,dynamic-core ...) and temperature from thermal zone "gpu-thmzone".
+
+	  Bit-exact RE result (C == blob assembly) proven by
+	  tools/re/re_gpu_cooling_model.py; board coefficients extracted from
+	  blobs/fdt_live.dtb via tools/re/re_fdt_gpu_cooling.py.
+
+	  This driver is ABI provider without in-tree consumer (Mali DDK that
+	  calls it not in this tree). Default n.
+
+config SPRD_TSENSOR_THERMAL
+	tristate "Spreadtrum SC27xx/SC2730 PMIC temperature sensor bridge"
+	depends on OF && REGMAP && MFD_SC27XX_PMIC
+	help
+	  Bridge the SC27xx/SC2730 PMIC on-chip temperature sensor ("tsensor",
+	  base register 0x1b34 on SC2730) into the Linux thermal framework.
+
+	  Ported from the vendor blob sc27xx_tsensor_thermal.ko (Android 13 /
+	  kernel 5.4.210) via work/donors_20260930/bocchi_unisoc54. Register
+	  access goes through the PMIC regmap handed down by
+	  drivers/mfd/sprd-sc27xx-spi.c, the same way drivers/nvmem/
+	  sc27xx-efuse.c does it.
+
+	  TWO WARNINGS, both measured (docs/baterai_termal_bedah_20260930.md):
+	    1. The driver only registers thermal zones when /chosen/bootargs
+	       contains "androidboot.mode=cali". Otherwise probe returns 0 and
+	       registers nothing, with a dev_warn. That is the vendor blob's own
+	       behaviour, not a stub: this is a factory calibration path, not a
+	       runtime thermal sensor.
+	    2. The "OUT" channel (sensor id 1) interpolates a 256-entry v2t_table
+	       whose first 136 entries are one flat plateau, so it is not
+	       factory calibrated.
+
+	  DTS shape required by the ported driver (OF thermal binding):
+	    #thermal-sensor-cells = <0>; on the sensor node, plus a
+	    thermal-zones node whose thermal-sensors = <&tsensor>;
+
+	  Say Y if you need the SC2730 factory calibration path, otherwise say N.
+
+config SPRD_SOC_THM
+	tristate "Unisoc virtual thermal zone aggregator"
+	depends on OF
+	help
+	  "virtual-thermal" platform driver: registers a thermal zone that
+	  reports the MAXIMUM of several real thermal zones, listed by phandle
+	  in the property "thmzone-cells" and resolved by node name. The zone
+	  id comes from the "thm-sensor" OF alias.
+
+	  Ported from the vendor blob sprd_soc_thm.ko (kernel 5.4.210, 3
+	  functions, 960 bytes of live text) via
+	  work/donors_20260930/bocchi_unisoc54. No MMIO, no interrupt, no
+	  polling - a single thermal_zone_device_update() at probe.
+
+	  Only useful together with SPRD_CPU_COOLING, whose power model is fed
+	  by the aggregate. Say N if you do not use that.
+
+config SPRD_CPU_COOLING
+	tristate "Unisoc CPU cooling device with static power model"
+	depends on OF && CPU_FREQ && PM_OPP
+	help
+	  CPU cooling device driven by a static power model (leakage plus a
+	  temperature/voltage scale polynomial) rather than by cpufreq_cooling.
+	  The state table is the cluster's PM OPP table; the cooling device is
+	  registered with thermal_of_cooling_device_register() and consumed by
+	  the power_allocator governor through get_requested_power /
+	  state2power / power2state.
+
+	  Ported from the vendor blob sprd_cpu_cooling.ko (kernel 5.4.210, 31
+	  functions) via work/donors_20260930/bocchi_unisoc54. Coefficients
+	  come from seventeen "sprd,*" properties on the children of the
+	  /cooling-devices node, indexed by the "cooling-device" OF alias.
+
+	  Two limitations you should know before enabling it:
+	    - The blob exported cpu_isolate_funs() to receive two CPU-isolator
+	      function pointers from the Unisoc hotplug driver. No such provider
+	      exists in this tree, so the pointers stay NULL and the driver falls
+	      back to real CPU hotplug (remove_cpu()/add_cpu()).
+	    - Leakage trimming from eFuse block 15 (sprd,efuse-switch) is not
+	      read: the Spreadtrum OTP reader is absent from this tree, so the
+	      sprd,core-base / sprd,cluster-base values are used instead.
+
+	  The driver hot-plugs CPUs offline to reach a cooling state, so it
+	  needs a DT that actually supports CPU hotplug. Say N if unsure.

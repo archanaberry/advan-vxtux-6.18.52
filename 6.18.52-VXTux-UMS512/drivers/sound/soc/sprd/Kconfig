@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/sound/asoc/Kconfig — ASoC Unisoc (VXTux port, stage B4e/B4f)
+#
+# RE chain (sym_router/cek_asoc): snd-soc-core -> card-utils -> dummy-codec
+# -> vbc-v4 (+fe-dai, pcm-routing) -> codec sc2730 -> card machine.
+# compr-2stage-dma deferred: compress path 5.4 (.compr_ops platform) missing in
+# 6.18; needs dai_link compress rework, not mechanical conversion.
+#
+# All bool symbols: sound stack built built-in (SOUND/SND/SND_SOC=y)
+# so snd_soc_* symbols exist in System.map and gate C5 can prove link.
+
+menuconfig VXTUX_SND_SPRD_ASOC
+	bool "Unisoc ASoC utilities (VXTux port)"
+	depends on SND_SOC
+	default n
+	help
+	  Unisoc ASoC utilities from GPL 5.4 fork: sprd-asoc-common (regmap
+	  AGCP/AON/PMU + debug), sprd-asoc-card-utils (+hook/legacy), codec
+	  dummy playback, and SC27xx audio power manager.
+
+if VXTUX_SND_SPRD_ASOC
+
+config VXTUX_SND_SPRD_CARD
+	bool "Unisoc ASoC card utils (sprd-asoc-card-utils)"
+	default n
+	help
+	  Provides symbols exported by blob snd-soc-sprd-card.ko:
+	  arch_audio_{get,set}_{aon_apb,agcp_ahb,pmu_apb,ap_apb,anlg_phy}_gpr,
+	  set_agcp_ahb_offset, sprd_audio_debug_init, asoc_sprd_card_probe etc.
+
+config VXTUX_SND_SPRD_DUMMY_CODEC
+	bool "Unisoc ASoC dummy playback codec"
+	depends on VXTUX_SND_SPRD_CARD
+	default n
+	help
+	  Replaces blob snd-soc-sprd-dummy-codec.ko: dummy_playback_dai,
+	  sprd_dummy_playback_codec_{init,exit}.
+
+config VXTUX_SND_SPRD_SC2730_POWER
+	bool "Unisoc SC27xx audio power manager"
+	depends on VXTUX_SND_SPRD_CARD
+	default n
+	help
+	  Replaces blob snd-soc-sprd-codec-sc2730-power.ko.
+
+config VXTUX_SND_SPRD_VBC_V4
+	bool "Unisoc VBC v4 codec-DAI + FE-DAI + pcm-routing (vbc-v4)"
+	depends on SPRD_AUDIO_MCDT && SPRD_AUDIO_SIPC
+	depends on VXTUX_SND_SPRD_CARD
+	default n
+	select VXTUX_SND_SPRD_PCM_ROUTING
+	help
+	  Replaces blob snd-soc-sprd-vbc-v4.ko + snd-soc-sprd-vbc-fe.ko:
+	  vbc-dai/vbc-phy-v4/vbc-codec (4332 lines, shim API legacy->component),
+	  sprd-fe-dai, and pcm-routing (blob snd-soc-sprd-pcm-routing).
+
+config VXTUX_SND_SPRD_PCM_ROUTING
+	bool "Unisoc ASoC pcm-routing platform"
+	depends on VXTUX_SND_SPRD_CARD
+	default n
+	help
+	  Replaces blob snd-soc-sprd-pcm-routing.ko: sprd_routing_pcm_driver,
+	  agdsp_access_enable/disable, get_dma_data_params between components.
+
+config VXTUX_SND_SPRD_SC2730
+	bool "Unisoc SC2730 audio codec + headset"
+	depends on VXTUX_SND_SPRD_CARD
+	depends on VXTUX_SND_SPRD_VBC_V4
+	default n
+	help
+	  Replaces blob snd-soc-sprd-codec-sc2730.ko: sprd-codec.c (regmap-less
+	  codec, read/write ops directly), headset jack detection, including
+	  driver machine vbc-rxpx-codec-sc27xx (compatible "sprd,vbc-v4-codec-sc2730").
+
+endif # VXTUX_SND_SPRD_ASOC

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# pcie/Kconfig — SC2355 lewat bus PCIe (varian; papan T1030 memakai SDIO).
+#
+# Wiring 2026-09-19: berkas ini SEBELUMNYA tidak pernah di-`source` dari
+# sprdwcn/Kconfig, sehingga `WCN_PCIE` tak dikenal kconfig dan 8 berkas .c di
+# direktori ini mustahil dibangun tanpa satu pun peringatan. Sekarang
+# di-`source` dan Makefile-nya di-descend, jadi cabangnya benar-benar ada.
+#
+# Tetap `default n`: cabang ini BELUM bisa jadi modul yang berguna karena
+# penyedia root-complex-nya tidak ada di pohon mana pun (lihat catatan di
+# sprdwcn/Makefile). Deklarasi simbol + descent tetap dilakukan supaya
+# kconfig dan Makefile tidak lagi saling bertentangan.
+
+config WCN_PCIE
+	tristate "PCIE Support"
+	depends on SC23XX
+	depends on PCI
+	default n
+	help
+	  Enable this module for Spreadtrum SC2355 chip pcie interface bus
+	  support.  Please insmod this module before any other WCN subsystems.
+
+	  Catatan port 6.18: berkas sumbernya sudah ada di pohon
+	  (pcie/pcie.c, edma_engine.c, pcie_dbg.c, ioctl.c, mchn.c,
+	  edma_test.c, pcie_attach_bus.c, pcie_pm.c) dan headernya
+	  include/linux/pcie-rc-sprd.h sudah dipasang, tetapi fungsi
+	  root-complex yang dipanggilnya -- sprd_pcie_configure_device(),
+	  sprd_pcie_unconfigure_device(), sprd_pcie_register_event(),
+	  sprd_pcie_deregister_event(), sprd_pcie_teardown_msi_irq(),
+	  sprd_pcie_dump_rc_regs() -- TIDAK punya definisi di pohon ini
+	  maupun di gpl-source/. Jadi cabang ini tidak akan link sampai
+	  driver PCIe root-complex Unisoc diport.

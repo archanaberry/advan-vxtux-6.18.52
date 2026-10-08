@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/net/wireless/sprdwcn/wlan/Kconfig
+# Port 6.18: sprd_wlan_combo (SC2355 WiFi) — pengganti blob sprd_wlan_combo.ko
+# Sumber: gpl-source/hadenix_ums512_wcn/drivers/wcn/wlan/sc2355/
+# Config di fragment: CONFIG_WCN_WLAN=m
+
+config WCN_WLAN
+	tristate "Spreadtrum SC2355 WiFi driver"
+	depends on WCN_CORE && CFG80211
+	default n
+	help
+	  WiFi driver for Spreadtrum SC2355 (SC2355 SDIO WiFi).
+	  Replaces vendor blob sprd_wlan_combo.ko.
+	  Sumber: gpl-source/hadenix_ums512_wcn/drivers/wcn/wlan/sc2355/
+	  Tergantung pada WCN_CORE untuk bus/transport SDIO.
+
+config WCN_WLAN_SC2355
+	tristate "SC2355 specific WiFi support"
+	depends on WCN_WLAN
+	default y
+	help
+	  Enable SC2355-specific WiFi functionality.

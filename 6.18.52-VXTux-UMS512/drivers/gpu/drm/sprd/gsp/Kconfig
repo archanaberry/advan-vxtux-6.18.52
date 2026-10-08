@@ -1,0 +1,37 @@
+config DRM_SPRD_GSP
+	tristate "SPRD DRM GSP driver"
+	depends on ARCH_SPRD
+	depends on DRM_SPRD
+	depends on SPRD_IOMMU
+	help
+	  GSP is hardware which not only can compose multiple layers
+	  but also can transform and scale layers.
+
+	  The T618 is a "pike2" part and binds to the
+	  "sprd,gsp-lite_r2p0-pike2" compatible string, which selects
+	  the gsp_lite_r2p0 core.
+
+	  Note: the gsp_layer buffer path calls the Unisoc ION helper
+	  sprd_ion_is_reserved(). ION was dropped from mainline and no
+	  provider for that symbol exists in this tree or in any donor, so
+	  gsp_ion_stub.c supplies it as a documented shim that always reports
+	  "not reserved", which puts the caller on the IOVA path. The other
+	  helper gsp_layer.c calls, sprd_ion_get_phys_addr(), comes from the
+	  real ported driver in drivers/dma-buf/sprd/ and is deliberately not
+	  duplicated here. The module links, loads and probes; a layer whose
+	  buffer really is a reserved ION carveout will take the IOVA path,
+	  which is a functional limitation rather than a memory-safety one.
+
+config DRM_SPRD_GSP_IPC_TRUSTY
+	bool "SPRD DRM GSP widevine driver"
+	depends on DRM_SPRD_GSP
+	depends on TRUSTY_VIRTIO_IPC
+	help
+	  This function is to support the widevine function.
+
+config DRM_SPRD_GSP_DVFS
+	bool "SPRD DRM GSP dvfs driver"
+	depends on DRM_SPRD_GSP
+	depends on SPRD_APSYS_DVFS
+	help
+	  This function is to support the dvfs function.

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Spreadtrum pin control drivers
+#
+
+config PINCTRL_SPRD
+	tristate
+	select PINMUX
+	select PINCONF
+	select GENERIC_PINCONF
+	select GENERIC_PINMUX_FUNCTIONS
+	help
+	  Say Y here to enable Spreadtrum pinctrl driver
+
+config PINCTRL_SPRD_SC9860
+	tristate "Spreadtrum SC9860 pinctrl driver"
+	depends on OF
+	depends on ARCH_SPRD || COMPILE_TEST
+	select PINCTRL_SPRD
+	help
+	  Say Y here to enable Spreadtrum SC9860 pinctrl driver
+
+config PINCTRL_SPRD_SHARKL5PRO
+	tristate "Spreadtrum Sharkl5Pro (UMS512/T618) pinctrl driver"
+	depends on OF
+	depends on ARCH_SPRD || COMPILE_TEST
+	select PINCTRL_SPRD
+	help
+	  Say Y here to enable the Spreadtrum Sharkl5Pro (UMS512/T618) pin
+	  controller: 393 pin, MISC/COMMON offset 0x34/0x434.
+
+	  BUKTI (B45-fix, 2026-09-27): angka-angka itu diambil dari fork GPL
+	  T618 dan dicocokkan TIGA arah dengan blob pinctrl-sprd-sharkl5Pro.ko
+	  (simbol tabel 0x3d68 byte = 393 x 40 byte; disasm sprd_pinctrl_probe
+	  melempar w2=393, w3=0x34, w4=0x434). Driver SC9860 mainline TIDAK
+	  bisa dipakai untuk SoC ini: harga konstanta offsetnya 0x20/0x4020 dan
+	  of_match-nya "sprd,sc9860-pinctrl". Rincian di kepala
+	  pinctrl-sprd-sharkl5pro.c.

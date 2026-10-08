@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-2.0
+
+menu "PCI controller drivers"
+	depends on PCI
+
+config PCI_HOST_COMMON
+	tristate
+	select PCI_ECAM
+
+config PCI_AARDVARK
+	tristate "Aardvark PCIe controller"
+	depends on (ARCH_MVEBU && ARM64) || COMPILE_TEST
+	depends on OF
+	depends on PCI_MSI
+	select PCI_BRIDGE_EMUL
+	select IRQ_MSI_LIB
+	help
+	 Add support for Aardvark 64bit PCIe Host Controller. This
+	 controller is part of the South Bridge of the Marvel Armada
+	 3700 SoC.
+
+config PCI_FTPCI100
+	bool "Faraday Technology FTPCI100 PCI controller"
+	depends on OF
+	default ARCH_GEMINI
+
+config PCI_HOST_GENERIC
+	tristate "Generic PCI host controller"
+	depends on OF
+	select PCI_HOST_COMMON
+	select IRQ_DOMAIN
+	help
+	  Say Y here if you want to support a simple generic PCI host
+	  controller, such as the one emulated by kvmtool.
+
+source "drivers/pci/controller/cadence/Kconfig"
+source "drivers/pci/controller/dwc/Kconfig"
+source "drivers/pci/controller/mobiveil/Kconfig"
+source "drivers/pci/controller/plda/Kconfig"
+endmenu

@@ -1,2 +1,196 @@
-# advan-vxtux-6.18.52
-Linux kernel for VXTux 6.18.52
+# VXTux
+
+<div align="center">
+
+**Linux 6.18.52 for Advan Tab VX Lite (T1030)**
+
+`ARM64` / `Unisoc UMS512-T618` / `VXTux`
+
+一歩ずつ、確実に。 Device-first kernel work, documented with care. `(^_^)/`
+
+</div>
+
+---
+
+## Tentang proyek | About
+
+VXTux is a device-focused Linux kernel tree for the **Advan Tab VX Lite T1030**. The target platform is Unisoc UMS512, also known as T618. The work combines upstream Linux drivers with carefully scoped platform ports and device-tree support.
+
+Bukan sekadar config dump: hardware-specific choices are tied to the target DTS, Kconfig dependencies, and build wiring wherever the source tree provides that evidence.
+
+## Target
+
+| Area | Target |
+| --- | --- |
+| Device | Advan Tab VX Lite T1030 |
+| SoC | Unisoc UMS512 / T618 |
+| Architecture | ARM64 |
+| Kernel | Linux 6.18.52-VXTux-UMS512 |
+| Device tree | `ums512-1h10-vxtux.dtb` |
+| Graphics | Mali-G52 MP2 (Bifrost, vendor codename Gondul) via Panfrost |
+
+## Driver tally | ドライバー
+
+| Count | Scope |
+| ---: | --- |
+| 102 | Deblob-derived driver integrations in the project tally |
+| 1 | Panfrost, the open-source kernel GPU driver replacing the vendor Mali Gondul DDK path |
+| **103** | **Tracked driver integrations: 102 + 1** |
+
+Panfrost is counted separately from the 102 deblob-derived entries. This is a driver-integration count, **not** a count of GPU models. The current source snapshot does not include an itemized deblob ledger, so the 102 figure reflects the project tally rather than a reproducible per-driver list in this repository.
+
+### Inventory per entri | Driver inventory
+
+The following 102 identifiers preserve the supplied project ledger order. Source links point into the current kernel tree. Where an identifier is a composite module, alias, header-only entry, or donor name without a matching standalone file, the linked Kbuild file or nearest source is shown and the status says so. Duplicate source paths are intentional ledger records, not additional unique implementations.
+
+| # | Ledger ID | Source in this tree | Status / evidence |
+| ---: | --- | --- | --- |
+| 1 | `aes-ce-ccm` | [arch/arm64/crypto/aes-ce-ccm-glue.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-ce-ccm-glue.c) | Mainline implementation plus ARM64 glue |
+| 2 | `aes-neon-blk` | [arch/arm64/crypto/aes-glue-neon.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/aes-glue-neon.c) | Mainline; module form in ledger |
+| 3 | `agsd` | [drivers/sound/soc/sprd/agdsp_access/agdsp_access.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/agdsp_access/agdsp_access.c) | Re-mapped; Tier A/B evidence |
+| 4 | `apsys-dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | SPRD devfreq port |
+| 5 | `arc4` | [crypto/arc4.c](6.18.52-VXTux-UMS512/crypto/arc4.c) | Mainline; ADA-verified in ledger |
+| 6 | `asix` | [drivers/net/usb/asix_common.c](6.18.52-VXTux-UMS512/drivers/net/usb/asix_common.c) | Mainline USB Ethernet; module |
+| 7 | `audio-dsp-dump` | [drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodspdump/audio_dsp_dump.c) | SPRD port; module |
+| 8 | `audio-pipe` | [drivers/sound/soc/sprd/audiosipc/audio-pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-pipe.c) | UNPROVEN; requires runtime/System.map evidence |
+| 9 | `audio_mem` | [drivers/sound/soc/sprd/audiomem/audio_mem.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiomem/audio_mem.c) | Path moved from donor layout; GPL fork source |
+| 10 | `audio_sipc` | [drivers/sound/soc/sprd/audiosipc/audio-sipc.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-sipc.c) | GPL fork port |
+| 11 | `ax88179_178a` | [drivers/net/usb/ax88179_178a.c](6.18.52-VXTux-UMS512/drivers/net/usb/ax88179_178a.c) | Mainline USB Ethernet; module |
+| 12 | `bq2560x-charger` | [drivers/power/supply/bq256xx_charger.c](6.18.52-VXTux-UMS512/drivers/power/supply/bq256xx_charger.c) | UNPROVEN; compatible alias is separately patched |
+| 13 | `core` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | Composite `wcn_core` module; no standalone `core.c` |
+| 14 | `cpufreq_userspace` | [drivers/cpufreq/cpufreq_userspace.c](6.18.52-VXTux-UMS512/drivers/cpufreq/cpufreq_userspace.c) | Mainline |
+| 15 | `extcon-usb-gpio` | [drivers/extcon/extcon-usb-gpio.c](6.18.52-VXTux-UMS512/drivers/extcon/extcon-usb-gpio.c) | Mainline |
+| 16 | `ghash-ce` | [arch/arm64/crypto/ghash-ce-glue.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/ghash-ce-glue.c) | Mainline implementation plus ARM64 glue |
+| 17 | `gnss_common_ctl_all` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_common_ctl.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_common_ctl.c) | Member of composite `wcn_core` |
+| 18 | `gnss_dbg` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_dbg.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_dbg.c) | Member of composite `wcn_core` |
+| 19 | `gnss_pmnotify_ctl` | [drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_pmnotify_ctl.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/gnss/gnss_pmnotify_ctl.c) | Member of composite `wcn_core` |
+| 20 | `gpio` | [drivers/gpio/gpio-sprd.c](6.18.52-VXTux-UMS512/drivers/gpio/gpio-sprd.c) | Tier A |
+| 21 | `hxchipset_83102e` | [drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/sprd/hx83102e/hxchipset/himax_platform.c) | Himax public-tree source |
+| 22 | `ims_bridge` | [net/ims_bridge/Makefile](6.18.52-VXTux-UMS512/net/ims_bridge/Makefile) | Tier A; composite network module |
+| 23 | `ion_cma_heap` | [drivers/dma-buf/heaps/cma_heap.c](6.18.52-VXTux-UMS512/drivers/dma-buf/heaps/cma_heap.c) | UNPROVEN as a deblob replacement |
+| 24 | `ion_ipc_trusty` | [drivers/dma-buf/sprd/ion_ipc_trusty.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/ion_ipc_trusty.c) | Noble substitute; ported 2026-10-07 |
+| 25 | `jpg` | [drivers/misc/sprd_jpg/sprd_jpg.c](6.18.52-VXTux-UMS512/drivers/misc/sprd_jpg/sprd_jpg.c) | SPRD JPEG port |
+| 26 | `leds-sc27xx-bltc` | [drivers/leds/leds-sc27xx-bltc.c](6.18.52-VXTux-UMS512/drivers/leds/leds-sc27xx-bltc.c) | UNPROVEN |
+| 27 | `ledtrig-pattern` | [drivers/leds/trigger/ledtrig-pattern.c](6.18.52-VXTux-UMS512/drivers/leds/trigger/ledtrig-pattern.c) | UNPROVEN |
+| 28 | `mcdt_hw` | [drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c) | Resolved through `sprd_mcdt_*` symbols |
+| 29 | `mipi_driver` | Not present under the supplied `drivers/unisoc_platform/debug_log/sharkl5/` path | Noble substitute listed; source path absent from this snapshot |
+| 30 | `misc_sprd_uid` | [drivers/soc/sprd/soc_id/sprd_uid.c](6.18.52-VXTux-UMS512/drivers/soc/sprd/soc_id/sprd_uid.c) | Tier A |
+| 31 | `musb_hdrc` | [drivers/usb/musb/musb_core.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_core.c) | Noble substitute; linkage remains unverified |
+| 32 | `musb_sprd` | [drivers/usb/musb/musb_sprd_vxtux.c](6.18.52-VXTux-UMS512/drivers/usb/musb/musb_sprd_vxtux.c) | Noble substitute; partial validation |
+| 33 | `novatek_ts_spi` | [drivers/input/touchscreen/novatek-nvt-ts-spi.c](6.18.52-VXTux-UMS512/drivers/input/touchscreen/novatek-nvt-ts-spi.c) | Noble substitute; not claimed as a one-to-one replacement |
+| 34 | `phy-sprd-sharkl5Pro` | [drivers/phy/sprd/phy-sprd-ums512.c](6.18.52-VXTux-UMS512/drivers/phy/sprd/phy-sprd-ums512.c) | Tier A |
+| 35 | `pinctrl` | [drivers/pinctrl/sprd/pinctrl-sprd.c](6.18.52-VXTux-UMS512/drivers/pinctrl/sprd/pinctrl-sprd.c) | Tier A; shared source with next ledger entry |
+| 36 | `pinctrl-sprd` | [drivers/pinctrl/sprd/pinctrl-sprd.c](6.18.52-VXTux-UMS512/drivers/pinctrl/sprd/pinctrl-sprd.c) | Tier A; same source path as previous entry |
+| 37 | `pinctrl-sprd-sharkl5Pro` | [drivers/pinctrl/sprd/pinctrl-sprd-sharkl5pro.c](6.18.52-VXTux-UMS512/drivers/pinctrl/sprd/pinctrl-sprd-sharkl5pro.c) | Tier A |
+| 38 | `pwm-sprd` | [drivers/pwm/pwm-sprd.c](6.18.52-VXTux-UMS512/drivers/pwm/pwm-sprd.c) | Tier A |
+| 39 | `pwm_bl` | [drivers/video/backlight/pwm_bl.c](6.18.52-VXTux-UMS512/drivers/video/backlight/pwm_bl.c) | Mainline PWM backlight |
+| 40 | `rtc-sc27xx` | [drivers/rtc/rtc-sc27xx.c](6.18.52-VXTux-UMS512/drivers/rtc/rtc-sc27xx.c) | Tier A |
+| 41 | `sc27xx-poweroff` | [drivers/power/reset/sc27xx-poweroff.c](6.18.52-VXTux-UMS512/drivers/power/reset/sc27xx-poweroff.c) | Tier A |
+| 42 | `sc27xx-vibra` | [drivers/input/misc/sc27xx-vibra.c](6.18.52-VXTux-UMS512/drivers/input/misc/sc27xx-vibra.c) | UNPROVEN |
+| 43 | `sc27xx_adc` | [drivers/iio/adc/sc27xx_adc.c](6.18.52-VXTux-UMS512/drivers/iio/adc/sc27xx_adc.c) | Tier A |
+| 44 | `sc27xx_fuel_gauge` | [drivers/power/supply/sc27xx_fuel_gauge.c](6.18.52-VXTux-UMS512/drivers/power/supply/sc27xx_fuel_gauge.c) | Tier A |
+| 45 | `sc27xx_tsensor_thermal` | [drivers/thermal/sprd/sc27xx_tsensor_thermal.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sc27xx_tsensor_thermal.c) | Tier A |
+| 46 | `sc27xx_typec` | [drivers/usb/typec/sprd/sc27xx_typec.c](6.18.52-VXTux-UMS512/drivers/usb/typec/sprd/sc27xx_typec.c) | Mainline-based port; module |
+| 47 | `seth` | [drivers/soc/sprd/sipc/seth.c](6.18.52-VXTux-UMS512/drivers/soc/sprd/sipc/seth.c) | Tier A |
+| 48 | `sha1-ce` | [crypto/sha1.c](6.18.52-VXTux-UMS512/crypto/sha1.c) | Mainline |
+| 49 | `snd-soc-sprd-card` | [drivers/sound/soc/sprd/card/sprd-asoc-card-utils.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/card/sprd-asoc-card-utils.c) | Tier A |
+| 50 | `snd-soc-sprd-codec-sc2730` | [drivers/sound/soc/sprd/codec_sc2730/sprd-codec.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec_sc2730/sprd-codec.c) | Tier A |
+| 51 | `snd-soc-sprd-codec-sc2730-power` | [drivers/sound/soc/sprd/codec/sprd-audio-power.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/sprd-audio-power.c) | Tier A; shared source with next entry |
+| 52 | `snd-soc-sprd-codec-sc2730-power-dev` | [drivers/sound/soc/sprd/codec/sprd-audio-power.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/sprd-audio-power.c) | Tier A; same source path as previous entry |
+| 53 | `snd-soc-sprd-dummy-codec` | [drivers/sound/soc/sprd/codec/dummy-codec.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/codec/dummy-codec.c) | Tier A |
+| 54 | `snd-soc-sprd-vbc-fe` | [drivers/sound/soc/sprd/dai_v4/vbc-dai.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-dai.c) | UNPROVEN |
+| 55 | `snd-soc-sprd-vbc-v4` | [drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/dai_v4/vbc-phy-v4.c) | UNPROVEN |
+| 56 | `spi-sprd` | [drivers/spi/spi-sprd.c](6.18.52-VXTux-UMS512/drivers/spi/spi-sprd.c) | Tier A |
+| 57 | `sprd-charger-manager` | [drivers/power/supply/sprd/sprd_charger_manager.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_charger_manager.c) | Tier A |
+| 58 | `sprd-compr-2stage-dma` | [drivers/dma/sprd-dma.c](6.18.52-VXTux-UMS512/drivers/dma/sprd-dma.c) | Tier A; shares implementation with `sprd-dma` |
+| 59 | `sprd-dma` | [drivers/dma/sprd-dma.c](6.18.52-VXTux-UMS512/drivers/dma/sprd-dma.c) | Tier A; same source path as previous entry |
+| 60 | `sprd-dmaengine-pcm` | [drivers/sound/soc/sprd/platform_include/sprd-dmaengine-pcm.h](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/platform_include/sprd-dmaengine-pcm.h) | Header-only; Tier B |
+| 61 | `sprd-drm` | [drivers/gpu/drm/sprd/sprd_drm.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/sprd/sprd_drm.c) | Tier A |
+| 62 | `sprd-gsp` | [drivers/gpu/drm/sprd/gsp/gsp_dev.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/sprd/gsp/gsp_dev.c) | Tier A |
+| 63 | `sprd-ion` | [drivers/dma-buf/sprd/sprd_ion.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/sprd_ion.c) | Tier A |
+| 64 | `sprd-platform-pcm-routing` | [drivers/sound/soc/sprd/platform/sprd-platform-pcm-routing.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/platform/sprd-platform-pcm-routing.c) | Tier A |
+| 65 | `sprd-top-dvfs` | [drivers/devfreq/sprd/sprd-top-dvfs.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/sprd-top-dvfs.c) | Tier A |
+| 66 | `sprd-vsp-pw-domain` | [drivers/pmdomain/sprd/sprd_vsp_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_vsp_pw_domain.c) | VSP power-domain gate |
+| 67 | `sprd_apipe` | [drivers/sound/soc/sprd/audio_pipe/audio_pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audio_pipe/audio_pipe.c) | Port of older driver |
+| 68 | `sprd_audcp_boot` | [drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c) | Tier A/B symbol evidence |
+| 69 | `sprd_audcp_dvfs` | [drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c) | Compiled 2026-10-04 |
+| 70 | `sprd_battery_info` | [drivers/power/supply/sprd/sprd_battery_info.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_battery_info.c) | NOT-CONFIGURED deliberately |
+| 71 | `sprd_camera` | [drivers/media/platform/sprd/pipeline/sprd_dcam.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_dcam.c) | UNPROVEN; ledger correction dated 2026-10-05 |
+| 72 | `sprd_camsys_pw_domain` | [drivers/pmdomain/sprd/sprd_camsys_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_camsys_pw_domain.c) | Power-domain port |
+| 73 | `sprd_cp_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
+| 74 | `sprd_cpp` | [drivers/media/platform/sprd/pipeline/sprd_isp.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_isp.c) | UNPROVEN; ledger correction dated 2026-05 |
+| 75 | `sprd_cpu_cooling` | [drivers/thermal/sprd/sprd_cpu_cooling.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sprd_cpu_cooling.c) | Tier A |
+| 76 | `sprd_ddr_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
+| 77 | `sprd_flash_drv` | [drivers/sprd/flash/flash_drv.c](6.18.52-VXTux-UMS512/drivers/sprd/flash/flash_drv.c) | Tier A |
+| 78 | `sprd_fm` | [drivers/net/wireless/sprd/sprdwcn/fm/driver/fm_sdio/fmdrv_main.c](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/fm/driver/fm_sdio/fmdrv_main.c) | Tier A; 4/4 objects, zero compile errors per ledger |
+| 79 | `sprd_gpu_cooling` | [drivers/thermal/sprd/sprd_gpu_cooling.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sprd_gpu_cooling.c) | Tier A |
+| 80 | `sprd_map` | [drivers/misc/sprd/sprd_map.c](6.18.52-VXTux-UMS512/drivers/misc/sprd/sprd_map.c) | Tier A |
+| 81 | `sprd_mipi` | Not present under the supplied `drivers/unisoc_platform/debug_log/` path | UNPROVEN; no matching source path in this snapshot |
+| 82 | `sprd_pmic_syscon` | [drivers/soc/sprd/pmic_syscon/sprd_pmic_syscon.c](6.18.52-VXTux-UMS512/drivers/soc/sprd/pmic_syscon/sprd_pmic_syscon.c) | Tier A |
+| 83 | `sprd_pmic_wdt` | [drivers/watchdog/sprd_wdt.c](6.18.52-VXTux-UMS512/drivers/watchdog/sprd_wdt.c) | Linked by symbol-family evidence |
+| 84 | `sprd_sensor` | [drivers/media/platform/sprd/sensors/sprd_sensor/Makefile](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/sensors/sprd_sensor/Makefile) | Tier A sensor framework; multiple source files |
+| 85 | `sprd_soc_thm` | [drivers/thermal/sprd/sprd_soc_thm.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sprd_soc_thm.c) | Tier A |
+| 86 | `sprd_thermal` | [drivers/thermal/sprd_thermal.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd_thermal.c) | Tier A |
+| 87 | `sprd_u_ether` | [drivers/usb/gadget/function/sprd/sprd_u_ether.c](6.18.52-VXTux-UMS512/drivers/usb/gadget/function/sprd/sprd_u_ether.c) | Tier A |
+| 88 | `sprd_usb_f_rndis` | [drivers/usb/gadget/function/sprd/sprd_usb_f_rndis.c](6.18.52-VXTux-UMS512/drivers/usb/gadget/function/sprd/sprd_usb_f_rndis.c) | Tier A |
+| 89 | `sprd_vdsp` | [drivers/sound/soc/sprd/Makefile](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/Makefile) | Symbol evidence in ledger; no standalone `vdsp.c` found |
+| 90 | `sprd_wdf` | [drivers/watchdog/sprd_wdf.c](6.18.52-VXTux-UMS512/drivers/watchdog/sprd_wdf.c) | Tier A |
+| 91 | `sprd_wlan_combo` | [drivers/net/wireless/sprd/sprdwcn/wlan/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/wlan/Makefile) | SC2355 Wi-Fi port; module composition |
+| 92 | `sprdbt_tty` | [drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile) | HCI over tty-SDIO; composite module |
+| 93 | `thermal-generic-adc` | [drivers/thermal/thermal-generic-adc.c](6.18.52-VXTux-UMS512/drivers/thermal/thermal-generic-adc.c) | Mainline |
+| 94 | `trusty-tui` | [drivers/misc/trusty-tui.c](6.18.52-VXTux-UMS512/drivers/misc/trusty-tui.c) | Port of vendor `trusty-tui.ko` |
+| 95 | `twofish_common` | [crypto/twofish_common.c](6.18.52-VXTux-UMS512/crypto/twofish_common.c) | Mainline |
+| 96 | `twofish_generic` | [crypto/twofish_generic.c](6.18.52-VXTux-UMS512/crypto/twofish_generic.c) | Mainline |
+| 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A |
+| 98 | `virt-dma` | [drivers/dma/virt-dma.c](6.18.52-VXTux-UMS512/drivers/dma/virt-dma.c) | Tier A shared DMA helper |
+| 99 | `vsp` | [drivers/pmdomain/sprd/vsp_regs.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/vsp_regs.c) | VSP domain support; see adjacent VSP headers and gate driver |
+| 100 | `wcn_bsp` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | WCN platform module composition; no standalone `bsp.c` found |
+| 101 | `zram` | [drivers/block/zram/zram_drv.c](6.18.52-VXTux-UMS512/drivers/block/zram/zram_drv.c) | N/A/absence entry in the supplied tally; corrected 2026-10-05 |
+| 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | UNPROVEN in the supplied tally; corrected 2026-10-05 |
+| 103 | `panfrost` | [drivers/gpu/drm/panfrost/panfrost_gpu.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/panfrost/panfrost_gpu.c) | Separate open-source GPU driver; Mali-G52 MP2 / Gondul replacement |
+
+**Count:** 102 supplied deblob/port ledger identifiers + 1 Panfrost entry = **103 documented entries**. This number intentionally preserves aliases and shared source paths from the ledger; it is not a claim of 103 distinct, independently validated kernel modules. `UNPROVEN`, `NOT-CONFIGURED`, `N/A`, and source-not-present labels are retained so the tally stays auditable.
+
+### Graphics note | GPU メモ
+
+The T618 GPU is Mali-G52 MP2, not Mali-G57. The stock GPU ID `0x7402` is normalized by Panfrost's model comparison to `0x7002`, matching its G52 model entry. The target DTS uses the Panfrost binding `arm,mali-bifrost`; it does not expose the removed vendor DDK compatible.
+
+Panfrost replaces the **kernel-side GPU driver**. Userspace graphics libraries are a separate layer and are not implied by this driver count.
+
+## Build | ビルド
+
+Use a clean kernel source tree. Kbuild rejects out-of-tree builds when a source-root `.config` is present. Install the usual kernel build dependencies, including `flex`, `bison`, and an AArch64 toolchain.
+
+```sh
+cd 6.18.52-VXTux-UMS512
+
+make O=out ARCH=arm64 defconfig
+
+(
+	cd out
+	sh ../scripts/kconfig/merge_config.sh -m .config \
+		../arch/arm64/configs/vxtux_618_fragment.defconfig
+)
+
+make O=out ARCH=arm64 olddefconfig
+make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
+```
+
+The target DTB is written to:
+
+```text
+out/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb
+```
+
+## Configuration notes | メモ
+
+- The production fragment targets UMS512/T618. Qualcomm and MediaTek SoC selections are disabled for this target; their upstream driver sources are not deleted.
+- Generic PCI/PCIe, USB, mass-storage, eMMC, and UFS support remain available. The board DTS and current hardware wiring determine which devices bind at runtime.
+- The UMS512 board uses its Unisoc USB path and SDIO-based WCN configuration. Unused platform-specific options do not justify removing reusable driver source.
+- Firmware and device-tree sources remain in the kernel tree. Firmware availability and userspace requirements are device-image concerns and should be checked separately.
+
+## Status | 状態
+
+This tree is under active bring-up. A config selection or successful DTB build alone does not prove that a driver has been validated on physical hardware; runtime support should be confirmed with probe logs and device tests.
+
+Issue reports and patches should include the exact board revision, kernel config, relevant `dmesg` output, and reproduction steps. どうぞよろしくお願いします。

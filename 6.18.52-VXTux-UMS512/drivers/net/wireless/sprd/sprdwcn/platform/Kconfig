@@ -1,0 +1,103 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Makefile for Unisoc wcn platform configuration
+#
+
+config WCN_BOOT
+	tristate "Core Support"
+	help
+	Choose Y here if you want to support boot function
+        for unisoc wcn sc23xx series chip.
+
+	In order to control your ext wcn chip, you will need enable it.
+	that include "boot, log, procfs, debugfs, at cmd, loopcheck, dumpmem,
+	reset, reboot,etc"
+
+config WCN_UTILS
+	bool "wcn debug for read and write register"
+	# Vendor menaruh `depends on SPRD_DEBUG` di sini. Untuk port 6.18
+	# ketergantungan itu DILEPAS, dengan alasan: wcn_debugfs.c hanya
+	# mendaftarkan satu berkas debugfs (device_initcall) yang membaca/menulis
+	# register chip — tidak ada sangkutan ke subsistem power/statistik
+	# SPRD_DEBUG. Kalau dependency itu dibiarkan, wcn_debugfs.o tidak akan
+	# pernah dibangun dan ekspor `wcn_init_debugfs` milik blob wcn_bsp
+	# (docs/blob_audit_syms.csv) hilang tanpa suara — persis jenis
+	# "port diam-diam mati" yang harus dicegah.
+	help
+	Choose Y here if you need to read/write register of wcn chip,
+	this is used for RD debug.
+
+	In order to control or debug your marlin chip, you will need to support
+	procfs command to read/write register of marlin chip on.
+
+config WCN_RDCDBG
+	bool "wcn kernel_write log and mermory to file"
+	help
+	Choose Y here if you need to save log and memory not by native server,
+	this is used for RD debug.
+
+	In order to control or debug your marlin chip, you will need to support
+	save log and mermory auto.
+
+config WCN_CORE
+	tristate "WCN core (SDIO path): power + bus + GNSS control"
+	depends on WCN_BOOT
+	default y
+	help
+	  Pemilik SATU-SATUNYA descent direktori platform/ (sebelumnya diraih
+	  WCN_BOOT, yang tidak boleh =m karena menyimpan tipe header).
+	  Komposit 23 objek: init fungsinya dirantai dari wcn_init_core()
+	  (lihat wcn_boot.c). Bukti bentuk komposit: 13 dari 20 simbol yang
+	  tadinya duplikat punya salinan identik di platform/ (versi blob SDIO
+	  wcn_bsp.ko); lapisan integrate (WCN_INTEG) dimatikan di papan ini.
+
+	# default was y, which forced WCN_INTEG (its dependency) to =y: a =y
+	# symbol cannot depend on a modular one, so kconfig promoted the whole
+	# WCN chain to builtin. That put boot/wcn_integrate*.o and
+	# platform/wcn_boot.o in the same vmlinux.a, colliding on 15 globals.
+	# Default n; the defconfig fragment sets =m explicitly when wanted.
+config WCN_PLATFORM
+	tristate "Platform Support"
+	depends on WCN_INTEG
+	default n
+	help
+	Enable this module for Spreadtrum WCN integration
+	chip debug and manage function.
+
+	In order to control or debug your marlin chip, you will need to
+	support procfs command and memory dump,cp log and so on.
+
+config WCN_SWD
+	bool "wcn swd support"
+	depends on UMW2653
+	help
+	Choose Y here if you need to support SWD driver to access arm registers,
+	this is used for RD debug.
+
+	In order to control or debug your marlin chip, you will need to support
+	swd driver to access arm registers.
+
+config WCN_SEC_VERIFY_STUB
+	bool "Lolos verifikasi citra TEE tanpa trusty (DEVIASI KEAMANAN)"
+	depends on WCN_BOOT
+	help
+	  Di 5.4, wcn_firmware_sec_verify() meminta TEE (trusty-ipc) mengesahkan
+	  citra firmware BTWF/GNSS lewat signature sebelum ditulis ke TCM.
+	  Kernel 6.18 VXTux tidak memuat driver trusty, jadi jalur itu tidak
+	  tersedia; tanpa simbol ini modul gagal di-link sama sekali.
+
+	  =y  -> wcn_sec_verify_618.c mengembalikan 0 (lolos) dan MENULIS
+	         pr_warn sekali per boot. Header/magic/ukuran citra tetap
+	         diperiksa pemanggil; yang dilewati hanya tanda tangan TEE.
+	  =n  -> fungsi mengembalikan -EOPNOTSUPP sehingga citra bertanda
+	         tangan TIDAK dimuat (perilaku aman bila trusty akhirnya
+	         di-port).
+
+	  Ini deviasi keamanan yang disengaja dan bukan implisit: tidak
+	  diaktifkan diam-diam. Wajib dicatat di docs/status.
+
+config WCN_SLEEP_INFO
+	bool "for get wcn sleep info"
+	help
+	Choose Y here if you need to get wcn sleep info,
+	this is used for get wcn sleep info.

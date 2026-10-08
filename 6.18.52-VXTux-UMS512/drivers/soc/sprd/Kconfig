@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0
+# Unisoc SoC drivers from port (GPL fork)
+
+source "drivers/soc/sprd/usbpinmux/Kconfig"
+source "drivers/soc/sprd/pmic_syscon/Kconfig"
+source "drivers/soc/sprd/soc_id/Kconfig"
+source "drivers/soc/sprd/hwfeature/Kconfig"
+source "drivers/soc/sprd/cache_efuse/Kconfig"
+source "drivers/soc/sprd/power_manager/Kconfig"
+source "drivers/soc/sprd/modem/Kconfig"

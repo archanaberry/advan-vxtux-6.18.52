@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/sipc/Kconfig — SIPC Unisoc framework (GPL 5.4 fork port -> 6.18)
+#
+# GPL source: fork Samsung Tab A8 (T618) drivers/soc/sprd/modem/sipc/
+# (C) Spreadtrum Communications Inc. — reused under GPL-2.0.
+#
+# Foundation for audio/WCN/modem chain: SIPC = shared-memory IPC to CP/DSP.
+# Consumers: drivers/misc/sprd_audio (AGDSP), drivers/misc/sprdwcn, modem.
+
+config SPRD_MAILBOX
+	bool "Unisoc vendor mailbox client API (over mainline sprd-mailbox)"
+	depends on SPRD_MBOX && MAILBOX
+	default y
+	help
+	  Reimplementation of Unisoc vendor mailbox API (mbox_raw_sent,
+	  mbox_just_sent, mbox_register_irq_handle, mbox_unregister_irq_handle,
+	  mbox_core_fifo_full) on top of mainline generic mailbox framework
+	  (drivers/mailbox/sprd-mailbox.c).
+
+	  Why needed: RE database of 103 blobs (blob_audit_syms.csv) proves
+	  these functions are not exported by any vendor blob — origin is
+	  stock 5.4 vmlinux (built-in). Without this shim all SIPC/audio consumers
+	  cannot build (and if forced, mailbox calls become no-op).
+
+config SPRD_SIPC
+	bool "Spreadtrum SIPC (AP <-> CP/DSP shared memory IPC)"
+	depends on SPRD_MAILBOX
+	default n
+	help
+	  Vendor SIPC framework: sipc.o smsg.o smem.o sbuf.o sblock.o +
+	  debugfs. Port 5.4 -> 6.18 (access_ok without type, timer_setup).
+	  Provides smsg_ch_open/smsg_send/smsg_recv, smem_alloc,
+	  sbuf_* and sblock_* used by audio AGDSP, WCN, and modem.
+
+# ---------------------------------------------------------------- MODEM
+# SPRD_SIPC_SPIPE/SPOOL/SETH/SIPX = transport MODEM di atas sbuf/sblock
+# (pipe/pool, dan ethernet-over-shared-memory).
+#
+# STATUS 2026-09-30: label ZOMBIE DIHAPUS karena status keempat
+# simbol ini berubah: airnya sudah ada GPL di
+# work/donors_20260930/bocchi_unisoc54/drivers/soc/sprd/modem/sipc/
+# (spipe.c, spool.c, sipx.c) dan .../drivers/net/sprd/seth/seth.c, dan
+# sekarang sudah ada di subtree ini sebagai spipe.c, spool.c, sipx.c,
+# seth.c beserta header .h-nya. Lihat docs/sipc_modem_port_20260930.md.
+# CONFIG-ZOMBIE dari tools/re/audit_wiring.py tidak lagi berlaku untuk
+# keempat simbol: Makefile di baris bawah sudah punya entri obj-*.
+
+config SPRD_SIPC_SPIPE
+	tristate "SPRD pipe driver based on SBUF"
+	depends on SPRD_SIPC
+	default n
+	help
+	  Character-device transport di atas sbuf: satu node DT
+	  "sprd,spipe" per kanal, mendaftarkan ringnr device
+	  /dev/<label><n>. Memakai sbuf_create_ex/sbuf_read/sbuf_write/
+	  sbuf_poll_wait dari inti SIPC.
+
+config SPRD_SIPC_SPOOL
+	tristate "SPRD pool driver based on SBLOCK"
+	depends on SPRD_SIPC
+	default n
+	help
+	  Character-device transport di atas sblock: satu node DT
+	  "sprd,spool" per kanal, mendaftarkan /dev/spool-<dst>-<channel>
+	  plus atribut sysfs base_addr. Dua mode DT ("sprd,preconfigured",
+	  "sprd,sblock_loop") ditolak eksplisit di probe karena penyedianya
+	  belum ada di port 6.18 - lihat komentar di spool.c.
+
+config SPRD_SIPC_SETH
+	tristate "SPRD Ethernet over shared memory (SETH)"
+	depends on SPRD_SIPC
+	help
+	  Netdev ARPHRD_RAWIP "seth_lte%d" yang menjembatani ethernet
+	  AP <-> modem lewat SBLOCK. MEMBUTUHKAN zero-copy SIPX pada
+	  konfigurasi device asli (blob seth.ko meng-undef 11 simbol
+	  sipx_*), jadi pilihannya adalah memilih
+	  SPRD_SIPC_ZERO_COPY_SIPX.
+
+config SPRD_SIPC_ZERO_COPY_SIPX
+	bool "SIPX zero-copy transport"
+	depends on SPRD_SIPC
+	default n
+	help
+	  Zero-copy untuk SBLOCK: menggantikan sblock_get/
+	  send/receive/release dengan pool+fifo di shared memory yang
+	  dipakai bersama CP. Menyediakan 12 simbol sipx_* yang di-`undef`
+	  oleh seth.ko pada device ini.
+
+config SPRD_SIPC_SWCNBLK
+	tristate "WCN block transport on SIPC"
+	depends on SPRD_SIPC
+	default n
+	help
+	  WCN-specific SBLK transport (swcnblk.o, self-contained: only calls
+	  core SIPC exported symbols which are built-in). Modular so it can be insmod'd
+	  and tested one by one (e.g. QEMU boot + insmod chain).

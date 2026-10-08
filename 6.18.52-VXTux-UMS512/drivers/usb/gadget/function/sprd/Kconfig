@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Unisoc RNDIS / U_ether USB gadget functions, ported from vendor blobs for
+# UMS512 (T618). CONFIG_USB_GADGET_SPRD is the aggregator referenced by
+# drivers/Makefile (obj-$(CONFIG_USB_GADGET_SPRD) += usb/gadget/function/sprd/);
+# it was referenced there but never defined, so the directory was never built.
+
+config USB_GADGET_SPRD
+	tristate "Unisoc RNDIS and U_ether USB gadget functions"
+	# "select USB_ETH" alongside "depends on USB_GADGET && USB_ETH" is a
+	# recursive dependency (kconfig rejects it): the file is sourced inside
+	# `if USB_GADGET` in drivers/usb/gadget/Kconfig, so USB_GADGET is already
+	# the enclosing condition. Keep the depends-on, drop the select.
+	depends on USB_ETH
+	default n
+	help
+	  Ethernet-over-USB and RNDIS gadget functions ported from the Unisoc
+	  vendor blobs for UMS512 (T618). sprd_u_ether provides the net_device
+	  side, sprd_usb_f_rndis the RNDIS protocol glue. These replace the
+	  vendor modules sprd_u_ether.ko / sprd_usb_f_rndis.ko and are what
+	  fastbootd RNDIS and USB tethering on this device need.

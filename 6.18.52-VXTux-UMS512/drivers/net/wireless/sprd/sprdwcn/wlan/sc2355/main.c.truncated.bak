@@ -1,0 +1,200 @@
+/*
+ * Copyright (C) 2015 Spreadtrum Communications Inc.
+ *
+ * Authors	:
+ * Keguang Zhang <keguang.zhang@spreadtrum.com>
+ * Jingxiang Li <Jingxiang.li@spreadtrum.com>
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include "sprdwl.h"
+#include "npi.h"
+#include "cfg80211.h"
+#include "cmdevt.h"
+#include "txrx.h"
+#include "msg.h"
+#include "intf_ops.h"
+#include "vendor.h"
+#include "work.h"
+#include "rnd_mac_addr.h"
+#if defined(SC2355_FTR)
+#include "tx_msg_sc2355.h"
+#include "rx_msg_sc2355.h"
+#include "core_sc2355.h"
+#endif
+#include "tcp_ack.h"
+#ifdef DFS_MASTER
+#include "11h.h"
+#endif
+
+#ifdef RTT_SUPPORT
+#include "rtt.h"
+#endif /* RTT_SUPPORT */
+
+#ifdef TCPACK_DELAY_SUPPORT
+#include "tcp_ack.h"
+#endif
+#include <net/ip.h>
+#include <net/sock.h>
+
+struct sprdwl_priv *g_sprdwl_priv;
+
+static void str2mac(const char *mac_addr, u8 *mac)
+{
+	unsigned int m[ETH_ALEN];
+
+	if (sscanf(mac_addr, "%02x:%02x:%02x:%02x:%02x:%02x",
+		   &m[0], &m[1], &m[2], &m[3], &m[4], &m[5]) != ETH_ALEN)
+		wl_err("failed to parse mac address '%s'", mac_addr);
+	mac[0] = m[0];
+	mac[1] = m[1];
+	mac[2] = m[2];
+	mac[3] = m[3];
+	mac[4] = m[4];
+	mac[5] = m[5];
+}
+
+void sprdwl_netif_rx(struct sk_buff *skb, struct net_device *ndev)
+{
+	struct sprdwl_vif *vif;
+	struct sprdwl_intf *intf;
+	struct sprdwl_rx_if *rx_if = NULL;
+
+	vif = netdev_priv(ndev);
+	intf = (struct sprdwl_intf *)(vif->priv->hw_priv);
+	rx_if = (struct sprdwl_rx_if *)intf->sprdwl_rx;
+
+	print_hex_dump_debug("RX packet: ", DUMP_PREFIX_OFFSET,
+			     16, 1, skb->data, skb->len, 0);
+	skb->dev = ndev;
+	skb->protocol = eth_type_trans(skb, ndev);
+	if (skb->protocol == cpu_to_be16(ETH_P_PAE) &&
+		sprdwl_debug_level >= L_INFO) {
+		print_hex_dump(KERN_WARNING, "RX EAP packet: ", DUMP_PREFIX_NONE,
+			16, 1, skb->data, skb->len, 0);
+	}
+	/* CHECKSUM_UNNECESSARY not supported by our hardware */
+	/* skb->ip_summed = CHECKSUM_UNNECESSARY; */
+
+	ndev->stats.rx_packets++;
+	ndev->stats.rx_bytes += skb->len;
+#if defined(MORE_DEBUG)
+		intf->stats.rx_packets++;
+		intf->stats.rx_bytes += skb->len;
+		if (skb->pkt_type == PACKET_MULTICAST)
+			intf->stats.rx_multicast++;
+#endif
+
+#ifndef SC2355_RX_NAPI
+/*to ensure data handled in netif in order*/
+	local_bh_disable();
+	netif_receive_skb(skb);
+	local_bh_enable();
+#else
+	skb_orphan(skb);
+	napi_gro_receive(&rx_if->napi_rx, skb);
+#endif
+}
+
+void sprdwl_stop_net(struct sprdwl_vif *vif)
+{
+	struct sprdwl_vif *real_vif, *tmp_vif;
+	struct sprdwl_priv *priv = vif->priv;
+
+	spin_lock_bh(&priv->list_lock);
+	list_for_each_entry_safe(real_vif, tmp_vif, &priv->vif_list, vif_node)
+		if (real_vif->ndev)
+			netif_stop_queue(real_vif->ndev);
+	spin_unlock_bh(&priv->list_lock);
+}
+
+static void sprdwl_netflowcontrl_mode(struct sprdwl_priv *priv,
+				      enum sprdwl_mode mode, bool state)
+{
+	struct sprdwl_vif *vif;
+
+	vif = mode_to_vif(priv, mode);
+	if (vif) {
+		if (state)
+			netif_wake_queue(vif->ndev);
+		else
+			netif_stop_queue(vif->ndev);
+		sprdwl_put_vif(vif);
+	}
+}
+
+static void sprdwl_netflowcontrl_all(struct sprdwl_priv *priv, bool state)
+{
+	struct sprdwl_vif *real_vif, *tmp_vif;
+
+	spin_lock_bh(&priv->list_lock);
+	list_for_each_entry_safe(real_vif, tmp_vif, &priv->vif_list, vif_node)
+		if (real_vif->ndev) {
+			if (state)
+				netif_wake_queue(real_vif->ndev);
+			else
+				netif_stop_queue(real_vif->ndev);
+		}
+	spin_unlock_bh(&priv->list_lock);
+}
+
+/* @state: true for netif_start_queue
+ *	   false for netif_stop_queue
+ */
+void sprdwl_net_flowcontrl(struct sprdwl_priv *priv,
+			   enum sprdwl_mode mode, bool state)
+{
+	if (mode != SPRDWL_MODE_NONE)
+		sprdwl_netflowcontrl_mode(priv, mode, state);
+	else
+		sprdwl_netflowcontrl_all(priv, state);
+}
+
+static int sprdwl_start_xmit_prepare(struct sprdwl_vif *vif, struct net_device *ndev,
+				     struct sk_buff *skb)
+{
+	struct sprdwl_intf *intf = (struct sprdwl_intf *)vif->priv->hw_priv;
+
+	/* drop nonlinearize skb */
+	if (skb_linearize(skb)) {
+		wl_err("nonlinearize skb\n");
+		dev_kfree_skb(skb);
+		ndev->stats.tx_dropped++;
+		return -1;
+	}
+
+	if (intf->cp_asserted == 1 || unlikely(intf->exit)) {
+		dev_kfree_skb(skb);
+		sprdwl_stop_net(vif);
+		return -1;
+	}
+
+	if (vif->priv->hw_type == SPRDWL_HW_SC2355_PCIE) {
+		if (sprdwcn_bus_get_status() == WCN_BUS_DOWN) {
+			wl_err("%s,wcn bus is down, drop skb!\n", __func__);
+			dev_kfree_skb(skb);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static void sprdwl_get_pcie_dma_addr(struct sprdwl_vif *vif, struct sk_buff *skb)
+{
+
+	struct sk_buff *tmp_skb = NULL;
+
+	if (vif->priv->hw_type == SPRDWL_HW_SC2355_PCIE) {
+		dma_addr_t dma_addr = 0;
+		dma_addr = PFN_PHYS(virt_to_pfn(skb->head)) + offset_in_page(skb->head);
+
+		if (!dma_capable(wiphy_dev(vif->priv->wiphy), dma_addr, skb->len)) {

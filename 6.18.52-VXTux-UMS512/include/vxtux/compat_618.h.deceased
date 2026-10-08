@@ -1,0 +1,89 @@
+/* compat_618.h - jembatan API 5.4 -> 6.18 untuk modul vendor yang
+ * dibangun ulang dari sumber revisi 5.4.
+ * Dibuat otomatis oleh tools/re/classify_missing.py (B11).
+ * Sertakan PALING AKHIR, setelah seluruh include kernel.
+ *
+ * Semua entri lulus tiga gerbang: LHS tidak disediakan 6.18,
+ * RHS ada di 6.18, dan arity argumen cocok.
+ * Verifikasi ulang: tools/re/verify_compat_618.py
+ */
+#ifndef _VXTUX_COMPAT_618_H
+#define _VXTUX_COMPAT_618_H
+
+
+/* ---- rename mekanis (macro) ---- */
+
+/* ---- inline shim (bukan macro: butuh tipe lengkap & semantik benar) ---- */
+#ifndef SKB_REASON_CONSUMED
+/* enum skb_free_reason 5.4 hilang di 6.18 */
+enum vxtux_skb_free_reason { SKB_REASON_CONSUMED = 0, SKB_REASON_DROPPED = 1 };
+#endif
+
+static inline void __dev_kfree_skb_any(struct sk_buff *skb, int reason)
+{
+	if (reason == SKB_REASON_DROPPED)
+		kfree_skb(skb);
+	else
+		consume_skb(skb);
+}
+
+static inline void of_dev_put(struct platform_device *ofdev)
+{
+	put_device(&ofdev->dev);
+}
+
+static inline void wakeup_source_destroy(struct wakeup_source *ws)
+{
+	wakeup_source_unregister(ws);
+}
+
+static inline void page_endio(struct page *page, bool is_write, int err)
+{
+	struct folio *folio = page_folio(page);
+
+	/* 6.18 menghapus flag PG_error/folio_set_error: penanda galat I/O pindah
+	 * ke address_space lewat mapping_set_error(), persis yang dipakai fs/6.18. */
+	if (err && folio->mapping)
+		mapping_set_error(folio->mapping, err);
+	if (is_write)
+		folio_end_writeback(folio);
+	else
+		folio_end_read(folio, err == 0);
+}
+
+/* FLAG_IS_WAKEUP (flag privat drivers/gpio/gpiolib.h di pohon vendor) dibaca
+ * langsung oleh sdiohal_main.c/sdio_int.c lewat p_desc->flags. 6.18 menutup
+ * struct gpio_desc, dan flag itu memang tidak pernah ada di mainline; makna
+ * sebenarnya = "interrupt GPIO ini terpasang sebagai wakeup source", yang di
+ * 6.18 dijawab API publik irqd_is_wakeup_set(). */
+static inline bool vxtux_gpiod_irq_is_wakeup(struct gpio_desc *desc)
+{
+	int irq = gpiod_to_irq(desc);
+	struct irq_data *d = (irq >= 0) ? irq_get_irq_data(irq) : NULL;
+
+	return d && irqd_is_wakeup_set(d);
+}
+
+/* sys_chmod() dihapus di 6.18. Padanan kernel untuk berkas yang baru dibuat
+ * filp_open(O_CREAT, 0666) = notify_change() pada dentry-nya, sebab mode O_CREAT
+ * sudah terpotong current_umask(). */
+static inline int vxtux_kernel_chmod(struct file *filp, umode_t mode)
+{
+	struct iattr newattrs = { .ia_valid = ATTR_MODE, .ia_mode = mode };
+
+	return notify_change(mnt_idmap(filp->f_path.mnt), filp->f_path.dentry,
+			     &newattrs, NULL);
+}
+
+/* ==== PORT-WORK TERSISA (SHIM-NEEDED, 74 simbol; lihat
+ * tools/re/build/shim_classified.tsv) ==== */
+/* blk-mq: blk_queue_*, blkdev_get/put, bdgrab/bdput, revalidate_disk */
+/* trusty/tipc: trusty_fast_call32, tipc_chan_* (port drivers/trusty) */
+/* ion: ion_alloc, ion_*_heap, ion_buffer_prep_noncached */
+/* sipc-x: sipx_*, smsg_callback_* */
+/* drm: drm_gem_cma_* -> drm_gem_dma_* */
+/* gadget: gether_*, sprd_gether_* */
+/* provider in-tree: sprd_battery_*, sprd_flash_*, sprd_iommu_* */
+/* arm64: fpsimd_context_busy */
+
+#endif /* _VXTUX_COMPAT_618_H */

@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/soc/soc_id/Kconfig — port fork GPL (sprd_soc_id.c, sprd_uid.c)
+
+config SPRD_SOCID
+	tristate "Unisoc SoC identity reader (chip/plat/impl/mft/ver) (VXTux port)"
+	depends on MFD_SYSCON
+	default n
+	help
+	  Pembaca identitas SoC dari syscon chipid (0x402e0000):
+	  sprd_get_soc_id() untuk konsumen in-tree. Port dari
+	  drivers/misc/sprd_soc_id.c (GPL fork Samsung T618).
+
+config SPRD_UID
+	tristate "Unisoc device UID via eFuse nvmem (VXTux port)"
+	depends on NVMEM
+	default n
+	help
+	  /dev/sprd_uid + atribut sysfs uid, dibaca dari sel efuse
+	  uid_start/uid_end. Port dari drivers/misc/sprd_uid.c (GPL).

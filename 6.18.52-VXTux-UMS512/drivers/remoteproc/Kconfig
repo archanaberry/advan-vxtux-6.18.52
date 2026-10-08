@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Remoteproc drivers"
+
+config REMOTEPROC
+	bool "Support for Remote Processor subsystem"
+	depends on HAS_DMA
+	select CRC32
+	select FW_LOADER
+	select VIRTIO
+	select WANT_DEV_COREDUMP
+	help
+	  Support for remote processors (such as DSP coprocessors). These
+	  are mainly used on embedded systems.
+
+if REMOTEPROC
+
+config REMOTEPROC_CDEV
+	bool "Remoteproc character device interface"
+	help
+	  Say y here to have a character device interface for the remoteproc
+	  framework. Userspace can boot/shutdown remote processors through
+	  this interface.
+
+	  It's safe to say N if you don't want to use this interface.
+
+endif # REMOTEPROC
+
+endmenu

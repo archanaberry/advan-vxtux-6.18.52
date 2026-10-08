@@ -1,0 +1,15 @@
+config SPRD_FLASH_DRV
+	tristate "Spreadtrum camera flash HAL"
+	depends on MISC_DEVICE
+	help
+	  Registration HAL between the ISP camera stack and the per-chip flash
+	  drivers. Ported 2026-10-04 from the vendor sources in
+	  work/donorcatalog/mods-sprd/sprd/common/camera/flash/flash_drv/.
+
+	  Chip drivers call sprd_flash_register() to publish themselves; the ISP
+	  calls sprd_flash_ctrl() / sprd_flash_cfg() / sprd_flash_get_info().
+	  Registers a misc device "sprd_flash" and creates its own platform
+	  device, so it needs no DT node.
+
+	  Say Y here if unsure -- the driver is harmless unless a flash chip
+	  driver registers with it.

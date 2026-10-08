@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Unisoc camera pipeline + sensors for UMS512 (T618). CONFIG_MEDIA_SPRD is the
+# aggregator referenced by drivers/Makefile
+# (obj-$(CONFIG_MEDIA_SPRD) += media/platform/sprd/); it was referenced there
+# but never defined, so the directory was never descended into.
+
+config MEDIA_SPRD
+	bool
+	default y
+	help
+	  Aggregator for the Unisoc/VXTux camera drivers. Not user-selectable;
+	  choose the pipeline and sensors below.
+
+config MEDIA_SPRD_PIPELINE
+	tristate "Unisoc camera pipeline (CSI/ISP glue)"
+	# VIDEO_V4L2 does not exist in this kernel any more. Upstream renamed
+	# the V4L2 core symbol to VIDEO_DEV; drivers/media/v4l2-core/Kconfig in
+	# this same tree spells it 'depends on VIDEO_DEV && MEDIA_CONTROLLER' for
+	# VIDEO_V4L2_SUBDEV_API. Depending on the old name silently dropped this
+	# symbol, so sprd_dcam.o, sprd_csi.o, sprd_mipi_csi_phy.o and
+	# sprd_isp.o never built even though the fragment asks for =y.
+	depends on VIDEO_DEV && MEDIA_CONTROLLER
+	depends on MEDIA_SPRD
+	default n
+	help
+	  Camera pipeline glue for the Unisoc CSI/ISP block: device-camera
+	  (.dcam) node, MIPI CSI-2 receiver, CSI PHY and ISP front end.
+
+source "drivers/media/platform/sprd/sensors/Kconfig"
+
+# Pens_DOWN_SENSORS: satu-satunya penjaga descent ke sensors/. Dulu Makefile
+# punya tiga baris += sensors/ (satu per simbol sensor) dan kbuild menghitung
+# directory itu tiga kali begitu lebih dari satu sensor =y.
+config VIDEO_SPRD_SENSORS
+	bool
+	default y
+	# The subdev API symbol is VIDEO_V4L2_SUBDEV_API in this tree, not
+	# V4L2_SUBDEV_API. Verified against drivers/media/v4l2-core/Kconfig.
+	depends on MEDIA_SPRD && VIDEO_V4L2_SUBDEV_API
+	help
+	  Non-visible aggregator gating the single descent into sensors/.
+	  The per-sensor symbols (VIDEO_GC8034, VIDEO_GC5025, VIDEO_S5K4H7YX)
+	  keep their own dependencies and defaults in sensors/Kconfig.

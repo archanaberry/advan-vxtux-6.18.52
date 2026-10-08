@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# SPRD IMS bridge — replaces blob ims_bridge.ko (Samsung Tab A8 donor,
+# bocchi_unisoc54/net/ims_bridge/). The bridge carries IMS/VoLTE user-plane
+# packets between the LTE bearer (seth_lte) and the IMS stack over SIPC.
+
+config SPRD_IMS_BRIDGE
+	tristate "SPRD IMS bridge"
+	depends on NET
+	depends on INET
+	# NETFILTER is required, and it is a real datapath dependency, not a
+	# preference. imsbr_hooks.c registers nf_imsbr_input / nf_imsbr_output as
+	# NF_INET_LOCAL_IN / NF_INET_LOCAL_OUT hooks: those hook points ARE how
+	# the bridge intercepts IMS packets. Without NETFILTER the driver has no
+	# way to see a packet at all, so there is no "cheap" variant that omits it.
+	#
+	# What is deliberately NOT selected is the expensive part. NETFILTER by
+	# itself is the core hook dispatcher, a few dozen files. The bulk of the
+	# earlier +8.7 MB came from NETFILTER_ADVANCED, which defaults to y and
+	# drags in xtables, conntrack, NAT, ip_tables, ip6_tables and the
+	# per-protocol netfilter trees. Leave NETFILTER_ADVANCED off: this driver
+	# registers raw hooks and never consults a match/target table.
+	#
+	# XFRM is likewise not selected. Only the ESP/IPsec tunnel path in
+	# imsbr_hooks.c reaches struct xfrm_state, and it is #ifdef'd out in the
+	# source. No T618 carrier config negotiates IPsec for IMS media.
+	select NETFILTER
+	help
+	  Bridge for the Spreadtrum IMS user plane. Multicasts IMS packets
+	  onto the LTE bearer and delivers inbound SIPC traffic back up to
+	  the IMS core, taking its datapath from flowi4/xfrm on egress and
+	  from netlink on ingress.
+
+	  Note: this selects NETFILTER and XFRM. Both are currently off in
+	  the T618 fragment, which is why the eight objects here could not
+	  build: imsbr_main.c calls security_skb_classify_flow() and
+	  imsbr_packet.c matches on flowi4_tos. Enabling this option pulls
+	  in roughly 366 additional C files (~8.7 MB of vmlinux). That is
+	  a deliberate size decision, not an oversight.
+
+config SPRD_IMS_BRIDGE_TRANSIT
+	tristate "SPRD IMS bridge transit mode"
+	depends on SPRD_IMS_BRIDGE
+	depends on DEBUG_FS
+	help
+	  Exposes the bridge's internal transit counters through debugfs so
+	  IMS packet flow can be observed on a live device. Off by default:
+	  it is a diagnostic path, not part of the data path.

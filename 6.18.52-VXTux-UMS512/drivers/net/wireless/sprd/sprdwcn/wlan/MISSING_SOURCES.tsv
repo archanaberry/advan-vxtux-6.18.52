@@ -1,0 +1,32 @@
+# MISSING_SOURCES.tsv - REVISI (D5f, 2026-09-30). Revisi ini MEMBUKA klaim
+# versi pertama yang salah: versi itu menyatakan 11h.h "tidak ada di donor
+# mana pun", padahal ada. Donor yang terlewat adalah wlan_combo/merlion/
+# di work/donors_20260930/marohinmark_ums512 -- justru donor yang disebut
+# dalam brief; from: hanya gpl-source/** yang dipindai.
+#
+# wlan/Makefile mendaftarkan 27 objek; 27 berkas .c ada di disk.
+# Tidak ada objek menggantung. Yang tersisa di bawah ini adalah berkas yang
+# SENGAJA TIDAK didaftarkan, beserta alasannya.
+#
+# Otoritas nama objek: gpl-source/hadenix_ums512_wcn/drivers/wcn/wlan/Makefile
+# (obj-$(CONFIG_WCN_WLAN) += sprdwl_ng.o; 26 objek) -- objek ported dicocokkan
+# 1:1 dengan daftar itu, ditambah sc2355/11h.o (lihat 11h.h di bawah).
+#
+# kolom: file<TAB>status<TAB>donor_path<TAB>sha256_16<TAB>ukuran_bytes<TAB>alasan
+11h.h	PULIH	work/donors_20260930/marohinmark_ums512/kernel_modules/kernel5.4/wcn/wlan/wlan_combo/merlion/11h.h	4321e9143f7c0914	2008	Salin 2026-09-30. WAJIB ada: cfg80211.c, cmdevt.c, main.c, work.c, work.h meng#include "11h.h". Klaim lama ("tidak ada di donor mana pun") SALAH.
+11h.c	PULIH	work/donors_20260930/marohinmark_ums512/kernel_modules/kernel5.4/wcn/wlan/wlan_combo/merlion/11h.c	990d13f866dd107b	7272	Salin 2026-09-30 + didaftarkan sbg sc2355/11h.o. WAJIB: cmdevt.c:3638 memanggil sprdwl_11h_handle_radar_detected() dan work.c:131 memanggil sprdwl_send_dfs_cmd(); keduanya didefinisikan HANYA di 11h.c -> tanpa ini link gagal. Donor hadenix punya 2 bug yang sama (memanggil tanpa mendefinisikan).
+mml.o	BUKAN-BERKAS	-	-	-	Salah ketik, bukan berkas hilang: mm.c/.mm.h ADA di donor hadenix DAN di pohon. Diperbaiki mml.o -> mm.o (sesuai wlan/Makefile hadenix). Tidak ada mml.c di donor mana pun.
+version.o	DIDEFINISIKAN-SEBAGAI-HEADER	-	-	-	version.h (54 baris, deklarasi saja tanpa static/inline) ADA di donor marohinmark/merlion DAN di pohon; version.c TIDAK ada di donor mana pun. Objek DIHAPUS dari daftar karena header itu tidak butuh .c.
+sdio.c	DITARIK-GENERASI-LAIN	work/donors_20260930/marohinmark_ums512/.../wlan_combo/sc2355/sdio.c	-	-	Ada, TAPI di pohon donor sc2355/ yang API-nya generations berbeda (pakai init.c/tx.c/rx.c/scan.c/acs.c/hw_param.c/fcc.c), sedangkan sumber yang dip-port merlion-generation (main.c/if_sc2355.c/txrx.c/...). Mencampur keduanya tidak akan link. WCN_T1030 juga jalur SDIO, bukan PCIe. Objek DIHAPUS.
+pcie.c	DITARIK-GENERASI-LAIN	work/donors_20260930/marohinmark_ums512/.../wlan_combo/sc2355/pcie.c	-	-	Sama seperti sdio.c:_generasi PCIe != generasi WiFi yang dip-port. Berkas bernama sama milik subtree PCIe sprdwcn (pcie/pcie.c) TIDAK boleh dipakai. Objek DIHAPUS.
+pcie_buf.c	DITARIK-GENERASI-LAIN	work/donors_20260930/marohinmark_ums512/.../wlan_combo/sc2355/pcie_buf.c	-	-	Sama seperti sdio.c/pcie.c. Objek DIHAPUS.
+#
+# CATATAN PENTING (belum terselesaikan):
+#  - hadenix wlan/Makefile menetapkan 13 ccflags -D (SC2355_FTR, IBSS_SUPPORT,
+#    NAN_SUPPORT, RTT_SUPPORT, ACS_SUPPORT, SOFTAP_HOOK, TCPACK_DELAY_SUPPORT,
+#    SC2355_TX_FILTER, SC2355_QOS_MAP, IBSS_RSN_SUPPORT, SC2355_HW_CSUM,
+#    WMMAC_WFA_CERTIFICATION, COMPAT_SAMPILE_CODE, RND_MAC_SUPPORT).
+#    Semuanya BELUM disalin ke wlan/Makefile. Tanpa build, dampaknya tidak
+#    bisa dibuktikan -> ditandai di komentar wlan/Makefile, bukan ditebak.
+#  - CONFIG_WCN_WLAN tetap TETAP =n di src/configs/vxtux_618_fragment.defconfig
+#    sampai ada build device yang membuktikan link.

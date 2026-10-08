@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/soc/hwfeature/Kconfig — port fork GPL (sprd_hwfeature.c)
+
+config SPRD_HWFEATURE
+	bool "Unisoc hardware feature table dari DT /hwfeature (VXTux port)"
+	depends on OF
+	default n
+	help
+	  Tabel properti /hwfeature dari DT (chipid, efuse, dll) yang bisa
+	  dikueri via sprd_kproperty_eq()/sprd_kproperty_get(). Port dari
+	  drivers/soc/sprd/sprd_hwfeature.c (GPL).

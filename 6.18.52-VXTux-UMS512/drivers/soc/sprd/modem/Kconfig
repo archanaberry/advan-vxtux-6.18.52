@@ -1,0 +1,32 @@
+config SPRD_MODEM
+	tristate "Unisoc Modem driver (stub)"
+	depends on FIRMWARE_LOADER
+	help
+	  Modem driver for Unisoc UMS512/T618.
+	  Loads modem firmware from partition and provides
+	  kernel interface for userspace RIL daemon.
+	  Full modem bring-up requires vendor RIL + SIPC stack.
+
+# Port 2026-10-04: the Kconfig above was a stub that only described the modem,
+# with no sub-options, so none of the real drivers below could ever be selected.
+# Each sub-directory now contributes its own options.
+source "drivers/soc/sprd/modem/cproc/Kconfig"
+source "drivers/soc/sprd/modem/cp_dump/Kconfig"
+source "drivers/soc/sprd/modem/modem_loader/Kconfig"
+
+# Port 2026-10-04: optional hook used by cp_dump when a dump region asks to be
+# registered for crash persistence (struct region_info.mini_dump_flag).
+# The provider -- minidump_save_extend_information() -- lives in the sprd debug
+# sysdump subsystem, which is NOT in this tree. Donor if it is ever wanted:
+#   gpl-source/fork_t618/extract/soc/drivers/soc/sprd/debug/sysdump/
+# It needs Samsung's <linux/sec_debug.h>, so it is a separate porting job.
+# Leave unset: cp_dump builds and works, only crash-persistence registration is
+# skipped (and says so once at runtime).
+config SPRD_SYSDUMP
+	bool "Unisoc sprd debug sysdump (crash-persistence provider)"
+	default n
+	help
+	  Enables minidump_save_extend_information() registration from cp_dump.
+	  Requires the sprd debug/sysdump subsystem, which is not present in this
+	  tree. Only turn this on after porting it, or the link will fail with an
+	  undefined symbol.

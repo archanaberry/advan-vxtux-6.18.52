@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Trusty (Trusted Execution Environment) — port Unisoc/UMS512.
+#
+# ASAL (dibuktikan, bukan dugaan): seluruh isi direktori ini diport dari donor
+# GPL `work/donors_20260930/bocchi_unisoc54` (Bocchi-The-Dev/kernel_unisoc-5.4,
+# HEAD 4d2f575) pada path `drivers/trusty/`. Donor itu adalah kernel 5.4 UMS512
+# dengan varian SPRD (`sprd_shm.c`), yaitu transport yang SAMA dengan yang
+# diharapkan DTS port ini (`sprd,trusty-smc-v1` + anak `sprd,trusty-virtio-v1`),
+# jadi varian AOSP murni (google-modules/trusty) TIDAK dipakai: protokolnya
+# berbeda (shm_cnt + dma_buf) dan blob vendor dibangun untuk varian 5.4 ini.
+#
+# KENAPA INI PENTING — tiga pemakai `tipc_chan_*` sudah ada di pohon SEBELUM
+# port ini dan sampai sekarang TIDAK BISA DIBANGUN karena tidak ada penyedianya:
+#   drivers/gpu/drm/sprd/gsp/gsp_ipc_trusty.c   (dimatikan di gsp/Makefile)
+#   drivers/net/wireless/sprd/sprdwcn/platform/wcn_ca_trusty.c (diganti deviasi)
+#   blobs/vendor_modules/ion_ipc_trusty.ko (baris ledger BLOCKED)
+# Header `include/linux/trusty/trusty_ipc.h` sudah ada di pohon dan IDENTIK
+# dengan donor, jadi kontrak API-nya bukan hasil tebakan.
+#
+# CATATAN SIMBOL: `config TRUSTY_TUI` TIDAK didefinisikan di sini walau donor
+# mendefinisikannya, karena pohon ini sudah punya `config TRUSTY_TUI` di
+# drivers/misc/Kconfig (drivers/misc/trusty-tui.c, hasil RE radare2 dari blob
+# vendor). Dua definisi simbol yang sama = error kconfig. `trusty-tui.c` donor
+# karena itu juga tidak diport.
+
+menu "Trusty"
+
+config TRUSTY
+	tristate "Trusty"
+	default n
+	help
+	  Trusty core: SMC call plumbing, shared memory encoding and the
+	  non-secure side of the trusty/secure-world handshake. The irq, log
+	  and virtio children below all depend on it.
+
+config TRUSTY_LOG
+	tristate
+	depends on TRUSTY
+	default m
+
+config TRUSTY_VIRTIO
+	tristate "Trusty virtio support"
+	depends on TRUSTY
+	select VIRTIO
+	default m
+
+config TRUSTY_VIRTIO_IPC
+	tristate "Trusty Virtio IPC driver"
+	depends on TRUSTY_VIRTIO
+	default m
+	help
+	  This module adds support for communications with Trusty Services.
+
+	  It provides the tipc_chan_* API declared in
+	  include/linux/trusty/trusty_ipc.h, which is what the in-tree
+	  gsp_ipc_trusty.c / wcn_ca_trusty.c consumers and the vendor
+	  ion_ipc_trusty.ko client are written against.
+
+	  If you choose to build a module, it'll be called trusty-ipc.
+	  Say N if unsure.
+
+config SPRD_TSHM
+	tristate "Spreadtrum TSHM driver"
+	depends on TRUSTY
+	default n
+	help
+	  This provides a simple method to allocate physical share memory
+	  in user space.
+	  Say N here if you are unsure about need this.
+	  Otherwise say Y to select.
+
+endmenu

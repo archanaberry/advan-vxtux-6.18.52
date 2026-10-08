@@ -1,0 +1,112 @@
+#
+# Spreadtrum WCN device (NEW )configuration
+#
+menu "Spreadtrum WCN Device Drivers (VXTux port)"
+config SC23XX
+	bool "SC23XX chip Support"
+	#depends on MMC
+	default n
+	help
+	  This is support wcn chip for spreadtrum.
+	  if you want to use 23xx series wcn chip of spreadtrum.
+	  please say "y".
+
+# NOTE (18 Sep 2026): this symbol MISSING from port despite being used by source and
+# vendor Kconfig. `include/wcn_glb.h` selects chip register header via
+# `#ifdef CONFIG_SC2355`; without this symbol no `*_glb.h` gets included
+# so dozens of register macros (GNSS_CP_START_ADDR, DCACHE_REG_BASE, DUMP_PACKET_SIZE,
+# FIRMWARE_MAX_SIZE, SYNC_ADDR, REG_CP_SLP_CTL, ...) missing
+# "sprd,sc2355-sdio-wifi"; blob wcn_bsp.ko full of sdiohal_* strings.
+config SC2355
+	bool "SC2355 chip Support"
+	depends on SC23XX
+	default n
+	help
+  SC2355 WCN chip support (used on Advan Tab VX Lite T1030/UMS512).
+  Enabling this makes wcn_glb.h include sc2355_glb.h.
+
+config WCN_INTEG
+	tristate "WCN Integrated chip Support"
+	depends on SC23XX
+	default n
+	help
+	  This is support wcn chip for spreadtrum.
+	  If you want to use WCN integrated chip of spreadtrum.
+	  Please say "y".
+
+config UMW2652
+	tristate "UMW2652 chip Support (not used on T618)"
+	depends on SC23XX
+	default n
+	help
+  PCIe/dual-bin chip variant -- keep n on T618 board.
+
+config UMW2653
+	tristate "UMW2653 chip Support (not used on T618)"
+	depends on SC23XX
+	default n
+	help
+  SWD/debug chip variant -- keep n on T618 board.
+
+config SC2342_I
+	tristate "SC2342 integrated chip Support (not used on T618)"
+	depends on WCN_INTEG
+	default n
+	help
+  Other chip variant -- keep n on T618 board.
+
+config UMW2631_I
+	tristate "UMW2631 integrated chip Support (not used on T618)"
+	depends on WCN_INTEG
+	default n
+	help
+  Other chip variant -- keep n on T618 board.
+
+# ---------------------------------------------------------------------------
+# Bluetooth (sprdbt_tty) + FM (sprd_fm)
+#
+# Symbol, module name, and object list taken AS-IS from in-tree reference
+# (gpl-source/hadenix_ums512_wcn/drivers/wcn/{Kconfig,bluetooth,fm}),
+# which uses `obj-$(CONFIG_WCN_BLUETOOTH)` / `obj-$(CONFIG_WCN_FM)` -- not
+# from vendor external-gen Makefile/Kbuild using `obj-m` + BSP_BOARD_UNISOC_WCN_SOCKET env var.
+# Both are `tristate` and set `=m` in fragment: original blobs are modules
+# (sprdbt_tty.ko, sprd_fm.ko), so correct module form -- also produces .ko
+# verifiable via modinfo/vermagic.
+
+config WCN_BLUETOOTH
+	tristate "Spreadtrum WCN bluetooth driver (sprdbt_tty)"
+	depends on SC23XX
+	default n
+	help
+  BT HCI over tty-sdio. Replaces sprdbt_tty.ko blob (5.4.210).
+  Source: wcn/bluetooth/driver/tty-sdio (4.14 generation).
+
+config WCN_FM
+	tristate "Spreadtrum WCN FM driver (sprd_fm)"
+	depends on SC23XX
+	default n
+	help
+  MARLIN3 FM Radio. Replaces sprd_fm.ko blob.
+  Source: wcn/fm/driver/fm_sdio (older generation than blob).
+
+# sprd's SDIO device driver based on SC2355...,etc
+source "drivers/net/wireless/sprd/sprdwcn/sdio/Kconfig"
+
+# sprd's SIPC device driver based on WCN_INTEG...,etc
+source "drivers/net/wireless/sprd/sprdwcn/sipc/Kconfig"
+
+# sprd's sleep device driver based on SC2355...,etc
+source "drivers/net/wireless/sprd/sprdwcn/sleep/Kconfig"
+
+# sprd's wcn platform driver based on SC2355/SC2342...,etc
+source "drivers/net/wireless/sprd/sprdwcn/platform/Kconfig"
+# PCIe bus variant (2026-09-19): PREVIOUSLY never sourced, so
+# WCN_PCIE unknown to kconfig and 8 .c in pcie/ impossible to build.
+source "drivers/net/wireless/sprd/sprdwcn/pcie/Kconfig"
+
+# D5(b2) (2026-09-30): wlan/Kconfig TIDAK PERNAH di-source, sehingga
+# CONFIG_WCN_WLAN tak dikenal kconfig dan wlan/ tidak pernah
+# di-descend. Ditambahkan sebelum endmenu agar ikut di dalam menu.
+source "drivers/net/wireless/sprd/sprdwcn/wlan/Kconfig"
+
+endmenu

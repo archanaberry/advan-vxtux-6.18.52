@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-2.0
+# CONFIG NOTE (18 Sep 2026): originally `depends on TRUSTY && VXTUX_DRIVERS`,
+# but 6.18 mainline DOES NOT have TRUSTY symbol (verified: no
+# `config TRUSTY` in entire tree; drivers/trusty doesn't exist, only
+# drivers/tee). As a result this symbol can never be enabled and =y line in defconfig
+# dropped by olddefconfig without message. If trusty-ipc enters tree, that dep
+# must be restored; disp_ca.c itself already fail-gracefully without TEE.
+config VXTUX_TRUSTY_DISP
+	tristate "VXTux: Trusty display-CA helpers (RE)"
+	depends on TEE
+	default n
+	help
+	  Helper disp_ca_* for Trusty TEE display path (proven stub build v4;
+	  original provider = disp_trusty.c when TRUSTY_VIRTIO_IPC=y). Official port
+	  replaces stub — fail-gracefully without TEE.

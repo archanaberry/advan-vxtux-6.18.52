@@ -1,0 +1,265 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# MMC/SD host controller drivers
+#
+
+comment "MMC/SD/SDIO Host Controller Drivers"
+
+config MMC_DEBUG
+	bool "MMC host drivers debugging"
+	depends on MMC != n
+	help
+	  This is an option for use by developers; most people should
+	  say N here. This enables MMC host driver debugging. And further
+	  added host drivers please don't invent their private macro for
+	  debugging.
+
+config MMC_SDHCI
+	tristate "Secure Digital Host Controller Interface support"
+	depends on HAS_DMA
+	help
+	  This selects the generic Secure Digital Host Controller Interface.
+	  It is used by manufacturers such as Texas Instruments(R), Ricoh(R)
+	  and Toshiba(R). Most controllers found in laptops are of this type.
+
+	  If you have a controller with this interface, say Y or M here. You
+	  also need to enable an appropriate bus interface.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_IO_ACCESSORS
+	bool
+	depends on MMC_SDHCI
+	help
+	  This is silent Kconfig symbol that is selected by the drivers that
+	  need to overwrite SDHCI IO memory accessors.
+
+config MMC_SDHCI_BIG_ENDIAN_32BIT_BYTE_SWAPPER
+	bool
+	depends on MMC_SDHCI
+	select MMC_SDHCI_IO_ACCESSORS
+	help
+	  This option is selected by drivers running on big endian hosts
+	  and performing I/O to a SDHCI controller through a bus that
+	  implements a hardware byte swapper using a 32-bit datum.
+	  This endian mapping mode is called "data invariance" and
+	  has the effect of scrambling the addresses and formats of data
+	  accessed in sizes other than the datum size.
+
+	  This is the case for the Nintendo Wii SDHCI.
+
+config MMC_SDHCI_UHS2
+	tristate "UHS2 support on SDHCI controller" if COMPILE_TEST
+	depends on MMC_SDHCI
+	help
+	  This option is selected by SDHCI controller drivers that want to
+	  support UHS2-capable devices.
+
+	  If you have a controller with this feature, say Y or M here.
+
+config MMC_SDHCI_PCI
+	tristate "SDHCI support on PCI bus"
+	depends on MMC_SDHCI && PCI
+	select MMC_CQHCI
+	select MMC_SDHCI_UHS2
+	select IOSF_MBI if X86
+	select MMC_SDHCI_IO_ACCESSORS
+	help
+	  This selects the PCI Secure Digital Host Controller Interface.
+	  Most controllers found today are PCI devices.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_RICOH_MMC
+	bool "Ricoh MMC Controller Disabler"
+	depends on MMC_SDHCI_PCI
+	default y
+	help
+	  This adds a pci quirk to disable Ricoh MMC Controller. This
+	  proprietary controller is unnecessary because the SDHCI driver
+	  supports MMC cards on the SD controller, but if it is not
+	  disabled, it will steal the MMC cards away - rendering them
+	  useless. It is safe to select this even if you don't
+	  have a Ricoh based card reader.
+
+	  If unsure, say Y.
+
+config MMC_SDHCI_ACPI
+	tristate "SDHCI support for ACPI enumerated SDHCI controllers"
+	depends on MMC_SDHCI && ACPI && PCI
+	select IOSF_MBI if X86
+	help
+	  This selects support for ACPI enumerated SDHCI controllers,
+	  identified by ACPI Compatibility ID PNP0D40 or specific
+	  ACPI Hardware IDs.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_PLTFM
+	tristate "SDHCI platform and OF driver helper"
+	depends on MMC_SDHCI
+	help
+	  This selects the common helper functions support for Secure Digital
+	  Host Controller Interface based platform and OF drivers.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_OF_ARASAN
+	tristate "SDHCI OF support for the Arasan SDHCI controllers"
+	depends on MMC_SDHCI_PLTFM
+	depends on OF
+	depends on COMMON_CLK
+	select MMC_CQHCI
+	help
+	  This selects the Arasan Secure Digital Host Controller Interface
+	  (SDHCI). This hardware is found e.g. in Xilinx' Zynq SoC.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_OF_ESDHC
+	tristate "SDHCI OF support for the Freescale eSDHC controller"
+	depends on MMC_SDHCI_PLTFM
+	depends on PPC || ARCH_MXC || ARCH_LAYERSCAPE || COMPILE_TEST
+	select MMC_SDHCI_IO_ACCESSORS
+	select FSL_GUTS
+	help
+	  This selects the Freescale eSDHC controller support.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_OF_DWCMSHC
+	tristate "SDHCI OF support for the Synopsys DWC MSHC"
+	depends on MMC_SDHCI_PLTFM
+	depends on OF
+	depends on COMMON_CLK
+	select MMC_CQHCI
+	help
+	  This selects Synopsys DesignWare Cores Mobile Storage Controller
+	  support.
+	  If you have a controller with this interface, say Y or M here.
+	  If unsure, say N.
+
+config MMC_SDHCI_SPRD
+	tristate "Spreadtrum SDIO host Controller"
+	depends on ARCH_SPRD || COMPILE_TEST
+	depends on MMC_SDHCI_PLTFM
+	select MMC_SDHCI_IO_ACCESSORS
+	select MMC_HSQ
+	help
+	  This selects the SDIO Host Controller in Spreadtrum
+	  SoCs, this driver supports R11(IP version: R11P0).
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_EXTERNAL_DMA
+	bool
+
+config MMC_CQHCI
+	tristate "Command Queue Host Controller Interface support"
+	depends on HAS_DMA
+	help
+	  This selects the Command Queue Host Controller Interface (CQHCI)
+	  support present in host controllers of Qualcomm Technologies, Inc
+	  amongst others.
+	  This controller supports eMMC devices with command queue support.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_HSQ
+	tristate "MMC Host Software Queue support"
+	help
+	  This selects the MMC Host Software Queue support. This may increase
+	  performance, if the host controller and its driver supports it.
+
+	  If you have a controller/driver supporting this interface, say Y or M
+	  here.
+
+	  If unsure, say N.
+
+config MMC_DW
+	tristate "Synopsys DesignWare Memory Card Interface"
+	depends on ARC || ARM || ARM64 || MIPS || RISCV || CSKY || COMPILE_TEST
+	help
+	  This selects support for the Synopsys DesignWare Mobile Storage IP
+	  block, this provides host support for SD and MMC interfaces, in both
+	  PIO, internal DMA mode and external DMA mode.
+
+config MMC_DW_PLTFM
+	tristate "Synopsys Designware MCI Support as platform device"
+	depends on MMC_DW
+	default y
+	help
+	  This selects the common helper functions support for Host Controller
+	  Interface based platform driver. Please select this option if the IP
+	  is present as a platform device. This is the common interface for the
+	  Synopsys Designware IP.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say Y.
+
+config MMC_DW_PCI
+	tristate "Synopsys Designware MCI support on PCI bus"
+	depends on MMC_DW && PCI
+	help
+	  This selects the PCI bus for the Synopsys Designware Mobile Storage IP.
+	  Select this option if the IP is present on PCI platform.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SPI
+	tristate "MMC/SD/SDIO over SPI"
+	depends on SPI_MASTER
+	select CRC7
+	select CRC_ITU_T
+	help
+	  Some systems access MMC/SD/SDIO cards using a SPI controller
+	  instead of using a "native" MMC/SD/SDIO controller.  This has a
+	  disadvantage of being relatively high overhead, but a compensating
+	  advantage of working on many systems without dedicated MMC/SD/SDIO
+	  controllers.
+
+	  If unsure, or if your system has no SPI master driver, say N.
+
+config MMC_SDHI
+	tristate "Renesas SDHI SD/SDIO controller support"
+	depends on SUPERH || ARCH_RENESAS || COMPILE_TEST
+	depends on (RESET_CONTROLLER && REGULATOR) || !OF
+	select MMC_TMIO_CORE
+	help
+	  This provides support for the SDHI SD/SDIO controller found in
+	  Renesas SuperH, ARM and ARM64 based SoCs
+
+config MMC_TMIO_CORE
+	tristate
+
+config SPRD_SDHCI
+	tristate "Spreadtrum/Unisoc SDHCI Host Controller support"
+	depends on ARCH_SPRD || COMPILE_TEST
+	depends on MMC_SDHCI_PLTFM
+	select MMC_SDHCI_IO_ACCESSORS
+	select MMC_HSQ
+	help
+	  This selects the SDHCI Host Controller in Spreadtrum/Unisoc
+	  SoCs. This is a separate driver from MMC_SDHCI_SPRD for newer
+	  Unisoc SoCs with standard SDHCI interface.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.

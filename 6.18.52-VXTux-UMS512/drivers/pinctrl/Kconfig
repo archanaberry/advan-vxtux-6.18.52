@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# PINCTRL infrastructure and drivers
+#
+
+menuconfig PINCTRL
+	bool "Pin controllers"
+
+if PINCTRL
+
+config GENERIC_PINCTRL_GROUPS
+	bool
+
+config PINMUX
+	bool "Support pin multiplexing controllers" if COMPILE_TEST
+
+config GENERIC_PINMUX_FUNCTIONS
+	bool
+	select PINMUX
+
+config PINCONF
+	bool "Support pin configuration controllers" if COMPILE_TEST
+
+config GENERIC_PINCONF
+	bool
+	select PINCONF
+
+config DEBUG_PINCTRL
+	bool "Debug PINCTRL calls"
+	depends on DEBUG_KERNEL
+	help
+	  Say Y here to add some extra checks and diagnostics to PINCTRL calls.
+
+config PINCTRL_LOONGSON2
+	tristate "Pinctrl driver for the Loongson-2 SoC"
+	depends on OF && (LOONGARCH || COMPILE_TEST)
+	select PINMUX
+	select GENERIC_PINCONF
+	help
+	 This selects pin control driver for the Loongson-2 SoC. It
+	 provides pin config functions multiplexing.  GPIO pin pull-up,
+	 pull-down functions are not supported. Say yes to enable
+	 pinctrl for Loongson-2 SoC.
+
+config PINCTRL_LPC18XX
+	bool "NXP LPC18XX/43XX SCU pinctrl driver"
+	depends on OF && (ARCH_LPC18XX || COMPILE_TEST)
+	default ARCH_LPC18XX
+	select PINMUX
+	select GENERIC_PINCONF
+	help
+	  Pinctrl driver for NXP LPC18xx/43xx System Control Unit (SCU).
+
+config PINCTRL_SCMI
+	tristate "Pinctrl driver using SCMI protocol interface"
+	depends on ARM_SCMI_PROTOCOL || COMPILE_TEST
+	select PINMUX
+	select GENERIC_PINCONF
+	help
+	  This driver provides support for pinctrl which is controlled
+	  by firmware that implements the SCMI interface.
+	  It uses SCMI Message Protocol to interact with the
+	  firmware providing all the pinctrl controls.
+
+config PINCTRL_SINGLE
+	tristate "One-register-per-pin type device tree based pinctrl driver"
+	depends on OF
+	depends on HAS_IOMEM
+	select GENERIC_PINCTRL_GROUPS
+	select GENERIC_PINMUX_FUNCTIONS
+	select GENERIC_PINCONF
+	help
+	  This selects the device tree based generic pinctrl driver.
+
+source "drivers/pinctrl/sprd/Kconfig"
+
+endif

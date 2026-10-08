@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/soc/pmic_syscon/Kconfig — port fork GPL (sprd_pmic_syscon.c)
+
+config SPRD_PMIC_SYSCON
+	tristate "Unisoc PMIC global register debug access (VXTux port)"
+	depends on MFD_SC27XX_PMIC
+	default n
+	help
+	  Akses register global PMIC SC27xx via sysfs (/sys/.../pmic_reg,
+	  pmic_value). Port dari drivers/soc/sprd/sprd_pmic_syscon.c (GPL).

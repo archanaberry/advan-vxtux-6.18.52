@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/soc/cache_efuse/Kconfig — port fork GPL (sprd_cache_efuse.c)
+
+config NVMEM_SPRD_CACHE_EFUSE
+	tristate "Unisoc AP cache eFuse reader (VXTux port)"
+	depends on NVMEM
+	default n
+	help
+	  Pembaca nvmem read-only untuk cache eFuse Unisoc (snapshot RAM).
+	  Menyediakan sel uid_start/uid_end untuk driver UID, thermal, dan
+	  DVFS. Port dari drivers/nvmem/sprd_cache_efuse.c (GPL). Pengganti
+	  blob tanpa butuh hwspinlock/clock (baca memori cache langsung).

@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_USBPINMUX
+	tristate "Unisoc USB pinmux (D+/UART-JTAG mux, VXTux port)"
+	depends on OF && REGULATOR && PINCTRL
+	help
+	  Driver pinmux USB Unisoc (port GPL 5.4 -> 6.18 dari fork Samsung T618).
+	  Membuka mux USBMux bila JTAG tidak memegang pin: menaikkan VDD usbmux dan
+	  memilih state pinctrl uart_inf_sel0/sel1. Tanpa ini, jalur D+/D- bisa
+	  tertinggal di mode UART/JTAG dan OTG gagal.

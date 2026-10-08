@@ -1,0 +1,14 @@
+	# default was y, which forced WCN_INTEG (its dependency) to =y: a =y
+	# symbol cannot depend on a modular one, so kconfig promoted the whole
+	# WCN chain to builtin. That put boot/wcn_integrate*.o and
+	# platform/wcn_boot.o in the same vmlinux.a, colliding on 15 globals.
+	# Default n; the defconfig fragment sets =m explicitly when wanted.
+config WCN_SIPC
+	tristate "WCN SIPC Support"
+	depends on WCN_INTEG
+	default n
+	help
+	  Enable this module for Spreadtrum WCN integration
+	  chip sipc Support.
+	  Please insmod this module before any other
+	  WCN subsystems. Thanks.

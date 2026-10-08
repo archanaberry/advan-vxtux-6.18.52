@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Unisoc/SC27xx Type-C port driver, ported from the vendor blob for
+# UMS512 (T618). CONFIG_TYPEC_SPRD is the aggregator referenced by
+# drivers/Makefile (obj-$(CONFIG_TYPEC_SPRD) += usb/typec/sprd/); it was
+# referenced there but never defined anywhere, so the directory was never
+# descended into.
+
+config TYPEC_SPRD
+	tristate "Unisoc SC27xx Type-C/PD port support"
+	# This file is sourced from drivers/usb/typec/Kconfig INSIDE `if TYPEC`,
+	# so TYPEC is already the enclosing condition: do not add "depends on TYPEC"
+	# (redundant) and do not "select TYPEC" (selecting the enclosing condition
+	# is a recursive dependency and kconfig rejects it).
+	depends on OF
+	default n
+	help
+	  Type-C / Power Delivery port driver for the Unisoc SC27xx family
+	  (SC2730 PMIC). Provides CC detection, RdWw attach/detach and PD
+	  contract negotiation for the USB-C port on UMS512 / T618.

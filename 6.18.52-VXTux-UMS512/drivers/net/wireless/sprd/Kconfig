@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/net/wireless/sprd/Kconfig
+#
+# D5(a) (2026-09-30): berkas INI TIDAK ADA sebelumnya, padahal
+# drivers/Kconfig:175 sudah menunjuknya:
+#     source "drivers/net/wireless/sprd/Kconfig"
+# -> Kconfig akan memberitahu "No rule to make target" / simbol
+# CONFIG_SC23XX, CONFIG_WCN_* tak pernah terbaca sebagai simbol.
+# Berkas Makefile pasangan (sprd/Makefile) SUDAH ada, jadi yang
+# hilang hanya sisi Kconfig.
+#
+# Semua simbol WCN dideklarasikan di sprdwcn/Kconfig, jadi berkas
+# ini cukup menjadi titik masuk (identik polanya dengan
+# drivers/gpu/drm/sprd/Kconfig dan drivers/iio/sprd/Kconfig).
+#
+# CATATAN: sprdwcn/Kconfig punya menu...endmenu sendiri, jadi TIDAK
+# dibungkus `if WLAN` di sini -- sprdwcn/Kconfig yang sudah mandiri.
+
+source "drivers/net/wireless/sprd/sprdwcn/Kconfig"

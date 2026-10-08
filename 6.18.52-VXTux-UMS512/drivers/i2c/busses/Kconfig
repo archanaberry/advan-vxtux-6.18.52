@@ -1,0 +1,175 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Sensor device configuration
+#
+
+menu "I2C Hardware Bus support"
+	depends on HAS_IOMEM
+
+comment "I2C system bus drivers (mostly embedded / system-on-chip)"
+
+config I2C_DESIGNWARE_CORE
+	tristate "Synopsys DesignWare I2C adapter"
+	select REGMAP
+	help
+	  This option enables support for the Synopsys DesignWare I2C adapter.
+	  This driver includes support for the I2C host on the Synopsys
+	  Designware I2C adapter.
+
+	  To compile the driver as a module, choose M here: the module will be
+	  called i2c-designware-core.
+
+if I2C_DESIGNWARE_CORE
+
+config I2C_DESIGNWARE_SLAVE
+	bool "Synopsys DesignWare Slave"
+	select I2C_SLAVE
+	help
+	  If you say yes to this option, support will be included for the
+	  Synopsys DesignWare I2C slave adapter.
+
+config I2C_DESIGNWARE_PLATFORM
+	tristate "Synopsys DesignWare Platform driver"
+	depends on (ACPI && COMMON_CLK) || !ACPI
+	select MFD_SYSCON if MIPS_BAIKAL_T1
+	default I2C_DESIGNWARE_CORE
+	help
+	  If you say yes to this option, support will be included for the
+	  Synopsys DesignWare I2C adapters on the platform bus.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called i2c-designware-platform.
+
+config I2C_DESIGNWARE_AMDISP
+	tristate "Synopsys DesignWare Platform for AMDISP"
+	depends on DRM_AMD_ISP || COMPILE_TEST
+	depends on I2C_DESIGNWARE_CORE
+	help
+	  If you say yes to this option, support will be included for the
+	  AMDISP Synopsys DesignWare I2C adapter.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called amd_isp_i2c_designware.
+
+config I2C_DESIGNWARE_AMDPSP
+	bool "AMD PSP I2C semaphore support"
+	depends on ACPI
+	depends on CRYPTO_DEV_SP_PSP
+	depends on PCI
+	depends on I2C_DESIGNWARE_PLATFORM
+	depends on (I2C_DESIGNWARE_PLATFORM=y && CRYPTO_DEV_CCP_DD=y) || \
+		   (I2C_DESIGNWARE_PLATFORM=m && CRYPTO_DEV_CCP_DD)
+	help
+	  This driver enables managed host access to the selected I2C bus shared
+	  between AMD CPU and AMD PSP.
+
+	  You should say Y if running on an AMD system equipped with the PSP.
+
+config I2C_DESIGNWARE_BAYTRAIL
+	bool "Intel Baytrail I2C semaphore support"
+	depends on ACPI
+	depends on I2C_DESIGNWARE_PLATFORM
+	depends on (I2C_DESIGNWARE_PLATFORM=m && IOSF_MBI) || \
+		   (I2C_DESIGNWARE_PLATFORM=y && IOSF_MBI=y)
+	help
+	  This driver enables managed host access to the PMIC I2C bus on select
+	  Intel BayTrail platforms using the X-Powers AXP288 PMIC. It allows
+	  the host to request uninterrupted access to the PMIC's I2C bus from
+	  the platform firmware controlling it. You should say Y if running on
+	  a BayTrail system using the AXP288.
+
+config I2C_DESIGNWARE_PCI
+	tristate "Synopsys DesignWare PCI driver"
+	depends on PCI
+	help
+	  If you say yes to this option, support will be included for the
+	  Synopsys DesignWare I2C adapters on the PCI bus. Only master mode is
+	  supported.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called i2c-designware-pci.
+
+endif
+
+config I2C_GPIO
+	tristate "GPIO-based bitbanging I2C"
+	depends on GPIOLIB || COMPILE_TEST
+	select I2C_ALGOBIT
+	help
+	  This is a very simple bitbanging I2C driver utilizing the
+	  arch-neutral GPIO API to control the SCL and SDA lines.
+
+config I2C_GPIO_FAULT_INJECTOR
+	bool "GPIO-based fault injector"
+	depends on I2C_GPIO
+	help
+	  This adds some functionality to the i2c-gpio driver which can inject
+	  faults to an I2C bus, so another bus master can be stress-tested.
+	  This is for debugging. If unsure, say 'no'.
+
+config I2C_CBUS_GPIO
+	tristate "CBUS I2C driver"
+	depends on GPIOLIB || COMPILE_TEST
+	help
+	  Support for CBUS access using I2C API. Mostly relevant for Nokia
+	  Internet Tablets (770, N800 and N810).
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called i2c-cbus-gpio.
+
+config I2C_SPRD
+	tristate "Spreadtrum I2C interface"
+	depends on I2C=y && (ARCH_SPRD || COMPILE_TEST)
+	depends on COMMON_CLK
+	help
+	  If you say yes to this option, support will be included for the
+	  Spreadtrum I2C interface.
+
+config I2C_VERSATILE
+	tristate "ARM Versatile/Realview I2C bus support"
+	depends on ARCH_MPS2 || ARCH_VERSATILE || ARCH_REALVIEW || ARCH_VEXPRESS || COMPILE_TEST
+	select I2C_ALGOBIT
+	help
+	  Say yes if you want to support the I2C serial bus on ARMs Versatile
+	  range of platforms.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called i2c-versatile.
+
+config I2C_MPC
+	tristate "MPC107/824x/85xx/512x/52xx/83xx/86xx"
+	depends on PPC
+	help
+	  If you say yes to this option, support will be included for the
+	  built-in I2C interface on the MPC107, Tsi107, MPC512x, MPC52xx,
+	  MPC8240, MPC8245, MPC83xx, MPC85xx and MPC8641 family processors.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called i2c-mpc.
+
+if ACPI
+
+config I2C_SCMI
+	tristate "SMBus Control Method Interface"
+	help
+	  This driver supports the SMBus Control Method Interface. It needs the
+	  BIOS to declare ACPI control methods as described in the SMBus Control
+	  Method Interface specification.
+
+	  To compile this driver as a module, choose M here:
+	  the module will be called i2c-scmi.
+
+endif # ACPI
+
+config I2C_VIRTIO
+	tristate "Virtio I2C Adapter"
+	select VIRTIO
+	help
+	  If you say yes to this option, support will be included for the virtio
+	  I2C adapter driver. The hardware can be emulated by any device model
+	  software according to the virtio protocol.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called i2c-virtio.
+
+endmenu

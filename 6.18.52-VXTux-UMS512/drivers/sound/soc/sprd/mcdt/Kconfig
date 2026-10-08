@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/audio/mcdt/Kconfig — varian hardware MCDT
+#
+# Wiring 2026-09-19. Dua cacat nyata yang diperbaiki di sini:
+#
+#  1. `mcdt_r2p0/Makefile` memakai `CONFIG_SPRD_AUDIO_MCDT_R2P0` sementara
+#     simbol itu TIDAK ADA di Kconfig mana pun. Simbol hantu seperti ini
+#     berbahaya: nilai apa pun yang ditulis untuknya dibuang kconfig tanpa
+#     peringatan (kelas cacat yang sama dengan D5 HIDDEN di gate_fragment.py).
+#
+#  2. Setelah simbolnya dideklarasikan, draf pertama memakai
+#     `depends on SPRD_AUDIO_MCDT` -- dan itu SALAH, terbukti dari probe:
+#     dengan r1p0 di-n dan r2p0 di-y, `make olddefconfig` MENGHAPUS r2p0 juga.
+#     Varian r2p0 jadi mustahil dipilih justru pada satu-satunya keadaan yang
+#     membutuhkannya.
+#
+# r1p0 dan r2p0 adalah DUA VARIAN DRIVER YANG SALING MENIADAKAN, bukan dua
+# bagian yang bisa hidup bersama: keduanya mendefinisikan `mcdt_probe`,
+# `mcdt_driver` dan `module_platform_driver(mcdt_driver)` untuk compatible yang
+# sama, dan keduanya mengklaim `mcdt_hw.o`/`mcdt_hw_r2p0.o` dari header yang
+# sama. Bentuk Kconfig yang benar untuk itu adalah `choice`, bukan dua `bool`
+# lepas: choice menjamin tepat satu terpilih, sehingga duplikasi platform_driver
+# tidak bisa terjadi karena salah tulis config, dan tiap varian tetap bisa
+# dipilih sendiri-sendiri.
+#
+# Umbrella-nya tetap `SPRD_AUDIO_MCDT` (dipakai audio/Makefile untuk menurunkan
+# direktori ini dan sound/asoc/Kconfig sebagai dependensi), jadi config yang
+# sudah ada -- `CONFIG_SPRD_AUDIO_MCDT=y` di fragmen -- tetap sah dan tetap
+# memilih r1p0 lewat `default`.
+
+choice
+	prompt "Unisoc MCDT hardware variant"
+	depends on SPRD_AUDIO_MCDT
+	default SPRD_AUDIO_MCDT_R1P0
+	help
+	  MCDT (Multi-channel Data Transfer) punya dua revisi hardware yang
+	  driver-nya tidak bisa hidup bersama. Pilih yang cocok dengan SoC
+	  target; untuk UMS512/T618 jawabannya r1p0.
+
+config SPRD_AUDIO_MCDT_R1P0
+	bool "r1p0 (UMS512/T618 — compatible \"sprd,sharkl5-mcdt\")"
+	help
+	  Varian r1p0 (mcdt_hw.c). Ini yang dipakai papan T1030: node DT fork
+	  memakai compatible "sprd,sharkl5-mcdt" yang cocok dengan mcdt_hw.c.
+
+config SPRD_AUDIO_MCDT_R2P0
+	bool "r2p0 (SoC generasi berikutnya)"
+	help
+	  Varian r2p0 (mcdt_hw_r2p0.c). Belum dipakai papan mana pun di pohon
+	  ini -- tidak ada node DT yang memakai compatible-nya. Dipilih hanya
+	  bila membidik SoC yang memang memakai MCDT r2p0.
+
+endchoice

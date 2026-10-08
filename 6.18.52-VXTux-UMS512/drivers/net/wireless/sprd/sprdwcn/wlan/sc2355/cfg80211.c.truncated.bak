@@ -1,0 +1,500 @@
+/*
+ * Copyright (C) 2015 Spreadtrum Communications Inc.
+ *
+ * Abstract : This file is an implementation for cfg80211 subsystem
+ *
+ * Authors:
+ * Keguang Zhang <keguang.zhang@spreadtrum.com>
+ * Jingxiang Li <Jingxiang.li@spreadtrum.com>
+ * Dong Xiang <dong.xiang@spreadtrum.com>
+ * Huiquan Zhou <huiquan.zhou@spreadtrum.com>
+ * Baolei Yuan <baolei.yuan@spreadtrum.com>
+ * Xianwei Zhao <xianwei.zhao@spreadtrum.com>
+ * Gui Zhu <gui.zhu@spreadtrum.com>
+ * Andy He <andy.he@spreadtrum.com>
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include "sprdwl.h"
+#include "cfg80211.h"
+#include "cmdevt.h"
+#include "work.h"
+#include "ibss.h"
+#include "intf_ops.h"
+#include "softap_hook.h"
+#if defined(SC2355_QOS_MAP)
+#include "tx_msg_sc2355.h"
+#endif
+#ifdef RND_MAC_SUPPORT
+#include "rnd_mac_addr.h"
+#endif
+#include "rx_msg_sc2355.h"
+
+#ifdef DFS_MASTER
+#include "11h.h"
+#endif
+
+#ifdef WMMAC_WFA_CERTIFICATION
+#include "qos.h"
+#endif
+
+#define RATETAB_ENT(_rate, _rateid, _flags)				\
+{									\
+	.bitrate	= (_rate),					\
+	.hw_value	= (_rateid),					\
+	.flags		= (_flags),					\
+}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
+#define CHAN2G(_channel, _freq, _flags)                                 \
+{									\
+	.band                   = NL80211_BAND_2GHZ,    		\
+	.center_freq            = (_freq),              		\
+	.hw_value               = (_channel),           		\
+	.flags                  = (_flags),             		\
+	.max_antenna_gain       = 0,                    		\
+	.max_power              = 30,                   		\
+}
+#else
+#define CHAN2G(_channel, _freq, _flags)  				\
+{									\
+	.band                   = IEEE80211_BAND_2GHZ,  		\
+	.center_freq		= (_freq),				\
+	.hw_value		= (_channel),				\
+	.flags			= (_flags),				\
+	.max_antenna_gain	= 0,					\
+	.max_power		= 30,					\
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
+#define CHAN5G(_channel, _flags) 					\
+{									\
+	.band                   = NL80211_BAND_5GHZ,            	\
+	.center_freq		= 5000 + (5 * (_channel)),		\
+	.hw_value		= (_channel),				\
+	.flags			= (_flags),				\
+	.max_antenna_gain	= 0,					\
+	.max_power		= 30,					\
+}
+#else
+#define CHAN5G(_channel, _flags)                                        \
+{									\
+	.band                   = IEEE80211_BAND_5GHZ,          	\
+	.center_freq            = 5000 + (5 * (_channel)),      	\
+	.hw_value               = (_channel),                   	\
+	.flags                  = (_flags),                     	\
+	.max_antenna_gain       = 0,                            	\
+	.max_power              = 30,                           	\
+}
+#endif
+
+static struct ieee80211_rate sprdwl_rates[] = {
+	RATETAB_ENT(10, 0x1, 0),
+	RATETAB_ENT(20, 0x2, 0),
+	RATETAB_ENT(55, 0x5, 0),
+	RATETAB_ENT(110, 0xb, 0),
+	RATETAB_ENT(60, 0x6, 0),
+	RATETAB_ENT(90, 0x9, 0),
+	RATETAB_ENT(120, 0xc, 0),
+	RATETAB_ENT(180, 0x12, 0),
+	RATETAB_ENT(240, 0x18, 0),
+	RATETAB_ENT(360, 0x24, 0),
+	RATETAB_ENT(480, 0x30, 0),
+	RATETAB_ENT(540, 0x36, 0),
+
+	RATETAB_ENT(65, 0x80, 0),
+	RATETAB_ENT(130, 0x81, 0),
+	RATETAB_ENT(195, 0x82, 0),
+	RATETAB_ENT(260, 0x83, 0),
+	RATETAB_ENT(390, 0x84, 0),
+	RATETAB_ENT(520, 0x85, 0),
+	RATETAB_ENT(585, 0x86, 0),
+	RATETAB_ENT(650, 0x87, 0),
+	RATETAB_ENT(130, 0x88, 0),
+	RATETAB_ENT(260, 0x89, 0),
+	RATETAB_ENT(390, 0x8a, 0),
+	RATETAB_ENT(520, 0x8b, 0),
+	RATETAB_ENT(780, 0x8c, 0),
+	RATETAB_ENT(1040, 0x8d, 0),
+	RATETAB_ENT(1170, 0x8e, 0),
+	RATETAB_ENT(1300, 0x8f, 0)
+};
+
+#define SPRDWL_G_RATE_NUM	28
+#define sprdwl_g_rates		(sprdwl_rates)
+#define SPRDWL_A_RATE_NUM	24
+#define sprdwl_a_rates		(sprdwl_rates + 4)
+
+#define sprdwl_g_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
+			IEEE80211_HT_CAP_SGI_20		 | \
+			IEEE80211_HT_CAP_SGI_40)
+
+#define sprdwl_a_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
+			IEEE80211_HT_CAP_SGI_20	| \
+			IEEE80211_HT_CAP_SM_PS | IEEE80211_HT_CAP_SGI_40)
+
+#define sprdwl_vhtcap (IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 | \
+		IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE | \
+		IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT | \
+		IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE | \
+		IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT | \
+		IEEE80211_VHT_CAP_VHT_TXOP_PS)
+
+static struct ieee80211_channel sprdwl_2ghz_channels[] = {
+	CHAN2G(1, 2412, 0),
+	CHAN2G(2, 2417, 0),
+	CHAN2G(3, 2422, 0),
+	CHAN2G(4, 2427, 0),
+	CHAN2G(5, 2432, 0),
+	CHAN2G(6, 2437, 0),
+	CHAN2G(7, 2442, 0),
+	CHAN2G(8, 2447, 0),
+	CHAN2G(9, 2452, 0),
+	CHAN2G(10, 2457, 0),
+	CHAN2G(11, 2462, 0),
+	CHAN2G(12, 2467, 0),
+	CHAN2G(13, 2472, 0),
+	CHAN2G(14, 2484, 0)
+};
+
+static struct ieee80211_supported_band sprdwl_band_2ghz = {
+	.n_channels = ARRAY_SIZE(sprdwl_2ghz_channels),
+	.channels = sprdwl_2ghz_channels,
+	.n_bitrates = SPRDWL_G_RATE_NUM,
+	.bitrates = sprdwl_g_rates,
+	.ht_cap.cap = sprdwl_g_htcap,
+	.ht_cap.ht_supported = true
+};
+
+static struct ieee80211_channel sprdwl_5ghz_channels[] = {
+	CHAN5G(34, 0), CHAN5G(36, 0),
+	CHAN5G(40, 0), CHAN5G(44, 0),
+	CHAN5G(48, 0), CHAN5G(52, 0),
+	CHAN5G(56, 0), CHAN5G(60, 0),
+	CHAN5G(64, 0), CHAN5G(100, 0),
+	CHAN5G(104, 0), CHAN5G(108, 0),
+	CHAN5G(112, 0), CHAN5G(116, 0),
+	CHAN5G(120, 0), CHAN5G(124, 0),
+	CHAN5G(128, 0), CHAN5G(132, 0),
+	CHAN5G(136, 0), CHAN5G(140, 0),
+	CHAN5G(144, 0), CHAN5G(149, 0),
+	CHAN5G(153, 0), CHAN5G(157, 0),
+	CHAN5G(161, 0), CHAN5G(165, 0),
+	CHAN5G(184, 0), CHAN5G(188, 0),
+	CHAN5G(192, 0), CHAN5G(196, 0),
+	CHAN5G(200, 0), CHAN5G(204, 0),
+	CHAN5G(208, 0), CHAN5G(212, 0),
+	CHAN5G(216, 0)
+};
+
+static struct ieee80211_supported_band sprdwl_band_5ghz = {
+	.n_channels = ARRAY_SIZE(sprdwl_5ghz_channels),
+	.channels = sprdwl_5ghz_channels,
+	.n_bitrates = SPRDWL_A_RATE_NUM,
+	.bitrates = sprdwl_a_rates,
+	.ht_cap.cap = sprdwl_a_htcap,
+	.ht_cap.ht_supported = true,
+	.vht_cap.vht_supported = true,
+	.vht_cap.cap = sprdwl_vhtcap,
+	.vht_cap.vht_mcs.rx_mcs_map = 0xfff0,
+	.vht_cap.vht_mcs.tx_mcs_map = 0xfff0,
+	.vht_cap.vht_mcs.rx_highest = 0,
+	.vht_cap.vht_mcs.tx_highest = 0,
+};
+
+static const u32 sprdwl_cipher_suites[] = {
+	WLAN_CIPHER_SUITE_WEP40,
+	WLAN_CIPHER_SUITE_WEP104,
+	WLAN_CIPHER_SUITE_TKIP,
+	WLAN_CIPHER_SUITE_CCMP,
+	WLAN_CIPHER_SUITE_SMS4,
+	/* required by ieee802.11w */
+	WLAN_CIPHER_SUITE_AES_CMAC,
+	WLAN_CIPHER_SUITE_PMK
+};
+
+/* Supported mgmt frame types to be advertised to cfg80211 */
+static const struct ieee80211_txrx_stypes
+sprdwl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+	[NL80211_IFTYPE_STATION] = {
+		.tx = 0xffff,
+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+	},
+	[NL80211_IFTYPE_AP] = {
+		.tx = 0xffff,
+		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
+		      BIT(IEEE80211_STYPE_AUTH >> 4) |
+		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
+		      BIT(IEEE80211_STYPE_ACTION >> 4)
+	},
+	[NL80211_IFTYPE_P2P_CLIENT] = {
+		.tx = 0xffff,
+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+	},
+	[NL80211_IFTYPE_P2P_GO] = {
+		.tx = 0xffff,
+		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
+		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
+		      BIT(IEEE80211_STYPE_AUTH >> 4) |
+		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
+		      BIT(IEEE80211_STYPE_ACTION >> 4)
+	},
+	[NL80211_IFTYPE_P2P_DEVICE] = {
+		.tx = 0xffff,
+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+	}
+};
+
+static const struct ieee80211_iface_limit sprdwl_iface_limits[] = {
+	{
+		.max = 1,
+		.types = BIT(NL80211_IFTYPE_STATION) |
+			 BIT(NL80211_IFTYPE_AP)
+	},
+	{
+		.max = 1,
+		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+			 BIT(NL80211_IFTYPE_P2P_GO)
+	},
+	{
+		.max = 1,
+		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
+	}
+};
+
+static const struct ieee80211_iface_combination sprdwl_iface_combos[] = {
+	{
+		 .max_interfaces = 3,
+		 .num_different_channels = 2,
+		 .n_limits = ARRAY_SIZE(sprdwl_iface_limits),
+		 .limits = sprdwl_iface_limits
+	}
+};
+
+#ifdef CONFIG_PM
+static const struct wiphy_wowlan_support sprdwl_wowlan_support = {
+	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_DISCONNECT
+};
+#endif
+
+/* Interface related stuff*/
+inline void sprdwl_put_vif(struct sprdwl_vif *vif)
+{
+	if (vif) {
+		spin_lock_bh(&vif->priv->list_lock);
+		vif->ref--;
+		spin_unlock_bh(&vif->priv->list_lock);
+	}
+}
+
+inline struct sprdwl_vif *ctx_id_to_vif(struct sprdwl_priv *priv, u8 vif_ctx_id)
+{
+	struct sprdwl_vif *vif, *found = NULL;
+
+	spin_lock_bh(&priv->list_lock);
+	list_for_each_entry(vif, &priv->vif_list, vif_node) {
+		if (vif->ctx_id == vif_ctx_id) {
+			vif->ref++;
+			found = vif;
+			break;
+		}
+	}
+	spin_unlock_bh(&priv->list_lock);
+
+	return found;
+}
+
+inline struct sprdwl_vif *mode_to_vif(struct sprdwl_priv *priv, u8 vif_mode)
+{
+	struct sprdwl_vif *vif, *found = NULL;
+
+	spin_lock_bh(&priv->list_lock);
+	list_for_each_entry(vif, &priv->vif_list, vif_node) {
+		if (vif->mode == vif_mode) {
+			vif->ref++;
+			found = vif;
+			break;
+		}
+	}
+	spin_unlock_bh(&priv->list_lock);
+
+	return found;
+}
+
+static inline enum sprdwl_mode type_to_mode(enum nl80211_iftype type)
+{
+	enum sprdwl_mode mode;
+
+	switch (type) {
+	case NL80211_IFTYPE_STATION:
+		mode = SPRDWL_MODE_STATION;
+		break;
+	case NL80211_IFTYPE_AP:
+		mode = SPRDWL_MODE_AP;
+		break;
+	case NL80211_IFTYPE_P2P_GO:
+		mode = SPRDWL_MODE_P2P_GO;
+		break;
+	case NL80211_IFTYPE_P2P_CLIENT:
+		mode = SPRDWL_MODE_P2P_CLIENT;
+		break;
+	case NL80211_IFTYPE_P2P_DEVICE:
+		mode = SPRDWL_MODE_P2P_DEVICE;
+		break;
+#ifdef IBSS_SUPPORT
+	case NL80211_IFTYPE_ADHOC:
+		mode = SPRDWL_MODE_IBSS;
+		break;
+#endif /* IBSS_SUPPORT */
+	default:
+		mode = SPRDWL_MODE_NONE;
+		break;
+	}
+
+	return mode;
+}
+
+int sprdwl_init_fw(struct sprdwl_vif *vif)
+{
+	struct sprdwl_priv *priv = vif->priv;
+#ifdef ENABLE_PAM_WIFI
+	struct sprdwl_intf *intf = (struct sprdwl_intf *)(priv->hw_priv);
+	int ret = 0;
+#endif
+	enum nl80211_iftype type = vif->wdev.iftype;
+	enum sprdwl_mode mode;
+	u8 *mac;
+	u8 vif_ctx_id = 0;
+
+	netdev_info(vif->ndev, "%s type %d, mode %d\n", __func__, type,
+		    vif->mode);
+
+	if (vif->mode != SPRDWL_MODE_NONE) {
+		netdev_err(vif->ndev, "%s already in use: mode %d\n",
+			   __func__, vif->mode);
+		return -EBUSY;
+	}
+
+	mode = type_to_mode(type);
+	if ((mode <= SPRDWL_MODE_NONE) || (mode >= SPRDWL_MODE_MAX)) {
+		netdev_err(vif->ndev, "%s unsupported interface type: %d\n",
+			   __func__, type);
+		return -EINVAL;
+	}
+
+	if (priv->fw_stat[mode] == SPRDWL_INTF_OPEN) {
+		netdev_err(vif->ndev, "%s mode %d already opened\n",
+			   __func__, mode);
+		return 0;
+	}
+
+	vif->mode = mode;
+	if (!vif->ndev)
+		mac = vif->wdev.address;
+	else
+		mac = vif->ndev->dev_addr;
+
+	if (vif->mode ==SPRDWL_MODE_P2P_GO) {
+		if (vif->has_rand_mac) {
+			netdev_info(vif->ndev, "GO use random mac addr: %pM\n", vif->random_mac);
+			mac = vif->random_mac;
+		}
+	}
+	if (sprdwl_open_fw(priv, &vif_ctx_id, vif->mode, mac)) {
+		netdev_err(vif->ndev, "%s failed!\n", __func__);
+		vif->mode = SPRDWL_MODE_NONE;
+		return -EIO;
+	}
+	vif->ctx_id  = vif_ctx_id;
+
+#ifdef ENABLE_PAM_WIFI
+	if (vif->mode == SPRDWL_MODE_AP) {
+		priv->pam_wifi_miss_irq = platform_get_irq_byname(intf->pdev, "pam-wifi-miss-irq-gpio");
+		ret = request_irq(priv->pam_wifi_miss_irq,
+				  pam_wifi_miss_handle,
+				  IRQF_TRIGGER_RISING | IRQF_NO_SUSPEND,
+				  "pam_wifi_miss_irq",
+				  NULL);
+		wl_err("pam_wifi_miss_irq-%d , ret: %d!!!\n", priv->pam_wifi_miss_irq, ret);
+
+		pam_wifi_update_tx_fifo_wptr(PSEL_UL, 500);
+		sprdwl_pamwifi_init(vif, intf->pdev);
+	}
+#endif
+
+	netdev_info(vif->ndev, "%s,open success type %d, mode:%d, ctx_id:%d\n",
+		    __func__, type,
+		    vif->mode, vif->ctx_id);
+	priv->fw_stat[vif->mode] = SPRDWL_INTF_OPEN;
+	if (priv->hw_type == SPRDWL_HW_SC2355_PCIE) {
+		u8 mode_opened = 0;
+
+		/*TODO make sure driver send buf only once*/
+		for (mode = SPRDWL_MODE_STATION; mode < SPRDWL_MODE_MAX; mode++)
+			if (priv->fw_stat[mode] == SPRDWL_INTF_OPEN)
+				mode_opened++;
+
+		if (mode_opened > 1) {
+			wl_info("%s, mm buffer already filled\n", __func__);
+			return 0;
+		}
+
+#ifndef ENABLE_PAM_WIFI
+		sprdwl_mm_fill_all_buffer(priv->hw_priv);
+#endif
+	}
+	return 0;
+}
+
+int sprdwl_uninit_fw(struct sprdwl_vif *vif)
+{
+	struct sprdwl_priv *priv = vif->priv;
+	struct sprdwl_intf *intf = (struct sprdwl_intf *)(priv->hw_priv);
+	struct sprdwl_tx_msg *tx_msg = (struct sprdwl_tx_msg *)intf->sprdwl_tx;
+	u8 count = 0;
+
+	if ((vif->mode <= SPRDWL_MODE_NONE) || (vif->mode >= SPRDWL_MODE_MAX)) {
+		netdev_err(vif->ndev, "%s invalid operation mode: %d\n",
+			   __func__, vif->mode);
+		return -EINVAL;
+	}
+
+	if (priv->fw_stat[vif->mode] == SPRDWL_INTF_CLOSE) {
+		netdev_err(vif->ndev, "%s mode %d already closed\n",
+			   __func__, vif->mode);
+		return -EBUSY;
+	}
+
+	priv->fw_stat[vif->mode] = SPRDWL_INTF_CLOSING;
+
+	/*flush data belong to this mode*/
+	if (atomic_read(&tx_msg->tx_list[vif->mode]->mode_list_num) > 0)
+		sprdwl_flush_mode_txlist(tx_msg, vif->mode);
+
+	/*here we need to wait for 3s to avoid there
+	 *is still data of this modeattached to sdio not poped
+	 */
+	while ((!list_empty(&tx_msg->xmit_msg_list.to_send_list) ||
+			!list_empty(&tx_msg->xmit_msg_list.to_free_list)) &&
+			count < 100) {
+		printk_ratelimited("error! %s data q not empty, wait\n", __func__);
+		usleep_range(2500, 3000);
+		count++;
+	}
