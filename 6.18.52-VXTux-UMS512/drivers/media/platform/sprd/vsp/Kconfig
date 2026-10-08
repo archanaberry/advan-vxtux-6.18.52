@@ -15,7 +15,15 @@
 
 config SPRD_VSP
 	tristate "SPRD VSP driver"
-	depends on SPRDM_ION && MFD_SYSCON
+	depends on MFD_SYSCON
+	# ION: vsp_common.c:187 memanggil sprd_ion_get_buffer(). Pola sama
+	# dengan sprd_jpg/Kconfig (select SPRD_ION) — jangan depends: SPRD_ION
+	# tak punya definisi Kconfig di pohon ini (ION dihapus dari mainline;
+	# lihat komentar drivers/dma-buf/sprd/Kconfig), depends-nya akan selalu
+	# gagal dan olddefconfig membuang simbol ini.
+	select SPRD_ION
+	# vsp_parse_dt() memanggil sprd_iommu_attach_device() (sprd_vsp.c:535).
+	select SPRD_IOMMU
 	# vsp_pw_on()/vsp_pw_off() (dipakai vsp_open/vsp_release) diekspor oleh
 	# sprd_vsp_pw_domain.c hanya di bawah #if IS_ENABLED(CONFIG_SPRD_VSP_PW_DOMAIN).
 	# Tanpa select ini link gagal saat VSP=y.

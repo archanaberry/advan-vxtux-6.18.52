@@ -22,6 +22,12 @@
 config SPRD_CPP
 	tristate "SPRD CPP driver"
 	depends on MFD_SYSCON
+	# cpp_core.c:495/534 memanggil sprd_ion_get_buffer()/sprd_ion_get_phys_addr()
+	# — pola sama dengan sprd_jpg (select SPRD_ION), BUKAN depends: SPRD_ION tak
+	# punya definisi Kconfig di pohon ini (ION dihapus dari mainline; lihat
+	# komentar drivers/dma-buf/sprd/Kconfig), depends akan selalu gagal dan
+	# olddefconfig membuang simbol ini.
+	select SPRD_ION
 	# sprd_cam_pw_on/off dibutuhkan cpp_core.c; tanpa symbol-nya link gagal.
 	select SPRD_CAMSYS_PW_DOMAIN
 	help

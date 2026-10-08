@@ -830,7 +830,9 @@ CONFIG_SPRD_VSP_PW_DOMAIN=m
 #   - node DT: ums512-1h10-vxtux.dts video-codec@20500000 (nilai register
 #     dari stock fdt_live.dtb; clock CLK_VSP_EB=2/CLK_VSP=22 dikonfirmasi
 #     dt-bindings sprd,ums512-clk.h:119/107)
-#   - deps: SPRDM_ION=y (sudah), MFD_SYSCON=y (baris di atas)
+#   - deps: SPRD_ION=y (select dari Kconfig; JANGAN depends SPRDM_ION —
+#     symbol itu tak terdefinisi, lihat komentar dma-buf/sprd/Kconfig),
+#     MFD_SYSCON=y (baris di atas)
 # select SPRD_VSP_PW_DOMAIN: vsp_open() memanggil vsp_pw_on() yang hanya
 # diekspor di bawah simbol itu; tanpa select, link gagal saat VSP=y.
 # regs[] (tabel syscon) dimiliki vsp_regs.c (EXPORT_SYMBOL) dan DIISI
