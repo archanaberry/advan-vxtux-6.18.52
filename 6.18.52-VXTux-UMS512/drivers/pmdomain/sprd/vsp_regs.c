@@ -9,8 +9,10 @@
  * without this the link fails with "undefined symbol: regs" once
  * pmdomain/sprd actually enters vmlinux.a.
  *
- * The table is populated at probe time by the VSP video driver, which is
- * still a NOT-PORTED blob. Until that lands, every entry stays {NULL, 0, 0}.
+ * The table is populated at probe time by the VSP video driver
+ * (drivers/media/platform/sprd/vsp, CONFIG_SPRD_VSP -- ported 2026-10-09
+ * from the iscle_ums512 5.4 donor). Before that driver loads, every entry
+ * stays {NULL, 0, 0}.
  * That is the vendor's own defined fallback: vsp_pw_on()/vsp_pw_off() both
  * test `regs[PMU_VSP_AUTO_SHUTDOWN].gpr == NULL` first and return -1 via the
  * "skip power on/off" path, so no regmap call is ever made on a NULL handle.
@@ -21,3 +23,9 @@
 #include "vsp_common.h"
 
 struct register_gpr regs[ARRAY_SIZE(tb_name)];
+
+/* Diekspor untuk drivers/media/platform/sprd/vsp (modul SPRD_VSP): tabel ini
+ * diisi vsp_parse_dt() saat probe driver video, dan dibaca vsp_pw_on/off di
+ * modul ini. Tanpa EXPORT_SYMBOL, modprobe SPRD_VSP gagal "unknown symbol
+ * regs" ketika keduanya =m. */
+EXPORT_SYMBOL(regs);

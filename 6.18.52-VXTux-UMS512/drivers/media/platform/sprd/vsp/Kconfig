@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# SPRD VSP (Video Service Processor) driver for UMS512/T618 (sharkl5pro).
+#
+# Ported 2026-10-09 from the iscle_ums512 5.4 donor tree
+# (work/donors_20260930/iscle_ums512/drivers/misc/sprd_vsp), same SoC.
+# The pw-domain half (sprd_vsp_pw_domain.c, vsp_regs.c) and the uapi header
+# (include/uapi/video/sprd_vsp.h) were already in this tree; this brings the
+# remaining core (sprd_vsp.c, vsp_common.c, vsp_isr_func.c) plus its dvfs
+# header (drivers/devfreq/apsys/sprd_dvfs_vsp.h).
+#
+# Node DT stock (fdt_live.dtb): video-codec@20500000, compatible
+# "sprd,sharkl5pro-vsp" — of_match di driver punya entri itu
+# (sprd_vsp.c:455).
+
+config SPRD_VSP
+	tristate "SPRD VSP driver"
+	depends on SPRDM_ION && MFD_SYSCON
+	# vsp_pw_on()/vsp_pw_off() (dipakai vsp_open/vsp_release) diekspor oleh
+	# sprd_vsp_pw_domain.c hanya di bawah #if IS_ENABLED(CONFIG_SPRD_VSP_PW_DOMAIN).
+	# Tanpa select ini link gagal saat VSP=y.
+	select SPRD_VSP_PW_DOMAIN
+	help
+	  VSP video block for Unisoc UMS512/T618: scaling/rotation/format
+	  conversion for camera and video paths. Misc device /dev/sprd_vsp
+	  with the uapi in include/uapi/video/sprd_vsp.h. Replaces the
+	  sprd-vsp vendor blob (vendor_dlkm vsp.ko, 115 KB).

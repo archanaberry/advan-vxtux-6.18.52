@@ -819,6 +819,24 @@ CONFIG_PM=y
 CONFIG_PM_GENERIC_DOMAINS=y
 CONFIG_SPRD_VSP_PW_DOMAIN=m
 
+# --- SPRD_VSP (video-codec@20500000; blob vsp.ko) ---
+# CELAH YANG DITUTUP 2026-10-09: pw-domain di atas TIDAK cukup -- ia library
+# murni (vsp_pw_on/vsp_pw_off). Driver video intinya (sprd_vsp.c,
+# vsp_common.c, vsp_isr_func.c) diporting dari donor iscle_ums512 5.4
+# (sama SoC) ke drivers/media/platform/sprd/vsp/. Bukti, semuanya di pohon:
+#   - definisi: drivers/media/platform/sprd/vsp/Kconfig, default n
+#   - wire: drivers/media/platform/sprd/Makefile + vsp/Makefile
+#   - of_match: sprd_vsp.c:455 "sprd,sharkl5pro-vsp"
+#   - node DT: ums512-1h10-vxtux.dts video-codec@20500000 (nilai register
+#     dari stock fdt_live.dtb; clock CLK_VSP_EB=2/CLK_VSP=22 dikonfirmasi
+#     dt-bindings sprd,ums512-clk.h:119/107)
+#   - deps: SPRDM_ION=y (sudah), MFD_SYSCON=y (baris di atas)
+# select SPRD_VSP_PW_DOMAIN: vsp_open() memanggil vsp_pw_on() yang hanya
+# diekspor di bawah simbol itu; tanpa select, link gagal saat VSP=y.
+# regs[] (tabel syscon) dimiliki vsp_regs.c (EXPORT_SYMBOL) dan DIISI
+# vsp_parse_dt() driver ini saat probe -- bukan duplikat definisi.
+CONFIG_SPRD_VSP=y
+
 # --- SC2730 PMIC regulator (backport, upstream 6.20) ---
 # The 6.18 base predates drivers/regulator/sc2730-regulator.c, which is the only
 # mainline driver that knows the SC2730 rail names (dcdc-*/ldo-*) and carries

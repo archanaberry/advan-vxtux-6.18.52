@@ -1443,6 +1443,51 @@ gpu_opp_table: opp-table {
 		status = "okay";
 	};
 
+	/* VSP (Video Service Processor) — ported 2026-10-09.
+	 * Driver: drivers/media/platform/sprd/vsp (CONFIG_SPRD_VSP), of_match
+	 * "sprd,sharkl5pro-vsp" (sprd_vsp.c:455). Node + nilai register dari
+	 * stock fdt_live.dtb (video-codec@20500000); index clock dikonfirmasi
+	 * dt-bindings: CLK_VSP_EB=2, CLK_VSP=22.
+	 *
+	 * vsp_parse_dt() mencari kelima nama di bawah lewat
+	 * syscon_regmap_lookup_by_name dengan urutan tb_name (vsp_common.h).
+	 * KELIMANYA wajib ada: vsp_pw_on() menguji regs[PMU_VSP_AUTO_SHUTDOWN]
+	 * NULL lebih dulu (return -1 -> vsp_open gagal), dan memanggil
+	 * regmap_read(regs[PMU_PWR_STATUS]) 3x per iterasi loop poll (NULL ->
+	 * crash). Nilai: cfg/shutdown dari stock fdt_live.dtb, pwr_status dari
+	 * tabel debug vendor (PWR_STATUS0_DBG @ PMU 0xBC, PD_AP_VSP_STATE
+	 * bit 8 mask 0x700).
+	 *
+	 * TANPA power-domains: sprd_vsp_pw_domain.c di pohon ini library murni
+	 * (fs_initcall + EXPORT_SYMBOL, tanpa of_match/platform_driver), jadi
+	 * tak ada yang bisa bind node vsp-power-domain stock — power-domains
+	 * akan menyebabkan -EPROBE_DEFER selamanya. vsp_open() memanggil
+	 * vsp_pw_on() langsung (library call).
+	 * TANPA iommus: sprd-iommu hanya match "sprd,iommu-v1"; node stock
+	 * "unisoc,iommuvaul5p-vsp" tak akan bind. Driver toleran
+	 * (iommu_exist_flag=0, jalur non-IOMMU). */
+	vsp: video-codec@20500000 {
+		compatible = "sprd,sharkl5pro-vsp";
+		/* &soc #address/#size-cells = <2>: 4 reg cells. */
+		reg = <0 0x20500000 0 0xc000>;
+		interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;
+		syscons = <&pmu_apb_regs 0x18 0x1000000>,
+			  <&pmu_apb_regs 0x18 0x2000000>,
+			  <&pmu_apb_regs 0xbc 0x700>,
+			  <&aon_apb_regs 0x04 0x20>,
+			  <&ap_ahb_regs 0x04 0x2800>;
+		syscon-names = "pmu_vsp_auto_shutdown",
+			       "pmu_vsp_force_shutdown",
+			       "pmu_pwr_status",
+			       "vsp_domain_eb",
+			       "reset";
+		clocks = <&apahb_gate 2>, <&pll2 9>, <&pll2 12>, <&pll2 2>,
+			 <&ap_clk 22>;
+		clock-names = "clk_ahb_gate_vsp_eb", "clk_src_256m",
+			      "clk_src_307m2", "clk_src_384m", "clk_vsp";
+		status = "okay";
+	};
+
 	/* ISP (Image Signal Processor) */
 	isp: isp@62000000 {
 		compatible = "sprd,sharkl5pro-isp", "sprd,isp";

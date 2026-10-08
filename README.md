@@ -153,7 +153,7 @@
 | 96 | `twofish_generic` | [crypto/twofish_generic.c](6.18.52-VXTux-UMS512/crypto/twofish_generic.c) | Mainline |
 | 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A |
 | 98 | `virt-dma` | [drivers/dma/virt-dma.c](6.18.52-VXTux-UMS512/drivers/dma/virt-dma.c) | Tier A shared DMA helper |
-| 99 | `vsp` | [drivers/pmdomain/sprd/vsp_regs.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/vsp_regs.c) | PARTIAL: pw-domain/regs only (SPRD_VSP_PW_DOMAIN=m); codec not ported, no DT node |
+| 99 | `vsp` | [drivers/media/platform/sprd/vsp/sprd_vsp.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/vsp/sprd_vsp.c) | SPRD_VSP=y + DT video-codec@20500000; ported 2026-10-09 from iscle_ums512 donor (pw-domain + regs + dvfs header sudah ada) |
 | 100 | `wcn_bsp` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | WCN platform module composition; no standalone `bsp.c` found |
 | 101 | `zram` | [drivers/block/zram/zram_drv.c](6.18.52-VXTux-UMS512/drivers/block/zram/zram_drv.c) | N/A/absence entry in the supplied tally; corrected 2026-10-05 |
 | 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | ZRAM=y + zsmalloc in mm/ |
@@ -187,8 +187,9 @@ DTB: `out/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb`
 - **`.config` lengkap**: merge `vxtux_618_fragment.defconfig` resmi — membawa TRUSTY family, SPRD_ION/JPG/SENSOR/DMA, USB gadget, MUSB_HDRC, CHARGER_BQ256XX, TOUCHSCREEN_NOVATEK_NVT_TS, SPRD_AUDIO_PIPE, DMABUF_HEAPS_CMA.
 - **Gap USB ditutup**: `CONFIG_USB_MUSB_SPRD_VXTUX=y` ditambahkan ke fragment — tanpa baris itu `musb_sprd_vxtux.o` tak pernah ter-compile padahal node DT `sprd,sharkl5pro-musb` ada (USB mati total). Bukti: Kconfig:204, Makefile:49, of_match:1568, DTS:676.
 - **Camera graph diperbaiki**: port@1/port@2 dcam (dua master pada endpoint csi yang sama → "not bidirectional") dihapus. Pipeline: sensor → CSI → ISP → DCAM. DTB rebuild: 0 error, 5 warning kosmetik.
-- **DTB rebuilt**: `ums512-1h10-vxtux.dtb` (44.630B) dari DTS terkoreksi — node panfrost `arm,mali-bifrost`, jpg-codec, isp/csi, novatek+himax touch, trusty, iommu semua terverifikasi via strings.
-- **Sisa gap jujur**: `vsp` codec (infra pw-domain ada, codec belum) dan `sprd_cpp` (belum ada config/source). Sisanya: driver+config+DT node lengkap, menunggu bukti runtime di hardware.
+- **DTB rebuilt**: `ums512-1h10-vxtux.dtb` (45.078B, setelah node vsp) dari DTS terkoreksi — node panfrost `arm,mali-bifrost`, jpg-codec, isp/csi, novatek+himax touch, trusty, iommu, video-codec@20500000 semua terverifikasi via strings.
+- **VSP codec diporting (2026-10-09)**: `sprd_vsp.c`+`vsp_common.c`+`vsp_isr_func.c` dari donor iscle_ums512 5.4 (sama SoC) → `drivers/media/platform/sprd/vsp/` (Kconfig+Makefile+wire). `sprd_dvfs_vsp.h` dari archive v3 → `drivers/devfreq/apsys/`. Integrasi: `regs[]` TIDAK diduplikasi (pemilik tunggal `vsp_regs.c`, +EXPORT_SYMBOL), Kconfig `select SPRD_VSP_PW_DOMAIN`. Node DT `video-codec@20500000` ("sprd,sharkl5pro-vsp") nilai register dari stock fdt_live.dtb (reset/force/auto/domain_eb) + tabel debug vendor (pwr_status: PMU 0xBC mask 0x700); clock dikonfirmasi dt-bindings (CLK_VSP_EB=2, CLK_VSP=22). DTB rebuild: 0 error, node terverifikasi strings. Host cross-compile `aarch64-none-linux-gnu-gcc` mentok di gap infrastruktur kbuild (header generated: types/div64/cpucap-defs — tree repo memang belum generated, device build yang generate) → bukan bug port; kompilasi ARM64 penuh menunggu build device. TANPA power-domains (pw-domain library murni → defer trap) & TANPA iommus (compatible stock tak match driver tree; driver toleran).
+- **Sisa gap jujur**: `sprd_cpp` (sumber vendor LENGKAP sudah ketemu di `work/donorcatalog/mods-sprd/sprd/common/camera/cpp/lite_r6p0/` — 13 file; belum diporting). Sisanya: driver+config+DT node lengkap, menunggu bukti runtime di hardware.
 
 ## 🔧 Status | 状態
 

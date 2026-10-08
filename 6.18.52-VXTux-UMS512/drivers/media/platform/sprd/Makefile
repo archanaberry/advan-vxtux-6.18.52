@@ -13,3 +13,7 @@ obj-$(CONFIG_MEDIA_SPRD_PIPELINE)	+= pipeline/
 # Setiap sensor tetap punya syaratnya sendiri DI DALAM sensors/Makefile,
 # jadi tidak ada gating yang hilang.
 obj-$(CONFIG_VIDEO_SPRD_SENSORS)	+= sensors/
+
+# VSP (video-codec@20500000). Descend hanya sekali; objek vsp/ dibangun oleh
+# Makefile di dalam direktori itu sendiri.
+obj-$(CONFIG_SPRD_VSP)		+= vsp/

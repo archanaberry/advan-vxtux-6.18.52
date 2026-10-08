@@ -28,6 +28,7 @@ config MEDIA_SPRD_PIPELINE
 	  (.dcam) node, MIPI CSI-2 receiver, CSI PHY and ISP front end.
 
 source "drivers/media/platform/sprd/sensors/Kconfig"
+source "drivers/media/platform/sprd/vsp/Kconfig"
 
 # Pens_DOWN_SENSORS: satu-satunya penjaga descent ke sensors/. Dulu Makefile
 # punya tiga baris += sensors/ (satu per simbol sensor) dan kbuild menghitung
