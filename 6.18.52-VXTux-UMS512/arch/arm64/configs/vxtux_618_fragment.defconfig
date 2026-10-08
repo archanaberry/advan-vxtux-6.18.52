@@ -3,11 +3,9 @@
 # configs/vxtux_618_fragment.defconfig — fragment kernel 6.18-VXTux-UMS512
 # LinDroid/VXTux v1.0 (design gen 3.0)
 # 
-# Build from a clean source tree (Kbuild rejects O= builds when source .config exists):
-#   make O=build ARCH=arm64 defconfig
-#   (cd build && sh ../scripts/kconfig/merge_config.sh -m .config \
-#       ../arch/arm64/configs/vxtux_618_fragment.defconfig)
-#   make O=build ARCH=arm64 olddefconfig
+# Dipakai dengan:
+#   ./scripts/kconfig/merge_config.sh -m build/.config configs/vxtux_618_fragment.defconfig
+#   make O=build olddefconfig
 # 
 # Basis: mainline 6.18 + fragment UNISOC (nilai kunci dari
 # configs/unisoc_fuzz_ums512_defconfig, diverifikasi sesi 5).
@@ -65,12 +63,6 @@ CONFIG_TOUCHSCREEN_HIMAX_IC_HX83102=y
 
 # --- Platform UNISOC in-tree (dari fork 5.4, port Fase 14) ---
 CONFIG_ARCH_SPRD=y
-# This production fragment targets Unisoc UMS512/T618, not Qualcomm or
-# MediaTek SoCs. The generic ARM64 defconfig enables both families for other
-# boards; these overrides disable their SoC-specific support for this target.
-# They do not remove generic USB, storage, PCIe, or peripheral drivers.
-# CONFIG_ARCH_MEDIATEK is not set
-# CONFIG_ARCH_QCOM is not set
 CONFIG_SPRD_UMS512_CLK=y
 # I2C controller SPRD (UMS512). Ditemukan 2026-10-03 dari .config:
 #   "# CONFIG_I2C_SPRD is not set" -> kernel tidak punya adapter i2c SAMA SEKALI,
@@ -498,21 +490,20 @@ CONFIG_INPUT_GPIO_DECODER=y
 
 
 # =====================================================================
-# Unisoc modem IPC and generic RPMsg
+# MAXIMUM MODEM KERNEL-SIDE (100% kernel-side)
 # =====================================================================
+CONFIG_QRTR=y
+CONFIG_QRTR_SMD=y
+CONFIG_QRTR_TUN=y
+CONFIG_QRTR_MHI=y
 CONFIG_RPMSG=y
 CONFIG_RPMSG_CHAR=y
 CONFIG_RPMSG_VIRTIO=y
-# Qualcomm QRTR and RPMsg transports do not match the UMS512/T618 modem.
-# CONFIG_QRTR is not set
-# CONFIG_QRTR_SMD is not set
-# CONFIG_QRTR_TUN is not set
-# CONFIG_QRTR_MHI is not set
-# CONFIG_RPMSG_QCOM_GLINK_NATIVE is not set
-# CONFIG_RPMSG_QCOM_GLINK_SMEM is not set
-# CONFIG_RPMSG_QCOM_GLINK_RPM is not set
-# CONFIG_RPMSG_QCOM_SMD is not set
-# CONFIG_RPMSG_QCOM_SMD_DIRECT is not set
+CONFIG_RPMSG_QCOM_GLINK_NATIVE=y
+CONFIG_RPMSG_QCOM_GLINK_SMEM=y
+CONFIG_RPMSG_QCOM_GLINK_RPM=y
+CONFIG_RPMSG_QCOM_SMD=y
+CONFIG_RPMSG_QCOM_SMD_DIRECT=y
 CONFIG_SPRD_SMEM=y
 CONFIG_SPRD_IPC_ROUTER=y
 # CONFIG_SPRD_MODEM_V2 not set (use CONFIG_SPRD_MODEM)
