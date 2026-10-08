@@ -14,7 +14,7 @@
 
 ---
 <div align="center">
-  <img src="archanaberry/vxtux_chan.png" width="1000">
+  <img src="archanaberry/vxtux_chan.png" width="50%">
 </div>
 ---
 
