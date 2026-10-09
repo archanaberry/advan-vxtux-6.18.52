@@ -16,6 +16,7 @@
  */
 
 #include <linux/prefetch.h>
+#include <misc/wcn_bus.h>
 #include "rx_msg_sc2355.h"
 #include "tx_msg_sc2355.h"
 #include "cmdevt.h"

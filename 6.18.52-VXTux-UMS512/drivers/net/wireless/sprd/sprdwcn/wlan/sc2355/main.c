@@ -1178,7 +1178,7 @@ static int sprdwl_get_mac_from_file(struct sprdwl_vif *vif, u8 *addr)
 		}
 	}
 
-	vfs_read(fp, buf, sizeof(buf), &pos);
+	kernel_read(fp, buf, sizeof(buf), &pos);
 
 	filp_close(fp, NULL);
 
@@ -1222,7 +1222,7 @@ static int write_mac_addr(u8 *addr)
 	 * address-space switch is needed or wanted here -- the save/restore
 	 * comments in the vendor source described a dance that no longer exists.
 	 */
-	vfs_write(fp, buf, sizeof(buf), &pos);
+	kernel_write(fp, buf, sizeof(buf), &pos);
 	filp_close(fp, NULL);
 
 	return 0;
