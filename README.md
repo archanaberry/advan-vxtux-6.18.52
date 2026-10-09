@@ -69,7 +69,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **6 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain |
+| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **8 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain, sprd_battery_info, sprd_charger_manager |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
 | **103** | **Total tracked desu! (≧▽≦)** |
 
@@ -148,7 +148,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 67 | `sprd_apipe` | [drivers/sound/soc/sprd/audio_pipe/audio_pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audio_pipe/audio_pipe.c) | Port of older driver |
 | 68 | `sprd_audcp_boot` | [drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c) | Tier A/B symbol evidence |
 | 69 | `sprd_audcp_dvfs` | [drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c) | Compiled 2026-10-04 |
-| 70 | `sprd_battery_info` | [drivers/power/supply/sprd/sprd_battery_info.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_battery_info.c) | NOT-CONFIGURED deliberately |
+| 70 | `sprd_battery_info` | [drivers/power/supply/sprd/sprd_battery_info_main.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_battery_info_main.c) | **Compile terverifikasi device: `sprd_battery_info.ko` 96 KB (gcc 16.2.1)** — `fgauge_get_profile_id()` di-port dari donor `unisoc_battery.c` (baru `unisoc_battery_id.c`); DT satu-profil → fallback donor: id 0. Dulu =n ("INCOMPLETE"), tuntas 2026-10-09 |
 | 71 | `sprd_camera` | [drivers/media/platform/sprd/pipeline/sprd_dcam.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_dcam.c) | VIDEO_SPRD_DCAM=y; camera graph fixed 2026-10-09 (was non-bidirectional) |
 | 72 | `sprd_camsys_pw_domain` | [drivers/pmdomain/sprd/sprd_camsys_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_camsys_pw_domain.c) | Power-domain port (platform_driver asli); **Compile terverifikasi device: `sprd_camsys_pw_domain.ko` 95 KB (gcc 16.2.1)** |
 | 73 | `sprd_cp_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
