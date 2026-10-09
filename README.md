@@ -141,16 +141,16 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 60 | `sprd-dmaengine-pcm` | [drivers/sound/soc/sprd/platform_include/sprd-dmaengine-pcm.h](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/platform_include/sprd-dmaengine-pcm.h) | Header-only; Tier B |
 | 61 | `sprd-drm` | [drivers/gpu/drm/sprd/sprd_drm.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/sprd/sprd_drm.c) | Tier A |
 | 62 | `sprd-gsp` | [drivers/gpu/drm/sprd/gsp/gsp_dev.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/sprd/gsp/gsp_dev.c) | Tier A |
-| 63 | `sprd-ion` | [drivers/dma-buf/sprd/sprd_ion.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/sprd_ion.c) | Tier A |
+| 63 | `sprd-ion` | [drivers/dma-buf/sprd/sprd_ion.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/sprd_ion.c) | Tier A; **Compile terverifikasi device: `sprd_ion.ko` 62 KB (gcc 16.2.1)** — fix build: `CONFIG_SPRD_ION` dideklarasi (undeclared → olddefconfig drop), `MODULE_IMPORT_NS(DMA_BUF)`, `struct ion_phy_data` direstore |
 | 64 | `sprd-platform-pcm-routing` | [drivers/sound/soc/sprd/platform/sprd-platform-pcm-routing.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/platform/sprd-platform-pcm-routing.c) | Tier A |
 | 65 | `sprd-top-dvfs` | [drivers/devfreq/sprd/sprd-top-dvfs.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/sprd-top-dvfs.c) | Tier A |
-| 66 | `sprd-vsp-pw-domain` | [drivers/pmdomain/sprd/sprd_vsp_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_vsp_pw_domain.c) | VSP power-domain gate |
+| 66 | `sprd-vsp-pw-domain` | [drivers/pmdomain/sprd/sprd_vsp_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_vsp_pw_domain.c) | VSP power-domain gate (library-style, tanpa DT power-domains); **Compile terverifikasi device: `sprd_vsp_pw_domain.ko` 52 KB (gcc 16.2.1)** |
 | 67 | `sprd_apipe` | [drivers/sound/soc/sprd/audio_pipe/audio_pipe.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audio_pipe/audio_pipe.c) | Port of older driver |
 | 68 | `sprd_audcp_boot` | [drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiocpboot/sprd_audcp_boot.c) | Tier A/B symbol evidence |
 | 69 | `sprd_audcp_dvfs` | [drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiodvfs/sprd_audcp_dvfs.c) | Compiled 2026-10-04 |
 | 70 | `sprd_battery_info` | [drivers/power/supply/sprd/sprd_battery_info.c](6.18.52-VXTux-UMS512/drivers/power/supply/sprd/sprd_battery_info.c) | NOT-CONFIGURED deliberately |
 | 71 | `sprd_camera` | [drivers/media/platform/sprd/pipeline/sprd_dcam.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/pipeline/sprd_dcam.c) | VIDEO_SPRD_DCAM=y; camera graph fixed 2026-10-09 (was non-bidirectional) |
-| 72 | `sprd_camsys_pw_domain` | [drivers/pmdomain/sprd/sprd_camsys_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_camsys_pw_domain.c) | Power-domain port |
+| 72 | `sprd_camsys_pw_domain` | [drivers/pmdomain/sprd/sprd_camsys_pw_domain.c](6.18.52-VXTux-UMS512/drivers/pmdomain/sprd/sprd_camsys_pw_domain.c) | Power-domain port (platform_driver asli); **Compile terverifikasi device: `sprd_camsys_pw_domain.ko` 95 KB (gcc 16.2.1)** |
 | 73 | `sprd_cp_dvfs` | [drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c](6.18.52-VXTux-UMS512/drivers/devfreq/sprd/apsys/sprd_dvfs_apsys.c) | Same object as `apsys-dvfs` |
 | 74 | `sprd_cpp` | [drivers/media/platform/sprd/cpp/cpp_core.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/cpp/cpp_core.c) | SPRD_CPP=y + DT cpp@62800000; ported 2026-10-09 (13 file vendor). **Compile terverifikasi device: `cpp.ko` 321 KB (gcc 16.2.1)** |
 | 75 | `sprd_cpu_cooling` | [drivers/thermal/sprd/sprd_cpu_cooling.c](6.18.52-VXTux-UMS512/drivers/thermal/sprd/sprd_cpu_cooling.c) | Tier A |
@@ -175,13 +175,15 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 94 | `trusty-tui` | [drivers/misc/trusty-tui.c](6.18.52-VXTux-UMS512/drivers/misc/trusty-tui.c) | Port of vendor `trusty-tui.ko` |
 | 95 | `twofish_common` | [crypto/twofish_common.c](6.18.52-VXTux-UMS512/crypto/twofish_common.c) | Mainline |
 | 96 | `twofish_generic` | [crypto/twofish_generic.c](6.18.52-VXTux-UMS512/crypto/twofish_generic.c) | Mainline |
-| 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A |
+| 97 | `unisoc-iommu` | [drivers/iommu/sprd-iommu.c](6.18.52-VXTux-UMS512/drivers/iommu/sprd-iommu.c) | Tier A; **Compile terverifikasi device: `sprd-iommu.ko` 81 KB (gcc 16.2.1)** — `sprd_iommu_restore` didefinisikan + di-export (sebelumnya declared-only → undefined di vsp/cpp); public API attach/map/unmap reimplemented di atas API generik |
 | 98 | `virt-dma` | [drivers/dma/virt-dma.c](6.18.52-VXTux-UMS512/drivers/dma/virt-dma.c) | Tier A shared DMA helper |
 | 99 | `vsp` | [drivers/media/platform/sprd/vsp/sprd_vsp_main.c](6.18.52-VXTux-UMS512/drivers/media/platform/sprd/vsp/sprd_vsp_main.c) | SPRD_VSP=y + DT video-codec@20500000; ported 2026-10-09 from iscle_ums512 donor (pw-domain + regs + dvfs header sudah ada). **Compile terverifikasi device: `sprd_vsp.ko` 231 KB (gcc 16.2.1)** |
 | 100 | `wcn_bsp` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | WCN platform module composition; no standalone `bsp.c` found |
 | 101 | `zram` | [drivers/block/zram/zram_drv.c](6.18.52-VXTux-UMS512/drivers/block/zram/zram_drv.c) | N/A/absence entry in the supplied tally; corrected 2026-10-05 |
 | 102 | `zsmalloc` | [mm/zsmalloc.c](6.18.52-VXTux-UMS512/mm/zsmalloc.c) | ZRAM=y + zsmalloc in mm/ |
 | 103 | `panfrost` | [drivers/gpu/drm/panfrost/panfrost_gpu.c](6.18.52-VXTux-UMS512/drivers/gpu/drm/panfrost/panfrost_gpu.c) | Separate open-source GPU driver; Mali-G52 MP2 / Gondul replacement |
+
+> **Legenda & status verifikasi desu~:** "Tier A" = sumber + simbol + config terverifikasi ada di tree; "Tier B" = bukti simbol/reverse-engineering (radare2/ghidra); "Mainline" = kode upstream 6.18 apa adanya. **6 entri sudah LULUS kompilasi penuh di device** (gcc 16.2.1, 2026-10-09 — compiler asli kernel, exit 0, nol undefined symbol): `sprd_vsp.ko` 231 KB, `cpp.ko` 321 KB, `sprd-iommu.ko` 81 KB, `sprd_ion.ko` 62 KB, `sprd_camsys_pw_domain.ko` 95 KB, `sprd_vsp_pw_domain.ko` 52 KB (ditandai **Compile terverifikasi device** di keterangan). Sisanya verified-in-tree (config + DT + sumber ada); bukti runtime (probe dmesg) menunggu boot kernel custom 6.18.52 di hardware.
 
 ---
 
