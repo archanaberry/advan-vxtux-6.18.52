@@ -69,7 +69,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **8 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain, sprd_battery_info, sprd_charger_manager |
+| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **9 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain, sprd_battery_info, sprd_charger_manager, wcn_core, sprd_wlan_combo (sprdwl.ko 2,5 MB) |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
 | **103** | **Total tracked desu! (≧▽≦)** |
 
@@ -91,7 +91,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 10 | `audio_sipc` | [drivers/sound/soc/sprd/audiosipc/audio-sipc.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/audiosipc/audio-sipc.c) | GPL fork port |
 | 11 | `ax88179_178a` | [drivers/net/usb/ax88179_178a.c](6.18.52-VXTux-UMS512/drivers/net/usb/ax88179_178a.c) | Mainline USB Ethernet; module |
 | 12 | `bq2560x-charger` | [drivers/power/supply/bq256xx_charger.c](6.18.52-VXTux-UMS512/drivers/power/supply/bq256xx_charger.c) | CHARGER_BQ256XX=y; alias ti,bq2560x_chg verified in of_match + DT charger@6b |
-| 13 | `core` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | Composite `wcn_core` module; no standalone `core.c` |
+| 13 | `core` | [drivers/net/wireless/sprd/sprdwcn/platform/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/platform/Makefile) | Composite `wcn_core` module; no standalone `core.c`. **Compile terverifikasi device: `wcn_core.ko`** |
 | 14 | `cpufreq_userspace` | [drivers/cpufreq/cpufreq_userspace.c](6.18.52-VXTux-UMS512/drivers/cpufreq/cpufreq_userspace.c) | Mainline |
 | 15 | `extcon-usb-gpio` | [drivers/extcon/extcon-usb-gpio.c](6.18.52-VXTux-UMS512/drivers/extcon/extcon-usb-gpio.c) | Mainline |
 | 16 | `ghash-ce` | [arch/arm64/crypto/ghash-ce-glue.c](6.18.52-VXTux-UMS512/arch/arm64/crypto/ghash-ce-glue.c) | Mainline implementation plus ARM64 glue |
@@ -169,7 +169,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 88 | `sprd_usb_f_rndis` | [drivers/usb/gadget/function/sprd/sprd_usb_f_rndis.c](6.18.52-VXTux-UMS512/drivers/usb/gadget/function/sprd/sprd_usb_f_rndis.c) | Tier A |
 | 89 | `sprd_vdsp` | [drivers/sound/soc/sprd/Makefile](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/Makefile) | Symbol evidence in ledger; no standalone `vdsp.c` found |
 | 90 | `sprd_wdf` | [drivers/watchdog/sprd_wdf.c](6.18.52-VXTux-UMS512/drivers/watchdog/sprd_wdf.c) | Tier A |
-| 91 | `sprd_wlan_combo` | [drivers/net/wireless/sprd/sprdwcn/wlan/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/wlan/Makefile) | SC2355 Wi-Fi port; module composition |
+| 91 | `sprd_wlan_combo` | [drivers/net/wireless/sprd/sprdwcn/wlan/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/wlan/Makefile) | SC2355 Wi-Fi port (27 objek → modul `sprdwl`). **Compile terverifikasi device: `sprdwl.ko` 2,5 MB (gcc 16.2.1)** — GPL, depends `cfg80211+wcn_core`, of_match `sprd,sc2355-wifi` (WiFi + SoftAP/hotspot). Tuntas 2026-10-09 |
 | 92 | `sprdbt_tty` | [drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile](6.18.52-VXTux-UMS512/drivers/net/wireless/sprd/sprdwcn/bluetooth/driver/Makefile) | HCI over tty-SDIO; composite module |
 | 93 | `thermal-generic-adc` | [drivers/thermal/thermal-generic-adc.c](6.18.52-VXTux-UMS512/drivers/thermal/thermal-generic-adc.c) | Mainline |
 | 94 | `trusty-tui` | [drivers/misc/trusty-tui.c](6.18.52-VXTux-UMS512/drivers/misc/trusty-tui.c) | Port of vendor `trusty-tui.ko` |
