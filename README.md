@@ -69,9 +69,9 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 101 | Deblob-derived driver integrations verified in tree + config (2026-10-09) |
+| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **6 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
-| **103** | **Total tracked: 103 + 1 desu! (≧▽≦)** |
+| **103** | **Total tracked desu! (≧▽≦)** |
 
 ---
 
@@ -193,6 +193,8 @@ GPU T618 itu Mali-G52 MP2, bukan G57. Stock ID `0x7402` dinormalisasi Panfrost j
 
 ## 🛠️ Build | ビルド方法
 
+**Host cross-compile** (config + DTB; kbuild host build mentok di header generated kbuild — `types/div64/cpucap-defs` — itu infrastruktur, bukan bug port):
+
 ```sh
 cd 6.18.52-VXTux-UMS512
 make O=out ARCH=arm64 defconfig
@@ -204,7 +206,19 @@ make O=out ARCH=arm64 defconfig
 make O=out ARCH=arm64 olddefconfig
 make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
+
 DTB: `out/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb`
+
+**Verifikasi ARM64 penuh = build di device** (Termux + proot-distro artix + gcc 16.2.1, compiler asli kernel stock):
+
+```sh
+# di device, dalam container artix
+make O=buildd ARCH=arm64 CC=gcc syncconfig
+make O=buildd ARCH=arm64 CC=gcc M=drivers/media/platform/sprd/vsp modules   # modul tunggal
+make -j8 O=buildd ARCH=arm64 CC=gcc Image modules                            # kernel penuh
+```
+
+Catatan build device: (1) setiap edit `.config`/Kconfig wajib `syncconfig` dulu — `M=` build tidak refresh `auto.conf`; (2) simbol antar-modul di-merge dari `Module.symvers` lokal tiap dir ke `buildd/Module.symvers`; (3) file hasil sync host→device strip CRLF dulu (hapus karakter CR di akhir setiap baris); (4) setelah build gagal di sebuah dir, `rm -f *.o` sebelum rebuild (`.o` partial bisa dianggap up-to-date → modpost "truncated").
 
 ## 📝 Changelog | 変更履歴
 
@@ -245,7 +259,7 @@ Repo relevan UMS512/T618 (sharkl5pro) yang sudah dicari tapi BELUM kepakai di po
 
 ## 🔧 Status | 状態
 
-Tree ini active bring-up desu~ Config atau DTB build sukses bukan bukti driver valid di hardware fisik, cek probe logs yaa~ (｡•̀ᴗ-)✧
+Active bring-up desu~ **103/103 driver verified-in-tree; 6 modul lulus kompilasi penuh di device** (gcc 16.2.1, exit 0, nol undefined symbol). Modul yang lulus build BUKAN bukti driver valid di hardware fisik — sisa verifikasi runtime: boot kernel custom 6.18.52 (Image + DTB) di device, lalu probe dmesg + device node (`/dev/sprd_vsp`, `/dev/sprd_cpp`) yaa~ (｡•̀ᴗ-)✧
 
 <div align="center">
 
