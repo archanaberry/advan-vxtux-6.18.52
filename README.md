@@ -69,7 +69,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 
 | Count | Scope nyaa~ |
 | ---: | --- |
-| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **9 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain, sprd_battery_info, sprd_charger_manager, wcn_core, sprd_wlan_combo (sprdwl.ko 2,5 MB) |
+| 102 | Deblob-derived driver integrations verified in tree + config (2026-10-09) — **10 di antaranya compile-verified di device** (gcc 16.2.1): vsp, cpp, iommu, ion, camsys/vsp pw-domain, sprd_battery_info, sprd_charger_manager, wcn_core, sprd_wlan_combo (sprdwl.ko 2,5 MB), jpg (sprd_jpg.ko 156 KB) |
 | 1 | Panfrost open-source GPU driver replacing vendor Mali Gondul DDK |
 | **103** | **Total tracked desu! (≧▽≦)** |
 
@@ -103,7 +103,7 @@ Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo 
 | 22 | `ims_bridge` | [net/ims_bridge/Makefile](6.18.52-VXTux-UMS512/net/ims_bridge/Makefile) | Tier A; composite network module |
 | 23 | `ion_cma_heap` | [drivers/dma-buf/heaps/cma_heap.c](6.18.52-VXTux-UMS512/drivers/dma-buf/heaps/cma_heap.c) | DMABUF_HEAPS_CMA=y; mainline cma_heap |
 | 24 | `ion_ipc_trusty` | [drivers/dma-buf/sprd/ion_ipc_trusty.c](6.18.52-VXTux-UMS512/drivers/dma-buf/sprd/ion_ipc_trusty.c) | Noble substitute; ported 2026-10-07 |
-| 25 | `jpg` | [drivers/misc/sprd_jpg/sprd_jpg.c](6.18.52-VXTux-UMS512/drivers/misc/sprd_jpg/sprd_jpg.c) | SPRD JPEG port |
+| 25 | `jpg` | [drivers/misc/sprd_jpg/sprd_jpg_main.c](6.18.52-VXTux-UMS512/drivers/misc/sprd_jpg/sprd_jpg_main.c) | SPRD JPEG port (renamed from sprd_jpg.c — nama modul ≠ nama objek). **Compile terverifikasi device: `sprd_jpg.ko` 156 KB (gcc 16.2.1)** — GPL, depends sprd-iommu+sprd_ion. Tuntas 2026-10-10 |
 | 26 | `leds-sc27xx-bltc` | [drivers/leds/leds-sc27xx-bltc.c](6.18.52-VXTux-UMS512/drivers/leds/leds-sc27xx-bltc.c) | LEDS_SC27XX_BLTC=y + DT sc2730-bltc node |
 | 27 | `ledtrig-pattern` | [drivers/leds/trigger/ledtrig-pattern.c](6.18.52-VXTux-UMS512/drivers/leds/trigger/ledtrig-pattern.c) | LEDS_TRIGGER_PATTERN=y mainline |
 | 28 | `mcdt_hw` | [drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c](6.18.52-VXTux-UMS512/drivers/sound/soc/sprd/mcdt/mcdt_r1p0/mcdt_hw.c) | Resolved through `sprd_mcdt_*` symbols |
