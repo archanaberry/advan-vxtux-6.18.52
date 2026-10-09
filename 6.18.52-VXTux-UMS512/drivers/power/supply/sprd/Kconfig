@@ -16,13 +16,10 @@ config CHARGER_SPRD_MANAGER
 	  Provides: CP state machine, fast charger, V-charger,
 	  vote system, JEITA, UVLO, battery monitoring.
 config SPRD_BATTERY_INFO
-	tristate "Unisoc battery info DT table parser (INCOMPLETE - does not link)"
+	tristate "Unisoc battery info DT table parser"
 	depends on OF && POWER_SUPPLY
 	default n
 	help
-	  INCOMPLETE. Enabling this fails the link step; read this before
-	  touching it.
-
 	  Parses the Unisoc battery characteristic tables (OCV/capacity,
 	  voltage/temperature, internal resistance, energy density, BASP, JEITA)
 	  out of device tree, from the node pointed at by the "monitored-battery"
@@ -32,17 +29,7 @@ config SPRD_BATTERY_INFO
 	  Ported from drivers/power/supply/sprd_battery_info.c of the GPL donor
 	  (951 lines, md5 identical between bocchi and marohinmark).
 
-	  WHY IT IS NOT ENABLED ANYWHERE:
-	    1. fgauge_get_profile_id() has no definition in this tree. In the
-	       donor it lives in drivers/power/supply/unisoc_battery.c and is
-	       battery_type_check() - an ADC-sampling, sysfs-overridable battery
-	       type identification subsystem, not a small helper.
-	    2. This directory is not wired into kbuild yet: neither
-	       drivers/power/supply/Makefile nor drivers/power/supply/Kconfig
-	       mentions "sprd/", so nothing in it is compiled regardless of this
-	       symbol.
-	    3. drivers/power/supply/sc27xx_fuel_gauge.c in this tree calls none
-	       of the five exports, so the module would have no consumer.
-
-	  Do not paper over this with a stub profile-id function: a module that
-	  loads successfully and populates nothing is worse than no module.
+	  fgauge_get_profile_id() (battery profile index) is provided by
+	  unisoc_battery_id.c — a port of the donor's unisoc_battery.c
+	  detection path (ADC + NTC ranges). Without an io-channel "batt_id"
+	  in DT, the donor's own fallback applies: profile 0 (single battery).

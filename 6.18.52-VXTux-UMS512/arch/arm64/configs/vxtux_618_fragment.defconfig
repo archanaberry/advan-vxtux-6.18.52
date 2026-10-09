@@ -1184,3 +1184,8 @@ CONFIG_CMA_SIZE_MBYTES=32
 # =m sementara: belum pernah jalan di hardware, dan modulnya butuh
 # TRUSTY_VIRTIO_IPC (=y) yang kini tersedia. Lihat drivers/dma-buf/sprd/.
 CONFIG_ION_IPC_TRUSTY=y
+
+# Battery info: fgauge_get_profile_id() kini terdefinisi (unisoc_battery_id.c,
+# port donor unisoc_battery.c). DT satu-profil -> fallback donor: id 0.
+# Lulus build device 2026-10-09 (exit 0, sprd_battery_info.ko).
+CONFIG_SPRD_BATTERY_INFO=m

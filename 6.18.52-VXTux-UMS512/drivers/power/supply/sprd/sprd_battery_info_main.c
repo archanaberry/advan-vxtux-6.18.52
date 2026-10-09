@@ -7,23 +7,14 @@
  * TIDAK ada akses MMIO: semua isi datang dari properti device tree pada node
  * "simple-battery" yang ditunjuk phandle "monitored-battery".
  *
- * STATUS: BELUM BISA DIBANGUN. Berkas ini sengaja TIDAK menyalakan apa pun
- * dan Kconfig-nya tidak diaktifkan di fragmen vxtux_618_fragment.defconfig.
- * Alasannya terukur, bukan dugaan:
- *   1. Simbol fgauge_get_profile_id() tidak punya definisi di pohon 6.18.
- *      Di donor GPL ia hidup di drivers/power/supply/unisoc_battery.c:244 ->
- *      battery_type_check(), yaitu subsistem identifikasi tipe baterai (baca
- *      ADC + sysfs battery_type_set + flag OPLUS), bukan fungsi kecil. Tidak
- *      ada padanannya di 6.18, dan mengarangnya berarti mengarang perilaku.
- *   2. Direktori drivers/power/supply/sprd/ belum disambung ke kbuild: tidak ada
- *      baris "sprd/" di drivers/power/supply/Makefile maupun
- *      drivers/power/supply/Kconfig. Berkas Kconfig/Makefile itu di luar
- *      kepemilikan lane ini.
- *   3. Driver hulu drivers/power/supply/sc27xx_fuel_gauge.c tidak memanggil
- *      satu pun dari lima ekspor di bawah, jadi mengaktifkannya hanya
- *      menghasilkan modul tanpa konsumen.
- * Menyeconomics stub "probe sukses tapi tidak melakukan apa" lebih buruk dari
- * tidak ada, jadi tidak dibuat. Lihat docs/thermal_battery_port_20260930.md.
+ * STATUS: LULUS BUILD (2026-10-09). Simbol fgauge_get_profile_id() kini
+ * terdefinisi di unisoc_battery_id.c (port jalur deteksi dari donor
+ * unisoc_battery.c:128-253 — battery_type_check + rentang NTC donor).
+ * Direktori sprd/ sudah tersambung kbuild (Makefile + Kconfig parent).
+ * DT ums512-1h10-vxtux tak punya io-channel "batt_id", jadi fallback DONOR
+ * sendiri berlaku: battery_id 0 (profil baterai tunggal — benar untuk DT
+ * satu-profil). Konsumen: driver hulu belum memanggil ekspor ini; modul
+ * berdiri sendiri dengan profil DT.
  *
  * Sumber: work/donors_20260930/bocchi_unisoc54/drivers/power/supply/
  *          sprd_battery_info.c (951 baris; md5 identik dengan marohinmark).
@@ -42,6 +33,9 @@
 #include <linux/string.h>
 
 #include "sprd_battery_info.h"
+
+/* unisoc_battery_id.c (port donor unisoc_battery.c). */
+extern void unisoc_battery_id_set_dev(struct device *dev);
 
 #define SPRD_BATTERY_OCV_TABLE_CHECK_VOLT_UV		3400000
 #define SPRD_BATTERY_OCV_CAP_TABLE_CHECK_VOLT_THRESHOLD	3000000
@@ -758,7 +752,10 @@ int sprd_battery_get_battery_info(struct power_supply *psy, struct sprd_battery_
 		return -ENXIO;
 	}
 
- 	battery_id = fgauge_get_profile_id();
+ 	/* Device untuk lookup io-channel "batt_id" (unisoc_battery_id.c). */
+	unisoc_battery_id_set_dev(&psy->dev);
+
+	battery_id = fgauge_get_profile_id();
 
 	battery_np = of_parse_phandle(psy->dev.of_node, "monitored-battery", battery_id);
 	if (!battery_np) {
