@@ -6,11 +6,21 @@ source anywhere under drivers/media/"` was **wrong**: the source exists, under
 `drivers/misc/`, in that donor only. `drivers/media/` was the wrong place to
 look.
 
-Files: `sprd_jpg.c` (646 lines), `sprd_jpg_common.c` (686),
+Files: `sprd_jpg_main.c` (646 lines, renamed from `sprd_jpg.c` — see the
+Makefile note on the module-name collision), `sprd_jpg_common.c` (686),
 `sprd_jpg_common.h` (141), plus `drivers/misc/Makefile`'s
 `obj-$(CONFIG_SPRD_JPG) += sprd_jpg/`. The uapi header
 `include/uapi/video/sprd_jpg.h` was already recovered into the tree by an
 earlier tick.
+
+**Build note (2026-10-10):** the Makefile's original form
+`obj-$(CONFIG_SPRD_JPG) += sprd_jpg.o sprd_jpg_common.o` produced TWO
+separate .ko as =m, so the shared symbols in sprd_jpg_common.c
+(jpg_get_mm_clk, jpg_clk_enable, jpg_get_iova, ...) went undefined at
+modpost. Fixed with the composite form — and the main source renamed to
+sprd_jpg_main.c, because a module name may not equal a source object
+name (same trap as zram/sprd_battery_info). Device build (gcc 16.2.1):
+exit 0, sprd_jpg.ko 156,384 B, depends sprd-iommu+sprd_ion.
 
 ## 5.4 → 6.18 deltas applied
 
