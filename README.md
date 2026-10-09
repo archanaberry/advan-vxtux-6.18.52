@@ -28,6 +28,22 @@
 
 ---
 
+## 🔗 Referensi donor | Donor references | ドナー参照だよっ
+
+Tabel donor/referensi untuk keperluan reverse engineering (RE) desu~ Semua repo di bawah SoC-nya Unisoc UMS512 / T618 (sharkl5pro), jadi register map & driver layout-nya bisa dibandingkan langsung~
+
+| Nama Repo | Sumber Repo (link) | Keterangan / Status |
+| --- | --- | --- |
+| TWRP Device Tree ADVAN_TAB_VX_LITE | [twrpdtgen/android_device_advan_ADVAN_TAB_VX_LITE](https://github.com/twrpdtgen/android_device_advan_ADVAN_TAB_VX_LITE/tree/ums512_1h10_Natv-user-13-TP1A.220624.014-82490-release-keys) | Referensi utama perangkat target. Device tree auto-generate twrpdtgen untuk Advan Tab VX Lite T1030 (board `ums512_1h10`). Publik. Berisi fstab/partisi + properti perangkat — peta hardware dasar, fokusnya recovery bukan kernel. |
+| beebono/rg-rotate-linux | [github.com/beebono/rg-rotate-linux](https://github.com/beebono/rg-rotate-linux) | Donor kernel paling relevan untuk sharkl5pro. Mainline Linux 7.1 dibawa ke Anbernic RG Rotate (UMS512/T618 — SoC sama). Isi: fork kernel (`src/linux-7-1-sprd/`), U-Boot vendor, skrip build, + kernel BSP vendor Android (`vendor/android-kernel-ums512/`) untuk analisis tingkat register. |
+| Seriousattempts/rp3plus-native-attempts | [github.com/Seriousattempts/rp3plus-native-attempts](https://github.com/Seriousattempts/rp3plus-native-attempts) | Donor data & firmware UMS512. Upaya (dan dokumentasi) native-OS di Retroid Pocket 3 Plus (UMS512/T618). Berisi firmware, skrip, dan dump data — berguna untuk analisis firmware RE di platform yang sama. |
+| iscle/android_kernel_unisoc_ums512 | [github.com/iscle/android_kernel_unisoc_ums512](https://github.com/iscle/android_kernel_unisoc_ums512) | Donor kernel vendor (referensi). Kernel Android UMS512. Akses publik tidak selalu tersedia (privat/terhapus) — **copy lokal: `work/donors_20260930/iscle_ums512/`**. Dari sini VSP (`drivers/misc/sprd_vsp/`) & ion ipc diporting 2026-10-09. |
+| MotorolaMobilityLLC/kernel-sprd | [github.com/MotorolaMobilityLLC/kernel-sprd](https://github.com/MotorolaMobilityLLC/kernel-sprd) | Donor driver & binding UMS512. Kernel Motorola untuk platform Spreadtrum/Unisoc. Bukan khusus Advan, tapi berisi driver + device-tree binding matang untuk komponen UMS512 (regulator SC2730, power domain sharkl5pro). |
+
+> 💡 Catatan RE: fokus `rg-rotate-linux` untuk porting kernel (paling komprehensif — fork mainline + board `ums512_1h10` + BSP vendor). Device tree TWRP dipakai sebagai peta partisi/properti. Beberapa repo mungkin tak bisa diakses publik — cek mirror atau copy lokal dulu yaa~
+
+---
+
 ## 🎯 Target | ターゲットだよっ
 
 | Area | Target desu~ |
