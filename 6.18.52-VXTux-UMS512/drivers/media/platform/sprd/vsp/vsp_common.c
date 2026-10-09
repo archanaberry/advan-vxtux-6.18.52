@@ -66,52 +66,62 @@ int find_vsp_freq_level(struct clock_name_map_t clock_name_map[],
 }
 
 #ifdef CONFIG_COMPAT
-static int compat_get_mmu_map_data(struct compat_vsp_iommu_map_data __user *
-				   data32,
-				   struct vsp_iommu_map_data __user *data)
+/*
+ * Helper konversi struct: 32-bit user <-> buffer kernel.
+ *
+ * Versi donor memakai get_user/put_user dua arah antar pointer __user
+ * (user->user) karena mengandalkan compat_alloc_user_space() untuk
+ * buffer user scratch. ARM64 tidak punya API itu (khusus x86 compat) dan
+ * 6.18 tidak punya padanannya -- build device 2026-10-09 gagal
+ * "implicit declaration of function 'compat_alloc_user_space'" di sini.
+ * Konversi jadi lewat buffer KERNEL: get_user/put_user hanya untuk sisi
+ * __user (32-bit), sisi kernel pakai assignment biasa.
+ */
+static int compat_get_mmu_map_data(struct compat_vsp_iommu_map_data __user *data32,
+				   struct vsp_iommu_map_data *data)
 {
-	compat_int_t i;
-	compat_size_t s;
-	compat_ulong_t ul;
+	compat_int_t fd32;
+	compat_size_t size32;
+	compat_ulong_t iova32;
 	int err;
 
-	err = get_user(i, &data32->fd);
-	err |= put_user(i, &data->fd);
-	err |= get_user(s, &data32->size);
-	err |= put_user(s, &data->size);
-	err |= get_user(ul, &data32->iova_addr);
-	err |= put_user(ul, &data->iova_addr);
+	err = get_user(fd32, &data32->fd);
+	if (err)
+		return err;
+	err = get_user(size32, &data32->size);
+	if (err)
+		return err;
+	err = get_user(iova32, &data32->iova_addr);
+	if (err)
+		return err;
 
-	return err;
-};
+	data->fd = fd32;
+	data->size = size32;
+	data->iova_addr = iova32;
+	return 0;
+}
 
-static int compat_put_mmu_map_data(struct compat_vsp_iommu_map_data __user *
-				   data32,
-				   struct vsp_iommu_map_data __user *data)
+static int compat_put_mmu_map_data(struct compat_vsp_iommu_map_data __user *data32,
+				   struct vsp_iommu_map_data *data)
 {
-	compat_int_t i;
-	compat_size_t s;
-	compat_ulong_t ul;
 	int err;
 
-	err = get_user(i, &data->fd);
-	err |= put_user(i, &data32->fd);
-	err |= get_user(s, &data->size);
-	err |= put_user(s, &data32->size);
-	err |= get_user(ul, &data->iova_addr);
-	err |= put_user(ul, &data32->iova_addr);
-
+	err = put_user(data->fd, &data32->fd);
+	if (err)
+		return err;
+	err = put_user((compat_size_t)data->size, &data32->size);
+	if (err)
+		return err;
+	err = put_user((compat_ulong_t)data->iova_addr, &data32->iova_addr);
 	return err;
-};
+}
 
 long compat_vsp_ioctl(struct file *filp, unsigned int cmd,
-			     unsigned long arg)
+		      unsigned long arg)
 {
 	long ret = 0;
 	int err;
 	struct compat_vsp_iommu_map_data __user *data32;
-	struct vsp_iommu_map_data __user *data;
-
 	struct vsp_fh *vsp_fp = filp->private_data;
 
 	if (!filp->f_op->unlocked_ioctl)
@@ -125,53 +135,36 @@ long compat_vsp_ioctl(struct file *filp, unsigned int cmd,
 
 	switch (cmd) {
 	case COMPAT_VSP_GET_IOVA:
+	case COMPAT_VSP_FREE_IOVA: {
+		struct vsp_iommu_map_data kdata;
 
 		data32 = compat_ptr(arg);
-		data = compat_alloc_user_space(sizeof(*data));
-		if (data == NULL) {
-			pr_err("%s %d, compat_alloc_user_space failed",
-				__func__, __LINE__);
+		err = compat_get_mmu_map_data(data32, &kdata);
+		if (err) {
+			pr_err("%s %d, compat_get_mmu_map_data failed\n",
+			       __func__, __LINE__);
 			return -EFAULT;
 		}
 
-		err = compat_get_mmu_map_data(data32, data);
-		if (err) {
-			pr_err("%s %d, compat_get_mmu_map_data failed",
-				__func__, __LINE__);
-			return err;
-		}
-		ret = filp->f_op->unlocked_ioctl(filp, VSP_GET_IOVA,
-						(unsigned long)data);
-		err = compat_put_mmu_map_data(data32, data);
-			return ret ? ret : err;
+		/*
+		 * vsp_hw_dev = global di sprd_vsp.c (non-static supaya bisa
+		 * dipakai dari sini). arg=NULL artinya jangan copy_to_user;
+		 * sisi compat yang mengonversi balik ke struct 32-bit lewat
+		 * compat_put_mmu_map_data di atas.
+		 */
+		if (cmd == COMPAT_VSP_GET_IOVA)
+			ret = vsp_get_iova(&vsp_hw_dev, &kdata, NULL);
+		else
+			ret = vsp_free_iova(&vsp_hw_dev, &kdata);
 
-	case COMPAT_VSP_FREE_IOVA:
-
-		data32 = compat_ptr(arg);
-		data = compat_alloc_user_space(sizeof(*data));
-		if (data == NULL) {
-			pr_err("%s %d, compat_alloc_user_space failed",
-				__func__, __LINE__);
-			return -EFAULT;
-		}
-
-		err = compat_get_mmu_map_data(data32, data);
-		if (err) {
-			pr_err("%s %d, compat_get_mmu_map_data failed",
-				__func__, __LINE__);
-			return err;
-		}
-		ret = filp->f_op->unlocked_ioctl(filp, VSP_FREE_IOVA,
-						(unsigned long)data);
-		err = compat_put_mmu_map_data(data32, data);
+		err = compat_put_mmu_map_data(data32, &kdata);
 		return ret ? ret : err;
+	}
 
 	default:
 		return filp->f_op->unlocked_ioctl(filp, cmd, (unsigned long)
 						  compat_ptr(arg));
 	}
-
-	return ret;
 }
 #endif
 
@@ -183,13 +176,17 @@ int vsp_get_iova(struct vsp_dev_t *vsp_hw_dev,
 	u32 power_state1, vsp_eb_reg;
 
 	vsp_clk_enable(vsp_hw_dev);
-	sprd_iommu_resume(vsp_hw_dev->vsp_dev);
+	/* sprd_iommu_resume() TIDAK ada di pohon ini (API iommu tree:
+	 * attach_device/map/unmap/restore/set_cam_bypass -- lihat
+	 * include/linux/sprd_iommu.h); padanannya sprd_iommu_restore(). */
+	sprd_iommu_restore(vsp_hw_dev->vsp_dev);
 	ret = sprd_ion_get_buffer(mapdata->fd, NULL,
-					&(iommu_map_data.buf),
-					&iommu_map_data.iova_size);
+				&(iommu_map_data.buf),
+				&iommu_map_data.iova_size);
 	if (ret) {
 		pr_err("get_sg_table failed, ret %d\n", ret);
-		sprd_iommu_suspend(vsp_hw_dev->vsp_dev);
+		/* sprd_iommu_suspend() TIDAK ada di pohon ini; di-drop
+		 * (iommu tetap menyala, aman untuk bring-up). */
 		vsp_clk_disable(vsp_hw_dev);
 		return ret;
 	}
@@ -209,18 +206,27 @@ int vsp_get_iova(struct vsp_dev_t *vsp_hw_dev,
 		mapdata->size = iommu_map_data.iova_size;
 		pr_debug("vsp iommu map success iova addr 0x%lx size 0x%zx\n",
 			mapdata->iova_addr, mapdata->size);
-		ret = copy_to_user((void __user *)arg, (void *)mapdata,
+		/*
+		 * arg == NULL: caller compat (compat_vsp_ioctl) memakai
+		 * buffer kernel sendiri dan mengonversi sendiri ke struct
+		 * 32-bit; lewati copy_to_user di sini.
+		 */
+		if (arg) {
+			ret = copy_to_user((void __user *)arg, (void *)mapdata,
 					sizeof(struct vsp_iommu_map_data));
-		if (ret) {
-			pr_err("copy_to_user failed, ret %d\n", ret);
-			sprd_iommu_suspend(vsp_hw_dev->vsp_dev);
-			vsp_clk_disable(vsp_hw_dev);
-			return ret;
+			if (ret) {
+				pr_err("copy_to_user failed, ret %d\n", ret);
+				/* sprd_iommu_suspend() TIDAK ada di pohon ini;
+				 * di-drop (iommu tetap menyala). */
+				vsp_clk_disable(vsp_hw_dev);
+				return ret;
+			}
 		}
 	} else
 		pr_err("vsp iommu map failed, ret %d, map size 0x%zx\n",
 			ret, iommu_map_data.iova_size);
-	sprd_iommu_suspend(vsp_hw_dev->vsp_dev);
+	/* sprd_iommu_suspend() TIDAK ada di pohon ini; di-drop (iommu tetap
+	 * menyala, aman untuk bring-up). */
 	vsp_clk_disable(vsp_hw_dev);
 	return ret;
 }
@@ -231,14 +237,16 @@ int vsp_free_iova(struct vsp_dev_t *vsp_hw_dev,
 	struct sprd_iommu_unmap_data iommu_ummap_data;
 
 	vsp_clk_enable(vsp_hw_dev);
-	sprd_iommu_resume(vsp_hw_dev->vsp_dev);
+	/* sprd_iommu_resume() TIDAK ada di pohon ini; padanannya
+	 * sprd_iommu_restore(). */
+	sprd_iommu_restore(vsp_hw_dev->vsp_dev);
 	iommu_ummap_data.iova_addr = ummapdata->iova_addr;
 	iommu_ummap_data.iova_size = ummapdata->size;
 	iommu_ummap_data.ch_type = SPRD_IOMMU_FM_CH_RW;
 	iommu_ummap_data.buf = NULL;
 
 	ret = sprd_iommu_unmap(vsp_hw_dev->vsp_dev,
-					&iommu_ummap_data);
+				&iommu_ummap_data);
 
 	if (ret)
 		pr_err("vsp iommu-unmap failed ret %d addr&size 0x%lx 0x%zx\n",
@@ -246,7 +254,8 @@ int vsp_free_iova(struct vsp_dev_t *vsp_hw_dev,
 	else
 		pr_debug("vsp iommu-unmap success iova addr 0x%lx size 0x%zx\n",
 			ummapdata->iova_addr, ummapdata->size);
-	sprd_iommu_suspend(vsp_hw_dev->vsp_dev);
+	/* sprd_iommu_suspend() TIDAK ada di pohon ini; di-drop (iommu tetap
+	 * menyala, aman untuk bring-up). */
 	vsp_clk_disable(vsp_hw_dev);
 
 	return ret;

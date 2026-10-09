@@ -73,6 +73,10 @@ struct vsp_dev_t {
 	bool vsp_qos_exist_flag;
 };
 
+/* Global vsp_hw_dev hidup di sprd_vsp.c (non-static supaya bisa dipakai
+ * compat_vsp_ioctl di vsp_common.c). */
+extern struct vsp_dev_t vsp_hw_dev;
+
 struct clock_name_map_t {
 	unsigned long freq;
 	char *name;

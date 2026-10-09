@@ -6,12 +6,12 @@
 # (work/donors_20260930/iscle_ums512/drivers/misc/sprd_vsp), same SoC.
 # The pw-domain half (sprd_vsp_pw_domain.c, vsp_regs.c) and the uapi header
 # (include/uapi/video/sprd_vsp.h) were already in this tree; this brings the
-# remaining core (sprd_vsp.c, vsp_common.c, vsp_isr_func.c) plus its dvfs
+# remaining core (sprd_vsp_main.c, vsp_common.c, vsp_isr_func.c) plus its dvfs
 # header (drivers/devfreq/apsys/sprd_dvfs_vsp.h).
 #
 # Node DT stock (fdt_live.dtb): video-codec@20500000, compatible
 # "sprd,sharkl5pro-vsp" — of_match di driver punya entri itu
-# (sprd_vsp.c:455).
+# (sprd_vsp_main.c:455).
 
 config SPRD_VSP
 	tristate "SPRD VSP driver"
@@ -22,7 +22,7 @@ config SPRD_VSP
 	# lihat komentar drivers/dma-buf/sprd/Kconfig), depends-nya akan selalu
 	# gagal dan olddefconfig membuang simbol ini.
 	select SPRD_ION
-	# vsp_parse_dt() memanggil sprd_iommu_attach_device() (sprd_vsp.c:535).
+	# vsp_parse_dt() memanggil sprd_iommu_attach_device() (sprd_vsp_main.c:535).
 	select SPRD_IOMMU
 	# vsp_pw_on()/vsp_pw_off() (dipakai vsp_open/vsp_release) diekspor oleh
 	# sprd_vsp_pw_domain.c hanya di bawah #if IS_ENABLED(CONFIG_SPRD_VSP_PW_DOMAIN).

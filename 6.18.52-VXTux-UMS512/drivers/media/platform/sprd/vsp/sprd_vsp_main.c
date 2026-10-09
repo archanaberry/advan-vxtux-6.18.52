@@ -98,7 +98,10 @@ static unsigned long sprd_vsp_phys_addr;
 static void __iomem *sprd_vsp_base;
 static void __iomem *vsp_glb_reg_base;
 
-static struct vsp_dev_t vsp_hw_dev;
+/* Global (bukan static): compat_vsp_ioctl di vsp_common.c memanggil
+ * vsp_get_iova/vsp_free_iova langsung dengan buffer kernel, jadi butuh
+ * akses ke instance global ini. */
+struct vsp_dev_t vsp_hw_dev;
 static struct wakeup_source *vsp_wakelock;
 static atomic_t vsp_instance_cnt = ATOMIC_INIT(0);
 static char *vsp_clk_src[] = {
@@ -685,8 +688,12 @@ static int vsp_release(struct inode *inode, struct file *filp)
 
 	if (vsp_fp->is_clock_enabled) {
 		pr_err("error occurred and close clock\n");
-		if (vsp_hw_dev.iommu_exist_flag)
-			sprd_iommu_suspend(vsp_hw_dev.vsp_dev);
+		/* sprd_iommu_suspend() TIDAK ada di pohon ini (API iommu tree:
+		 * attach_device/map/unmap/restore/set_cam_bypass — lihat
+		 * include/linux/sprd_iommu.h). Vendor 5.4 memakainya untuk
+		 * mematikan iommu; di-drop (iommu tetap menyala, aman untuk
+		 * bring-up). Call kembar di vsp_ioctl juga sudah di-drop
+		 * (build device 2026-10-09). */
 		vsp_fp->is_clock_enabled = 0;
 		vsp_clk_disable(&vsp_hw_dev);
 	}

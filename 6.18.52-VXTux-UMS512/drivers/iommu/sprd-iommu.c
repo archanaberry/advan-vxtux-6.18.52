@@ -500,6 +500,26 @@ int sprd_iommu_attach_device(struct device *dev)
 }
 EXPORT_SYMBOL(sprd_iommu_attach_device);
 
+/*
+ * sprd_iommu_restore() -- declared in include/linux/sprd_iommu.h and called
+ * by clients (vsp_get_iova/vsp_free_iova, gsp) on the enable path -- the
+ * vendor 5.4 counterpart of sprd_iommu_suspend(), which this tree does not
+ * have. In 5.4 it re-enabled the vendor iommu hardware after a suspend; in
+ * 6.18 the domain survives across the client's clk toggling (the iommu core
+ * owns device power state), so -- same philosophy as attach_device() above --
+ * the honest answer is "does this device still have a domain?". Build device
+ * 2026-10-09: without this definition modpost reported
+ * "sprd_iommu_restore [sprd_vsp.ko] undefined".
+ */
+int sprd_iommu_restore(struct device *dev)
+{
+	if (!dev || !iommu_get_domain_for_dev(dev))
+		return -ENODEV;
+
+	return 0;
+}
+EXPORT_SYMBOL(sprd_iommu_restore);
+
 
 static void sprd_iommu_sync(struct iommu_domain *domain,
 			    struct iommu_iotlb_gather *iotlb_gather)
