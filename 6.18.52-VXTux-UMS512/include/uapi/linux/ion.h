@@ -147,4 +147,24 @@ struct ion_heap_query {
  */
 #define ION_IOC_ABI_VERSION    _IOR(ION_IOC_MAGIC, 9, \
 					__u32)
+
+/**
+ * struct ion_phy_data - Unisoc/SPRD extension to query the physical address
+ * and size of an ION buffer handle (used by ION_IOC_PHY in
+ * include/uapi/linux/sprd_ion.h).
+ *
+ * Layout recovered from the vendor blob by RE -- see the comment above
+ * sprd_ion_ioctl() in drivers/dma-buf/sprd/sprd_ion.c: fd at +0, pad at +4,
+ * size at +8, phys at +16. This definition was lost in the codespace
+ * over-prune (2026-10-09) and restored from that documented layout; without
+ * it uapi/sprd_ion.h's ION_IOC_PHY hits "invalid application of sizeof to
+ * incomplete type" and sprd_ion.c cannot compile.
+ */
+struct ion_phy_data {
+	__u32 fd;
+	__u32 pad;
+	__u64 size;
+	__u64 phys;
+};
+
 #endif /* _UAPI_LINUX_ION_H */

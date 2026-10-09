@@ -261,3 +261,10 @@ static int __init vsp_pw_domain_init(void)
 }
 
 fs_initcall(vsp_pw_domain_init);
+
+/* Modpost menuntut MODULE_LICENSE/MODULE_DESCRIPTION di setiap modul (build
+ * device 2026-10-09: "ERROR: modpost: missing MODULE_LICENSE() in
+ * sprd_vsp_pw_domain.o" -- file ini lahir sebagai built-in lewat fs_initcall
+ * sehingga makronya tak pernah ada; sebagai =m wajib ada). */
+MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("SPRD VSP power domain gate");

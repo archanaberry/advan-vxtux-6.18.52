@@ -8,4 +8,9 @@ cpp-objs := cpp_core.o cpp_ioctl.o scale_drv.o rot_drv.o dma_drv.o
 
 obj-$(CONFIG_SPRD_CPP) += cpp.o
 
-subdir-ccflags-y += -I$(srctree)/$(src)
+# ccflags-y (BUKAN subdir-ccflags-y): subdir-ccflags hanya merambat ke
+# SUBDIR, tidak berlaku untuk objek milik direktori ini. cpp_core.c memakai
+# #include <sprd_mm.h> (angle-bracket) -- perlu -I eksplisit ke dir sendiri
+# supaya resolve. (Bug ini ketemu saat build device 2026-10-09: compile
+# gagal "sprd_mm.h: No such file" padahal file ada di direktori yang sama.)
+ccflags-y += -I$(src)

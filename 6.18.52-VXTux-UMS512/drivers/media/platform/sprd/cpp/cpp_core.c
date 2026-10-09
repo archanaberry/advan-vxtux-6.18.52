@@ -918,13 +918,14 @@ fail:
 	return ret;
 }
 
-static int sprd_cppcore_remove(struct platform_device *pdev)
+/* .remove di pohon ini bertanda void (include/linux/platform_device.h:238:
+ * "void (*remove)(struct platform_device *)") -- build device 2026-10-09
+ * gagal dengan -Werror=incompatible-pointer-types saat masih int. */
+static void sprd_cppcore_remove(struct platform_device *pdev)
 {
 	struct cpp_device *dev = platform_get_drvdata(pdev);
 
 	misc_deregister(&dev->md);
-
-	return 0;
 }
 
 static const struct of_device_id of_match_table[] = {

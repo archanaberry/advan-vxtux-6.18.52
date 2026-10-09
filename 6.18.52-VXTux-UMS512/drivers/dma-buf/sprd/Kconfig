@@ -2,6 +2,25 @@
 #
 # Unisoc (SPRD) dma-buf / ION pieces.
 
+config SPRD_ION
+	tristate "Unisoc ION allocator"
+	help
+	  Vendor ION allocator for Unisoc UMS512/T618 (sprd_ion.c). Provides
+	  sprd_ion_get_buffer() / sprd_ion_get_phys_addr() / sprd_ion_free_buffer()
+	  used by the VSP (vsp_common.c), CPP (cpp_core.c) and JPG (sprd_jpg)
+	  drivers -- all three `select SPRD_ION`.
+
+	  DECLARED 2026-10-09: before this the symbol had NO definition in any
+	  Kconfig, so `select SPRD_ION` from the consumers selected an implicit
+	  symbol that olddefconfig/syncconfig silently DROPS from .config
+	  (undeclared symbols are not written to auto.conf), and the Makefile's
+	  obj-$(CONFIG_SPRD_ION) then built nothing. Symptom on the device
+	  build: ion built only while a hand-appended CONFIG_SPRD_ION=y survived
+	  in .config; every kconfig pass removed it and sprd_ion.o stopped
+	  building, leaving the consumers with unresolved symbols.
+
+	  Say M to build the module, or Y to link it into the kernel.
+
 config ION_IPC_TRUSTY
 	tristate "Unisoc ION <-> Trusty IPC client"
 	depends on TRUSTY_VIRTIO_IPC
@@ -12,8 +31,8 @@ config ION_IPC_TRUSTY
 
 	  This module is a pure CLIENT of the tipc_chan_* API. It provides no
 	  ION allocation itself and needs no ION core, so it is independent of
-	  CONFIG_SPRD_ION (which has no Kconfig definition in this tree, since
-	  ION was removed from mainline).
+	  CONFIG_SPRD_ION (declared in this file since 2026-10-09; before that
+	  it had no definition, and ION itself was removed from mainline).
 
 	  The protocol was recovered from the vendor blob with radare2 and
 	  Ghidra; see drivers/dma-buf/sprd/ion_ipc_trusty.c for the provenance

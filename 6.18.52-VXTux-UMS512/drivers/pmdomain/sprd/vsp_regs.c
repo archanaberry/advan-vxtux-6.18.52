@@ -22,6 +22,11 @@
 
 #include "vsp_common.h"
 
+/* MODULE_LICENSE/MODULE_DESCRIPTION butuh <linux/module.h> -- vsp_common.h
+ * tidak menyertakannya (modpost gagal "missing MODULE_LICENSE() in
+ * vsp_regs.o" saat build device 2026-10-09). */
+#include <linux/module.h>
+
 struct register_gpr regs[ARRAY_SIZE(tb_name)];
 
 /* Diekspor untuk drivers/media/platform/sprd/vsp (modul SPRD_VSP): tabel ini
@@ -29,3 +34,9 @@ struct register_gpr regs[ARRAY_SIZE(tb_name)];
  * modul ini. Tanpa EXPORT_SYMBOL, modprobe SPRD_VSP gagal "unknown symbol
  * regs" ketika keduanya =m. */
 EXPORT_SYMBOL(regs);
+
+/* modpost menuntut MODULE_LICENSE/MODULE_DESCRIPTION di SETIAP .o yang masuk
+ * modul (bukan cukup di sprd_vsp_pw_domain.c) -- tanpa ini build device
+ * gagal "ERROR: modpost: missing MODULE_LICENSE() in vsp_regs.o". */
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Unisoc VSP syscon register table owner, shared with the VSP pw-domain driver");

@@ -594,3 +594,9 @@ static void __exit sprd_ion_exit(void)
 module_exit(sprd_ion_exit);
 
 MODULE_LICENSE("GPL");
+/* dma_buf_vmap/dma_buf_vunmap diekspor di namespace DMA_BUF (kbuild 6.18):
+ * tanpa IMPORT_NS, modpost menolak modul ini ("uses symbol dma_buf_vmap
+ * from namespace DMA_BUF, but does not import it") -- ditemukan build
+ * device 2026-10-09. */
+MODULE_IMPORT_NS("DMA_BUF");
+MODULE_DESCRIPTION("Unisoc ION allocator (UMS512/T618)");

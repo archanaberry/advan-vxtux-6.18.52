@@ -7,4 +7,8 @@
 
 obj-$(CONFIG_SPRD_VSP) += sprd_vsp.o vsp_common.o vsp_isr_func.o
 
-subdir-ccflags-y += -Idrivers/devfreq/apsys/
+# ccflags-y (BUKAN subdir-ccflags-y): subdir-ccflags hanya merambat ke SUBDIR.
+# sprd_vsp.c memakai #include "sprd_dvfs_vsp.h" yang ada di
+# drivers/devfreq/apsys/ -- perlu -I eksplisit. (Pola yang sama dengan
+# vendor Makefile donor: subdir-ccflags-y += -Idrivers/devfreq/apsys/.)
+ccflags-y += -I$(srctree)/drivers/devfreq/apsys/ -I$(srctree)/drivers/devfreq/sprd/apsys/

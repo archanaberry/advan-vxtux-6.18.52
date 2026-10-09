@@ -42,6 +42,53 @@
 #include "vsp_common.h"
 #include "sprd_dvfs_vsp.h"
 
+/* --- 6.18 compat shims (vendor 5.4 APIs yang tak ada di pohon ini) ---
+ * Ketiga masalah di bawah ketahuan saat build device 2026-10-09; shim
+ * dibuat static agar tidak mencemari namespace simbol kernel.
+ */
+
+/* syscon_regmap_lookup_by_name()/syscon_get_args_by_name() adalah ekstensi
+ * vendor untuk pasangan properti "syscons"/"syscon-names"; pohon 6.18 hanya
+ * punya syscon_regmap_lookup_by_phandle(). Semantik yang ditiru donor 5.4:
+ * cari index nama di "syscon-names", lalu ambil specifier ke-index dari
+ * "syscons" (2 cell: register + mask). */
+static struct regmap *syscon_regmap_lookup_by_name(struct device_node *np,
+						   const char *name)
+{
+	struct of_phandle_args args;
+	struct regmap *regmap;
+	int idx;
+
+	idx = of_property_match_string(np, "syscon-names", name);
+	if (idx < 0)
+		return ERR_PTR(idx);
+	if (of_parse_phandle_with_fixed_args(np, "syscons", 2, idx, &args))
+		return ERR_PTR(-EINVAL);
+	regmap = syscon_node_to_regmap(args.np);
+	of_node_put(args.np);
+	return regmap;
+}
+
+static int syscon_get_args_by_name(struct device_node *np, const char *name,
+				   int arg_count, unsigned int *out_args)
+{
+	struct of_phandle_args args;
+	int idx, i;
+
+	idx = of_property_match_string(np, "syscon-names", name);
+	if (idx < 0)
+		return idx;
+	if (arg_count > 2)
+		return -EINVAL;
+	if (of_parse_phandle_with_fixed_args(np, "syscons", 2, idx, &args))
+		return -EINVAL;
+	for (i = 0; i < arg_count; i++)
+		out_args[i] = args.args[i];
+	of_node_put(args.np);
+	return 0;
+}
+/* --- akhir compat shim --- */
+
 #ifdef pr_fmt
 #undef pr_fmt
 #endif
@@ -52,7 +99,7 @@ static void __iomem *sprd_vsp_base;
 static void __iomem *vsp_glb_reg_base;
 
 static struct vsp_dev_t vsp_hw_dev;
-static struct wakeup_source vsp_wakelock;
+static struct wakeup_source *vsp_wakelock;
 static atomic_t vsp_instance_cnt = ATOMIC_INIT(0);
 static char *vsp_clk_src[] = {
 	"clk_src_76m8",
@@ -120,26 +167,29 @@ static long vsp_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 	case VSP_ENABLE:
 		pr_debug("vsp ioctl VSP_ENABLE\n");
-		__pm_stay_awake(&vsp_wakelock);
+		__pm_stay_awake(vsp_wakelock);
 
 		ret = vsp_clk_enable(&vsp_hw_dev);
 		if (ret == 0)
 			vsp_fp->is_clock_enabled = 1;
 		if (vsp_hw_dev.iommu_exist_flag)
-			sprd_iommu_resume(vsp_hw_dev.vsp_dev);
+			sprd_iommu_restore(vsp_hw_dev.vsp_dev);
 		break;
 
 	case VSP_DISABLE:
 		pr_debug("vsp ioctl VSP_DISABLE\n");
 		if (vsp_fp->is_clock_enabled == 1) {
-			if (vsp_hw_dev.iommu_exist_flag)
-				sprd_iommu_suspend(vsp_hw_dev.vsp_dev);
+			/* sprd_iommu_suspend() TIDAK ada di pohon ini (API iommu
+			 * tree: attach_device/map/unmap/restore/set_cam_bypass --
+			 * lihat include/linux/sprd_iommu.h). Vendor 5.4 memakainya
+			 * untuk mematikan iommu saat VSP_DISABLE; di sini call-nya
+			 * di-drop (iommu tetap menyala; aman untuk bring-up). */
 			clr_vsp_interrupt_mask(&vsp_hw_dev,
 				sprd_vsp_base, vsp_glb_reg_base);
 			vsp_fp->is_clock_enabled = 0;
 			vsp_clk_disable(&vsp_hw_dev);
 		}
-		__pm_relax(&vsp_wakelock);
+		__pm_relax(vsp_wakelock);
 		break;
 
 	case VSP_ACQUAIRE:
@@ -370,7 +420,7 @@ static irqreturn_t vsp_isr(int irq, void *data)
 
 	if (vsp_fp == NULL) {
 		pr_err("%s error occurred, vsp_fp == NULL\n", __func__);
-		__pm_stay_awake(&vsp_wakelock);
+		__pm_stay_awake(vsp_wakelock);
 		return IRQ_WAKE_THREAD;
 	}
 
@@ -408,7 +458,7 @@ static irqreturn_t vsp_isr_thread(int irq, void *data)
 
 		vsp_clk_disable(&vsp_hw_dev);
 	}
-	__pm_relax(&vsp_wakelock);
+	__pm_relax(vsp_wakelock);
 
 	return IRQ_HANDLED;
 }
@@ -690,7 +740,7 @@ static int vsp_probe(struct platform_device *pdev)
 		}
 	}
 
-	wakeup_source_init(&vsp_wakelock, "pm_message_wakelock_vsp");
+	vsp_wakelock = wakeup_source_register(NULL, "pm_message_wakelock_vsp");
 
 	sema_init(&vsp_hw_dev.vsp_mutex, 1);
 
@@ -745,13 +795,14 @@ errout:
 	return ret;
 }
 
-static int vsp_remove(struct platform_device *pdev)
+/* .remove di pohon ini bertanda void (sama seperti platform_driver lain di
+ * 6.18; build device 2026-10-09 gagal -Werror=incompatible-pointer-types
+ * saat masih int). */
+static void vsp_remove(struct platform_device *pdev)
 {
 	misc_deregister(&vsp_dev);
 
 	free_irq(vsp_hw_dev.irq, &vsp_hw_dev);
-
-	return 0;
 }
 
 static int vsp_suspend(struct device *dev)
