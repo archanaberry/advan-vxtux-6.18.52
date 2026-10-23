@@ -53,8 +53,10 @@ jobs:
           # Daftar simbol yang Kconfig-nya ada di tree ini (sekali, lalu dicari).
           xargs -a /tmp/kconfigs.txt grep -hE '^(menu)?config[[:space:]]+' \
             | awk '{print $2}' | sort -u > /tmp/kconfig_syms.txt
+          # Pengecualian yang sudah ditelusuri (lihat docs/CI-KNOWN-DROPPED.txt).
+          grep -v '^#' ../docs/CI-KNOWN-DROPPED.txt | grep '^CONFIG_' | sort -u > /tmp/known_dropped.txt
           echo "Kconfig mendefinisikan $(wc -l < /tmp/kconfig_syms.txt) simbol"
-          rc=0; absent=0; coerce=0
+          rc=0; absent=0; coerce=0; known=0
           while IFS= read -r line; do
             line=${line%$'\r'}
             case "$line" in
@@ -68,6 +70,10 @@ jobs:
               absent=$((absent+1))
               continue
             fi
+            if grep -qx "$sym" /tmp/known_dropped.txt; then
+              known=$((known+1))
+              continue
+            fi
             if [ "$val" = m ] && [ "${got#*=}" = y ]; then
               # bool yang diminta =m: Kconfig menaikkan ke =y, bukan bug.
               coerce=$((coerce+1))
@@ -78,7 +84,8 @@ jobs:
             rc=1
           done < ../enhanced_config.cfg
           echo "Simbol fragmen yang belum punya Kconfig di tree ini: $absent (bukan kegagalan guard)"
-          echo "Simbol bool yang diminta =m lalu jadi =y: $coerce"
+          echo "Simbol yang diminta =m lalu jadi =y: $coerce"
+          echo "Pengecualian terdaftar (docs/CI-KNOWN-DROPPED.txt): $known"
           exit $rc
       - name: Upload effective .config
         if: always()
