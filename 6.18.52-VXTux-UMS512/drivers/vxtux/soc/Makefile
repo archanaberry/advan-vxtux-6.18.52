@@ -16,3 +16,6 @@ obj-$(CONFIG_SPRD_TIME_SYNC) += time_sync/
 
 # SIP secure-monitor client (stock blob sprd_sip_svc.ko).
 obj-$(CONFIG_SPRD_SIP_SVC)	+= sip_svc/
+
+# Subsystem sleep statistics (stock blob sprd_power_stat.ko).
+obj-$(CONFIG_SPRD_DEBUGSTAT)	+= debugstat/

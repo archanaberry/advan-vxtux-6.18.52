@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_DEBUGSTAT
+	tristate "Spreadtrum subsystem sleep statistics"
+	depends on ARM64 && PROC_FS && MFD_SYSCON
+	select SPRD_SIP_SVC
+	help
+	  Collects per-subsystem sleep counters (AP and PMIC SoC) and
+	  exposes them under /proc/sprd-debugstat/. The AP numbers come
+	  from the SIP power service, the SoC counter is read from the
+	  PMIC register described by the soc_slp_cnt_reg device tree
+	  property.
+
+	  Port of the vendor 5.4 `sprd_power_stat.ko`.

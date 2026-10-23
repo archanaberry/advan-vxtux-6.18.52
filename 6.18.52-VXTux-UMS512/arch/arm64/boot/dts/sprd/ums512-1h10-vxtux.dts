@@ -2613,3 +2613,17 @@ gpu_opp_table: opp-table {
 	};
 };
 
+
+/*
+ * Statistik tidur subsistem (blob stok sprd_power_stat.ko). Node asli di
+ * stock.dtb: /debugstat { compatible = "sprd,debugstat";
+ * soc_slp_cnt_reg = <0x2 0x784 0xff>; } dan 0x2 adalah phandle
+ * /soc/syscon@327e0000 -> label pmu_apb_regs (ums512.dtsi).
+ * Argumen 0x784 = offset register slp_cnt PMIC, 0xff = masknya.
+ */
+/ {
+	debugstat {
+		compatible = "sprd,debugstat";
+		soc_slp_cnt_reg = <&pmu_apb_regs 0x784 0xff>;
+	};
+};
