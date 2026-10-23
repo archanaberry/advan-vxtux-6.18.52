@@ -29,11 +29,12 @@ import re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOBS = os.path.join(ROOT, "donors", "stock_vendor_modules_all")
 KO_LIST = os.path.join(ROOT, "docs", "evidence-20261023", "ko_list_tick16.txt")
-CFG = os.path.join(ROOT, "docs", "evidence-20261023", "config_tick15.txt")
+CFG = os.path.join(ROOT, "docs", "evidence-20261023", "config_tick16.txt")
 PORT_AUDIT = os.path.join(ROOT, "docs", "PORT-AUDIT.md")
 TRIAGE = os.path.join(ROOT, "docs", "NOSRC-TRIAGE.md")
 SYMREACH = os.path.join(ROOT, "docs", "evidence-20261023", "symreach.json")
 OUT = os.path.join(ROOT, "docs", "COVERAGE-129.md")
+OUT_STATUS = os.path.join(ROOT, "docs", "STATUS-129.md")
 
 # nama stok -> nama pengganti di build (port_audit.RENAMES + temuan tick14/15)
 RENAMES = {
@@ -136,8 +137,9 @@ def main():
     A = L.append
     A("# Cakupan 129 blob stok — skor otoritatif\n\n")
     A("Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap "
-      f"config live ([config_tick15.txt](evidence-20261023/config_tick15.txt), "
-      f"8.007 baris) dan daftar `.ko` hasil build, bukan snapshot dokumen lama.\n\n")
+      f"config live ([{os.path.basename(CFG)}](evidence-20261023/{os.path.basename(CFG)}), "
+      f"{sum(1 for _ in open(CFG, encoding='utf-8', errors='replace')):,} baris) dan "
+      f"daftar `.ko` hasil build ({os.path.basename(KO_LIST)}), bukan snapshot dokumen lama.\n\n")
     A(f"## **{selesai}/129** tertangani\n\n")
     A("| Verdict | Jumlah | Arti |\n|---|---:|---|\n")
     A(f"| `KO` | {cnt['KO']} | ada `.ko` penggantinya di build |\n")
@@ -168,16 +170,34 @@ def main():
       "(mis. `phy-sprd-sharkl5Pro.ko` -> `phy-sprd-ums512.ko`) dipakai "
       "`RENAMES`.\n")
     A("- Pemetaan nama -> Kconfig di `PORT-AUDIT.md` punya kesalahan pasang "
-      "(mis. `gpio.ko` dipetakan ke `CONFIG_MTD_NAND_GPIO`, padahal blob itu "
-      "`sprd autotest gpio driver`). Kasus ini terbaca sebagai \"pemetaan tidak "
-      "ditemukan\" sehingga tidak dihitung sebagai selesai.\n")
+      "(mis. `gpio.ko` dulu dipetakan ke `CONFIG_MTD_NAND_GPIO`, padahal blob "
+      "itu `sprd autotest gpio driver`). Sejak `UNRESOLVED`/`AMBIGUOUS` di "
+      "`port_audit.py`, kasus seperti ini tampil sebagai belum, bukan selesai.\n")
     A("- `symreach.json` dipakai untuk kolom port/hilang saja. Penutup simbol "
       "TIDAK menggantikan keberadaan kode.\n")
 
     open(OUT, "w", encoding="utf-8", newline="\n").write("".join(L))
+
+    # Tabel ringkas: semua 129 blob dengan tanda ✅ atau (X).
+    S = []
+    S.append("# Status 129 blob stok — sudah jalan di 6.18.52 atau belum\n\n")
+    S.append("Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari "
+             "daftar `.ko` hasil build + config live.\n\n")
+    S.append("- ✅ = fungsinya sudah tersedia di build 6.18.52 (`.ko` pengganti, "
+             "kode ikut `Image`, atau fungsi sudah ada di modul lain)\n")
+    S.append("- **(X)** = belum ada penggantinya\n\n")
+    S.append(f"**{selesai}/{len(rows)}** ✅ · **{len(rows) - selesai}** (X)\n\n")
+    S.append("| # | driver stok 5.4 | di 6.18.52 | catatan |\n|---:|---|---|---|\n")
+    for i, r in enumerate(rows, 1):
+        if r["verdict"] == "BELUM":
+            S.append(f"| {i} | `{r['blob']}` | **(X)** | {r['why']} |\n")
+        else:
+            S.append(f"| {i} | `{r['blob']}` | ✅ `{r['verdict']}` | {r['why']} |\n")
+    open(OUT_STATUS, "w", encoding="utf-8", newline="\n").write("".join(S))
+
     print(f"{selesai}/{len(rows)}  " + " ".join(f"{k}={v}" for k, v in sorted(cnt.items())))
     print("BELUM:", ", ".join(r["blob"] for r in belum))
-    print("tulis", OUT)
+    print("tulis", OUT, "dan", OUT_STATUS)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Cakupan 129 blob stok — skor otoritatif
 
-Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config live ([config_tick15.txt](evidence-20261023/config_tick15.txt), 8.007 baris) dan daftar `.ko` hasil build, bukan snapshot dokumen lama.
+Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config live ([config_tick16.txt](evidence-20261023/config_tick16.txt), 8,000 baris) dan daftar `.ko` hasil build (ko_list_tick16.txt), bukan snapshot dokumen lama.
 
 ## **119/129** tertangani
 
@@ -42,5 +42,5 @@ Angka `port`/`hilang` di atas adalah referensi undefined yang belum ter-resolve 
 ## Catatan jujur
 
 - `KO` = ada `.ko` dengan nama itu di build. Untuk nama yang berbeda (mis. `phy-sprd-sharkl5Pro.ko` -> `phy-sprd-ums512.ko`) dipakai `RENAMES`.
-- Pemetaan nama -> Kconfig di `PORT-AUDIT.md` punya kesalahan pasang (mis. `gpio.ko` dipetakan ke `CONFIG_MTD_NAND_GPIO`, padahal blob itu `sprd autotest gpio driver`). Kasus ini terbaca sebagai "pemetaan tidak ditemukan" sehingga tidak dihitung sebagai selesai.
+- Pemetaan nama -> Kconfig di `PORT-AUDIT.md` punya kesalahan pasang (mis. `gpio.ko` dulu dipetakan ke `CONFIG_MTD_NAND_GPIO`, padahal blob itu `sprd autotest gpio driver`). Sejak `UNRESOLVED`/`AMBIGUOUS` di `port_audit.py`, kasus seperti ini tampil sebagai belum, bukan selesai.
 - `symreach.json` dipakai untuk kolom port/hilang saja. Penutup simbol TIDAK menggantikan keberadaan kode.
