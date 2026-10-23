@@ -1,0 +1,1084 @@
+
+sprd_7sreset.ko:     file format elf64-littleaarch64
+
+
+Disassembly of section .plt:
+
+0000000000000000 <.plt>:
+	...
+
+Disassembly of section .init.plt:
+
+0000000000000000 <.init.plt>:
+	...
+
+Disassembly of section .text.ftrace_trampoline:
+
+0000000000000000 <.text.ftrace_trampoline>:
+	...
+
+Disassembly of section .text:
+
+0000000000000000 <__cfi_check_fail>:
+       0:	str	x30, [x18], #8
+       4:	stp	x29, x30, [sp, #-16]!
+       8:	mov	x29, sp
+       c:	cbz	x0, 28 <__cfi_check_fail+0x28>
+      10:	ldrb	w8, [x0]
+      14:	cmp	w8, #0x5
+      18:	b.cc	28 <__cfi_check_fail+0x28>  // b.lo, b.ul, b.last
+      1c:	ldp	x29, x30, [sp], #16
+      20:	ldr	x30, [x18, #-8]!
+      24:	ret
+      28:	mov	w0, #0x2                   	// #2
+      2c:	bl	0 <__ubsan_handle_cfi_check_fail_abort>
+			2c: R_AARCH64_CALL26	__ubsan_handle_cfi_check_fail_abort
+
+0000000000000030 <sprd_7sreset_probe>:
+      30:	sub	sp, sp, #0x50
+      34:	str	x30, [x18], #8
+      38:	stp	x29, x30, [sp, #16]
+      3c:	str	x23, [sp, #32]
+      40:	stp	x22, x21, [sp, #48]
+      44:	stp	x20, x19, [sp, #64]
+      48:	add	x29, sp, #0x10
+      4c:	adrp	x8, 0 <__stack_chk_guard>
+			4c: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+      50:	ldr	x8, [x8]
+			50: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+      54:	add	x19, x0, #0x10
+      58:	mov	x20, x0
+      5c:	mov	w1, #0x20                  	// #32
+      60:	str	x8, [sp, #8]
+      64:	str	wzr, [sp, #4]
+      68:	ldr	x22, [x0, #784]
+      6c:	mov	w2, #0xdc0                 	// #3520
+      70:	mov	x0, x19
+      74:	bl	0 <devm_kmalloc>
+			74: R_AARCH64_CALL26	devm_kmalloc
+      78:	cbz	x0, 118 <sprd_7sreset_probe+0xe8>
+      7c:	mov	x21, x0
+      80:	ldr	x0, [x20, #112]
+      84:	mov	x1, xzr
+      88:	bl	0 <dev_get_regmap>
+			88: R_AARCH64_CALL26	dev_get_regmap
+      8c:	str	x0, [x21, #8]
+      90:	cbz	x0, 150 <sprd_7sreset_probe+0x120>
+      94:	mov	x0, x19
+      98:	str	x19, [x21]
+      9c:	bl	0 <of_device_get_match_data>
+			9c: R_AARCH64_CALL26	of_device_get_match_data
+      a0:	cbz	x0, 15c <sprd_7sreset_probe+0x12c>
+      a4:	adrp	x1, 0 <__cfi_check_fail>
+			a4: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xb0
+      a8:	str	x0, [x21, #24]
+      ac:	add	x1, x1, #0x0
+			ac: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xb0
+      b0:	add	x3, sp, #0x4
+      b4:	mov	x0, x22
+      b8:	mov	w2, wzr
+      bc:	bl	0 <of_property_read_u32_index>
+			bc: R_AARCH64_CALL26	of_property_read_u32_index
+      c0:	mov	w23, w0
+      c4:	cbnz	w0, 11c <sprd_7sreset_probe+0xec>
+      c8:	ldr	w8, [sp, #4]
+      cc:	adrp	x1, 0 <__cfi_check_fail>
+			cc: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xb0
+      d0:	add	x1, x1, #0x0
+			d0: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xb0
+      d4:	add	x3, sp, #0x4
+      d8:	mov	w2, #0x1                   	// #1
+      dc:	mov	x0, x22
+      e0:	str	w8, [x21, #16]
+      e4:	bl	0 <of_property_read_u32_index>
+			e4: R_AARCH64_CALL26	of_property_read_u32_index
+      e8:	mov	w23, w0
+      ec:	cbnz	w0, 11c <sprd_7sreset_probe+0xec>
+      f0:	ldr	w8, [sp, #4]
+      f4:	adrp	x1, 0 <__cfi_check_fail>
+			f4: R_AARCH64_ADR_PREL_PG_HI21	.data+0x140
+      f8:	add	x1, x1, #0x0
+			f8: R_AARCH64_ADD_ABS_LO12_NC	.data+0x140
+      fc:	mov	x0, x19
+     100:	str	w8, [x21, #20]
+     104:	bl	0 <sysfs_create_groups>
+			104: R_AARCH64_CALL26	sysfs_create_groups
+     108:	mov	w23, w0
+     10c:	cbnz	w0, 174 <sprd_7sreset_probe+0x144>
+     110:	str	x21, [x20, #168]
+     114:	b	11c <sprd_7sreset_probe+0xec>
+     118:	mov	w23, #0xfffffff4            	// #-12
+     11c:	adrp	x9, 0 <__stack_chk_guard>
+			11c: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     120:	ldr	x8, [sp, #8]
+     124:	ldr	x9, [x9]
+			124: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     128:	cmp	x9, x8
+     12c:	b.ne	188 <sprd_7sreset_probe+0x158>  // b.any
+     130:	ldp	x29, x30, [sp, #16]
+     134:	mov	w0, w23
+     138:	ldp	x20, x19, [sp, #64]
+     13c:	ldp	x22, x21, [sp, #48]
+     140:	ldr	x23, [sp, #32]
+     144:	ldr	x30, [x18, #-8]!
+     148:	add	sp, sp, #0x50
+     14c:	ret
+     150:	adrp	x1, 0 <__cfi_check_fail>
+			150: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x3f
+     154:	add	x1, x1, #0x0
+			154: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x3f
+     158:	b	164 <sprd_7sreset_probe+0x134>
+     15c:	adrp	x1, 0 <__cfi_check_fail>
+			15c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x89
+     160:	add	x1, x1, #0x0
+			160: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x89
+     164:	mov	x0, x19
+     168:	bl	0 <_dev_err>
+			168: R_AARCH64_CALL26	_dev_err
+     16c:	mov	w23, #0xffffffea            	// #-22
+     170:	b	11c <sprd_7sreset_probe+0xec>
+     174:	adrp	x1, 0 <__cfi_check_fail>
+			174: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x55
+     178:	add	x1, x1, #0x0
+			178: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x55
+     17c:	mov	x0, x19
+     180:	bl	0 <_dev_err>
+			180: R_AARCH64_CALL26	_dev_err
+     184:	b	11c <sprd_7sreset_probe+0xec>
+     188:	bl	0 <__stack_chk_fail>
+			188: R_AARCH64_CALL26	__stack_chk_fail
+
+000000000000018c <sprd_7sreset_remove>:
+     18c:	str	x30, [x18], #8
+     190:	stp	x29, x30, [sp, #-16]!
+     194:	mov	x29, sp
+     198:	adrp	x1, 0 <__cfi_check_fail>
+			198: R_AARCH64_ADR_PREL_PG_HI21	.data+0x140
+     19c:	add	x0, x0, #0x10
+     1a0:	add	x1, x1, #0x0
+			1a0: R_AARCH64_ADD_ABS_LO12_NC	.data+0x140
+     1a4:	bl	0 <sysfs_remove_groups>
+			1a4: R_AARCH64_CALL26	sysfs_remove_groups
+     1a8:	mov	w0, wzr
+     1ac:	ldp	x29, x30, [sp], #16
+     1b0:	ldr	x30, [x18, #-8]!
+     1b4:	ret
+
+00000000000001b8 <threshold_time_show>:
+     1b8:	sub	sp, sp, #0x30
+     1bc:	str	x30, [x18], #8
+     1c0:	stp	x29, x30, [sp, #16]
+     1c4:	str	x19, [sp, #32]
+     1c8:	add	x29, sp, #0x10
+     1cc:	adrp	x8, 0 <__stack_chk_guard>
+			1cc: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     1d0:	ldr	x8, [x8]
+			1d0: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     1d4:	mov	x19, x2
+     1d8:	add	x2, sp, #0x4
+     1dc:	str	x8, [sp, #8]
+     1e0:	str	wzr, [sp, #4]
+     1e4:	ldr	x8, [x0, #152]
+     1e8:	ldr	x0, [x8, #8]
+     1ec:	ldr	w1, [x8, #20]
+     1f0:	bl	0 <regmap_read>
+			1f0: R_AARCH64_CALL26	regmap_read
+     1f4:	ldr	w8, [sp, #4]
+     1f8:	cmp	w0, #0x0
+     1fc:	adrp	x2, 0 <__cfi_check_fail>
+			1fc: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xac
+     200:	add	x2, x2, #0x0
+			200: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xac
+     204:	ubfx	w8, w8, #4, #4
+     208:	csel	w3, w8, w0, eq	// eq = none
+     20c:	mov	w1, #0x1000                	// #4096
+     210:	mov	x0, x19
+     214:	bl	0 <scnprintf>
+			214: R_AARCH64_CALL26	scnprintf
+     218:	adrp	x9, 0 <__stack_chk_guard>
+			218: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     21c:	ldr	x8, [sp, #8]
+     220:	ldr	x9, [x9]
+			220: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     224:	cmp	x9, x8
+     228:	b.ne	244 <threshold_time_show+0x8c>  // b.any
+     22c:	ldp	x29, x30, [sp, #16]
+     230:	ldr	x19, [sp, #32]
+     234:	ldr	x30, [x18, #-8]!
+     238:	sxtw	x0, w0
+     23c:	add	sp, sp, #0x30
+     240:	ret
+     244:	bl	0 <__stack_chk_fail>
+			244: R_AARCH64_CALL26	__stack_chk_fail
+
+0000000000000248 <threshold_time_store>:
+     248:	sub	sp, sp, #0x40
+     24c:	str	x30, [x18], #8
+     250:	stp	x29, x30, [sp, #16]
+     254:	str	x21, [sp, #32]
+     258:	stp	x20, x19, [sp, #48]
+     25c:	add	x29, sp, #0x10
+     260:	adrp	x9, 0 <__stack_chk_guard>
+			260: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     264:	ldr	x9, [x9]
+			264: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     268:	mov	x8, x2
+     26c:	mov	x20, x0
+     270:	mov	x2, sp
+     274:	mov	w1, #0xa                   	// #10
+     278:	mov	x0, x8
+     27c:	mov	x19, x3
+     280:	str	x9, [sp, #8]
+     284:	str	wzr, [sp]
+     288:	bl	0 <kstrtoint>
+			288: R_AARCH64_CALL26	kstrtoint
+     28c:	tbnz	w0, #31, 2e8 <threshold_time_store+0xa0>
+     290:	ldr	x21, [x20, #152]
+     294:	ldr	x8, [x21, #24]
+     298:	ldr	w1, [x8, #8]
+     29c:	cbz	w1, 2f0 <threshold_time_store+0xa8>
+     2a0:	str	wzr, [sp, #4]
+     2a4:	ldr	x0, [x21, #8]
+     2a8:	mov	w2, #0x3991                	// #14737
+     2ac:	mov	w3, #0x7fff                	// #32767
+     2b0:	mov	x4, xzr
+     2b4:	mov	w5, wzr
+     2b8:	mov	w6, wzr
+     2bc:	bl	0 <regmap_update_bits_base>
+			2bc: R_AARCH64_CALL26	regmap_update_bits_base
+     2c0:	ldr	x8, [x21, #24]
+     2c4:	ldr	x0, [x21, #8]
+     2c8:	add	x2, sp, #0x4
+     2cc:	ldr	w1, [x8, #8]
+     2d0:	bl	0 <regmap_read>
+			2d0: R_AARCH64_CALL26	regmap_read
+     2d4:	cbnz	w0, 2e0 <threshold_time_store+0x98>
+     2d8:	ldrb	w8, [sp, #5]
+     2dc:	tbnz	w8, #7, 2f0 <threshold_time_store+0xa8>
+     2e0:	mov	x0, #0xffffffffffffffea    	// #-22
+     2e4:	b	380 <threshold_time_store+0x138>
+     2e8:	sxtw	x0, w0
+     2ec:	b	380 <threshold_time_store+0x138>
+     2f0:	ldr	x0, [x21, #8]
+     2f4:	ldr	w1, [x21, #20]
+     2f8:	mov	w2, #0xf0                  	// #240
+     2fc:	mov	w3, #0xf0                  	// #240
+     300:	mov	x4, xzr
+     304:	mov	w5, wzr
+     308:	mov	w6, wzr
+     30c:	bl	0 <regmap_update_bits_base>
+			30c: R_AARCH64_CALL26	regmap_update_bits_base
+     310:	ldr	x8, [x21, #24]
+     314:	ldr	w8, [x8, #8]
+     318:	cbz	w8, 374 <threshold_time_store+0x12c>
+     31c:	str	wzr, [sp, #4]
+     320:	ldr	x20, [x20, #152]
+     324:	mov	w2, #0x3990                	// #14736
+     328:	mov	w3, #0x7fff                	// #32767
+     32c:	mov	x4, xzr
+     330:	ldr	x8, [x20, #24]
+     334:	ldr	x0, [x20, #8]
+     338:	mov	w5, wzr
+     33c:	mov	w6, wzr
+     340:	ldr	w1, [x8, #8]
+     344:	bl	0 <regmap_update_bits_base>
+			344: R_AARCH64_CALL26	regmap_update_bits_base
+     348:	ldr	x8, [x20, #24]
+     34c:	ldr	x0, [x20, #8]
+     350:	add	x2, sp, #0x4
+     354:	ldr	w1, [x8, #8]
+     358:	bl	0 <regmap_read>
+			358: R_AARCH64_CALL26	regmap_read
+     35c:	ldr	w8, [sp, #4]
+     360:	mov	w9, #0xffffffea            	// #-22
+     364:	cmp	w0, #0x0
+     368:	lsl	w8, w8, #16
+     36c:	and	w8, w9, w8, asr #31
+     370:	csel	w0, w8, w0, eq	// eq = none
+     374:	sxtw	x8, w0
+     378:	cmp	w0, #0x0
+     37c:	csel	x0, x19, x8, eq	// eq = none
+     380:	adrp	x9, 0 <__stack_chk_guard>
+			380: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     384:	ldr	x8, [sp, #8]
+     388:	ldr	x9, [x9]
+			388: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     38c:	cmp	x9, x8
+     390:	b.ne	3ac <threshold_time_store+0x164>  // b.any
+     394:	ldp	x29, x30, [sp, #16]
+     398:	ldp	x20, x19, [sp, #48]
+     39c:	ldr	x21, [sp, #32]
+     3a0:	ldr	x30, [x18, #-8]!
+     3a4:	add	sp, sp, #0x40
+     3a8:	ret
+     3ac:	bl	0 <__stack_chk_fail>
+			3ac: R_AARCH64_CALL26	__stack_chk_fail
+
+00000000000003b0 <keypad_mode_show>:
+     3b0:	sub	sp, sp, #0x30
+     3b4:	str	x30, [x18], #8
+     3b8:	stp	x29, x30, [sp, #16]
+     3bc:	str	x19, [sp, #32]
+     3c0:	add	x29, sp, #0x10
+     3c4:	adrp	x8, 0 <__stack_chk_guard>
+			3c4: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     3c8:	ldr	x8, [x8]
+			3c8: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     3cc:	mov	w10, #0x2731                	// #10033
+     3d0:	mov	x19, x2
+     3d4:	add	x2, sp, #0x4
+     3d8:	str	x8, [sp, #8]
+     3dc:	str	wzr, [sp, #4]
+     3e0:	ldr	x8, [x0, #152]
+     3e4:	ldr	x9, [x8, #24]
+     3e8:	ldr	x0, [x8, #8]
+     3ec:	ldr	x9, [x9]
+     3f0:	cmp	x9, x10
+     3f4:	mov	w9, #0x14                  	// #20
+     3f8:	mov	w10, #0x10                  	// #16
+     3fc:	csel	x9, x10, x9, eq	// eq = none
+     400:	ldr	w1, [x8, x9]
+     404:	bl	0 <regmap_read>
+			404: R_AARCH64_CALL26	regmap_read
+     408:	ldr	w8, [sp, #4]
+     40c:	mov	w9, #0x1                   	// #1
+     410:	cmp	w0, #0x0
+     414:	adrp	x2, 0 <__cfi_check_fail>
+			414: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xac
+     418:	bic	w8, w9, w8, lsr #9
+     41c:	csel	w3, w8, w0, eq	// eq = none
+     420:	add	x2, x2, #0x0
+			420: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xac
+     424:	mov	w1, #0x1000                	// #4096
+     428:	mov	x0, x19
+     42c:	bl	0 <scnprintf>
+			42c: R_AARCH64_CALL26	scnprintf
+     430:	adrp	x9, 0 <__stack_chk_guard>
+			430: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     434:	ldr	x8, [sp, #8]
+     438:	ldr	x9, [x9]
+			438: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     43c:	cmp	x9, x8
+     440:	b.ne	45c <keypad_mode_show+0xac>  // b.any
+     444:	ldp	x29, x30, [sp, #16]
+     448:	ldr	x19, [sp, #32]
+     44c:	ldr	x30, [x18, #-8]!
+     450:	sxtw	x0, w0
+     454:	add	sp, sp, #0x30
+     458:	ret
+     45c:	bl	0 <__stack_chk_fail>
+			45c: R_AARCH64_CALL26	__stack_chk_fail
+
+0000000000000460 <keypad_mode_store>:
+     460:	sub	sp, sp, #0x40
+     464:	str	x30, [x18], #8
+     468:	stp	x29, x30, [sp, #16]
+     46c:	stp	x22, x21, [sp, #32]
+     470:	stp	x20, x19, [sp, #48]
+     474:	add	x29, sp, #0x10
+     478:	adrp	x9, 0 <__stack_chk_guard>
+			478: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     47c:	ldr	x9, [x9]
+			47c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     480:	mov	x8, x2
+     484:	mov	x20, x0
+     488:	mov	x2, sp
+     48c:	mov	w1, #0xa                   	// #10
+     490:	mov	x0, x8
+     494:	mov	x19, x3
+     498:	str	x9, [sp, #8]
+     49c:	str	wzr, [sp]
+     4a0:	bl	0 <kstrtoint>
+			4a0: R_AARCH64_CALL26	kstrtoint
+     4a4:	tbnz	w0, #31, 504 <keypad_mode_store+0xa4>
+     4a8:	ldr	x21, [x20, #152]
+     4ac:	ldr	w22, [sp]
+     4b0:	ldr	x8, [x21, #24]
+     4b4:	ldr	w1, [x8, #8]
+     4b8:	cbz	w1, 510 <keypad_mode_store+0xb0>
+     4bc:	str	wzr, [sp, #4]
+     4c0:	ldr	x0, [x21, #8]
+     4c4:	mov	w2, #0x3991                	// #14737
+     4c8:	mov	w3, #0x7fff                	// #32767
+     4cc:	mov	x4, xzr
+     4d0:	mov	w5, wzr
+     4d4:	mov	w6, wzr
+     4d8:	bl	0 <regmap_update_bits_base>
+			4d8: R_AARCH64_CALL26	regmap_update_bits_base
+     4dc:	ldr	x8, [x21, #24]
+     4e0:	ldr	x0, [x21, #8]
+     4e4:	add	x2, sp, #0x4
+     4e8:	ldr	w1, [x8, #8]
+     4ec:	bl	0 <regmap_read>
+			4ec: R_AARCH64_CALL26	regmap_read
+     4f0:	cbnz	w0, 4fc <keypad_mode_store+0x9c>
+     4f4:	ldrb	w8, [sp, #5]
+     4f8:	tbnz	w8, #7, 50c <keypad_mode_store+0xac>
+     4fc:	mov	x0, #0xffffffffffffffea    	// #-22
+     500:	b	5c0 <keypad_mode_store+0x160>
+     504:	sxtw	x0, w0
+     508:	b	5c0 <keypad_mode_store+0x160>
+     50c:	ldr	x8, [x21, #24]
+     510:	ldr	x8, [x8]
+     514:	mov	w9, #0x2731                	// #10033
+     518:	mov	w10, #0x14                  	// #20
+     51c:	mov	w11, #0x10                  	// #16
+     520:	cmp	x8, x9
+     524:	csel	x8, x11, x10, eq	// eq = none
+     528:	ldr	w1, [x21, x8]
+     52c:	ldr	x0, [x21, #8]
+     530:	cmp	w22, #0x0
+     534:	cset	w8, eq	// eq = none
+     538:	lsl	w3, w8, #9
+     53c:	mov	w2, #0x200                 	// #512
+     540:	mov	x4, xzr
+     544:	mov	w5, wzr
+     548:	mov	w6, wzr
+     54c:	bl	0 <regmap_update_bits_base>
+			54c: R_AARCH64_CALL26	regmap_update_bits_base
+     550:	ldr	x8, [x21, #24]
+     554:	ldr	w8, [x8, #8]
+     558:	cbz	w8, 5b4 <keypad_mode_store+0x154>
+     55c:	str	wzr, [sp, #4]
+     560:	ldr	x20, [x20, #152]
+     564:	mov	w2, #0x3990                	// #14736
+     568:	mov	w3, #0x7fff                	// #32767
+     56c:	mov	x4, xzr
+     570:	ldr	x8, [x20, #24]
+     574:	ldr	x0, [x20, #8]
+     578:	mov	w5, wzr
+     57c:	mov	w6, wzr
+     580:	ldr	w1, [x8, #8]
+     584:	bl	0 <regmap_update_bits_base>
+			584: R_AARCH64_CALL26	regmap_update_bits_base
+     588:	ldr	x8, [x20, #24]
+     58c:	ldr	x0, [x20, #8]
+     590:	add	x2, sp, #0x4
+     594:	ldr	w1, [x8, #8]
+     598:	bl	0 <regmap_read>
+			598: R_AARCH64_CALL26	regmap_read
+     59c:	ldr	w8, [sp, #4]
+     5a0:	mov	w9, #0xffffffea            	// #-22
+     5a4:	cmp	w0, #0x0
+     5a8:	lsl	w8, w8, #16
+     5ac:	and	w8, w9, w8, asr #31
+     5b0:	csel	w0, w8, w0, eq	// eq = none
+     5b4:	sxtw	x8, w0
+     5b8:	cmp	w0, #0x0
+     5bc:	csel	x0, x19, x8, eq	// eq = none
+     5c0:	adrp	x9, 0 <__stack_chk_guard>
+			5c0: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     5c4:	ldr	x8, [sp, #8]
+     5c8:	ldr	x9, [x9]
+			5c8: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     5cc:	cmp	x9, x8
+     5d0:	b.ne	5ec <keypad_mode_store+0x18c>  // b.any
+     5d4:	ldp	x29, x30, [sp, #16]
+     5d8:	ldp	x20, x19, [sp, #48]
+     5dc:	ldp	x22, x21, [sp, #32]
+     5e0:	ldr	x30, [x18, #-8]!
+     5e4:	add	sp, sp, #0x40
+     5e8:	ret
+     5ec:	bl	0 <__stack_chk_fail>
+			5ec: R_AARCH64_CALL26	__stack_chk_fail
+
+00000000000005f0 <short_mode_show>:
+     5f0:	sub	sp, sp, #0x30
+     5f4:	str	x30, [x18], #8
+     5f8:	stp	x29, x30, [sp, #16]
+     5fc:	str	x19, [sp, #32]
+     600:	add	x29, sp, #0x10
+     604:	adrp	x8, 0 <__stack_chk_guard>
+			604: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     608:	ldr	x8, [x8]
+			608: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     60c:	mov	x19, x2
+     610:	add	x2, sp, #0x4
+     614:	str	x8, [sp, #8]
+     618:	str	wzr, [sp, #4]
+     61c:	ldr	x8, [x0, #152]
+     620:	ldr	x0, [x8, #8]
+     624:	ldr	w1, [x8, #20]
+     628:	bl	0 <regmap_read>
+			628: R_AARCH64_CALL26	regmap_read
+     62c:	ldr	w8, [sp, #4]
+     630:	cmp	w0, #0x0
+     634:	adrp	x2, 0 <__cfi_check_fail>
+			634: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xac
+     638:	add	x2, x2, #0x0
+			638: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xac
+     63c:	ubfx	w8, w8, #8, #1
+     640:	csel	w3, w8, w0, eq	// eq = none
+     644:	mov	w1, #0x1000                	// #4096
+     648:	mov	x0, x19
+     64c:	bl	0 <scnprintf>
+			64c: R_AARCH64_CALL26	scnprintf
+     650:	adrp	x9, 0 <__stack_chk_guard>
+			650: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     654:	ldr	x8, [sp, #8]
+     658:	ldr	x9, [x9]
+			658: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     65c:	cmp	x9, x8
+     660:	b.ne	67c <short_mode_show+0x8c>  // b.any
+     664:	ldp	x29, x30, [sp, #16]
+     668:	ldr	x19, [sp, #32]
+     66c:	ldr	x30, [x18, #-8]!
+     670:	sxtw	x0, w0
+     674:	add	sp, sp, #0x30
+     678:	ret
+     67c:	bl	0 <__stack_chk_fail>
+			67c: R_AARCH64_CALL26	__stack_chk_fail
+
+0000000000000680 <short_mode_store>:
+     680:	sub	sp, sp, #0x40
+     684:	str	x30, [x18], #8
+     688:	stp	x29, x30, [sp, #16]
+     68c:	stp	x22, x21, [sp, #32]
+     690:	stp	x20, x19, [sp, #48]
+     694:	add	x29, sp, #0x10
+     698:	adrp	x9, 0 <__stack_chk_guard>
+			698: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     69c:	ldr	x9, [x9]
+			69c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     6a0:	mov	x8, x2
+     6a4:	mov	x20, x0
+     6a8:	mov	x2, sp
+     6ac:	mov	w1, #0xa                   	// #10
+     6b0:	mov	x0, x8
+     6b4:	mov	x19, x3
+     6b8:	str	x9, [sp, #8]
+     6bc:	str	wzr, [sp]
+     6c0:	bl	0 <kstrtoint>
+			6c0: R_AARCH64_CALL26	kstrtoint
+     6c4:	tbnz	w0, #31, 724 <short_mode_store+0xa4>
+     6c8:	ldr	x21, [x20, #152]
+     6cc:	ldr	w22, [sp]
+     6d0:	ldr	x8, [x21, #24]
+     6d4:	ldr	w1, [x8, #8]
+     6d8:	cbz	w1, 72c <short_mode_store+0xac>
+     6dc:	str	wzr, [sp, #4]
+     6e0:	ldr	x0, [x21, #8]
+     6e4:	mov	w2, #0x3991                	// #14737
+     6e8:	mov	w3, #0x7fff                	// #32767
+     6ec:	mov	x4, xzr
+     6f0:	mov	w5, wzr
+     6f4:	mov	w6, wzr
+     6f8:	bl	0 <regmap_update_bits_base>
+			6f8: R_AARCH64_CALL26	regmap_update_bits_base
+     6fc:	ldr	x8, [x21, #24]
+     700:	ldr	x0, [x21, #8]
+     704:	add	x2, sp, #0x4
+     708:	ldr	w1, [x8, #8]
+     70c:	bl	0 <regmap_read>
+			70c: R_AARCH64_CALL26	regmap_read
+     710:	cbnz	w0, 71c <short_mode_store+0x9c>
+     714:	ldrb	w8, [sp, #5]
+     718:	tbnz	w8, #7, 72c <short_mode_store+0xac>
+     71c:	mov	x0, #0xffffffffffffffea    	// #-22
+     720:	b	7c4 <short_mode_store+0x144>
+     724:	sxtw	x0, w0
+     728:	b	7c4 <short_mode_store+0x144>
+     72c:	ldr	x0, [x21, #8]
+     730:	ldr	w1, [x21, #20]
+     734:	cmp	w22, #0x0
+     738:	cset	w8, ne	// ne = any
+     73c:	lsl	w3, w8, #8
+     740:	mov	w2, #0x100                 	// #256
+     744:	mov	x4, xzr
+     748:	mov	w5, wzr
+     74c:	mov	w6, wzr
+     750:	bl	0 <regmap_update_bits_base>
+			750: R_AARCH64_CALL26	regmap_update_bits_base
+     754:	ldr	x8, [x21, #24]
+     758:	ldr	w8, [x8, #8]
+     75c:	cbz	w8, 7b8 <short_mode_store+0x138>
+     760:	str	wzr, [sp, #4]
+     764:	ldr	x20, [x20, #152]
+     768:	mov	w2, #0x3990                	// #14736
+     76c:	mov	w3, #0x7fff                	// #32767
+     770:	mov	x4, xzr
+     774:	ldr	x8, [x20, #24]
+     778:	ldr	x0, [x20, #8]
+     77c:	mov	w5, wzr
+     780:	mov	w6, wzr
+     784:	ldr	w1, [x8, #8]
+     788:	bl	0 <regmap_update_bits_base>
+			788: R_AARCH64_CALL26	regmap_update_bits_base
+     78c:	ldr	x8, [x20, #24]
+     790:	ldr	x0, [x20, #8]
+     794:	add	x2, sp, #0x4
+     798:	ldr	w1, [x8, #8]
+     79c:	bl	0 <regmap_read>
+			79c: R_AARCH64_CALL26	regmap_read
+     7a0:	ldr	w8, [sp, #4]
+     7a4:	mov	w9, #0xffffffea            	// #-22
+     7a8:	cmp	w0, #0x0
+     7ac:	lsl	w8, w8, #16
+     7b0:	and	w8, w9, w8, asr #31
+     7b4:	csel	w0, w8, w0, eq	// eq = none
+     7b8:	sxtw	x8, w0
+     7bc:	cmp	w0, #0x0
+     7c0:	csel	x0, x19, x8, eq	// eq = none
+     7c4:	adrp	x9, 0 <__stack_chk_guard>
+			7c4: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     7c8:	ldr	x8, [sp, #8]
+     7cc:	ldr	x9, [x9]
+			7cc: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     7d0:	cmp	x9, x8
+     7d4:	b.ne	7f0 <short_mode_store+0x170>  // b.any
+     7d8:	ldp	x29, x30, [sp, #16]
+     7dc:	ldp	x20, x19, [sp, #48]
+     7e0:	ldp	x22, x21, [sp, #32]
+     7e4:	ldr	x30, [x18, #-8]!
+     7e8:	add	sp, sp, #0x40
+     7ec:	ret
+     7f0:	bl	0 <__stack_chk_fail>
+			7f0: R_AARCH64_CALL26	__stack_chk_fail
+
+00000000000007f4 <hard_mode_show>:
+     7f4:	sub	sp, sp, #0x30
+     7f8:	str	x30, [x18], #8
+     7fc:	stp	x29, x30, [sp, #16]
+     800:	str	x19, [sp, #32]
+     804:	add	x29, sp, #0x10
+     808:	adrp	x8, 0 <__stack_chk_guard>
+			808: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     80c:	ldr	x8, [x8]
+			80c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     810:	mov	x19, x2
+     814:	add	x2, sp, #0x4
+     818:	str	x8, [sp, #8]
+     81c:	str	wzr, [sp, #4]
+     820:	ldr	x8, [x0, #152]
+     824:	ldr	x0, [x8, #8]
+     828:	ldr	w1, [x8, #20]
+     82c:	bl	0 <regmap_read>
+			82c: R_AARCH64_CALL26	regmap_read
+     830:	ldr	w8, [sp, #4]
+     834:	cmp	w0, #0x0
+     838:	adrp	x2, 0 <__cfi_check_fail>
+			838: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xac
+     83c:	add	x2, x2, #0x0
+			83c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xac
+     840:	and	w8, w8, #0x1
+     844:	csel	w3, w8, w0, eq	// eq = none
+     848:	mov	w1, #0x1000                	// #4096
+     84c:	mov	x0, x19
+     850:	bl	0 <scnprintf>
+			850: R_AARCH64_CALL26	scnprintf
+     854:	adrp	x9, 0 <__stack_chk_guard>
+			854: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     858:	ldr	x8, [sp, #8]
+     85c:	ldr	x9, [x9]
+			85c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     860:	cmp	x9, x8
+     864:	b.ne	880 <hard_mode_show+0x8c>  // b.any
+     868:	ldp	x29, x30, [sp, #16]
+     86c:	ldr	x19, [sp, #32]
+     870:	ldr	x30, [x18, #-8]!
+     874:	sxtw	x0, w0
+     878:	add	sp, sp, #0x30
+     87c:	ret
+     880:	bl	0 <__stack_chk_fail>
+			880: R_AARCH64_CALL26	__stack_chk_fail
+
+0000000000000884 <hard_mode_store>:
+     884:	sub	sp, sp, #0x40
+     888:	str	x30, [x18], #8
+     88c:	stp	x29, x30, [sp, #16]
+     890:	stp	x22, x21, [sp, #32]
+     894:	stp	x20, x19, [sp, #48]
+     898:	add	x29, sp, #0x10
+     89c:	adrp	x9, 0 <__stack_chk_guard>
+			89c: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     8a0:	ldr	x9, [x9]
+			8a0: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     8a4:	mov	x8, x2
+     8a8:	mov	x20, x0
+     8ac:	mov	x2, sp
+     8b0:	mov	w1, #0xa                   	// #10
+     8b4:	mov	x0, x8
+     8b8:	mov	x19, x3
+     8bc:	str	x9, [sp, #8]
+     8c0:	str	wzr, [sp]
+     8c4:	bl	0 <kstrtoint>
+			8c4: R_AARCH64_CALL26	kstrtoint
+     8c8:	tbnz	w0, #31, 928 <hard_mode_store+0xa4>
+     8cc:	ldr	x21, [x20, #152]
+     8d0:	ldr	w22, [sp]
+     8d4:	ldr	x8, [x21, #24]
+     8d8:	ldr	w1, [x8, #8]
+     8dc:	cbz	w1, 930 <hard_mode_store+0xac>
+     8e0:	str	wzr, [sp, #4]
+     8e4:	ldr	x0, [x21, #8]
+     8e8:	mov	w2, #0x3991                	// #14737
+     8ec:	mov	w3, #0x7fff                	// #32767
+     8f0:	mov	x4, xzr
+     8f4:	mov	w5, wzr
+     8f8:	mov	w6, wzr
+     8fc:	bl	0 <regmap_update_bits_base>
+			8fc: R_AARCH64_CALL26	regmap_update_bits_base
+     900:	ldr	x8, [x21, #24]
+     904:	ldr	x0, [x21, #8]
+     908:	add	x2, sp, #0x4
+     90c:	ldr	w1, [x8, #8]
+     910:	bl	0 <regmap_read>
+			910: R_AARCH64_CALL26	regmap_read
+     914:	cbnz	w0, 920 <hard_mode_store+0x9c>
+     918:	ldrb	w8, [sp, #5]
+     91c:	tbnz	w8, #7, 930 <hard_mode_store+0xac>
+     920:	mov	x0, #0xffffffffffffffea    	// #-22
+     924:	b	9c4 <hard_mode_store+0x140>
+     928:	sxtw	x0, w0
+     92c:	b	9c4 <hard_mode_store+0x140>
+     930:	ldr	x0, [x21, #8]
+     934:	ldr	w1, [x21, #20]
+     938:	cmp	w22, #0x0
+     93c:	cset	w3, ne	// ne = any
+     940:	mov	w2, #0x1                   	// #1
+     944:	mov	x4, xzr
+     948:	mov	w5, wzr
+     94c:	mov	w6, wzr
+     950:	bl	0 <regmap_update_bits_base>
+			950: R_AARCH64_CALL26	regmap_update_bits_base
+     954:	ldr	x8, [x21, #24]
+     958:	ldr	w8, [x8, #8]
+     95c:	cbz	w8, 9b8 <hard_mode_store+0x134>
+     960:	str	wzr, [sp, #4]
+     964:	ldr	x20, [x20, #152]
+     968:	mov	w2, #0x3990                	// #14736
+     96c:	mov	w3, #0x7fff                	// #32767
+     970:	mov	x4, xzr
+     974:	ldr	x8, [x20, #24]
+     978:	ldr	x0, [x20, #8]
+     97c:	mov	w5, wzr
+     980:	mov	w6, wzr
+     984:	ldr	w1, [x8, #8]
+     988:	bl	0 <regmap_update_bits_base>
+			988: R_AARCH64_CALL26	regmap_update_bits_base
+     98c:	ldr	x8, [x20, #24]
+     990:	ldr	x0, [x20, #8]
+     994:	add	x2, sp, #0x4
+     998:	ldr	w1, [x8, #8]
+     99c:	bl	0 <regmap_read>
+			99c: R_AARCH64_CALL26	regmap_read
+     9a0:	ldr	w8, [sp, #4]
+     9a4:	mov	w9, #0xffffffea            	// #-22
+     9a8:	cmp	w0, #0x0
+     9ac:	lsl	w8, w8, #16
+     9b0:	and	w8, w9, w8, asr #31
+     9b4:	csel	w0, w8, w0, eq	// eq = none
+     9b8:	sxtw	x8, w0
+     9bc:	cmp	w0, #0x0
+     9c0:	csel	x0, x19, x8, eq	// eq = none
+     9c4:	adrp	x9, 0 <__stack_chk_guard>
+			9c4: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     9c8:	ldr	x8, [sp, #8]
+     9cc:	ldr	x9, [x9]
+			9cc: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     9d0:	cmp	x9, x8
+     9d4:	b.ne	9f0 <hard_mode_store+0x16c>  // b.any
+     9d8:	ldp	x29, x30, [sp, #16]
+     9dc:	ldp	x20, x19, [sp, #48]
+     9e0:	ldp	x22, x21, [sp, #32]
+     9e4:	ldr	x30, [x18, #-8]!
+     9e8:	add	sp, sp, #0x40
+     9ec:	ret
+     9f0:	bl	0 <__stack_chk_fail>
+			9f0: R_AARCH64_CALL26	__stack_chk_fail
+
+00000000000009f4 <module_disable_show>:
+     9f4:	sub	sp, sp, #0x30
+     9f8:	str	x30, [x18], #8
+     9fc:	stp	x29, x30, [sp, #16]
+     a00:	str	x19, [sp, #32]
+     a04:	add	x29, sp, #0x10
+     a08:	adrp	x8, 0 <__stack_chk_guard>
+			a08: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     a0c:	ldr	x8, [x8]
+			a0c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     a10:	mov	x19, x2
+     a14:	add	x2, sp, #0x4
+     a18:	str	x8, [sp, #8]
+     a1c:	str	wzr, [sp, #4]
+     a20:	ldr	x8, [x0, #152]
+     a24:	ldr	x0, [x8, #8]
+     a28:	ldr	w1, [x8, #20]
+     a2c:	bl	0 <regmap_read>
+			a2c: R_AARCH64_CALL26	regmap_read
+     a30:	ldr	w8, [sp, #4]
+     a34:	cmp	w0, #0x0
+     a38:	adrp	x2, 0 <__cfi_check_fail>
+			a38: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xac
+     a3c:	add	x2, x2, #0x0
+			a3c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xac
+     a40:	ubfx	w8, w8, #1, #1
+     a44:	csel	w3, w8, w0, eq	// eq = none
+     a48:	mov	w1, #0x1000                	// #4096
+     a4c:	mov	x0, x19
+     a50:	bl	0 <scnprintf>
+			a50: R_AARCH64_CALL26	scnprintf
+     a54:	adrp	x9, 0 <__stack_chk_guard>
+			a54: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     a58:	ldr	x8, [sp, #8]
+     a5c:	ldr	x9, [x9]
+			a5c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     a60:	cmp	x9, x8
+     a64:	b.ne	a80 <module_disable_show+0x8c>  // b.any
+     a68:	ldp	x29, x30, [sp, #16]
+     a6c:	ldr	x19, [sp, #32]
+     a70:	ldr	x30, [x18, #-8]!
+     a74:	sxtw	x0, w0
+     a78:	add	sp, sp, #0x30
+     a7c:	ret
+     a80:	bl	0 <__stack_chk_fail>
+			a80: R_AARCH64_CALL26	__stack_chk_fail
+
+0000000000000a84 <module_disable_store>:
+     a84:	sub	sp, sp, #0x40
+     a88:	str	x30, [x18], #8
+     a8c:	stp	x29, x30, [sp, #16]
+     a90:	stp	x22, x21, [sp, #32]
+     a94:	stp	x20, x19, [sp, #48]
+     a98:	add	x29, sp, #0x10
+     a9c:	adrp	x9, 0 <__stack_chk_guard>
+			a9c: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     aa0:	ldr	x9, [x9]
+			aa0: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     aa4:	mov	x8, x2
+     aa8:	mov	x20, x0
+     aac:	mov	x2, sp
+     ab0:	mov	w1, #0xa                   	// #10
+     ab4:	mov	x0, x8
+     ab8:	mov	x19, x3
+     abc:	str	x9, [sp, #8]
+     ac0:	str	wzr, [sp]
+     ac4:	bl	0 <kstrtoint>
+			ac4: R_AARCH64_CALL26	kstrtoint
+     ac8:	tbnz	w0, #31, b28 <module_disable_store+0xa4>
+     acc:	ldr	x21, [x20, #152]
+     ad0:	ldr	w22, [sp]
+     ad4:	ldr	x8, [x21, #24]
+     ad8:	ldr	w1, [x8, #8]
+     adc:	cbz	w1, b30 <module_disable_store+0xac>
+     ae0:	str	wzr, [sp, #4]
+     ae4:	ldr	x0, [x21, #8]
+     ae8:	mov	w2, #0x3991                	// #14737
+     aec:	mov	w3, #0x7fff                	// #32767
+     af0:	mov	x4, xzr
+     af4:	mov	w5, wzr
+     af8:	mov	w6, wzr
+     afc:	bl	0 <regmap_update_bits_base>
+			afc: R_AARCH64_CALL26	regmap_update_bits_base
+     b00:	ldr	x8, [x21, #24]
+     b04:	ldr	x0, [x21, #8]
+     b08:	add	x2, sp, #0x4
+     b0c:	ldr	w1, [x8, #8]
+     b10:	bl	0 <regmap_read>
+			b10: R_AARCH64_CALL26	regmap_read
+     b14:	cbnz	w0, b20 <module_disable_store+0x9c>
+     b18:	ldrb	w8, [sp, #5]
+     b1c:	tbnz	w8, #7, b30 <module_disable_store+0xac>
+     b20:	mov	x0, #0xffffffffffffffea    	// #-22
+     b24:	b	bc8 <module_disable_store+0x144>
+     b28:	sxtw	x0, w0
+     b2c:	b	bc8 <module_disable_store+0x144>
+     b30:	ldr	x0, [x21, #8]
+     b34:	ldr	w1, [x21, #20]
+     b38:	cmp	w22, #0x0
+     b3c:	cset	w8, ne	// ne = any
+     b40:	lsl	w3, w8, #1
+     b44:	mov	w2, #0x2                   	// #2
+     b48:	mov	x4, xzr
+     b4c:	mov	w5, wzr
+     b50:	mov	w6, wzr
+     b54:	bl	0 <regmap_update_bits_base>
+			b54: R_AARCH64_CALL26	regmap_update_bits_base
+     b58:	ldr	x8, [x21, #24]
+     b5c:	ldr	w8, [x8, #8]
+     b60:	cbz	w8, bbc <module_disable_store+0x138>
+     b64:	str	wzr, [sp, #4]
+     b68:	ldr	x20, [x20, #152]
+     b6c:	mov	w2, #0x3990                	// #14736
+     b70:	mov	w3, #0x7fff                	// #32767
+     b74:	mov	x4, xzr
+     b78:	ldr	x8, [x20, #24]
+     b7c:	ldr	x0, [x20, #8]
+     b80:	mov	w5, wzr
+     b84:	mov	w6, wzr
+     b88:	ldr	w1, [x8, #8]
+     b8c:	bl	0 <regmap_update_bits_base>
+			b8c: R_AARCH64_CALL26	regmap_update_bits_base
+     b90:	ldr	x8, [x20, #24]
+     b94:	ldr	x0, [x20, #8]
+     b98:	add	x2, sp, #0x4
+     b9c:	ldr	w1, [x8, #8]
+     ba0:	bl	0 <regmap_read>
+			ba0: R_AARCH64_CALL26	regmap_read
+     ba4:	ldr	w8, [sp, #4]
+     ba8:	mov	w9, #0xffffffea            	// #-22
+     bac:	cmp	w0, #0x0
+     bb0:	lsl	w8, w8, #16
+     bb4:	and	w8, w9, w8, asr #31
+     bb8:	csel	w0, w8, w0, eq	// eq = none
+     bbc:	sxtw	x8, w0
+     bc0:	cmp	w0, #0x0
+     bc4:	csel	x0, x19, x8, eq	// eq = none
+     bc8:	adrp	x9, 0 <__stack_chk_guard>
+			bc8: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+     bcc:	ldr	x8, [sp, #8]
+     bd0:	ldr	x9, [x9]
+			bd0: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+     bd4:	cmp	x9, x8
+     bd8:	b.ne	bf4 <module_disable_store+0x170>  // b.any
+     bdc:	ldp	x29, x30, [sp, #16]
+     be0:	ldp	x20, x19, [sp, #48]
+     be4:	ldp	x22, x21, [sp, #32]
+     be8:	ldr	x30, [x18, #-8]!
+     bec:	add	sp, sp, #0x40
+     bf0:	ret
+     bf4:	bl	0 <__stack_chk_fail>
+			bf4: R_AARCH64_CALL26	__stack_chk_fail
+	...
+
+0000000000001000 <__cfi_check>:
+    1000:	mov	x8, #0x2444                	// #9284
+    1004:	movk	x8, #0x2924, lsl #16
+    1008:	movk	x8, #0xa43e, lsl #32
+    100c:	movk	x8, #0x2b3, lsl #48
+    1010:	cmp	x0, x8
+    1014:	b.le	106c <__cfi_check+0x6c>
+    1018:	mov	x8, #0x2445                	// #9285
+    101c:	movk	x8, #0x2924, lsl #16
+    1020:	movk	x8, #0xa43e, lsl #32
+    1024:	movk	x8, #0x2b3, lsl #48
+    1028:	cmp	x0, x8
+    102c:	b.eq	10c8 <__cfi_check+0xc8>  // b.none
+    1030:	mov	x8, #0x99e9                	// #39401
+    1034:	movk	x8, #0x3d04, lsl #16
+    1038:	movk	x8, #0xffe, lsl #32
+    103c:	movk	x8, #0x1e3d, lsl #48
+    1040:	cmp	x0, x8
+    1044:	b.eq	10dc <__cfi_check+0xdc>  // b.none
+    1048:	mov	x8, #0xbcd5                	// #48341
+    104c:	movk	x8, #0x7ad8, lsl #16
+    1050:	movk	x8, #0xa0fb, lsl #32
+    1054:	movk	x8, #0x7e04, lsl #48
+    1058:	cmp	x0, x8
+    105c:	b.ne	10b4 <__cfi_check+0xb4>  // b.any
+    1060:	adrp	x8, 0 <__cfi_check_fail>
+			1060: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1138
+    1064:	add	x8, x8, #0x0
+			1064: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1138
+    1068:	b	10d0 <__cfi_check+0xd0>
+    106c:	mov	x8, #0x608                 	// #1544
+    1070:	movk	x8, #0x67ba, lsl #16
+    1074:	movk	x8, #0xde5f, lsl #32
+    1078:	movk	x8, #0x992b, lsl #48
+    107c:	cmp	x0, x8
+    1080:	b.eq	10e8 <__cfi_check+0xe8>  // b.none
+    1084:	mov	x8, #0x848f                	// #33935
+    1088:	movk	x8, #0x472f, lsl #16
+    108c:	movk	x8, #0xce70, lsl #32
+    1090:	movk	x8, #0xcaa8, lsl #48
+    1094:	cmp	x0, x8
+    1098:	b.ne	10b4 <__cfi_check+0xb4>  // b.any
+    109c:	adrp	x8, 0 <__cfi_check_fail>
+			109c: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1108
+    10a0:	add	x8, x8, #0x0
+			10a0: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1108
+    10a4:	sub	x8, x1, x8
+    10a8:	ror	x8, x8, #2
+    10ac:	cmp	x8, #0x2
+    10b0:	b.cc	1100 <__cfi_check+0x100>  // b.lo, b.ul, b.last
+    10b4:	str	x30, [sp, #-16]!
+    10b8:	mov	x0, x2
+    10bc:	bl	0 <__cfi_check_fail>
+			10bc: R_AARCH64_CALL26	__cfi_check_fail
+    10c0:	ldr	x30, [sp], #16
+    10c4:	ret
+    10c8:	adrp	x8, 0 <__cfi_check_fail>
+			10c8: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1104
+    10cc:	add	x8, x8, #0x0
+			10cc: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1104
+    10d0:	cmp	x1, x8
+    10d4:	b.eq	1100 <__cfi_check+0x100>  // b.none
+    10d8:	b	10b4 <__cfi_check+0xb4>
+    10dc:	adrp	x8, 0 <__cfi_check_fail>
+			10dc: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1124
+    10e0:	add	x8, x8, #0x0
+			10e0: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1124
+    10e4:	b	10f0 <__cfi_check+0xf0>
+    10e8:	adrp	x8, 0 <__cfi_check_fail>
+			10e8: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1110
+    10ec:	add	x8, x8, #0x0
+			10ec: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1110
+    10f0:	sub	x8, x1, x8
+    10f4:	ror	x8, x8, #2
+    10f8:	cmp	x8, #0x5
+    10fc:	b.cs	10b4 <__cfi_check+0xb4>  // b.hs, b.nlast
+    1100:	ret
+    1104:	b	0 <__cfi_check_fail>
+			1104: R_AARCH64_JUMP26	init_module
+    1108:	b	0 <__cfi_check_fail>
+			1108: R_AARCH64_JUMP26	.text+0x30
+    110c:	b	0 <__cfi_check_fail>
+			110c: R_AARCH64_JUMP26	.text+0x18c
+    1110:	b	0 <__cfi_check_fail>
+			1110: R_AARCH64_JUMP26	.text+0x1b8
+    1114:	b	0 <__cfi_check_fail>
+			1114: R_AARCH64_JUMP26	.text+0x3b0
+    1118:	b	0 <__cfi_check_fail>
+			1118: R_AARCH64_JUMP26	.text+0x5f0
+    111c:	b	0 <__cfi_check_fail>
+			111c: R_AARCH64_JUMP26	.text+0x7f4
+    1120:	b	0 <__cfi_check_fail>
+			1120: R_AARCH64_JUMP26	.text+0x9f4
+    1124:	b	0 <__cfi_check_fail>
+			1124: R_AARCH64_JUMP26	.text+0x248
+    1128:	b	0 <__cfi_check_fail>
+			1128: R_AARCH64_JUMP26	.text+0x460
+    112c:	b	0 <__cfi_check_fail>
+			112c: R_AARCH64_JUMP26	.text+0x680
+    1130:	b	0 <__cfi_check_fail>
+			1130: R_AARCH64_JUMP26	.text+0x884
+    1134:	b	0 <__cfi_check_fail>
+			1134: R_AARCH64_JUMP26	.text+0xa84
+    1138:	b	0 <__cfi_check_fail>
+			1138: R_AARCH64_JUMP26	cleanup_module
+
+Disassembly of section .init.text:
+
+0000000000000000 <init_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-16]!
+   8:	mov	x29, sp
+   c:	adrp	x0, 0 <init_module>
+			c: R_AARCH64_ADR_PREL_PG_HI21	.data
+  10:	adrp	x1, 0 <init_module>
+			10: R_AARCH64_ADR_PREL_PG_HI21	__this_module
+  14:	add	x0, x0, #0x0
+			14: R_AARCH64_ADD_ABS_LO12_NC	.data
+  18:	add	x1, x1, #0x0
+			18: R_AARCH64_ADD_ABS_LO12_NC	__this_module
+  1c:	bl	0 <__platform_driver_register>
+			1c: R_AARCH64_CALL26	__platform_driver_register
+  20:	ldp	x29, x30, [sp], #16
+  24:	ldr	x30, [x18, #-8]!
+  28:	ret
+
+Disassembly of section .exit.text:
+
+0000000000000000 <cleanup_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-16]!
+   8:	mov	x29, sp
+   c:	adrp	x0, 0 <cleanup_module>
+			c: R_AARCH64_ADR_PREL_PG_HI21	.data
+  10:	add	x0, x0, #0x0
+			10: R_AARCH64_ADD_ABS_LO12_NC	.data
+  14:	bl	0 <platform_driver_unregister>
+			14: R_AARCH64_CALL26	platform_driver_unregister
+  18:	ldp	x29, x30, [sp], #16
+  1c:	ldr	x30, [x18, #-8]!
+  20:	ret

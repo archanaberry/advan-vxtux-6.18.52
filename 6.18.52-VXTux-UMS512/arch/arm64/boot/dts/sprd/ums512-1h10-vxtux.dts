@@ -2642,3 +2642,17 @@ gpu_opp_table: opp-table {
 		sprd,pdbg-irq-domain-ap-eic-sync = "320200c0.gpio";
 	};
 };
+
+/*
+ * PMIC 7s reset (blob stok sprd_7sreset.ko).  Node stok:
+ * /soc/aon/spi@32100000/pmic@0/hw-reset@1bc0 dengan reg = <0x1bf8 0x1bc0>.
+ * Dua sel itu bukan range: index 0 = "reg" (dipakai keypad_mode pada semua
+ * PMIC kecuali SC2731), index 1 = register kontrol 0x1bc0 (semua atribut
+ * lain).  Bit/mask tiap atribut dibaca dari blob — docs/RE-SPRD-7SRESET.md.
+ */
+&sc2730_pmic {
+	hw_reset: hw-reset@1bc0 {
+		compatible = "sprd,sc2730-7sreset";
+		reg = <0x1bf8 0x1bc0>;
+	};
+};

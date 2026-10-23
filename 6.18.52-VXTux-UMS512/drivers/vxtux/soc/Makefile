@@ -22,3 +22,12 @@ obj-$(CONFIG_SPRD_DEBUGSTAT)	+= debugstat/
 
 # Power debug: wakeup/sleep logging (stock blob sprd_pdbg.ko).
 obj-$(CONFIG_SPRD_PDBG)	+= pdbg/
+
+# SoC model / manufacturer strings (stock blob sprd_manufacturer_model.ko).
+obj-$(CONFIG_SPRD_MANUFACTURER_MODEL)	+= manufacturer_model/
+
+# PMIC 7s reset knobs (stock blob sprd_7sreset.ko).
+obj-$(CONFIG_SPRD_7SRESET)	+= sprd_7sreset/
+
+# Framework autotest vendor (stock blob core.ko + gpio.ko).
+obj-$(CONFIG_SPRD_AUTOTEST)	+= autotest/

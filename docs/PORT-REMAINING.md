@@ -1,6 +1,20 @@
 # 10 blob yang belum tertangani — bukti dan langkah berikutnya
 
-Status per build CI `39946023755` (commit `a0f2e70ce`, 229 `.ko`, rc=0):
+**Status 2026-10-23 (codespace, 235 `.ko`, rc=0): 6 dari 10 sudah diport.**
+
+| # | blob | status |
+|---|---|---|
+| 1,2 | `core.ko`, `gpio.ko` | **selesai** — `sprd_autotest_core`, `sprd_autotest_gpio` |
+| 6 | `sprd_7sreset.ko` | **selesai** — 5 atribut sysfs + node DT |
+| 8 | `sprd_manufacturer_model.ko` | **selesai** — path root `/`, bukan node `soc-manufacturer` |
+| 9 | `sprd_pdbg.ko` | **selesai** (commit `cb5e91d35`) |
+| 10 | `sprd_power_stat.ko` | **selesai** sebagai `sprd_debugstat` (commit `8bf97026b`) |
+| 3 | `mmc_swcq.ko` | belum — 40 fungsi, butuh pembacaan penuh |
+| 4 | `sprd-cpufreq-v2.ko` | belum — 23 fungsi, disassembly tersedia |
+| 5 | `sprd-cpufreq-public.ko` | belum — bergantung semantik #4 |
+| 7 | `sprd_iq.ko` | belum — butuh `usb_f_vser` yang tidak ada di tree |
+
+Angka lama (build CI `39946023755`, commit `a0f2e70ce`, 229 `.ko`):
 
 ```
 119/129   KO=58  Y=47  BUILT-IN=12  SUPERSEDED=2  BELUM=10
@@ -47,10 +61,10 @@ Hasil baca `sprd_autotest_ioctl` (objdump, 196 B) — ini yang sudah pasti:
 Struct `gpio.ko` di `.data` cocok dengan pola itu: `+0x00` nama, `+0x08`
 `cmd = 0xc0044101` (arah `_IOWR`, size 4, type `'A'`, nr 1).
 
-**Yang masih kurang:** isi `gpio_test` (`0x30`..`0x10c8`) memakai GPIO
-descriptor API dan pencocokan nama chip (`gpio_match_name_gpio`), tapi
-urutan tes (pin mana, pola apa) baru terbaca sebagian. Butuh pembacaan
-penuh fungsi itu sebelum bisa ditulis 1:1.
+**SELESAI.** `gpio_test` sudah terbaca penuh: argumen u32 user (offset
+bit 0..15, dir bit 16, value bit 17), chip dicocokkan lewat
+`chip->ngpio == 256`, arah input membaca line dan menulis balik bit 17.
+Port: `drivers/vxtux/soc/autotest/`. Rincian: [RE-SPRD-AUTOTEST.md](RE-SPRD-AUTOTEST.md).
 
 ---
 
@@ -99,9 +113,11 @@ pada tabel OPP yang dikelola #4.
 | compatible | `sprd,sc2720-7sreset`, `sc2721`, `sc2730`, `sc2731`, `ump9620-7sreset` |
 | node stok | `/soc/aon/spi@32100000/pmic@0/hw-reset@1bc0`, `reg = <0x1bf8 0x1bc0>` |
 
-Yang belum: alamat bit per mode di regmap PMIC dan arti dua nilai `reg`.
-Tanpa itu, driver hanya bisa ditulis sebagai kerangka — jadi belum
-dikerjakan.
+**SELESAI.** Peta bit sudah dipulihkan: `module_disable` mask 0x2 bit 1,
+`hard_mode` 0x1 bit 0, `short_mode` 0x100 bit 8, `keypad_mode` 0x200 bit 9
+(aktif-rendah), `threshold_time` 0xf0 bit 4..7; dua sel `reg` = register
+`keypad` (index 0) dan register kontrol 0x1bc0 (index 1); UMP9620 memakai
+kunci 0x23d8. Port + node DT: [RE-SPRD-7SRESET.md](RE-SPRD-7SRESET.md).
 
 ## 7. `sprd_iq.ko` — camera IQ
 
@@ -116,11 +132,11 @@ dikerjakan.
 String: `soc-manufacturer`, `soc_manufacturer`, `soc_model`, `soc0`,
 `soc_model: %s`, `soc_manufacturer_show`, `soc_model_show`.
 
-Namun **node `soc-manufacturer` tidak ada di `stock.dtb`** (`fdt_dump.py
---paths` tidak menemukannya); artinya path yang dicari driver bukan node DT
-biasa, dan sysfs group-nya ditempel ke device yang dibuat sendiri
-(`sprd_manufacturer_model_dev`). Tanpa tahu path/node itu, driver hanya
-bisa menebak dari mana string dibaca.
+**SELESAI.** "Blokir" lama ternyata salah baca: blob memakai
+`of_find_node_opts_by_path("/", NULL)` lalu membaca properti
+`soc-module` dan `soc-manufacturer` dari **root** node, bukan dari node
+bernama `soc-manufacturer`. Stok DTB memang punya keduanya
+(`UMS512`, `Spreadtrum`). Port: [RE-SPRD-MANUFACTURER.md](RE-SPRD-MANUFACTURER.md).
 
 ## 9. `sprd_pdbg.ko` — power debug (irq domain) — **SELESAI (diport)**
 
@@ -153,7 +169,7 @@ pada 6.18) terhadap 8 string DT, sekali per IRQ lalu nama di-null-kan;
 Terverifikasi: `sprd_pdbg.o` rc=0 via `cs_quick.sh`, DTB `ums512-1h10-vxtux`
 rc=0; build penuh untuk `.ko` — lihat status di commit.
 
-## 10. `sprd_power_stat.ko` — statistik tidur
+## 10. `sprd_power_stat.ko` — statistik tidur — **SELESAI (diport)**
 
 | Item | Nilai |
 |---|---|
@@ -163,8 +179,10 @@ rc=0; build penuh untuk `.ko` — lihat status di commit.
 | node stok | `/debugstat`, properti `soc_slp_cnt_reg = <0x2 0x784 0xff>` |
 | SMC | `pwr_get_wakeup_source` = `0x82000501` (sudah dibungkus) |
 
-Sama seperti #9: ABI firmware-nya sudah tersedia, yang belum adalah format
-node sysfs dan pemakaian `soc_slp_cnt_reg` (offset regmap 0x784, mask 0xff).
+Diport sebagai `sprd_debugstat` (commit `8bf97026b`):
+`drivers/vxtux/soc/debugstat/`, Kconfig `SPRD_DEBUGSTAT`, kolom
+`/proc/sprd-debugstat/*` dan pemakaian `soc_slp_cnt_reg` (regmap 0x784,
+mask 0xff) mengikuti [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md).
 
 ---
 

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_7SRESET
+	tristate "Spreadtrum PMIC 7s reset controller"
+	depends on MFD_SC27XX_PMIC || COMPILE_TEST
+	help
+	  Exposes the PMIC long-press (7s) reset knobs as sysfs attributes
+	  of the hw-reset child device:
+
+	      module_disable, hard_mode, short_mode, keypad_mode,
+	      threshold_time
+
+	  Each attribute reads/writes the PMIC register given by the
+	  second cell of the "reg" property (index 1); keypad_mode uses
+	  the first cell on every PMIC except SC2731.  UMP9620 additionally
+	  locks/unlocks the register through 0x23d8 (bit 15 = status).
+
+	  Port of the vendor 5.4 `sprd_7sreset.ko`.

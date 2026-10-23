@@ -305,9 +305,11 @@ def main():
     if a.cmd == "dis":
         arg = a.arg or ""
         target = None
+        limit = 0x4000  # batas atas jendela; fungsi terpanjang di blob ~3 KB
         for addr, size, name in b.funcs():
             if arg == name or arg.lower() in name.lower():
                 target = addr
+                limit = size
                 print(f"; {name} @ 0x{addr:x} ({size} B)")
                 break
         if target is None:
@@ -320,7 +322,7 @@ def main():
                 continue
             started = True
             print(ln)
-            if addr >= target + 0x400:
+            if addr >= target + limit:
                 break
         if not started:
             print("tidak ada kode di alamat itu")
