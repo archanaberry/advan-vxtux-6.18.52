@@ -12,7 +12,7 @@
 | 3 | `mmc_swcq.ko` | belum — 40 fungsi, butuh pembacaan penuh |
 | 4 | `sprd-cpufreq-v2.ko` | belum — 23 fungsi, disassembly tersedia |
 | 5 | `sprd-cpufreq-public.ko` | belum — bergantung semantik #4 |
-| 7 | `sprd_iq.ko` | belum — butuh `usb_f_vser` yang tidak ada di tree |
+| 7 | `sprd_iq.ko` | belum — RE selesai, layout state/mailbox masih gelap |
 
 Angka lama (build CI `39946023755`, commit `a0f2e70ce`, 229 `.ko`):
 
@@ -98,10 +98,16 @@ driver. Butuh pembacaan `sprd_cpufreq_probe` + `sprd_cpufreq_dvfs_*`.
 
 ## 5. `sprd-cpufreq-public.ko` — API cpufreq untuk modul lain
 
-5 fungsi, 1 ekspor: `sprd_cpufreq_update_opp`. Ini lapisan tipis di atas
-`cpufreq_get_policy()` + `dev_pm_opp_*` yang dipanggil driver lain
-(thermal/boost). Bisa ditulis setelah #4 ada, karena semantiknya bergantung
-pada tabel OPP yang dikelola #4.
+3 fungsi (`sprd_cpufreq_update_opp` 476 B, `sprd_cpufreq_update_normal` dan
+`sprd_cpufreq_update_common` masing-masing 148 B), 1 ekspor GPL:
+`sprd_cpufreq_update_opp`. Undefined symbol-nya cuma
+`cpufreq_get_policy`, `get_cpu_device`, `of_parse_phandle`, `strcmp`,
+`memset`, `printk` — jadi modul ini memang tipis: ambil `policy->driver_data`
+dari cluster 0 lalu panggil salah satu dari dua pointer fungsi di dalamnya
+(offset 400 untuk nama node `cpufreq-cluster0`, offset 232 untuk
+`cpufreq-clus0`), meneruskan dua argumen u32. Bergantung penuh pada #4: tanpa
+`cpufreq-v2` tidak ada yang mengisi `driver_data`, sehingga port-nya tidak
+berguna lebih dulu.
 
 ## 6. `sprd_7sreset.ko` — PMIC 7S reset
 
@@ -121,9 +127,21 @@ kunci 0x23d8. Port + node DT: [RE-SPRD-7SRESET.md](RE-SPRD-7SRESET.md).
 
 ## 7. `sprd_iq.ko` — camera IQ
 
-15 fungsi, 32 KB, `depends = usb_f_vser,sipc-core`; node
-`/reserved-memory/iq-mem@90000000` + `/sprd-iq`. Butuh `usb_f_vser`
-(fungsi gadget vendor) yang juga belum ada di tree, jadi berantai.
+15 fungsi, 32 KB, `depends = usb_f_vser,sipc-core`; node `/sprd-iq` dengan
+properti `sprd,region` (phandle) dan opsional `sprd,mapping-offs`.
+
+**RE selesai, driver belum ditulis.** Premis lama ("butuh `usb_f_vser` yang
+tidak ada di tree") **salah**: `drivers/usb/gadget/function/f_vserial.c`
+sudah ada, namanya `usb_f_vser.ko` dan mengekspor
+`kernel_vser_register_callback`, `kernel_vser_set_pass_mode`,
+`vser_pass_user_write`; API SIPC `shmem_ram_vmap_nocache_ex`/`_unmap_ex`
+juga tersedia di `include/linux/soc/sprd/sipc.h`. Rincian lengkap (gate
+bootargs `androidboot.mode=iq`, `misc` device `iq_mem`, tabel `ioctl`
+0/1/0x80/0x82/0x83, kondisi `poll`, alur `iq_thread`, magic
+`0x81005a00`/`0x81815a5a`/`"MPAD"`): [RE-SPRD-IQ.md](RE-SPRD-IQ.md).
+Yang menahan port sekarang: layout 8 byte pertama state `iq` dan arah
+transisi mode/mailbox belum terbaca pasti, dan salah tebak berarti menulis
+ke region reserved modem.
 
 ## 8. `sprd_manufacturer_model.ko` — model/manufacturer SoC
 
@@ -193,7 +211,7 @@ mask 0xff) mengikuti [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md).
 2. `sprd-cpufreq-v2` lalu `sprd-cpufreq-public`.
 3. `sprd_7sreset` (butuh peta bit regmap PMIC).
 4. `sprd_manufacturer_model` (butuh asal string).
-5. `sprd_iq` (berantai ke `usb_f_vser`).
+5. `sprd_iq` (RE selesai; butuh model state/mailbox yang pasti).
 6. `mmc_swcq` (paling besar, butuh sumber).
 7. `core.ko` + `gpio.ko` (autotest) — ABI ioctl sudah terbaca, tinggal
    `gpio_test`.
