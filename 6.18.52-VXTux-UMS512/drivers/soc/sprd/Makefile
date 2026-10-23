@@ -8,4 +8,3 @@ obj-$(CONFIG_SPRD_HWFEATURE)	+= hwfeature/
 # here as a directory module any more.
 obj-$(CONFIG_SPRD_POWER_MANAGER) += power_manager/
 obj-$(CONFIG_SPRD_TIME_SYNC) += time_sync/
-obj-$(CONFIG_SPRD_SIP_SVC)	+= sip_svc/
