@@ -578,3 +578,39 @@ ponytail: if the stock tracepoint symbol names ever matter, drop
 CONFIG_HAVE_ARCH_PREL32_RELOCATIONS from arch/arm64/Kconfig and re-measure;
 the cost is a slower tracepoint dereference and different init_call and PCI
 relocation handling.
+
+## TICK16 — CI hijau, `sprd_sip_svc` ter-build
+
+Untuk pertama kalinya sejak guard config ditambahkan, workflow `v17-build.yml`
+lolos sampai akhir (run `39946023755`, commit `a0f2e70ce`): guard config,
+build DTB, build modules, tar `.ko` — semuanya sukses, rc=0, **229 `.ko`**
+(sebelumnya 228). Artefak: `v17-built-kos` + `v17-dtb`.
+
+Yang diperbaiki di jalan:
+
+1. **Guard config tidak pernah lolos.** Ia membandingkan seluruh
+   `enhanced_config.cfg` dengan `.config` hasil `olddefconfig`. Fragmen itu
+   mewarisi config vendor 5.4 utuh, jadi 412 entri menunjuk driver yang belum
+   di-port atau subsistem yang dipangkas dari tree. Sekarang guard hanya
+   mewajibkan simbol yang Kconfig-nya ADA dan tidak terdaftar di
+   [CI-KNOWN-DROPPED.txt](CI-KNOWN-DROPPED.txt) (124 entri, berkelompok
+   dengan alasannya).
+2. **`sprd_sip_svc` masuk pohon yang salah.** Modul pertama ditaruh di
+   `drivers/soc/sprd/`, yang Kconfig-nya masih di-source `drivers/Kconfig`
+   tetapi Makefile-nya tidak pernah dimasuki — simbol `=m` tanpa `.ko`.
+   Modul SoC Unisoc yang hidup ada di `drivers/vxtux/soc/`; setelah dipindah
+   ke sana, `sprd_sip_svc.ko` benar-benar dibangun:
+   `drivers/vxtux/soc/sip_svc/sprd_sip_svc.ko`, vermagic cocok, undefined
+   hanya `__arm_smccc_smc`, `_printk`, `memset`, `__stack_chk_fail`.
+3. **Audit tidak lagi menebak dari nama.** `gpio.ko` dulu dipetakan ke
+   `CONFIG_MTD_NAND_GPIO` dan `core.ko` ke kandidat acak; keduanya kini
+   terbaca sebagai `NOSRC` dengan bukti dari metadata blob (`sprd autotest
+   gpio/core driver`). Nama modul generik dengan banyak kandidat CONFIG_
+   dilaporkan `AMBIGUOUS`, bukan dipilih yang pertama ditemukan.
+4. **Config efektif kini benar-benar ter-upload.** `upload-artifact` v4
+   membuang hidden file, jadi `.config` selama ini tidak pernah ada di
+   artefak; disalin dulu ke `effective.config`.
+
+Skor: **119/129** (KO 58, Y 47, BUILT-IN 12, SUPERSEDED 2, BELUM 10). Rincian
+sepuluh yang tersisa, lengkap dengan bukti dan blokirnya:
+[PORT-REMAINING.md](PORT-REMAINING.md).

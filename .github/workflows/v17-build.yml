@@ -87,12 +87,19 @@ jobs:
           echo "Simbol yang diminta =m lalu jadi =y: $coerce"
           echo "Pengecualian terdaftar (docs/CI-KNOWN-DROPPED.txt): $known"
           exit $rc
+      - name: Simpan config efektif
+        if: always()
+        run: |
+          # upload-artifact v4 membuang hidden file secara default, jadi `.config`
+          # tidak pernah ter-upload dan audit tidak punya config acuan.
+          cp 6.18.52-VXTux-UMS512/.config effective.config || true
+          wc -l effective.config
       - name: Upload effective .config
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v17-config
-          path: 6.18.52-VXTux-UMS512/.config
+          path: effective.config
           if-no-files-found: warn
       - name: Build DTB (verifikasi DTS thermal/efuse chain)
         run: |

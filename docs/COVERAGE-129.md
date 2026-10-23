@@ -6,8 +6,8 @@ Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config
 
 | Verdict | Jumlah | Arti |
 |---|---:|---|
-| `KO` | 57 | ada `.ko` penggantinya di build |
-| `Y` | 48 | pemetaan Kconfig-nya `=y` -> ikut `Image` |
+| `KO` | 58 | ada `.ko` penggantinya di build |
+| `Y` | 47 | pemetaan Kconfig-nya `=y` -> ikut `Image` |
 | `BUILT-IN` | 12 | verdict triage, kode ikut Image |
 | `SUPERSEDED` | 2 | fungsinya sudah ada di modul lain |
 | **BELUM** | **10** | lihat tabel |
@@ -17,16 +17,16 @@ Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config
 
 | # | blob | alasan | simbol port | simbol hilang |
 |---:|---|---|---:|---:|
-| 1 | `gpio.ko` | config tidak nyala (CONFIG_MTD_NAND_GPIO=absent) | 2 | 0 |
-| 2 | `mmc_swcq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 3 | `sprd-cpufreq-public.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 4 | `sprd-cpufreq-v2.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
-| 5 | `sprd_7sreset.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 6 | `sprd_iq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 7 | `sprd_manufacturer_model.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 8 | `sprd_pdbg.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
-| 9 | `sprd_power_stat.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 0 |
-| 10 | `sprd_sip_svc.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 1 | `core.ko` | pemetaan nama -> Kconfig tidak ditemukan | 0 | 0 |
+| 2 | `gpio.ko` | pemetaan nama -> Kconfig tidak ditemukan | 2 | 0 |
+| 3 | `mmc_swcq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 4 | `sprd-cpufreq-public.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 5 | `sprd-cpufreq-v2.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
+| 6 | `sprd_7sreset.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 7 | `sprd_iq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 8 | `sprd_manufacturer_model.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
+| 9 | `sprd_pdbg.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
+| 10 | `sprd_power_stat.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 0 |
 
 ## Blokir simbol per blob (dari symreach)
 

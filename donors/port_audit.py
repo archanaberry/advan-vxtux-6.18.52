@@ -141,6 +141,18 @@ def config_state(cfg):
     return state
 
 
+# Nama modul generik yang identitasnya sudah dibuktikan dari metadata blob itu
+# sendiri (MODULE_DESCRIPTION/depends), bukan dari namanya. Tanpa entri ini,
+# pencocokan nama saja memetakan `gpio.ko` ke CONFIG_MTD_NAND_GPIO — driver
+# yang sama sekali berbeda (blob ini "sprd autotest gpio driver", depends=core).
+UNRESOLVED = {
+    "core.ko": "blob: sprd autotest core driver; framework SPRD_AUTOTEST "
+                "tidak ada di tree",
+    "gpio.ko": "blob: sprd autotest gpio driver (depends=core); "
+                "SPRD_AUTOTEST/SPRD_AUTOTEST_GPIO tidak ada di tree",
+}
+
+
 def variants(base):
     """Nama modul vendor pakai '_' kadang tree pakai '-'."""
     return {base, base.replace("_", "-"), base.replace("-", "_")}
@@ -186,11 +198,26 @@ def main():
                 tgtbase = tgtbase[:-len(suf)]
                 break
         hit = None
+        if ko in UNRESOLVED:
+            rows.append((ko, "NOSRC", "", UNRESOLVED[ko]))
+            continue
+        # Nama modul generik (`gpio.o`, `core.o`, `test.o`) muncul di banyak
+        # Makefile dengan CONFIG_ berbeda. Memilih yang pertama ditemukan adalah
+        # tebakan, dan dulu itu memetakan gpio.ko (autotest) ke MTD_NAND_GPIO.
+        # Kalau kandidatnya lebih dari satu simbol berbeda, nyatakan ambigu.
+        cands = []
+        for v in set(variants(base)) | set(variants(tgtbase)):
+            cands += mk.get(v, [])
+        distinct = {s for s, _d in cands}
+        ambiguous = len(distinct) > 1 and not RENAMES.get(ko)
         for v in set(variants(base)) | set(variants(tgtbase)):
             if v in mk:
                 hit = mk[v]
                 break
         status, sym, path = None, "", src
+        if ambiguous and not (modkey(ko) in built or modkey(RENAMES.get(ko, "")) in built):
+            rows.append((ko, "AMBIGUOUS", "", src))
+            continue
         if modkey(ko) in built or modkey(RENAMES.get(ko, "")) in built:
             status = "KO"
             if hit:
@@ -221,7 +248,7 @@ def main():
         rows.append((ko, status, sym, path))
 
     order = {"KO": 0, "Y": 1, "OBJ-Y": 2, "OFF": 3, "NOKCONFIG": 4, "CONF-m": 5,
-             "OFF-DESIGN": 6, "NOSRC": 7}
+             "OFF-DESIGN": 6, "AMBIGUOUS": 7, "NOSRC": 8}
     rows.sort(key=lambda r: (order.get(r[1], 9), r[0]))
     tally = {}
     for r in rows:
@@ -234,6 +261,8 @@ def main():
         f.write("**OBJ-Y** = selalu built-in · **OFF** = sumber + Kconfig ada, belum diaktifkan · ")
         f.write("**NOKCONFIG** = Makefile pakai CONFIG_ tapi entri Kconfig hilang · ")
         f.write("**OFF-DESIGN** = sengaja `# ... is not set` · ")
+        f.write("**AMBIGUOUS** = nama modul generik, banyak kandidat CONFIG_ (identitas "
+                "harus dibuktikan dari blob, bukan dari nama) · ")
         f.write("**NOSRC** = sumber driver tidak ada di tree (butuh port kode baru)\n\n")
         f.write("## Ringkasan\n\n| Status | Jumlah |\n|---|---:|\n")
         for k in sorted(tally, key=lambda k: order.get(k, 9)):
