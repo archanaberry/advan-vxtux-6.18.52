@@ -23,6 +23,32 @@ import sys
 # phy-sprd-sharkl5Pro.ko (5.4) di-port sebagai phy-sprd-ums512.c (6.18).
 RENAMES = {
     "phy-sprd-sharkl5Pro.ko": "phy-sprd-ums512.ko",
+    # TICK15: kelima nama ini terbukti lewat `ar t` pada built-in.a hasil build
+    # tick15 — objeknya benar-benar ikut Image, bukan cuma config-nya =y
+    # (built-in.a adalah arsip tipis: ukurannya ~300 B tapi isinya penuh).
+    #   jpg.ko                    -> sprd_jpg                  (sprd_jpg_main.o)
+    #   vsp.ko                    -> sprd_vsp                  (sprd_vsp_main.o)
+    #   sprd_cpp.ko               -> cpp                       (cpp_core.o)
+    #   sprd-compr-2stage-dma.ko  -> snd-soc-sprd-platform     (sprd-pcm-compress.o)
+    #   snd-soc-sprd-vbc-fe.ko    -> snd-soc-sprd-vbc-v4.ko    (=m, jadi KO)
+    "jpg.ko": "sprd_jpg.ko",
+    "vsp.ko": "sprd_vsp.ko",
+    "sprd_cpp.ko": "cpp.ko",
+    "sprd-compr-2stage-dma.ko": "snd-soc-sprd-platform.ko",
+    "snd-soc-sprd-vbc-fe.ko": "snd-soc-sprd-vbc-v4.ko",
+    # sc2730 audio-power: blob-nya sendiri menyebut path sumbernya di string:
+    #   .../kernel5.4/audio_driver/sprd/codec/sprd/sc2730/power/sprd-audio-power.c
+    # File dengan nama sama ada di pohon: drivers/vxtux/sound/asoc/codec/
+    # sprd-audio-power.c, dibangun oleh CONFIG_VXTUX_SND_SPRD_SC2730_POWER=y
+    # (regulator VREG/VB/BG/BIAS/MICBIAS...). Varian "-dev" adalah sub-device
+    # dari driver yang sama (of_match-nya banyak compatible).
+    "snd-soc-sprd-codec-sc2730-power.ko": "sprd-audio-power.o",
+    "snd-soc-sprd-codec-sc2730-power-dev.ko": "sprd-audio-power.o",
+    # bq2560x: chip BQ2560x didukung driver mainline bq256xx_charger.c yang
+    # sudah =y (CONFIG_CHARGER_BQ256XX), lengkap dengan tabel bq2560x_reg_defs
+    # dan bq25601d_get/set_chrg_volt. Blob vendor memakai chip yang sama lewat
+    # sprd_charger_manager (juga ada di pohon).
+    "bq2560x-charger.ko": "bq256xx_charger.o",
 }
 
 MOD_RE = re.compile(r"^obj-\$\((CONFIG_[A-Z0-9_]+)\)\s*\+?=\s*(.*)$")
@@ -150,8 +176,17 @@ def main():
     rows = []
     for ko, src in ven:
         base = ko[:-3]
+        # TICK15: kalau nama stok punya pengganti (RENAMES), cari juga pemetaan
+        # Makefile->Kconfig atas nama penggantinya. Tanpa ini jpg.ko tetap
+        # NOSRC padahal CONFIG_SPRD_JPG=y dan objeknya ikut Image.
+        tgt = RENAMES.get(ko, "")
+        tgtbase = tgt
+        for suf in (".ko", ".o"):
+            if tgtbase.endswith(suf):
+                tgtbase = tgtbase[:-len(suf)]
+                break
         hit = None
-        for v in variants(base):
+        for v in set(variants(base)) | set(variants(tgtbase)):
             if v in mk:
                 hit = mk[v]
                 break

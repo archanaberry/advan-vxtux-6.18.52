@@ -6,7 +6,7 @@ Menjawab satu pertanyaan untuk SETIAP undefined symbol di blob stok:
 tidak, apa yang harus dilakukan?"
 
 Sumber kebenaran:
-  - donors/symvers_tick13.txt   : semua ekspor (vmlinux + 163 modul) build kita
+  - donors/symvers_tick14.txt   : semua ekspor (vmlinux + 163 modul) build kita
   - donors/vmlinux_o_syms.txt   : nm --defined-only vmlinux.o build tick13
   - donors/stock_vendor_modules_all/*.ko : blob stok 5.4.210 (ELF aarch64)
 
@@ -32,7 +32,7 @@ from elftools.elf.elffile import ELFFile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOBS = os.path.join(ROOT, "donors", "stock_vendor_modules_all")
-SYMVERS = os.path.join(ROOT, "donors", "symvers_tick13.txt")
+SYMVERS = os.path.join(ROOT, "donors", "symvers_tick14.txt")
 VMLINUX_SYMS = os.path.join(ROOT, "donors", "vmlinux_o_syms.txt")
 TREE = os.path.join(ROOT, "6.18.52-VXTux-UMS512")
 OUT_MD = os.path.join(ROOT, "docs", "UNDEF-REACHABILITY.md")
@@ -311,7 +311,7 @@ def main():
     A = L.append
     A("# Keterjangkauan Simbol — 129 blob stok 5.4.210 vs build 6.18.52\n\n")
     A("Dihasilkan [symreach.py](../donors/symreach.py). Sumber: "
-      "[symvers_tick13.txt](../donors/symvers_tick13.txt) "
+      "[symvers_tick14.txt](../donors/symvers_tick14.txt) "
       f"({len(exports):,} ekspor dari vmlinux + 163 modul), "
       f"`stock_vendor_modules_all/*.ko` ({len(blobs)} blob, vermagic "
       f"`{vermagic.get(blobs[0], '?')}`), dan "

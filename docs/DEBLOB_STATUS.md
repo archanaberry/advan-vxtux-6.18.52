@@ -87,7 +87,7 @@ Sumber kebenaran yang dipakai (bukan tebakan):
 
 | Bukti | Isi |
 |---|---|
-| `donors/symvers_tick13.txt` | 15.215 ekspor: vmlinux + 163 modul |
+| `donors/symvers_tick14.txt` | 15.242 ekspor: vmlinux + 163 modul (sebelumnya 15.215) |
 | `donors/vmlinux_o_syms.txt` | `nm --defined-only vmlinux.o`, 140.469 nama + tipe |
 | `stock_vendor_modules_all/*.ko` | 129 blob, `.symtab` + `__versions` |
 
@@ -96,16 +96,34 @@ Kelengkapan daftar vmlinux diuji: **14.290 dari 14.291** ekspor vmlinux di
 simbol linker-script yang dipakai `EXPORT_SYMBOL` tanpa entri di `vmlinux.o`,
 bukan celah data.
 
-| Kelas | Referensi | Arti |
-|---|---:|---|
-| `ok` | **4.434** (79,6%) | diekspor build kita |
-| `ekspor` | 23 | global, ada di vmlinux.o, tinggal `EXPORT_SYMBOL` |
-| `rename` | 219 | padanan 6.18 terverifikasi (mekanis + `REMAP`) |
-| `makro` | 476 | definisi ada di pohon: inline/makro/**config mati** |
-| `port` | 24 | hanya disediakan blob stok lain |
-| `instr` | 298 | `__cfi_*`/`__ubsan_*` runtime Clang stok |
-| `hilang` | 98 | tidak ada di mana pun (62 simbol unik) |
-| **total** | **5.572** | 1.488 simbol unik |
+| Kelas | Sebelum | **Sesudah** | Arti |
+|---|---:|---:|---|
+| `ok` | 4.434 (79,6%) | **4.750 (85,2%)** | diekspor build kita |
+| `ekspor` | 23 | **0** | global, ada di vmlinux.o, tinggal `EXPORT_SYMBOL` |
+| `rename` | 219 | 219 | padanan 6.18 terverifikasi (mekanis + `REMAP`) |
+| `makro` | 476 | **330** | definisi ada di pohon: inline/makro/config mati |
+| `port` | 24 | 24 | hanya disediakan blob stok lain |
+| `instr` | 298 | **169** | `__cfi_*`/`__ubsan_*` runtime Clang stok |
+| `hilang` | 98 | **80** | tidak ada di mana pun |
+| **total** | **5.572** | 5.572 | 1.488 simbol unik |
+| **blob tanpa port** | 82/129 | **91/129** | naik 9 blob |
+
+Tiga perubahan yang menghasilkan angka di atas (semua build rc=0, 228 `.ko`):
+
+1. `CONFIG_VXTUX_VENDOR_ABI=y` di `enhanced_config.cfg`. Penyedianya sudah
+   ada di `drivers/vxtux/vendor_abi/` (bukan salinan mati di
+   `drivers/misc/sprd/vendor_abi/` — itu tidak punya jalur Kconfig/Makefile).
+   Dampak: 146 referensi `cpu_hwcaps`/`cpu_hwcap_keys`/`arm64_const_caps_ready`/
+   `kimage_vaddr`/`cpu_number` + 129 referensi `__ubsan_handle_cfi_*` resolve.
+2. `vendor_abi_exports.c` — 19 simbol global yang ada di `vmlinux.o` tetapi
+   tidak diekspor (`irq_to_desc`, `cma_alloc/release/for_each_area/get_name`,
+   `dma_direct_map_sg/unmap_sg/sync_sg_for_cpu`, `blk_alloc_queue`,
+   `__alloc_disk_node`, helper audio AGCP + MCDT). Kelas `ekspor` 23 → 0.
+   Percobaan pertama file ini **gagal compile** karena memakai
+   `extern void nama(void)`; prototipe asli wajib (`irq_to_desc(unsigned int)`),
+   dan sekarang semuanya diambil dari header pohon ini.
+3. `vendor_abi_compat54.c` — `init_timer_key` (5.4) di atas `timer_setup`
+   (6.18). 18 referensi tertutup, 9 blob tambahan lolos menjadi "tanpa port".
 
 Empat temuan yang mengubah prioritas:
 

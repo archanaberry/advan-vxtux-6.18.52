@@ -1,21 +1,21 @@
 {
  "vermagic": "5.4.210 SMP preempt mod_unload modversions aarch64",
- "exports_total": 15215,
+ "exports_total": 15242,
  "vmlinux_symbols": 140469,
  "unique_undef": 1488,
  "classes": {
-  "ok": 4434,
-  "ekspor": 23,
+  "ok": 4750,
+  "ekspor": 0,
   "rename": 219,
-  "makro": 476,
+  "makro": 330,
   "port": 24,
-  "instr": 298,
-  "hilang": 98,
+  "instr": 169,
+  "hilang": 80,
   "undef": 5572,
-  "crc_beda": 3223
+  "crc_beda": 3334
  },
  "blobs": 129,
- "blobs_no_port": 82,
+ "blobs_no_port": 91,
  "leverage": {
   "sipc-core": 9,
   "mmc_swcq": 5,
@@ -24,27 +24,7 @@
   "zsmalloc": 2,
   "musb_hdrc": 1
  },
- "ekspor": {
-  "irq_to_desc": 2,
-  "arch_audio_get_agcp_ahb_gpr": 2,
-  "get_agcp_ahb_set_offset": 2,
-  "get_agcp_ahb_clr_offset": 2,
-  "cma_for_each_area": 1,
-  "cma_release": 1,
-  "cma_get_name": 1,
-  "cma_alloc": 1,
-  "dma_direct_map_sg": 1,
-  "dma_direct_sync_sg_for_cpu": 1,
-  "dma_direct_unmap_sg": 1,
-  "set_agcp_ahb_offset": 1,
-  "arch_audio_set_pmu_apb_gpr": 1,
-  "arch_audio_set_aon_apb_gpr": 1,
-  "arch_audio_set_anlg_phy_g": 1,
-  "mcdt_da_fifo_clr": 1,
-  "mcdt_ad_fifo_clr": 1,
-  "blk_alloc_queue": 1,
-  "__alloc_disk_node": 1
- },
+ "ekspor": {},
  "rename": {
   "printk": "_printk",
   "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
@@ -74,14 +54,10 @@
  },
  "definisi_pohon": {
   "mutex_lock": "drivers/clocksource/timer-nxp-stm.c:80",
-  "arm64_const_caps_ready": "drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c:95",
-  "cpu_hwcap_keys": "drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c:92",
-  "cpu_hwcaps": "drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c:90",
   "__list_add_valid": "include/linux/list.h:73",
   "__list_del_entry_valid": "include/linux/list.h:114",
   "usleep_range": "drivers/gpu/drm/i915/gt/selftest_slpc.c:8",
   "of_parse_phandle": "include/linux/of.h:986",
-  "kimage_vaddr": "drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c:99",
   "debugfs_create_file": "include/linux/debugfs.h:125",
   "wakeup_source_create": "drivers/base/power/wakeup.c:80",
   "wakeup_source_add": "drivers/base/power/wakeup.c:165",
@@ -92,7 +68,6 @@
   "sg_next": "include/linux/scatterlist.h:107",
   "strlcpy": "tools/include/linux/string.h:27",
   "seq_puts": "include/linux/seq_file.h:122",
-  "cpu_number": "drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c:103",
   "wakeup_source_remove": "drivers/base/power/wakeup.c:185",
   "debugfs_remove_recursive": "include/linux/debugfs.h:324",
   "cpumask_next": "include/linux/cpumask.h:230",
@@ -155,12 +130,10 @@
   "kmem_cache_create": "include/linux/slab.h:461"
  },
  "instr": {
-  "__ubsan_handle_cfi_check_fail_abort": 129,
   "__stack_chk_guard": 107,
   "__cfi_slowpath": 62
  },
  "hilang": {
-  "init_timer_key": 18,
   "kmalloc_order_trace": 6,
   "__ioremap": 5,
   "fpsimd_context_busy": 4,
@@ -230,11 +203,13 @@
   "devm_kmalloc": 67,
   "mutex_unlock": 50,
   "of_property_read_variable_u32_array": 48,
+  "cpu_hwcap_keys": 47,
   "kmalloc_caches": 45,
   "__dynamic_pr_debug": 41,
   "__mutex_init": 41,
   "_dev_info": 36,
   "_dev_warn": 36,
+  "cpu_hwcaps": 35,
   "__dynamic_dev_dbg": 33,
   "regmap_update_bits_base": 32,
   "of_property_read_string": 30,
@@ -250,6 +225,7 @@
   "of_device_get_match_data": 19,
   "prepare_to_wait_event": 18,
   "finish_wait": 18,
+  "init_timer_key": 18,
   "devm_request_threaded_irq": 18,
   "pm_runtime_enable": 18,
   "dev_get_regmap": 17,
@@ -320,21 +296,18 @@
   "gen_pool_free_owner": 6,
   "gen_pool_create": 6,
   "gen_pool_add_owner": 6,
-  "gpiod_to_irq": 6,
-  "proc_create": 6,
-  "request_threaded_irq": 6,
-  "of_alias_get_id": 6
+  "gpiod_to_irq": 6
  },
  "rows": [
   {
    "blob": "aes-ce-ccm.ko",
    "undef": 23,
-   "ok": 18,
+   "ok": 19,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
    "crc_beda": 5,
    "blokir_modul": {},
@@ -349,12 +322,12 @@
   {
    "blob": "aes-neon-blk.ko",
    "undef": 27,
-   "ok": 22,
+   "ok": 23,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
    "crc_beda": 10,
    "blokir_modul": {},
@@ -369,12 +342,12 @@
   {
    "blob": "agdsp_access.ko",
    "undef": 33,
-   "ok": 29,
+   "ok": 30,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 18,
    "blokir_modul": {},
@@ -400,14 +373,14 @@
   {
    "blob": "apsys-dvfs.ko",
    "undef": 63,
-   "ok": 50,
+   "ok": 55,
    "ekspor": 0,
    "rename": 2,
-   "makro": 7,
+   "makro": 3,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
-   "crc_beda": 38,
+   "crc_beda": 40,
    "blokir_modul": {},
    "contoh": [
     [
@@ -435,12 +408,12 @@
   {
    "blob": "arc4.ko",
    "undef": 9,
-   "ok": 7,
+   "ok": 8,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 4,
    "blokir_modul": {},
@@ -450,12 +423,12 @@
   {
    "blob": "asix.ko",
    "undef": 80,
-   "ok": 67,
+   "ok": 68,
    "ekspor": 0,
    "rename": 2,
    "makro": 4,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 4,
    "crc_beda": 60,
    "blokir_modul": {},
@@ -506,14 +479,14 @@
   {
    "blob": "audio-dsp-dump.ko",
    "undef": 66,
-   "ok": 54,
+   "ok": 58,
    "ekspor": 0,
    "rename": 5,
-   "makro": 4,
+   "makro": 1,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 26,
+   "crc_beda": 28,
    "blokir_modul": {},
    "contoh": [
     [
@@ -558,14 +531,14 @@
   {
    "blob": "audio-pipe.ko",
    "undef": 32,
-   "ok": 24,
+   "ok": 28,
    "ekspor": 0,
    "rename": 2,
-   "makro": 4,
+   "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 14,
+   "crc_beda": 16,
    "blokir_modul": {},
    "contoh": [
     [
@@ -589,14 +562,14 @@
   {
    "blob": "audio_mem.ko",
    "undef": 35,
-   "ok": 23,
+   "ok": 28,
    "ekspor": 0,
    "rename": 3,
-   "makro": 7,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 19,
+   "crc_beda": 21,
    "blokir_modul": {},
    "contoh": [
     [
@@ -627,14 +600,14 @@
   {
    "blob": "audio_sipc.ko",
    "undef": 45,
-   "ok": 34,
+   "ok": 37,
    "ekspor": 0,
    "rename": 3,
-   "makro": 5,
+   "makro": 3,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 23,
+   "crc_beda": 24,
    "blokir_modul": {},
    "contoh": [
     [
@@ -665,12 +638,12 @@
   {
    "blob": "ax88179_178a.ko",
    "undef": 49,
-   "ok": 44,
+   "ok": 45,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 2,
    "crc_beda": 38,
    "blokir_modul": {},
@@ -700,26 +673,20 @@
   {
    "blob": "bq2560x-charger.ko",
    "undef": 65,
-   "ok": 57,
+   "ok": 59,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 0,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 48,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 49,
    "blokir_modul": {},
    "contoh": [
     [
      "printk",
      [
       "_printk"
-     ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
      ]
     ]
    ],
@@ -730,12 +697,12 @@
   {
    "blob": "clk-sprd.ko",
    "undef": 28,
-   "ok": 24,
+   "ok": 25,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 18,
    "blokir_modul": {},
@@ -761,12 +728,12 @@
   {
    "blob": "core.ko",
    "undef": 20,
-   "ok": 12,
+   "ok": 13,
    "ekspor": 0,
    "rename": 3,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 9,
    "blokir_modul": {},
@@ -799,34 +766,27 @@
   {
    "blob": "extcon-usb-gpio.ko",
    "undef": 23,
-   "ok": 20,
+   "ok": 22,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 1,
-   "hilang": 1,
-   "crc_beda": 18,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 19,
    "blokir_modul": {},
-   "contoh": [
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
-    ]
-   ],
+   "contoh": [],
    "map": {}
   },
   {
    "blob": "ghash-ce.ko",
    "undef": 28,
-   "ok": 23,
+   "ok": 24,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
    "crc_beda": 9,
    "blokir_modul": {},
@@ -841,12 +801,12 @@
   {
    "blob": "gpio-eic-sprd.ko",
    "undef": 26,
-   "ok": 19,
+   "ok": 20,
    "ekspor": 0,
    "rename": 2,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 16,
    "blokir_modul": {},
@@ -872,12 +832,12 @@
   {
    "blob": "gpio-pmic-eic-sprd.ko",
    "undef": 24,
-   "ok": 18,
+   "ok": 19,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 16,
    "blokir_modul": {},
@@ -896,12 +856,12 @@
   {
    "blob": "gpio-sprd.ko",
    "undef": 20,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 12,
    "blokir_modul": {},
@@ -920,14 +880,14 @@
   {
    "blob": "gpio.ko",
    "undef": 15,
-   "ok": 6,
+   "ok": 10,
    "ekspor": 0,
    "rename": 2,
-   "makro": 3,
+   "makro": 0,
    "port": 2,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 5,
+   "crc_beda": 7,
    "blokir_modul": {
     "core": 2
    },
@@ -953,14 +913,14 @@
   {
    "blob": "hxchipset_83102e.ko",
    "undef": 96,
-   "ok": 79,
+   "ok": 84,
    "ekspor": 0,
    "rename": 5,
-   "makro": 8,
+   "makro": 5,
    "port": 0,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 56,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 59,
    "blokir_modul": {},
    "contoh": [
     [
@@ -992,12 +952,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -1011,14 +965,14 @@
   {
    "blob": "i2c-sprd-hw.ko",
    "undef": 37,
-   "ok": 32,
+   "ok": 35,
    "ekspor": 0,
    "rename": 0,
-   "makro": 3,
+   "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 22,
+   "crc_beda": 23,
    "blokir_modul": {},
    "contoh": [],
    "map": {}
@@ -1026,14 +980,14 @@
   {
    "blob": "i2c-sprd.ko",
    "undef": 52,
-   "ok": 44,
+   "ok": 47,
    "ekspor": 0,
    "rename": 1,
-   "makro": 2,
+   "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 2,
-   "crc_beda": 32,
+   "crc_beda": 33,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1064,14 +1018,14 @@
   {
    "blob": "ion_cma_heap.ko",
    "undef": 37,
-   "ok": 24,
-   "ekspor": 4,
+   "ok": 30,
+   "ekspor": 0,
    "rename": 2,
    "makro": 4,
    "port": 0,
-   "instr": 2,
-   "hilang": 1,
-   "crc_beda": 15,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 20,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1085,12 +1039,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -1101,12 +1049,12 @@
   {
    "blob": "ion_ipc_trusty.ko",
    "undef": 30,
-   "ok": 23,
+   "ok": 24,
    "ekspor": 0,
    "rename": 2,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 9,
    "blokir_modul": {},
@@ -1132,14 +1080,14 @@
   {
    "blob": "jpg.ko",
    "undef": 75,
-   "ok": 63,
+   "ok": 67,
    "ekspor": 0,
    "rename": 2,
-   "makro": 7,
+   "makro": 4,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 49,
+   "crc_beda": 51,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1163,12 +1111,12 @@
   {
    "blob": "kfifo_buf.ko",
    "undef": 20,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 7,
    "blokir_modul": {},
@@ -1187,12 +1135,12 @@
   {
    "blob": "leds-sc27xx-bltc.ko",
    "undef": 17,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 13,
    "blokir_modul": {},
@@ -1202,26 +1150,20 @@
   {
    "blob": "ledtrig-pattern.ko",
    "undef": 23,
-   "ok": 16,
+   "ok": 18,
    "ekspor": 0,
    "rename": 1,
    "makro": 1,
    "port": 0,
-   "instr": 3,
-   "hilang": 2,
-   "crc_beda": 10,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 11,
    "blokir_modul": {},
    "contoh": [
     [
      "del_timer_sync",
      [
       "timer_delete_sync"
-     ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
      ]
     ],
     [
@@ -1236,12 +1178,12 @@
   {
    "blob": "mcdt_hw.ko",
    "undef": 22,
-   "ok": 16,
+   "ok": 17,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 13,
    "blokir_modul": {},
@@ -1260,12 +1202,12 @@
   {
    "blob": "mipi_driver.ko",
    "undef": 40,
-   "ok": 35,
+   "ok": 36,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 24,
    "blokir_modul": {},
@@ -1284,12 +1226,12 @@
   {
    "blob": "misc_sprd_uid.ko",
    "undef": 17,
-   "ok": 15,
+   "ok": 16,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 9,
    "blokir_modul": {},
@@ -1299,12 +1241,12 @@
   {
    "blob": "mmc_hsq.ko",
    "undef": 20,
-   "ok": 16,
+   "ok": 17,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 11,
    "blokir_modul": {},
@@ -1323,14 +1265,14 @@
   {
    "blob": "mmc_swcq.ko",
    "undef": 62,
-   "ok": 49,
+   "ok": 54,
    "ekspor": 0,
    "rename": 3,
-   "makro": 6,
+   "makro": 3,
    "port": 0,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 38,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 41,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1350,12 +1292,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -1367,14 +1303,14 @@
   {
    "blob": "mmdvfs.ko",
    "undef": 51,
-   "ok": 36,
+   "ok": 41,
    "ekspor": 0,
    "rename": 2,
-   "makro": 9,
+   "makro": 5,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
-   "crc_beda": 27,
+   "crc_beda": 29,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1402,14 +1338,14 @@
   {
    "blob": "musb_hdrc.ko",
    "undef": 132,
-   "ok": 108,
+   "ok": 114,
    "ekspor": 0,
    "rename": 6,
-   "makro": 12,
+   "makro": 8,
    "port": 0,
-   "instr": 3,
-   "hilang": 3,
-   "crc_beda": 87,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 90,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1461,12 +1397,6 @@
       "dma_direct_all_ram_mapped",
       "dma_direct_alloc"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -1481,14 +1411,14 @@
   {
    "blob": "musb_sprd.ko",
    "undef": 94,
-   "ok": 80,
+   "ok": 84,
    "ekspor": 0,
    "rename": 1,
-   "makro": 8,
+   "makro": 6,
    "port": 1,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 54,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 56,
    "blokir_modul": {
     "musb_hdrc": 1
    },
@@ -1497,12 +1427,6 @@
      "__class_create",
      [
       "class_create"
-     ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
      ]
     ]
    ],
@@ -1513,14 +1437,14 @@
   {
    "blob": "novatek_ts_spi.ko",
    "undef": 78,
-   "ok": 60,
-   "ekspor": 1,
+   "ok": 66,
+   "ekspor": 0,
    "rename": 4,
-   "makro": 9,
+   "makro": 6,
    "port": 0,
-   "instr": 2,
-   "hilang": 2,
-   "crc_beda": 40,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 44,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1548,12 +1472,6 @@
      ]
     ],
     [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
-    ],
-    [
      "kmalloc_order_trace",
      []
     ]
@@ -1568,12 +1486,12 @@
   {
    "blob": "nvmem-sc27xx-efuse.ko",
    "undef": 27,
-   "ok": 23,
+   "ok": 24,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 20,
    "blokir_modul": {},
@@ -1583,14 +1501,14 @@
   {
    "blob": "nvmem_sprd_cache_efuse.ko",
    "undef": 23,
-   "ok": 15,
+   "ok": 20,
    "ekspor": 0,
    "rename": 1,
-   "makro": 5,
+   "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 10,
+   "crc_beda": 12,
    "blokir_modul": {},
    "contoh": [
     [
@@ -1607,12 +1525,12 @@
   {
    "blob": "nvmem_sprd_efuse.ko",
    "undef": 25,
-   "ok": 21,
+   "ok": 22,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 15,
    "blokir_modul": {},
@@ -1622,12 +1540,12 @@
   {
    "blob": "phy-sprd-sharkl5Pro.ko",
    "undef": 47,
-   "ok": 41,
+   "ok": 42,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
    "crc_beda": 35,
    "blokir_modul": {},
@@ -1650,12 +1568,12 @@
   {
    "blob": "pinctrl-sprd-sharkl5Pro.ko",
    "undef": 6,
-   "ok": 5,
+   "ok": 6,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 5,
    "blokir_modul": {},
@@ -1665,12 +1583,12 @@
   {
    "blob": "pinctrl-sprd.ko",
    "undef": 28,
-   "ok": 26,
+   "ok": 27,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 23,
    "blokir_modul": {},
@@ -1680,14 +1598,14 @@
   {
    "blob": "pinctrl.ko",
    "undef": 17,
-   "ok": 8,
+   "ok": 12,
    "ekspor": 0,
    "rename": 1,
-   "makro": 4,
+   "makro": 1,
    "port": 2,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 6,
+   "crc_beda": 8,
    "blokir_modul": {
     "core": 2
    },
@@ -1706,12 +1624,12 @@
   {
    "blob": "pwm-sprd.ko",
    "undef": 15,
-   "ok": 13,
+   "ok": 14,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 10,
    "blokir_modul": {},
@@ -1721,12 +1639,12 @@
   {
    "blob": "pwm_bl.ko",
    "undef": 33,
-   "ok": 26,
+   "ok": 27,
    "ekspor": 0,
    "rename": 3,
    "makro": 1,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 23,
    "blokir_modul": {},
@@ -1759,12 +1677,12 @@
   {
    "blob": "rtc-sc27xx.ko",
    "undef": 28,
-   "ok": 21,
+   "ok": 22,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
    "crc_beda": 15,
    "blokir_modul": {},
@@ -1787,12 +1705,12 @@
   {
    "blob": "sblock_bridge.ko",
    "undef": 24,
-   "ok": 22,
+   "ok": 23,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 11,
    "blokir_modul": {},
@@ -1802,12 +1720,12 @@
   {
    "blob": "sbuf_bridge.ko",
    "undef": 28,
-   "ok": 24,
+   "ok": 25,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 1,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 15,
    "blokir_modul": {
@@ -1819,12 +1737,12 @@
   {
    "blob": "sc2730-regulator.ko",
    "undef": 29,
-   "ok": 24,
+   "ok": 25,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 21,
    "blokir_modul": {},
@@ -1834,12 +1752,12 @@
   {
    "blob": "sc27xx-poweroff.ko",
    "undef": 19,
-   "ok": 14,
+   "ok": 16,
    "ekspor": 0,
    "rename": 1,
-   "makro": 3,
+   "makro": 2,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 8,
    "blokir_modul": {},
@@ -1858,12 +1776,12 @@
   {
    "blob": "sc27xx-vibra.ko",
    "undef": 16,
-   "ok": 15,
+   "ok": 16,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 14,
    "blokir_modul": {},
@@ -1873,12 +1791,12 @@
   {
    "blob": "sc27xx_adc.ko",
    "undef": 34,
-   "ok": 28,
+   "ok": 29,
    "ekspor": 0,
    "rename": 0,
    "makro": 3,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 22,
    "blokir_modul": {},
@@ -1888,26 +1806,20 @@
   {
    "blob": "sc27xx_fuel_gauge.ko",
    "undef": 72,
-   "ok": 64,
+   "ok": 66,
    "ekspor": 0,
    "rename": 1,
    "makro": 4,
    "port": 0,
-   "instr": 2,
-   "hilang": 1,
-   "crc_beda": 49,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 50,
    "blokir_modul": {},
    "contoh": [
     [
      "printk",
      [
       "_printk"
-     ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
      ]
     ]
    ],
@@ -1918,12 +1830,12 @@
   {
    "blob": "sc27xx_typec.ko",
    "undef": 39,
-   "ok": 37,
+   "ok": 38,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 31,
    "blokir_modul": {},
@@ -1933,14 +1845,14 @@
   {
    "blob": "sdhci-sprd.ko",
    "undef": 130,
-   "ok": 105,
-   "ekspor": 3,
+   "ok": 112,
+   "ekspor": 0,
    "rename": 5,
-   "makro": 8,
+   "makro": 5,
    "port": 5,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
-   "crc_beda": 82,
+   "crc_beda": 87,
    "blokir_modul": {
     "mmc_swcq": 5
    },
@@ -1994,14 +1906,14 @@
   {
    "blob": "sensorhub.ko",
    "undef": 86,
-   "ok": 68,
+   "ok": 72,
    "ekspor": 0,
    "rename": 4,
-   "makro": 7,
+   "makro": 5,
    "port": 0,
-   "instr": 3,
-   "hilang": 4,
-   "crc_beda": 42,
+   "instr": 2,
+   "hilang": 3,
+   "crc_beda": 44,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2047,12 +1959,6 @@
       "iio_trigger_attach_poll_func",
       "iio_trigger_consumer_attr_group"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -2065,12 +1971,12 @@
   {
    "blob": "sha1-ce.ko",
    "undef": 12,
-   "ok": 8,
+   "ok": 9,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 2,
    "crc_beda": 2,
    "blokir_modul": {},
@@ -2092,14 +1998,14 @@
   {
    "blob": "sipc-core.ko",
    "undef": 92,
-   "ok": 74,
+   "ok": 79,
    "ekspor": 0,
    "rename": 3,
-   "makro": 12,
+   "makro": 8,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 57,
+   "crc_beda": 59,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2130,12 +2036,12 @@
   {
    "blob": "sipx.ko",
    "undef": 52,
-   "ok": 41,
+   "ok": 42,
    "ekspor": 0,
    "rename": 3,
    "makro": 5,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 30,
    "blokir_modul": {},
@@ -2168,12 +2074,12 @@
   {
    "blob": "slog_bridge.ko",
    "undef": 44,
-   "ok": 33,
+   "ok": 34,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 5,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 19,
    "blokir_modul": {
@@ -2194,12 +2100,12 @@
   {
    "blob": "snd-soc-sprd-card.ko",
    "undef": 63,
-   "ok": 56,
+   "ok": 57,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
    "crc_beda": 45,
    "blokir_modul": {},
@@ -2225,12 +2131,12 @@
   {
    "blob": "snd-soc-sprd-codec-sc2730-power-dev.ko",
    "undef": 5,
-   "ok": 3,
+   "ok": 4,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 3,
    "blokir_modul": {},
@@ -2249,12 +2155,12 @@
   {
    "blob": "snd-soc-sprd-codec-sc2730-power.ko",
    "undef": 23,
-   "ok": 18,
+   "ok": 19,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 13,
    "blokir_modul": {},
@@ -2280,14 +2186,14 @@
   {
    "blob": "snd-soc-sprd-codec-sc2730.ko",
    "undef": 134,
-   "ok": 107,
-   "ekspor": 7,
+   "ok": 116,
+   "ekspor": 0,
    "rename": 2,
    "makro": 11,
    "port": 0,
-   "instr": 3,
-   "hilang": 4,
-   "crc_beda": 87,
+   "instr": 2,
+   "hilang": 3,
+   "crc_beda": 88,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2314,12 +2220,6 @@
      ]
     ],
     [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
-    ],
-    [
      "snd_soc_component_read32",
      [
       "snd_soc_compensate_channel_connection_map",
@@ -2335,12 +2235,12 @@
   {
    "blob": "snd-soc-sprd-dummy-codec.ko",
    "undef": 9,
-   "ok": 6,
+   "ok": 7,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 5,
    "blokir_modul": {},
@@ -2350,12 +2250,12 @@
   {
    "blob": "snd-soc-sprd-vbc-fe.ko",
    "undef": 20,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 1,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 5,
    "blokir_modul": {},
@@ -2374,14 +2274,14 @@
   {
    "blob": "snd-soc-sprd-vbc-v4.ko",
    "undef": 89,
-   "ok": 73,
-   "ekspor": 3,
+   "ok": 80,
+   "ekspor": 0,
    "rename": 4,
-   "makro": 6,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 1,
-   "crc_beda": 42,
+   "crc_beda": 44,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2423,12 +2323,12 @@
   {
    "blob": "spi-sprd-adi.ko",
    "undef": 32,
-   "ok": 28,
+   "ok": 29,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 20,
    "blokir_modul": {},
@@ -2447,14 +2347,14 @@
   {
    "blob": "spi-sprd.ko",
    "undef": 55,
-   "ok": 46,
+   "ok": 49,
    "ekspor": 0,
    "rename": 1,
-   "makro": 3,
+   "makro": 1,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 2,
-   "crc_beda": 34,
+   "crc_beda": 35,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2485,12 +2385,12 @@
   {
    "blob": "spipe.ko",
    "undef": 33,
-   "ok": 29,
+   "ok": 30,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 21,
    "blokir_modul": {},
@@ -2516,14 +2416,14 @@
   {
    "blob": "spool.ko",
    "undef": 49,
-   "ok": 38,
+   "ok": 42,
    "ekspor": 0,
    "rename": 3,
-   "makro": 4,
+   "makro": 1,
    "port": 2,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 25,
+   "crc_beda": 27,
    "blokir_modul": {
     "sipc-core": 2
    },
@@ -2556,14 +2456,14 @@
   {
    "blob": "sprd-charger-manager.ko",
    "undef": 99,
-   "ok": 84,
+   "ok": 86,
    "ekspor": 0,
    "rename": 4,
    "makro": 7,
    "port": 0,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 62,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 63,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2589,12 +2489,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -2607,14 +2501,14 @@
   {
    "blob": "sprd-compr-2stage-dma.ko",
    "undef": 70,
-   "ok": 48,
-   "ekspor": 2,
+   "ok": 54,
+   "ekspor": 0,
    "rename": 6,
-   "makro": 10,
+   "makro": 7,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
-   "crc_beda": 22,
+   "crc_beda": 24,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2670,12 +2564,12 @@
   {
    "blob": "sprd-cpufreq-public.ko",
    "undef": 11,
-   "ok": 5,
+   "ok": 6,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 2,
    "blokir_modul": {},
@@ -2694,12 +2588,12 @@
   {
    "blob": "sprd-cpufreq-v2.ko",
    "undef": 68,
-   "ok": 54,
+   "ok": 55,
    "ekspor": 0,
    "rename": 1,
    "makro": 8,
    "port": 1,
-   "instr": 3,
+   "instr": 2,
    "hilang": 1,
    "crc_beda": 37,
    "blokir_modul": {
@@ -2727,14 +2621,14 @@
   {
    "blob": "sprd-dma.ko",
    "undef": 48,
-   "ok": 40,
+   "ok": 43,
    "ekspor": 0,
    "rename": 1,
-   "makro": 5,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 34,
+   "crc_beda": 35,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2751,12 +2645,12 @@
   {
    "blob": "sprd-dmaengine-pcm.ko",
    "undef": 45,
-   "ok": 36,
+   "ok": 37,
    "ekspor": 0,
    "rename": 3,
    "makro": 3,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 22,
    "blokir_modul": {},
@@ -2789,14 +2683,14 @@
   {
    "blob": "sprd-drm.ko",
    "undef": 288,
-   "ok": 255,
+   "ok": 261,
    "ekspor": 0,
    "rename": 6,
-   "makro": 13,
+   "makro": 9,
    "port": 0,
-   "instr": 3,
-   "hilang": 11,
-   "crc_beda": 214,
+   "instr": 2,
+   "hilang": 10,
+   "crc_beda": 217,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2886,14 +2780,14 @@
   {
    "blob": "sprd-gsp.ko",
    "undef": 128,
-   "ok": 110,
+   "ok": 116,
    "ekspor": 0,
    "rename": 4,
-   "makro": 10,
+   "makro": 6,
    "port": 0,
-   "instr": 3,
-   "hilang": 1,
-   "crc_beda": 83,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 86,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2919,12 +2813,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -2937,14 +2825,14 @@
   {
    "blob": "sprd-ion.ko",
    "undef": 41,
-   "ok": 29,
+   "ok": 34,
    "ekspor": 0,
    "rename": 3,
-   "makro": 6,
+   "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 23,
+   "crc_beda": 25,
    "blokir_modul": {},
    "contoh": [
     [
@@ -2975,12 +2863,12 @@
   {
    "blob": "sprd-platform-pcm-routing.ko",
    "undef": 9,
-   "ok": 7,
+   "ok": 8,
    "ekspor": 0,
    "rename": 0,
    "makro": 1,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 7,
    "blokir_modul": {},
@@ -2990,12 +2878,12 @@
   {
    "blob": "sprd-sc27xx-spi.ko",
    "undef": 19,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 0,
    "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 11,
    "blokir_modul": {},
@@ -3005,12 +2893,12 @@
   {
    "blob": "sprd-sipc-virt-bus.ko",
    "undef": 6,
-   "ok": 5,
+   "ok": 6,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 5,
    "blokir_modul": {},
@@ -3020,12 +2908,12 @@
   {
    "blob": "sprd-vsp-pw-domain.ko",
    "undef": 23,
-   "ok": 20,
+   "ok": 21,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 17,
    "blokir_modul": {},
@@ -3044,12 +2932,12 @@
   {
    "blob": "sprd_7sreset.ko",
    "undef": 16,
-   "ok": 14,
+   "ok": 15,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 12,
    "blokir_modul": {},
@@ -3059,14 +2947,14 @@
   {
    "blob": "sprd_apipe.ko",
    "undef": 34,
-   "ok": 26,
+   "ok": 30,
    "ekspor": 0,
    "rename": 1,
-   "makro": 4,
+   "makro": 1,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 16,
+   "crc_beda": 18,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3083,12 +2971,12 @@
   {
    "blob": "sprd_audcp_boot.ko",
    "undef": 22,
-   "ok": 19,
+   "ok": 20,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 11,
    "blokir_modul": {},
@@ -3107,12 +2995,12 @@
   {
    "blob": "sprd_audcp_dvfs.ko",
    "undef": 18,
-   "ok": 16,
+   "ok": 17,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 10,
    "blokir_modul": {},
@@ -3122,12 +3010,12 @@
   {
    "blob": "sprd_battery_info.ko",
    "undef": 23,
-   "ok": 19,
+   "ok": 20,
    "ekspor": 0,
    "rename": 1,
    "makro": 1,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 12,
    "blokir_modul": {},
@@ -3146,14 +3034,14 @@
   {
    "blob": "sprd_camera.ko",
    "undef": 158,
-   "ok": 125,
+   "ok": 131,
    "ekspor": 0,
    "rename": 4,
-   "makro": 23,
+   "makro": 19,
    "port": 0,
-   "instr": 3,
-   "hilang": 3,
-   "crc_beda": 80,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 83,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3185,12 +3073,6 @@
      []
     ],
     [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
-    ],
-    [
      "ns_to_timeval",
      [
       "ns_to_timespec64"
@@ -3207,14 +3089,14 @@
   {
    "blob": "sprd_camsys_pw_domain.ko",
    "undef": 43,
-   "ok": 34,
+   "ok": 37,
    "ekspor": 0,
    "rename": 1,
-   "makro": 5,
+   "makro": 3,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 25,
+   "crc_beda": 26,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3231,14 +3113,14 @@
   {
    "blob": "sprd_cpp.ko",
    "undef": 78,
-   "ok": 61,
+   "ok": 65,
    "ekspor": 0,
    "rename": 3,
-   "makro": 11,
+   "makro": 8,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 48,
+   "crc_beda": 50,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3269,12 +3151,12 @@
   {
    "blob": "sprd_flash_drv.ko",
    "undef": 16,
-   "ok": 12,
+   "ok": 13,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 10,
    "blokir_modul": {},
@@ -3293,12 +3175,12 @@
   {
    "blob": "sprd_hwspinlock.ko",
    "undef": 18,
-   "ok": 17,
+   "ok": 18,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 12,
    "blokir_modul": {},
@@ -3308,14 +3190,14 @@
   {
    "blob": "sprd_iq.ko",
    "undef": 41,
-   "ok": 32,
+   "ok": 36,
    "ekspor": 0,
    "rename": 2,
-   "makro": 4,
+   "makro": 1,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 23,
+   "crc_beda": 25,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3339,12 +3221,12 @@
   {
    "blob": "sprd_manufacturer_model.ko",
    "undef": 7,
-   "ok": 5,
+   "ok": 6,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 4,
    "blokir_modul": {},
@@ -3363,12 +3245,12 @@
   {
    "blob": "sprd_mipi.ko",
    "undef": 17,
-   "ok": 12,
+   "ok": 13,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 6,
    "blokir_modul": {},
@@ -3394,14 +3276,14 @@
   {
    "blob": "sprd_modem_loader.ko",
    "undef": 64,
-   "ok": 48,
+   "ok": 52,
    "ekspor": 0,
    "rename": 2,
-   "makro": 10,
+   "makro": 7,
    "port": 1,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 37,
+   "crc_beda": 39,
    "blokir_modul": {
     "sipc-core": 1
    },
@@ -3427,14 +3309,14 @@
   {
    "blob": "sprd_pdbg.ko",
    "undef": 51,
-   "ok": 38,
-   "ekspor": 1,
+   "ok": 41,
+   "ekspor": 0,
    "rename": 2,
    "makro": 4,
    "port": 1,
-   "instr": 3,
-   "hilang": 2,
-   "crc_beda": 24,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 26,
    "blokir_modul": {
     "sprd_sip_svc": 1
    },
@@ -3452,12 +3334,6 @@
      ]
     ],
     [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
-    ],
-    [
      "pm_get_active_wakeup_sources",
      []
     ]
@@ -3470,12 +3346,12 @@
   {
    "blob": "sprd_pmic_syscon.ko",
    "undef": 23,
-   "ok": 18,
+   "ok": 19,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 14,
    "blokir_modul": {},
@@ -3494,14 +3370,14 @@
   {
    "blob": "sprd_power_manager.ko",
    "undef": 33,
-   "ok": 21,
+   "ok": 23,
    "ekspor": 0,
    "rename": 3,
    "makro": 6,
    "port": 0,
-   "instr": 2,
-   "hilang": 1,
-   "crc_beda": 13,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 14,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3521,12 +3397,6 @@
      [
       "_printk"
      ]
-    ],
-    [
-     "init_timer_key",
-     [
-      "init_timer_list_procfs"
-     ]
     ]
    ],
    "map": {
@@ -3538,12 +3408,12 @@
   {
    "blob": "sprd_power_stat.ko",
    "undef": 30,
-   "ok": 21,
+   "ok": 22,
    "ekspor": 0,
    "rename": 2,
    "makro": 3,
    "port": 1,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 16,
    "blokir_modul": {
@@ -3571,14 +3441,14 @@
   {
    "blob": "sprd_sensor.ko",
    "undef": 79,
-   "ok": 60,
+   "ok": 64,
    "ekspor": 0,
    "rename": 3,
-   "makro": 11,
+   "makro": 8,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 2,
-   "crc_beda": 42,
+   "crc_beda": 44,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3623,14 +3493,14 @@
   {
    "blob": "sprd_shm.ko",
    "undef": 43,
-   "ok": 33,
+   "ok": 37,
    "ekspor": 0,
    "rename": 2,
-   "makro": 6,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 27,
+   "crc_beda": 29,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3654,12 +3524,12 @@
   {
    "blob": "sprd_sip_svc.ko",
    "undef": 5,
-   "ok": 2,
+   "ok": 3,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 0,
    "blokir_modul": {},
@@ -3678,12 +3548,12 @@
   {
    "blob": "sprd_soc_id.ko",
    "undef": 14,
-   "ok": 11,
+   "ok": 12,
    "ekspor": 0,
    "rename": 1,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 8,
    "blokir_modul": {},
@@ -3702,12 +3572,12 @@
   {
    "blob": "sprd_systimer.ko",
    "undef": 10,
-   "ok": 6,
+   "ok": 7,
    "ekspor": 0,
    "rename": 2,
    "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 4,
    "blokir_modul": {},
@@ -3733,14 +3603,14 @@
   {
    "blob": "sprd_time_sync.ko",
    "undef": 36,
-   "ok": 27,
+   "ok": 31,
    "ekspor": 0,
    "rename": 3,
-   "makro": 3,
+   "makro": 0,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 17,
+   "crc_beda": 19,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3771,12 +3641,12 @@
   {
    "blob": "sprd_time_sync_cp.ko",
    "undef": 2,
-   "ok": 1,
+   "ok": 2,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 1,
    "blokir_modul": {},
@@ -3786,14 +3656,14 @@
   {
    "blob": "sprd_wdt_fiq.ko",
    "undef": 31,
-   "ok": 24,
+   "ok": 27,
    "ekspor": 0,
    "rename": 1,
-   "makro": 4,
+   "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 14,
+   "crc_beda": 15,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3810,14 +3680,14 @@
   {
    "blob": "trusty-ipc.ko",
    "undef": 69,
-   "ok": 55,
+   "ok": 58,
    "ekspor": 0,
    "rename": 5,
-   "makro": 6,
+   "makro": 4,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 39,
+   "crc_beda": 40,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3862,12 +3732,12 @@
   {
    "blob": "trusty-irq.ko",
    "undef": 44,
-   "ok": 37,
+   "ok": 39,
    "ekspor": 0,
    "rename": 1,
-   "makro": 4,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
    "crc_beda": 27,
    "blokir_modul": {},
@@ -3886,14 +3756,14 @@
   {
    "blob": "trusty-log.ko",
    "undef": 39,
-   "ok": 27,
+   "ok": 32,
    "ekspor": 0,
    "rename": 4,
-   "makro": 6,
+   "makro": 2,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 19,
+   "crc_beda": 21,
    "blokir_modul": {},
    "contoh": [
     [
@@ -3931,12 +3801,12 @@
   {
    "blob": "trusty-pm.ko",
    "undef": 10,
-   "ok": 5,
+   "ok": 7,
    "ekspor": 0,
    "rename": 1,
-   "makro": 1,
+   "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 2,
    "crc_beda": 2,
    "blokir_modul": {},
@@ -3969,14 +3839,14 @@
   {
    "blob": "trusty-tui.ko",
    "undef": 20,
-   "ok": 13,
+   "ok": 17,
    "ekspor": 0,
    "rename": 2,
-   "makro": 3,
+   "makro": 0,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 0,
-   "crc_beda": 11,
+   "crc_beda": 13,
    "blokir_modul": {},
    "contoh": [
     [
@@ -4000,14 +3870,14 @@
   {
    "blob": "trusty-virtio.ko",
    "undef": 41,
-   "ok": 28,
+   "ok": 33,
    "ekspor": 0,
    "rename": 4,
-   "makro": 8,
+   "makro": 4,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
-   "crc_beda": 21,
+   "crc_beda": 23,
    "blokir_modul": {},
    "contoh": [
     [
@@ -4045,12 +3915,12 @@
   {
    "blob": "trusty.ko",
    "undef": 66,
-   "ok": 53,
+   "ok": 55,
    "ekspor": 0,
    "rename": 4,
-   "makro": 6,
+   "makro": 5,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 41,
    "blokir_modul": {},
@@ -4090,12 +3960,12 @@
   {
    "blob": "twofish_common.ko",
    "undef": 1,
-   "ok": 0,
+   "ok": 1,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 0,
    "blokir_modul": {},
@@ -4105,12 +3975,12 @@
   {
    "blob": "twofish_generic.ko",
    "undef": 4,
-   "ok": 3,
+   "ok": 4,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 3,
    "blokir_modul": {},
@@ -4120,12 +3990,12 @@
   {
    "blob": "ums512-clk.ko",
    "undef": 18,
-   "ok": 17,
+   "ok": 18,
    "ekspor": 0,
    "rename": 0,
    "makro": 0,
    "port": 0,
-   "instr": 1,
+   "instr": 0,
    "hilang": 0,
    "crc_beda": 17,
    "blokir_modul": {},
@@ -4135,14 +4005,14 @@
   {
    "blob": "unisoc-iommu.ko",
    "undef": 63,
-   "ok": 42,
+   "ok": 47,
    "ekspor": 0,
    "rename": 3,
-   "makro": 12,
+   "makro": 8,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 3,
-   "crc_beda": 29,
+   "crc_beda": 31,
    "blokir_modul": {},
    "contoh": [
     [
@@ -4188,12 +4058,12 @@
   {
    "blob": "unisoc-mailbox.ko",
    "undef": 49,
-   "ok": 43,
+   "ok": 44,
    "ekspor": 0,
    "rename": 1,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 33,
    "blokir_modul": {},
@@ -4212,14 +4082,14 @@
   {
    "blob": "usb_f_vser.ko",
    "undef": 52,
-   "ok": 40,
+   "ok": 44,
    "ekspor": 0,
    "rename": 4,
-   "makro": 5,
+   "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 28,
+   "crc_beda": 30,
    "blokir_modul": {},
    "contoh": [
     [
@@ -4257,12 +4127,12 @@
   {
    "blob": "virt-dma.ko",
    "undef": 12,
-   "ok": 7,
+   "ok": 8,
    "ekspor": 0,
    "rename": 0,
    "makro": 2,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
    "crc_beda": 6,
    "blokir_modul": {},
@@ -4272,14 +4142,14 @@
   {
    "blob": "vsp.ko",
    "undef": 80,
-   "ok": 66,
+   "ok": 70,
    "ekspor": 0,
    "rename": 2,
-   "makro": 9,
+   "makro": 6,
    "port": 0,
-   "instr": 3,
+   "instr": 2,
    "hilang": 0,
-   "crc_beda": 54,
+   "crc_beda": 56,
    "blokir_modul": {},
    "contoh": [
     [
@@ -4303,14 +4173,14 @@
   {
    "blob": "zram.ko",
    "undef": 129,
-   "ok": 88,
-   "ekspor": 2,
+   "ok": 93,
+   "ekspor": 0,
    "rename": 6,
-   "makro": 9,
+   "makro": 7,
    "port": 2,
-   "instr": 3,
+   "instr": 2,
    "hilang": 19,
-   "crc_beda": 51,
+   "crc_beda": 54,
    "blokir_modul": {
     "zsmalloc": 2
    },
@@ -4408,14 +4278,14 @@
   {
    "blob": "zsmalloc.ko",
    "undef": 56,
-   "ok": 38,
+   "ok": 41,
    "ekspor": 0,
    "rename": 4,
-   "makro": 5,
+   "makro": 3,
    "port": 0,
-   "instr": 2,
+   "instr": 1,
    "hilang": 7,
-   "crc_beda": 30,
+   "crc_beda": 31,
    "blokir_modul": {},
    "contoh": [
     [
