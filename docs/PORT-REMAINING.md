@@ -122,7 +122,7 @@ biasa, dan sysfs group-nya ditempel ke device yang dibuat sendiri
 (`sprd_manufacturer_model_dev`). Tanpa tahu path/node itu, driver hanya
 bisa menebak dari mana string dibaca.
 
-## 9. `sprd_pdbg.ko` — power debug (irq domain)
+## 9. `sprd_pdbg.ko` — power debug (irq domain) — **SELESAI (diport)**
 
 | Item | Nilai |
 |---|---|
@@ -132,9 +132,26 @@ bisa menebak dari mana string dibaca.
 | node stok | `/debuglog`, properti `sprd,pdbg-irq-domain-{gic,gpio,ana,ana-eic,ap-eic-sync}` |
 | SMC | `pwr_get_pdbg_info` = `0x82000502` (sudah dibungkus `sprd_sip_svc`) |
 
-Blokir sebenarnya bukan simbol lagi: yang belum dipetakan adalah cara
-`/debuglog` memakai nama irq-domain itu (dicocokkan ke `irq_domain` mana) dan
-format keluaran sysfs-nya.
+Blokir lama (cara `/debuglog` memakai nama irq-domain + format sysfs) sudah
+terpecahkan lewat pembacaan blob penuh — ringkasan bukti dan keputusan port:
+[RE-SPRD-PDBG.md](RE-SPRD-PDBG.md); disassembly lengkap
+[pdbg_disasm.txt](evidence-20261023/pdbg_disasm.txt) dan
+[pdbg_notif.txt](evidence-20261023/pdbg_notif.txt).
+
+Port ada di `drivers/vxtux/soc/pdbg/` (Kconfig `SPRD_PDBG`):
+
+- pemetaan: loop IRQ 0..511, `strcmp` nama domain (`irq_desc->irq_data.domain`
+pada 6.18) terhadap 8 string DT, sekali per IRQ lalu nama di-null-kan;
+- kthread `sprd-pdbg-thread` + `delayed_work` rescan (jeda dari `poll_ms`);
+- pm_notifier (`PM_SUSPEND_PREPARE`/`PM_POST_SUSPEND`) dan cpu_pm_notifier
+  (DEEP SLEEP START / WAKEUP SCENE END) — keduanya kini benar-benar di-set
+  `.notifier_call`-nya;
+- `/proc/sprd-pdbg/regs_info` (`regs_get_once`, 4 kata dari SMC
+  `0x82000502` lewat varian baru `sprd_sip_svc_pwr_get_pdbg_info4`);
+- module_param `sprd_pdbg_log_force` (level KERN_ERR, sama seperti blob).
+
+Terverifikasi: `sprd_pdbg.o` rc=0 via `cs_quick.sh`, DTB `ums512-1h10-vxtux`
+rc=0; build penuh untuk `.ko` — lihat status di commit.
 
 ## 10. `sprd_power_stat.ko` — statistik tidur
 

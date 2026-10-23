@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_PDBG
+	tristate "Spreadtrum power debug (wakeup / sleep logging)"
+	depends on ARM64 && PROC_FS && PM
+	select SPRD_SIP_SVC
+	help
+	  Explains why the SoC slept or woke up: matches the wakeup-source
+	  irq-domain names from the debuglog device tree node against the
+	  live irq descriptors, logs the active wakeup sources from a
+	  kernel thread, records suspend duration from the PM notifiers and
+	  pulls sleep statistics from the SIP power service
+	  (pwr_get_pdbg_info, SMC 0x82000502).
+
+	  Exports sprd_pdbg_msg_print() for other drivers and
+	  /proc/sprd-pdbg/regs_info for the register snapshot.
+
+	  Port of the vendor 5.4 `sprd_pdbg.ko`.

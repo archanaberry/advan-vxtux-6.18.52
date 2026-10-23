@@ -166,6 +166,24 @@ static int sip_pwr_get_pdbg_info(u32 id, u64 *lo, u64 *hi)
 	return 0;
 }
 
+static int sip_pwr_get_pdbg_info_words(u32 id, u64 out[4])
+{
+	struct arm_smccc_res res;
+
+	if (!out)
+		return -EINVAL;
+
+	SIP_ARGS(&res, SPRD_SIP_SVC_PWR_GET_PDBG_INFO, id, 0, 0, 0, 0, 0);
+	if (sip_failed(&res))
+		return -EOPNOTSUPP;
+
+	out[0] = res.a0;
+	out[1] = res.a1;
+	out[2] = res.a2;
+	out[3] = res.a3;
+	return 0;
+}
+
 /* ------------------------------------------------------------------ DVFS */
 
 static int sip_dvfs_enable(u32 enable)
@@ -395,6 +413,7 @@ static int __init sprd_sip_svc_init(void)
 
 	sprd_handle.pwr_get_wakeup_source = sip_pwr_get_wakeup_source;
 	sprd_handle.pwr_get_pdbg_info = sip_pwr_get_pdbg_info;
+	sprd_handle.pwr_get_pdbg_info_words = sip_pwr_get_pdbg_info_words;
 
 	sprd_handle.dvfs_enable = sip_dvfs_enable;
 	sprd_handle.dvfs_table_update = sip_dvfs_table_update;

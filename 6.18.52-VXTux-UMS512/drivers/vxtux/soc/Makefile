@@ -19,3 +19,6 @@ obj-$(CONFIG_SPRD_SIP_SVC)	+= sip_svc/
 
 # Subsystem sleep statistics (stock blob sprd_power_stat.ko).
 obj-$(CONFIG_SPRD_DEBUGSTAT)	+= debugstat/
+
+# Power debug: wakeup/sleep logging (stock blob sprd_pdbg.ko).
+obj-$(CONFIG_SPRD_PDBG)	+= pdbg/

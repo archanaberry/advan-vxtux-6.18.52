@@ -96,6 +96,7 @@ make -j$(nproc) modules
 | `scripts/cc-version.sh: Permission denied` | bit executable hilang; `chmod -R +x scripts/` |
 | `The source tree is not clean` (build `O=`) | artefak root di pohon `/workspaces`; pakai clone bersih |
 | modpost: `"<simbol>" undefined` di build `M=` | `Module.symvers` belum ada; modul tunggal baru bisa di-modpost setelah `make modules` penuh |
+| `make modules` sukses tapi `.ko` baru tidak muncul; subdir `modules.order` kosong | dua sebab yang pernah kena: **(a)** Makefile subdir berisi `\t` **literal** (backslash-t) — make membaca nama variabel jadi `obj-m\t+`, sehingga `obj-m` kosong dan submake ke direktori menghasilkan `{ :; } > modules.order`; periksa dengan `cat -A` (harus `^I`, bukan `\\t`). **(b)** `enhanced_config.cfg` ada di root repo di luar `$K`, jadi tidak ikut tersinkron `cs_quick.sh` dan `CONFIG_*` baru tak pernah sampai ke `.config` codespace — kini ikut dikirim + auto-merge; bila `.config` sudah di-update tapi modul tetap absen, hapus `modules.order` (root + subdir) lalu `make modules` lagi |
 
 ## 6. Hasil verifikasi 2026-10-23
 
@@ -132,6 +133,8 @@ Yang **tidak** bisa dipercepat begini: `.ko`. Modpost menuntut
 `nohup` lalu poll log, jangan blokir sesi SSH):
 
 ```bash
-nohup bash -c 'make -j8 Image modules dtbs > /workspaces/b2/build.log 2>&1; \
+nohup bash -c 'make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- \
+  -j8 Image modules dtbs > /workspaces/b2/build.log 2>&1; \
   echo RC=$? >> /workspaces/b2/build.log' >/dev/null 2>&1 &
+# tanpa ARCH=arm64 make langsung salah sasaran: "arch/x86/Makefile: No such file"
 ```

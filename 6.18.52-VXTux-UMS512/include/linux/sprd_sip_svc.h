@@ -87,6 +87,12 @@ struct sprd_sip_svc_handle {
 	/* PWR */
 	int (*pwr_get_wakeup_source)(u64 *mask);
 	int (*pwr_get_pdbg_info)(u32 id, u64 *lo, u64 *hi);
+	/*
+	 * Varian empat kata (a0..a3).  Vendor `sprd_pdbg.ko` membaca empat
+	 * u64 hasil SMC 0x82000502 per id (blob: empat pointer keluar di
+	 * +0xf8..+0x117, count byte di +0x116), jadi dua kata tidak cukup.
+	 */
+	int (*pwr_get_pdbg_info_words)(u32 id, u64 out[4]);
 
 	/* DVFS */
 	int (*dvfs_enable)(u32 enable);

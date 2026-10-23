@@ -31,7 +31,12 @@ fi
 RENV="export PATH=\$HOME/bc/bin:\$HOME/flex/bin:\$HOME/tc/bin:\$PATH"
 
 # 1. Kirim hanya yang berubah, satu round-trip.
-mapfile -t files < <({ git diff --name-only HEAD -- "$K"; git ls-files --others --exclude-standard -- "$K"; } | sort -u)
+#    enhanced_config.cfg ikut dikirim: tanpa itu CONFIG (mis. SPRD_PDBG)
+#    yang baru ditambahkan tidak pernah sampai ke .config codespace,
+#    jadi hasilnya .o ter-build tetapi .ko tidak (modpost dilewati).
+mapfile -t files < <({ git diff --name-only HEAD -- "$K"; git ls-files --others --exclude-standard -- "$K";
+	git diff --name-only HEAD -- enhanced_config.cfg;
+	test -f enhanced_config.cfg && echo enhanced_config.cfg; } | sort -u)
 if [ "${#files[@]}" -gt 0 ]; then
 	printf '%s\n' "${files[@]}" | tar czf - -T - |
 		gh cs ssh -c "$CS" -- "mkdir -p $REMOTE && tar xzf - -C $REMOTE"
@@ -40,7 +45,16 @@ else
 	echo "SYNC 0 (tidak ada perubahan)"
 fi
 
-# 2. Kompilasi target. Log penuh disimpan di $REMOTE/last-cc.log.
+# 2. Merge config bila enhanced_config.cfg lebih baru dari .config.
+gh cs ssh -c "$CS" -- "$RENV; cd $REMOTE/$K || exit 3
+if [ ../enhanced_config.cfg -nt .config ]; then
+	cp .config .config.device
+	scripts/kconfig/merge_config.sh -m -O . .config.device ../enhanced_config.cfg > /dev/null
+	make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- olddefconfig > /dev/null
+	echo 'CONFIG merged (enhanced_config.cfg lebih baru dari .config)'
+fi"
+
+# 3. Kompilasi target. Log penuh disimpan di $REMOTE/last-cc.log.
 gh cs ssh -c "$CS" -- "$RENV; cd $REMOTE/$K || exit 3
 S=\$(date +%s)
 make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- -j\$(nproc) '$TARGET' > $REMOTE/last-cc.log 2>&1
