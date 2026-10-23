@@ -13,3 +13,6 @@ obj-$(CONFIG_SPRD_MODEM) += modem/
 # Unisoc time correction device (stock blob sprd_time_sync.ko) and its
 # control point (sprd_time_sync_cp.ko).
 obj-$(CONFIG_SPRD_TIME_SYNC) += time_sync/
+
+# SIP secure-monitor client (stock blob sprd_sip_svc.ko).
+obj-$(CONFIG_SPRD_SIP_SVC)	+= sip_svc/

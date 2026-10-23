@@ -17,6 +17,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/sprd_sip_svc.h>
+#include <linux/stddef.h>
 #include <linux/string.h>
 
 #define SIP_ARGS(res, id, a1, a2, a3, a4, a5, a6)			\

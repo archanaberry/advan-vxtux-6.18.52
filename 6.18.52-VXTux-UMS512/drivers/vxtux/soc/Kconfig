@@ -10,3 +10,4 @@ source "drivers/vxtux/soc/power_manager/Kconfig"
 
 source "drivers/vxtux/soc/modem/Kconfig"
 source "drivers/vxtux/soc/time_sync/Kconfig"
+source "drivers/vxtux/soc/sip_svc/Kconfig"
