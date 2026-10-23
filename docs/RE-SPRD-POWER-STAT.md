@@ -149,10 +149,63 @@ create failed`, `Register soc sleep info get error`, `Parameter is error`,
 `Proc file create failed`, `Proc dir create failed`,
 `Register ap sleep info get error`.
 
-## Yang masih kurang sebelum bisa ditulis ulang
+## Kolom `/proc/sprd-debugstat/stat` (lengkap)
 
-1. Offset di dalam blob 0x58 yang dicetak tiap `stat_print_*`, plus
-   format `%10u` vs `%10s` per entry.
-2. Nilai argumen `x1`/`x2` `stat_info_register` yang dipakai pemanggil
-   (pemanggilnya ada di modul lain, mis. cpufreq).
-3. Isi `sprd_debugstat_core_init` — pembuat node `stat` dan `slp_cnt`.
+Diambil dari pasangan `sprintf` di tiap `stat_print_*` (`donors/blobre.py`
+meresolusi string `.rodata` yang dirujuk `adrp/add`), lalu dicocokkan dengan
+`ldr/ldur` yang membaca blob 0x58 milik tiap node.
+
+| offset | field | printer | format |
+|---:|---|---|---|
+| `+0x00` | `char name[4]` | `stat_print_name` | `%10s` |
+| `+0x08` | `total_duration` (u64) | `stat_print_total` | `%10llu` |
+| `+0x10` | `sleep_duration_total` (u64) | `stat_print_sleep` | `%10llu` |
+| `+0x18` | `idle_duration_total` (u64) | `stat_print_idle` | `%10llu` |
+| `+0x20` | `state` | `stat_print_state` | `%10u` |
+| `+0x24` | `subsystem_reboot_count` | `stat_print_reboot` | `%10u` |
+| `+0x28` | `wakeup_reason` | `stat_print_wakeup_reason` | `%10u` |
+| `+0x2c` | `last_wakeup_duration` | `stat_print_last_wakeup` | `%10u` |
+| `+0x30` | `last_sleep_duration` | `stat_print_last_sleep` | `%10u` |
+| `+0x34` | `active_core` | `stat_print_active_core` | `%#10x` |
+| `+0x38` | `internal_irq_count` | `stat_print_irq_count` | `%10u` |
+| `+0x3c` | `irq_to_ap_count` | `stat_print_irq_to_ap` | `%10u` |
+| `+0x40` | `soc_slp_cnt` | `slp_cnt_read` | `%d\n` |
+
+Header berkas: `"Subsys information:\n"`, tiap baris `"%22s:"` + nilai-nilai
+node + `"\n"`.
+
+## Pemanggil `stat_info_register` (dari `probe`)
+
+| argumen | nilai |
+|---|---|
+| `name` | `"ap_sys"` / `"soc_sys"` |
+| `x1` (getter) | `ap_sleep_info_get` / `soc_sleep_info_get` |
+| `x2` (arg) | `&pdev->dev` (getter memanggil `dev_get_drvdata`) |
+
+Blob mengisi ketiga field itu di `struct stat_info` (+0x00/+0x10/+0x18) dan
+menyimpan `struct subsys_sleep_info` 0x58 byte di `+0x08`.
+
+## `sprd_debugstat_core_init` (0x290)
+
+```
+proc_mkdir("sprd-debugstat", NULL)
+proc_create("stat",    0444, dir, &stat_fops)     /* open -> single_open(stat_read) */
+proc_create("slp_cnt", 0644, dir, &slp_cnt_fops)  /* open -> single_open(slp_cnt_read) */
+```
+
+Gagal → `Proc dir create failed` / `Proc file create failed` /
+`Proc file slp_cnt create failed`, lalu `remove_proc_entry("sprd-debugstat")`
+dan `-EINVAL`.
+
+## Sudah diport
+
+Hasil di atas dipakai langsung oleh
+[drivers/vxtux/soc/debugstat/sprd_debugstat.c](../6.18.52-VXTux-UMS512/drivers/vxtux/soc/debugstat/sprd_debugstat.c)
+(`CONFIG_SPRD_DEBUGSTAT=m`), termasuk node `/debugstat` di
+`ums512-1h10-vxtux.dts`. Kompilasi diverifikasi lewat workflow `quick-cc`.
+
+Satu perbedaan yang disengaja: blob mengakses handle SMC lewat offset tetap
+(`handle+0x50` lalu `+0x10`), sedangkan port memakai field bernama
+`handle->pwr_get_wakeup_source` dari
+[include/linux/sprd_sip_svc.h](../6.18.52-VXTux-UMS512/include/linux/sprd_sip_svc.h).
+SMC ID dan urutan argumennya sama (`0x82000501`).

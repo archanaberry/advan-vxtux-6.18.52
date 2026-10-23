@@ -29,6 +29,22 @@ for f in $HOME/deb/*.deb; do dpkg -x "$f" $HOME/sysroot; done
 export PATH=$HOME/sysroot/usr/bin:$PATH
 ```
 
+Kalau `apt-get download` menjawab `E: Unable to locate package bc` (daftar
+paket kosong dan `update` tidak bisa menulis `/var/lib/apt`), ambil `.deb`-nya
+langsung dari arsip Ubuntu sesuai rilis image — cara ini yang akhirnya dipakai
+untuk `bc` di Ubuntu 24.04 (**noble, amd64**):
+
+```bash
+curl -sSL -o $HOME/bc.deb \
+  https://archive.ubuntu.com/ubuntu/pool/main/b/bc/bc_1.07.1-3build1_amd64.deb
+dpkg-deb -x $HOME/bc.deb $HOME/bcpkg
+mkdir -p $HOME/bc/bin && ln -sf $HOME/bcpkg/usr/bin/bc $HOME/bc/bin/bc
+ls $HOME/bc/bin/bc   # libreadline8 sudah ada di image, tak perlu tambahan
+```
+
+Tanpa `bc`, `make` berhenti di `Kbuild:24: include/generated/timeconst.h`
+(`/bin/sh: 1: bc: not found`) — bukan error driver.
+
 ## 3. Pohon sumber yang bersih
 
 Pohon di `/workspaces/...` berisi artefak milik **root**, sehingga
@@ -41,6 +57,24 @@ git clone --depth 1 --single-branch -b test1 /workspaces/advan-vxtux-6.18.52 $HO
 cd $HOME/src/6.18.52-VXTux-UMS512
 chmod -R +x scripts/       # bit executable hilang saat commit dari Windows
 ```
+
+Kalau clone-nya **sudah** ada tapi tercemar artefak root, jangan clone ulang
+(2 GB per pohon): bikin *worktree* dari commit yang mau diuji. Objek git
+dipakai bersama (hardlink), jadi cuma butuh ~1,4 GB untuk isi pohon dan
+selesai dalam ~34 s:
+
+```bash
+cd /workspaces/advan-vxtux-6.18.52
+git fetch --depth 1 https://github.com/<user>/advan-vxtux-6.18.52 test1
+git worktree add --detach /workspaces/b2 $(git rev-parse FETCH_HEAD)
+```
+
+Dua jebakan yang sudah kena di codespace:
+
+| Gejala | Sebab | Penanganan |
+|---|---|---|
+| `ls include/asm-generic/vmlinux.lds.h` hilang, padahal `git status` bersih | entri ber-*skip-worktree* (checkout parsial) | `git restore --source=HEAD --worktree -- 6.18.52-VXTux-UMS512` (1 perintah, ~8000 file kembali) |
+| `fopen: Permission denied` di `include/generated/autoconf.h`, `unlink: Permission denied` | sisa build milik **root** (2391 entri; `include/config` dan `include/generated` dimiliki root) | tidak bisa `chmod`/`rm` tanpa root → pakai worktree baru milik user |
 
 ## 4. Build
 
@@ -68,3 +102,36 @@ make -j$(nproc) modules
 - `make modules` → **rc=0**, **228 `.ko`** (227 sebelumnya + `phy-sprd-ums512.ko`).
 - `drivers/phy/sprd/phy-sprd-ums512.ko` = **433.584 B**.
 - Bukti: `docs/evidence-20261023/ko_list_tick13.txt` + `config_tick13.txt`.
+
+## 7. Loop cepat: satu objek di codespace (~10 s)
+
+Build kernel penuh di Actions memakan 15–17 menit per iterasi. Untuk menulis
+driver cukup `prepare` + satu objek, dan itu bisa dijalankan langsung di
+codespace (`gh cs ssh`, bukan runner). Terukur di worktree `/workspaces/b2`
+(toolchain ARM 13.2 rel1, `-j6`, commit `ddb885362`):
+
+| Tahap | Waktu |
+|---|---:|
+| `merge_config.sh -m` + `make olddefconfig` | **20 s** |
+| `make drivers/vxtux/soc/debugstat/sprd_debugstat.o` (cold, sekaligus prepare) | **9 s** |
+| objek hasil | 229.600 B, `rc=0` |
+
+Skripnya [`donors/cs_quick.sh`](../donors/cs_quick.sh): mengirim file yang
+berubah (tracked + untracked) lewat satu round-trip `tar`/`ssh`, lalu
+meng-`make` target di codespace. Contoh:
+
+```bash
+donors/cs_quick.sh                                          # debugstat.o
+donors/cs_quick.sh drivers/vxtux/soc/sip_svc/sprd_sip_svc.o
+donors/cs_quick.sh drivers/vxtux/soc/debugstat/sprd_debugstat.ko   # BUTUH build penuh
+```
+
+Yang **tidak** bisa dipercepat begini: `.ko`. Modpost menuntut
+`Module.symvers` dari vmlinux, jadi target `.ko` tetap menunggu
+`make modules` penuh — di codespace itu ~15 menit dengan `-j8` (jalankan
+`nohup` lalu poll log, jangan blokir sesi SSH):
+
+```bash
+nohup bash -c 'make -j8 Image modules dtbs > /workspaces/b2/build.log 2>&1; \
+  echo RC=$? >> /workspaces/b2/build.log' >/dev/null 2>&1 &
+```
