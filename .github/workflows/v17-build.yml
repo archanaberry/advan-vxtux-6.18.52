@@ -37,26 +37,48 @@ jobs:
       # Simbol yang dependensinya kurang dibuang tanpa peringatan (kelas bug
       # SC27XX_TSENSOR_THERMAL) — lebih baik gagal cepat di sini daripada
       # menemukan .ko hilang di akhir build.
-      - name: Guard — simbol fragmen harus selamat dari olddefconfig
+      - name: Guard — simbol fragmen yang memang ada di Kconfig harus selamat
         run: |
           cd 6.18.52-VXTux-UMS512
-          rc=0
+          # Fragmen ini mewarisi config vendor 5.4 utuh: ratusan entri menunjuk
+          # driver yang belum di-port (SPRD_7SRESET, SPRD_IQ, ...) atau subsistem
+          # yang memang dipangkas dari tree ini (VHOST, UNIX_SCM). Simbol yang
+          # tidak didefinisikan Kconfig mana pun BUKAN bug config — itu pekerjaan
+          # port, dan dilacak di docs/PORT-AUDIT.md.
+          #
+          # Yang dicek ketat: simbol yang Kconfig-nya ADA tapi tetap hilang setelah
+          # olddefconfig. Itu berarti dependensinya kurang (kelas bug
+          # SC27XX_TSENSOR_THERMAL), dan modulnya akan hilang tanpa suara.
+          git ls-files '*Kconfig*' > /tmp/kconfigs.txt
+          # Daftar simbol yang Kconfig-nya ada di tree ini (sekali, lalu dicari).
+          xargs -a /tmp/kconfigs.txt grep -hE '^(menu)?config[[:space:]]+' \
+            | awk '{print $2}' | sort -u > /tmp/kconfig_syms.txt
+          echo "Kconfig mendefinisikan $(wc -l < /tmp/kconfig_syms.txt) simbol"
+          rc=0; absent=0; coerce=0
           while IFS= read -r line; do
             line=${line%$'\r'}
             case "$line" in
               CONFIG_*=*) sym=${line%%=*}; val=${line#*=} ;;
               *) continue ;;
             esac
-            if ! grep -qx "$sym=$val" .config; then
-              got=$(grep -m1 "^$sym=" .config || true)
-              [ -z "$got" ] && got="$sym is not set"
-              echo "DROPPED: mau $sym=$val -> dapat ${got#*=}"
-              rc=1
+            grep -qx "$sym=$val" .config && continue
+            got=$(grep -m1 "^$sym=" .config || true)
+            name=${sym#CONFIG_}
+            if ! grep -qx "$name" /tmp/kconfig_syms.txt; then
+              absent=$((absent+1))
+              continue
             fi
+            if [ "$val" = m ] && [ "${got#*=}" = y ]; then
+              # bool yang diminta =m: Kconfig menaikkan ke =y, bukan bug.
+              coerce=$((coerce+1))
+              continue
+            fi
+            [ -z "$got" ] && got="$sym is not set"
+            echo "::error::DROPPED $sym=$val -> ${got#*=} (Kconfig ada, dependensi kurang)"
+            rc=1
           done < ../enhanced_config.cfg
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::Fragmen punya simbol yang dibuang olddefconfig (dependensi kurang)"
-          fi
+          echo "Simbol fragmen yang belum punya Kconfig di tree ini: $absent (bukan kegagalan guard)"
+          echo "Simbol bool yang diminta =m lalu jadi =y: $coerce"
           exit $rc
       - name: Upload effective .config
         if: always()
