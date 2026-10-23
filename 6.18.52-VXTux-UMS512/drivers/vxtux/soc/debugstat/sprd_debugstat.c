@@ -30,8 +30,8 @@
 #include <linux/slab.h>
 #include <linux/sprd_sip_svc.h>
 #include <linux/string.h>
-#include <linux/syscon.h>
 #include <linux/cpumask.h>
+#include <linux/mfd/syscon.h>
 
 #include <linux/sprd_debugstat.h>
 
