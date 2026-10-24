@@ -80,7 +80,7 @@ jobs:
           mkdir -p /tmp/src
           cat > /tmp/src/init.c <<'EOFC'
           #include <fcntl.h>
-          #include <reboot.h>
+          #include <sys/reboot.h>
           #include <string.h>
           #include <sys/mount.h>
           #include <unistd.h>
