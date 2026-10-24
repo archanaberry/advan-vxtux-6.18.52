@@ -42,6 +42,14 @@ CONFIG_USB_CONFIGFS_ACM=y
 CONFIG_VIRTIO_PCI=y
 CONFIG_VIRTIO_CONSOLE=y
 
+# --- 5) keyboard virtio untuk sesi CLI fbcon (2026-10-25) -------------------
+#  Input core sudah =y di enhanced_config (CONFIG_INPUT, INPUT_EVDEV,
+#  INPUT_KEYBOARD). Tanpa driver keyboard di guest, perintah HMP `sendkey`
+#  QEMU tidak pernah sampai ke VT/tty1 sehingga sesi shell interaktif di
+#  fbcon tidak bisa digerakkan dari CI. virtio-keyboard-pci dienumerasi
+#  lewat node PCIe + ITS yang sama dengan virtio-gpu (tanpa perubahan DTS).
+CONFIG_VIRTIO_INPUT=y
+
 # --- 5) host PCIe generik (2026-10-24) ------------------------------------
 #  DTB kustom qemu-ums512-t1030.dts kini memuat node pcie@10000000 (ECAM,
 #  alamat persis QEMU -M virt base_memmap) + ITS GICv3 @0x8080000. Tanpa

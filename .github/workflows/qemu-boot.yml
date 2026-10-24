@@ -19,15 +19,16 @@ jobs:
           ref: ${{ github.ref_name }}
           fetch-depth: 1
 
+      # ffmpeg untuk encode video sesi fbcon (mp4) dari frame screendump.
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential gcc-aarch64-linux-gnu flex bison bc \
-            libssl-dev libelf-dev qemu-system-arm busybox-static cpio
+            libssl-dev libelf-dev qemu-system-arm busybox-static cpio ffmpeg
 
       # Pola config sama dengan v17-build: .config device + enhanced_config.cfg,
       # ditambah fragmen khusus QEMU (vxtux_618_qemu.defconfig: dummy_hcd, i2c-sprd,
-      # virtio-console). Ketiga file disimpan CRLF — wajib LF sebelum merge.
+      # virtio-console, virtio-input). Ketiga file disimpan CRLF — wajib LF sebelum merge.
       - name: Config (device + enhanced + fragmen QEMU)
         run: |
           cd 6.18.52-VXTux-UMS512
@@ -37,15 +38,18 @@ jobs:
           scripts/kconfig/merge_config.sh -m -O . .config.device \
             ../enhanced_config.cfg arch/arm64/configs/vxtux_618_qemu.defconfig
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
-          # Guard: simbol konsol QEMU harus selamat setelah olddefconfig.
+          # Guard: simbol konsol + input QEMU harus selamat setelah olddefconfig.
           # PL011 sengaja tidak dicek — driver AMBA memang tidak ada di tree V17
           # (docs/CI-KNOWN-DROPPED.txt); console memakai virtio-console (hvc0).
+          # VIRTIO_INPUT = keyboard virtio: tanpa ini sendkey HMP tidak sampai
+          # ke VT/tty1 dan sesi CLI interaktif tidak bisa digerakkan CI.
           rc=0
           for s in CONFIG_VIRTIO=y CONFIG_VIRTIO_PCI=y CONFIG_VIRTIO_CONSOLE=y \
                    CONFIG_BLK_DEV_INITRD=y CONFIG_RD_GZIP=y CONFIG_BINFMT_SCRIPT=y \
                    CONFIG_DEVTMPFS=y CONFIG_ARCH_SPRD=y CONFIG_ARM_GIC_V3=y \
                    CONFIG_DRM_VIRTIO_GPU=y CONFIG_FRAMEBUFFER_CONSOLE=y \
-                   CONFIG_DRM_FBDEV_EMULATION=y CONFIG_VT_CONSOLE=y; do
+                   CONFIG_DRM_FBDEV_EMULATION=y CONFIG_VT_CONSOLE=y \
+                   CONFIG_VIRTIO_INPUT=y CONFIG_INPUT=y CONFIG_VT=y; do
             if ! grep -qx "$s" .config; then
               echo "::error::HILANG setelah olddefconfig: $s"
               rc=1
@@ -67,73 +71,318 @@ jobs:
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
           ls -l arch/arm64/boot/Image
 
-      # Init C statis arm64, tanpa busybox sama sekali. Dua kegagalan
-      # busybox tercatat: (1) run 40090028825 memakai /bin/busybox milik
-      # runner yang x86-64 -> kernel gagal exec (ENOEXEC, exitcode 5) lalu
-      # "No working init found"; (2) run 40094005980 memakai
-      # busybox-static:arm64 hasil unduhan ports -> tamu melempar undefined
-      # instruction (el0_undef, exitcode 0x4) — binari Ubuntu mengandung
-      # instruksi di atas baseline -cpu cortex-a72. Init ini dikompilasi
-      # -march=armv8-a eksplisit: mount proc/sys/dev, tulis marker
-      # "VXTUX-QEMU-BOOT-OK" ke console+kmsg, lalu poweroff.
+      # Init C statis arm64, tanpa busybox sama sekali (dua kegagalan busybox
+      # tercatat di riwayat: binari runner x86-64 -> ENOEXEC; busybox-static:arm64
+      # ports -> undefined instruction di -cpu cortex-a72).
+      #
+      # Dua mode dibedakan dari /proc/cmdline:
+      #   tanpa vxtux.shell=1 : jalur lama — marker + poweroff 8 detik
+      #                         (boot bisect stock/custom; gate lama tetap berlaku)
+      #   vxtux.shell=1       : sesi CLI interaktif di fbcon/tty1 — banner login
+      #                         ala Arch, shell bawaan (uname/ls/cat/dmesg/free/
+      #                         echo/clear/help/poweroff) dengan echo VT asli,
+      #                         digerakkan keyboard virtio lewat HMP sendkey CI,
+      #                         lalu poweroff. Jejak marker ke hvc0 (serial)
+      #                         supaya tidak mencoret layar fbcon.
       - name: Initramfs (init C statis arm64)
         run: |
           set -e
           mkdir -p /tmp/src
           cat > /tmp/src/init.c <<'EOFC'
+          // SPDX-License-Identifier: GPL-2.0
+          // init statis untuk initramfs validasi QEMU VXTux.
+          #define _GNU_SOURCE
+          #include <ctype.h>
+          #include <dirent.h>
           #include <errno.h>
           #include <fcntl.h>
+          #include <stdarg.h>
           #include <stdio.h>
-          #include <sys/reboot.h>
+          #include <stdlib.h>
           #include <string.h>
+          #include <sys/klog.h>
           #include <sys/mount.h>
+          #include <sys/reboot.h>
+          #include <sys/select.h>
+          #include <sys/stat.h>
+          #include <sys/utsname.h>
+          #include <termios.h>
+          #include <time.h>
           #include <unistd.h>
+
+          static int shell_mode;
+          static int tfd = -1;
+
+          // jejak ke serial (hvc0) — tidak lewat kmsg supaya tidak mencoret fbcon
+          static void ser(const char *s)
+          {
+            int fd = open("/dev/hvc0", O_WRONLY | O_NOCTTY);
+            if (fd < 0)
+              fd = open("/dev/console", O_WRONLY | O_NOCTTY);
+            if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
+          }
+
+          // jalur lama (mode bisect): stdout + console + kmsg; mode shell: ser()
           static void out(const char *s)
           {
-            int fd;
+            if (shell_mode) { ser(s); return; }
             write(1, s, strlen(s));
-            fd = open("/dev/console", O_WRONLY | O_NOCTTY);
+            int fd = open("/dev/console", O_WRONLY | O_NOCTTY);
             if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
             fd = open("/dev/kmsg", O_WRONLY);
             if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
           }
-          /* Banner CLI ke /dev/tty1 (VT) — inilah yang dirender fbcon ke
-           * framebuffer virtio-gpu pada boot fbcon, hasil dicapture lewat
-           * screendump QEMU menjadi fbcon.png. Bila fbcon tidak ada,
-           * tulisan tetap masuk buffer VT tapi tak pernah dirender. */
-          static void tty1_banner(void)
+
+          static void scr(const char *s)
           {
-            char msg[80];
-            int fd = open("/dev/tty1", O_WRONLY | O_NOCTTY);
-            if (fd < 0) {
-              snprintf(msg, sizeof msg, "=== tty1 GAGAL: errno=%d ===\n", errno);
-              out(msg);
+            if (tfd >= 0) write(tfd, s, strlen(s));
+          }
+
+          static void scrf(const char *fmt, ...)
+          {
+            char b[512];
+            va_list ap;
+            va_start(ap, fmt);
+            vsnprintf(b, sizeof b, fmt, ap);
+            va_end(ap);
+            scr(b);
+          }
+
+          static void prompt(void) { scr("root@vxtux ~ # "); }
+
+          static void cmd_uname(int full)
+          {
+            struct utsname u;
+            char b[512];
+            uname(&u);
+            if (full)
+              snprintf(b, sizeof b, "%s %s %s %s %s GNU/Linux\n",
+                       u.sysname, u.nodename, u.release, u.version, u.machine);
+            else
+              snprintf(b, sizeof b, "%s\n", u.sysname);
+            scr(b);
+          }
+
+          static void cmd_ls(const char *path)
+          {
+            DIR *d = opendir(path && *path ? path : ".");
+            if (!d) {
+              scrf("ls: cannot access '%s': %s\n", path ? path : ".", strerror(errno));
               return;
             }
-            const char *cli =
-              "\033[2J\033[H"
-              "VXTux 6.18.52 - fbcon CLI test\r\n"
-              "===========================================\r\n"
-              "[ OK ] framebuffer console menampilkan teks\r\n"
-              "===========================================\r\n"
-              "> ";
-            int n = write(fd, cli, strlen(cli));
-            close(fd);
-            snprintf(msg, sizeof msg, "=== tty1: %d byte CLI tertulis ===\n", n);
-            out(msg);
+            struct dirent *e;
+            char row[160];
+            int len = 0;
+            while ((e = readdir(d))) {
+              if (e->d_name[0] == '.') continue;
+              int n = snprintf(row + len, sizeof row - len, "%-20s", e->d_name);
+              if (n < 0 || n >= (int)sizeof row - len) break;
+              len += n;
+              if (len > 100) { scr(row); scr("\n"); len = 0; row[0] = 0; }
+            }
+            if (len) { scr(row); scr("\n"); }
+            closedir(d);
           }
+
+          static void cmd_cat(const char *path)
+          {
+            if (!path) { scr("cat: missing operand\n"); return; }
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) {
+              scrf("cat: %s: %s\n", path, strerror(errno));
+              return;
+            }
+            char buf[4096];
+            ssize_t n;
+            while ((n = read(fd, buf, sizeof buf)) > 0)
+              if (tfd >= 0) write(tfd, buf, n);
+            close(fd);
+          }
+
+          static void cmd_dmesg(void)
+          {
+            int sz = 1 << 18;
+            char *b = malloc(sz);
+            if (!b) return;
+            int n = klogctl(3, b, sz - 1);   // SYSLOG_ACTION_READ_ALL
+            if (n < 0) { scr("dmesg: klogctl failed\n"); free(b); return; }
+            b[n] = 0;
+            char *p = b, *q = b + n;
+            int lines = 0;
+            while (q > b && lines < 40)      // 40 baris terakhir, cukup untuk video
+              if (*--q == '\n') lines++;
+            if (q > b) p = q + 1;
+            scr(p);
+            if (n && b[n - 1] != '\n') scr("\n");
+            free(b);
+          }
+
+          static void cmd_free(void)
+          {
+            FILE *f = fopen("/proc/meminfo", "r");
+            if (!f) return;
+            char line[128];
+            long total = 0, avail = 0;
+            while (fgets(line, sizeof line, f)) {
+              sscanf(line, "MemTotal: %ld kB", &total);
+              sscanf(line, "MemAvailable: %ld kB", &avail);
+            }
+            fclose(f);
+            scrf("              total        used        free\n"
+                 "Mem:       %7ld MB %8ld MB %8ld MB\n",
+                 total / 1024, (total - avail) / 1024, avail / 1024);
+          }
+
+          // eksekusi satu baris; return 1 = perintah poweroff
+          static int do_line(char *line)
+          {
+            char *cmd = line;
+            while (*cmd == ' ' || *cmd == '\t') cmd++;
+            char *e = cmd + strlen(cmd);
+            while (e > cmd && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' ')) *--e = 0;
+            if (!*cmd) return 0;
+
+            char *arg = cmd;
+            while (*arg && *arg != ' ') arg++;
+            if (*arg) { *arg++ = 0; while (*arg == ' ') arg++; if (!*arg) arg = NULL; }
+            else arg = NULL;
+
+            char ev[256];
+            snprintf(ev, sizeof ev, "=== SHELL-CMD: %s%s%s ===\n",
+                     cmd, arg ? " " : "", arg ? arg : "");
+            ser(ev);
+
+            if (!strcmp(cmd, "uname"))        cmd_uname(arg && !strcmp(arg, "-a"));
+            else if (!strcmp(cmd, "ls"))      cmd_ls(arg);
+            else if (!strcmp(cmd, "cat"))     cmd_cat(arg);
+            else if (!strcmp(cmd, "dmesg"))   cmd_dmesg();
+            else if (!strcmp(cmd, "free"))    cmd_free();
+            else if (!strcmp(cmd, "echo"))    { if (arg) { scr(arg); scr("\n"); } }
+            else if (!strcmp(cmd, "clear"))   scr("\033[2J\033[H");
+            else if (!strcmp(cmd, "help"))
+              scr("commands: uname ls cat dmesg free echo clear help poweroff\n");
+            else if (!strcmp(cmd, "poweroff")) return 1;
+            else scrf("bash: %s: command not found\n", cmd);
+            return 0;
+          }
+
+          static void set_raw(void)
+          {
+            struct termios t;
+            if (tcgetattr(tfd, &t) < 0) return;
+            t.c_lflag |= ICANON | ECHO | ECHOE | ECHOK;
+            t.c_lflag &= ~(ECHOCTL | NOFLSH);
+            t.c_iflag |= ICRNL | IXON;
+            t.c_oflag |= OPOST | ONLCR;
+            t.c_cc[VMIN] = 1;
+            t.c_cc[VTIME] = 0;
+            tcsetattr(tfd, TCSANOW, &t);
+          }
+
+          static int have_opt(const char *tok)
+          {
+            char b[512];
+            int fd = open("/proc/cmdline", O_RDONLY);
+            if (fd < 0) return 0;
+            int n = read(fd, b, sizeof b - 1);
+            close(fd);
+            if (n <= 0) return 0;
+            b[n] = 0;
+            return strstr(b, tok) != NULL;
+          }
+
           int main(void)
           {
             mount("none", "/proc", "proc", 0, 0);
             mount("none", "/sys", "sysfs", 0, 0);
             mount("none", "/dev", "devtmpfs", 0, 0);
+
+            shell_mode = have_opt("vxtux.shell=1");
+
             out("=== VXTUX INIT BERJALAN (init C statis arm64) ===\n");
-            tty1_banner();
             out("=== VXTUX-QEMU-BOOT-OK ===\n");
-            /* Jendela 8 detik sebelum poweroff: QEMU boot fbcon perlu
-             * waktu menjalankan HMP screendump (fbcon.ppm) sebelum tamu
-             * mati — tanpa ini screendump selalu Connection refused. */
-            sleep(8);
+
+            if (!shell_mode) {
+              // jalur bisect: banner ke VT + jendela 8 detik sebelum poweroff
+              int fd = open("/dev/tty1", O_WRONLY | O_NOCTTY);
+              if (fd >= 0) {
+                const char *b = "\033[2J\033[Hfbcon: waiting for shell mode\n";
+                write(fd, b, strlen(b));
+                close(fd);
+              }
+              sleep(8);
+              sync();
+              reboot(RB_POWER_OFF);
+              for (;;) sleep(1);
+            }
+
+            // ---- mode sesi CLI fbcon ----
+            tfd = open("/dev/tty1", O_RDWR | O_NOCTTY);
+            if (tfd < 0) {
+              char m[120];
+              snprintf(m, sizeof m, "=== tty1 GAGAL: errno=%d ===\n", errno);
+              ser(m);
+              sleep(8);
+              sync();
+              reboot(RB_POWER_OFF);
+              for (;;) sleep(1);
+            }
+            set_raw();
+
+            // banner login ala Arch — di atas teks kernel (console=tty0)
+            scr("\nVXTux 6.18.52 (tty1)\n\n");
+            scr("root@vxtux login: root\n");
+            {
+              char li[128];
+              time_t now = time(NULL);
+              char *nl = ctime(&now);
+              if (nl) {
+                char *x = strchr(nl, '\n');
+                if (x) *x = 0;
+                snprintf(li, sizeof li, "Last login: %s on tty1\n\n", nl);
+                scr(li);
+              } else {
+                scr("\n");
+              }
+            }
+            ser("=== VXTUX-SHELL-READY ===\n");
+            prompt();
+
+            time_t deadline = time(NULL) + 150;
+            for (;;) {
+              fd_set rf;
+              struct timeval tv;
+              FD_ZERO(&rf);
+              FD_SET(tfd, &rf);
+              tv.tv_sec = 1;
+              tv.tv_usec = 0;
+              int r = select(tfd + 1, &rf, NULL, NULL, &tv);
+              if (r < 0) continue;
+              if (r == 0) {
+                if (time(NULL) >= deadline) {
+                  ser("=== VXTUX-SHELL-TIMEOUT ===\n");
+                  break;
+                }
+                continue;
+              }
+              char buf[1024];
+              ssize_t n = read(tfd, buf, sizeof buf - 1);
+              if (n <= 0) continue;
+              buf[n] = 0;
+              char *p = buf, *nl;
+              while (p && *p) {
+                nl = strchr(p, '\n');
+                if (nl) *nl = 0;
+                if (do_line(p)) {
+                  ser("=== VXTUX-SHELL-DEMO-DONE ===\n");
+                  sync();
+                  reboot(RB_POWER_OFF);
+                  for (;;) sleep(1);
+                }
+                p = nl ? nl + 1 : NULL;
+              }
+              prompt();
+            }
             sync();
             reboot(RB_POWER_OFF);
             for (;;) sleep(1);
@@ -153,17 +402,14 @@ jobs:
           ls -lh /tmp/initramfs.cpio.gz
           gzip -t /tmp/initramfs.cpio.gz
           # Diagnostik, non-fatal: format daftar `cpio -t` tidak konsisten
-          # antar versi (gerbang `grep -qx './init'` gagal padahal arsip 647 KB
-          # = ukuran binary init memang berisi /init). Penentu sebenarnya
-          # adalah gate boot: init hilang -> panic "No working init found"
-          # yang terbaca jelas di log serial.
+          # antar versi. Penentu sebenarnya adalah gate boot.
           gzip -dc /tmp/initramfs.cpio.gz | cpio -t > /tmp/cpio-list.txt || true
           echo '--- isi initramfs (cpio -t) ---'
           cat /tmp/cpio-list.txt || true
           grep -qE '(^|\./)init$' /tmp/cpio-list.txt || \
             echo '::warning::cpio -t tak menampilkan entri init — biarkan gate boot menentukan'
 
-      # Bisect dua boot dalam satu run (run 40087667380: tamu menggantung420s,
+      # Bisect dua boot dalam satu run (run 40087667380: tamu menggantung 420s,
       # serial 0 byte — entah DTB kustom atau kernelnya yang belum pernah boot).
       #   Boot A = DTB stok -M virt  → memisahkan masalah kernel vs DTB kustom
       #   Boot B = DTB kustom qemu-ums512-t1030
@@ -197,88 +443,10 @@ jobs:
           boot stock   # tanpa -dtb: DTB dibuat QEMU sendiri
           boot custom -dtb 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
 
-          # Boot C: fbcon/KMS — jawaban atas "apakah fbcon & DRM/KMS sudah
-          # bisa print CLI?". virtio-gpu-pci dienumerasi lewat pcie+ITS yang
-          # sudah ada di DTB kustom; VNC headless dipakai supaya QEMU punya
-          # permukaan display untuk HMP screendump; monitor TCP menerima
-          # perintah screendump ke /tmp/fbcon.ppm lalu diubah jadi PNG.
-          # Gerbang: marker boot + piksel tak-hitam di framebuffer (teks
-          # fbcon, bukan layar hitam kosong).
-          tag=fb
-          qemu-system-aarch64 \
-            -machine virt,gic-version=3,highmem=off \
-            -cpu cortex-a72 -smp 8 -m 2G \
-            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
-            -initrd /tmp/initramfs.cpio.gz \
-            -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=8" \
-            -device virtio-serial-pci \
-            -device virtconsole,chardev=vc0 \
-            -device virtio-gpu-pci \
-            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial-fb.log \
-            -vnc 127.0.0.1:0 \
-            -monitor tcp:127.0.0.1:55555,server,nowait \
-            -no-reboot \
-            -d guest_errors,unimp,cpu_reset -D /tmp/qemu-fb.debug.log \
-            > /tmp/qemu-fb-stdout.log 2>&1 &
-          qpid=$!
-          ok_fb=0
-          for i in $(seq 1 120); do
-            if grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-fb.log 2>/dev/null; then ok_fb=1; break; fi
-            kill -0 $qpid 2>/dev/null || break
-            sleep 1
-          done
-          echo "[fb] marker=$ok_fb pid=$qpid"
-          if [ "$ok_fb" = 1 ]; then
-            # Retry: kirim screendump+quit via HMP/TCP selama QEMU masih
-            # hidup (jendela 8 detik dari init sebelum poweroff).
-            for try in 1 2 3 4; do
-              kill -0 $qpid 2>/dev/null || { echo "[fb] QEMU keluar sebelum screendump"; break; }
-              if timeout 8 bash -c 'exec 3<>/dev/tcp/127.0.0.1/55555; printf "screendump /tmp/fbcon.ppm\nquit\n" >&3; cat <&3'; then
-                [ -f /tmp/fbcon.ppm ] && break
-              fi
-              sleep 1
-            done
-          else
-            timeout 10 bash -c 'exec 3<>/dev/tcp/127.0.0.1:55555; printf "quit\n" >&3; cat <&3' || true
-          fi
-          wait $qpid; echo "[fb] qemu exit=$?"
-          echo "[fb] serial bytes: $(wc -c < /tmp/serial-fb.log 2>/dev/null)"
-          echo '--- jejak DRM/fbcon di serial fb ---'
-          grep -nE 'fb0|fbcon|frame buffer|virtio_gpu|drm ' /tmp/serial-fb.log | head -20
-          ls -l /tmp/fbcon.ppm 2>/dev/null
-          fb_px=1
-          if [ -f /tmp/fbcon.ppm ]; then
-            command -v convert >/dev/null 2>&1 && convert /tmp/fbcon.ppm /tmp/fbcon.png && ls -l /tmp/fbcon.png
-            python3 - <<'EOFPY'
-          import sys
-          f = open('/tmp/fbcon.ppm', 'rb')
-          assert f.readline().strip() == b'P6', 'format PPM bukan P6'
-          line = f.readline()
-          while line.startswith(b'#'):
-            line = f.readline()
-          w, h = map(int, line.split())
-          mx = int(f.readline())
-          data = f.read(w * h * 3)
-          nb = sum(1 for i in range(0, len(data), 3) if data[i:i+3] != b'\x00\x00\x00')
-          pct = 100 * nb // (w * h)
-          print('fbcon framebuffer: %dx%d, piksel tak-hitam=%d (%d%%)' % (w, h, nb, pct))
-          sys.exit(0 if nb > 500 else 1)
-          EOFPY
-            if [ $? -eq 0 ]; then
-              echo 'FBCON RENDER OK — framebuffer berisi teks, bukan hitam'
-            else
-              echo '::warning::framebuffer hitam/kosong — fbcon tidak merender (lihat jejak DRM di atas)'
-              fb_px=0
-            fi
-          else
-            echo '::warning::screendump tidak menghasilkan fbcon.ppm'
-            fb_px=0
-          fi
-
           ok_stock=0; ok_custom=0
           grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-stock.log && ok_stock=1
           grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-custom.log && ok_custom=1
-          echo "marker: stock=$ok_stock custom=$ok_custom fb=$ok_fb px=$fb_px"
+          echo "marker: stock=$ok_stock custom=$ok_custom"
 
           if [ "$ok_custom" = 1 ]; then
             if grep -q 'Kernel panic' /tmp/serial-custom.log; then
@@ -286,12 +454,7 @@ jobs:
               exit 1
             fi
             echo 'BOOT OK — DTB kustom tembus userspace tanpa panic'
-            if [ "$ok_fb" = 1 ] && [ "$fb_px" = 1 ]; then
-              echo 'FBCON OK — DRM virtio-gpu + fbcon merender CLI (fbcon.png di artefak)'
-              exit 0
-            fi
-            echo '::error::boot kustom OK tetapi uji fbcon gagal — lihat jejak DRM di log fb'
-            exit 1
+            exit 0
           fi
           if [ "$ok_stock" = 1 ]; then
             echo '::error::Kernel OK dengan DTB stok, tetapi DTB kustom gagal — perbaiki DTS'
@@ -303,7 +466,195 @@ jobs:
           echo '--- debug QEMU custom tail ---'; tail -n 25 /tmp/qemu-custom.debug.log 2>/dev/null
           exit 1
 
-      - name: Upload serial log
+      # Boot C: sesi CLI interaktif di fbcon + rekam video framebuffer.
+      #   - console=tty0 console=hvc0 : teks kernel printk jatuh ke VT (fbcon)
+      #     SEKALIGUS ke serial — inilah "wall of text" ala Arch di awal boot;
+      #     console=hvc0 terakhir = /dev/console tetap serial.
+      #   - vxtux.shell=1 : init masuk mode sesi shell di tty1 (banner login +
+      #     shell bawaan dengan echo VT asli).
+      #   - virtio-keyboard-pci + CONFIG_VIRTIO_INPUT : HMP `sendkey` CI sampai
+      #     ke kbd handler VT → tty1 — perintah diketik "beneran" di dalam video.
+      #   - Satu koneksi HMP persisten: kirim sendkey + screendump frame ~2/s,
+      #     lalu ffmpeg encode ke fbcon-session.mp4 (artefak).
+      # Gate: marker boot + SHELL-CMD (perintah tereksekusi) + DEMO-DONE +
+      # piksel tak-hitam di frame akhir.
+      - name: Boot QEMU — sesi CLI fbcon + rekam video
+        run: |
+          set +e
+          tag=fb
+          mkdir -p /tmp/fbframes
+          rm -f /tmp/fbframes/*.ppm
+          qemu-system-aarch64 \
+            -machine virt,gic-version=3,highmem=off \
+            -cpu cortex-a72 -smp 8 -m 2G \
+            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
+            -initrd /tmp/initramfs.cpio.gz \
+            -append "console=tty0 console=hvc0 rdinit=/init vxtux.shell=1 panic=-1 oops=panic loglevel=8" \
+            -device virtio-serial-pci \
+            -device virtconsole,chardev=vc0 \
+            -device virtio-gpu-pci \
+            -device virtio-keyboard-pci \
+            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial-fb.log \
+            -vnc 127.0.0.1:0 \
+            -monitor tcp:127.0.0.1:55555,server,nowait \
+            -no-reboot \
+            -d guest_errors,unimp,cpu_reset -D /tmp/qemu-fb.debug.log \
+            > /tmp/qemu-fb-stdout.log 2>&1 &
+          qpid=$!
+          t0=$(date +%s)
+
+          # Driver: satu koneksi HMP — rekam frame + ketik perintah antrean.
+          (
+            okc=0
+            for i in $(seq 1 60); do
+              if exec 3<>/dev/tcp/127.0.0.1/55555 2>/dev/null; then okc=1; break; fi
+              kill -0 $qpid 2>/dev/null || exit 1
+              sleep 0.5
+            done
+            [ "$okc" = 1 ] || exit 1
+
+            # perintah demo sesi (tanpa huruf kapital / karakter aneh)
+            declare -a cmds=('uname -a' 'ls /dev' 'cat /proc/version' 'free' \
+                             'dmesg' 'ls /sys/class/graphics' 'help' 'poweroff')
+            declare -a keys=()
+            ci=0
+            ready=0
+            iter=0
+            while :; do
+              iter=$((iter + 1))
+
+              # satu key per iterasi — diketik pelan supaya terlihat di video
+              if [ ${#keys[@]} -eq 0 ] && [ "$ready" = 1 ] && [ "$ci" -lt ${#cmds[@]} ]; then
+                s="${cmds[$ci]}"; ci=$((ci + 1))
+                for ((j = 0; j < ${#s}; j++)); do
+                  c="${s:j:1}"
+                  case "$c" in
+                    ' ') keys+=("spc") ;;
+                    '-') keys+=("minus") ;;
+                    '/') keys+=("slash") ;;
+                    '.') keys+=("dot") ;;
+                    *) keys+=("$c") ;;
+                  esac
+                done
+                keys+=("ret")
+                keys+=("__pause__")
+              fi
+              if [ ${#keys[@]} -gt 0 ]; then
+                k="${keys[0]}"; keys=("${keys[@]:1}")
+                if [ "$k" = "__pause__" ]; then
+                  sleep 1.4
+                else
+                  printf 'sendkey %s\n' "$k" >&3
+                fi
+              fi
+
+              printf 'screendump /tmp/fbframes/f%04d.ppm\n' "$iter" >&3
+              sleep 0.35
+
+              if [ "$ready" = 0 ] && grep -q 'VXTUX-SHELL-READY' /tmp/serial-fb.log 2>/dev/null; then
+                ready=1
+                sleep 1.2   # biarkan banner login tampil dulu sebelum mengetik
+              fi
+              grep -q 'VXTUX-SHELL-DEMO-DONE' /tmp/serial-fb.log 2>/dev/null && { sleep 0.8; break; }
+              kill -0 $qpid 2>/dev/null || break
+              [ "$iter" -ge 700 ] && break
+            done
+            printf 'quit\n' >&3 2>/dev/null || true
+          ) &
+          driver=$!
+
+          # tunggu tamu mati (poweroff dari perintah poweroff / deadline init 150s)
+          for i in $(seq 1 240); do
+            kill -0 $qpid 2>/dev/null || break
+            sleep 1
+          done
+          if kill -0 $qpid 2>/dev/null; then
+            echo '[fb] tamu belum mati — minta quit via monitor'
+            timeout 8 bash -c 'exec 3<>/dev/tcp/127.0.0.1/55555; printf "quit\n" >&3; cat <&3' || true
+            sleep 3
+            kill -0 $qpid 2>/dev/null && kill -KILL $qpid 2>/dev/null
+          fi
+          wait $qpid; echo "[fb] qemu exit=$?"
+          wait $driver 2>/dev/null
+          t1=$(date +%s)
+
+          echo "[fb] serial bytes: $(wc -c < /tmp/serial-fb.log 2>/dev/null)"
+          echo '--- jejak DRM/fbcon/shell di serial fb ---'
+          grep -nE 'fb0|fbcon|frame buffer|virtio_gpu|VXTUX-' /tmp/serial-fb.log | head -40
+          # Renumber: bila satu screendump gagal (display belum siap saat
+          # boot awal) nomor PPM putus dan ffmpeg berhenti di celah itu.
+          # Salin berurutan ke direktori baru supaya pola f%04d rapat.
+          mkdir -p /tmp/fbrenum
+          rm -f /tmp/fbrenum/*.ppm
+          n=0
+          for f in /tmp/fbframes/*.ppm; do
+            [ -f "$f" ] || continue
+            n=$((n + 1))
+            cp "$f" "$(printf '/tmp/fbrenum/f%04d.ppm' "$n")"
+          done
+          frames=$n
+          echo "[fb] frame terekam: $frames (durasi $((t1 - t0))s)"
+
+          # ---- gate ----
+          ok_fb=0; ok_ready=0; ok_cmd=0; ok_done=0
+          grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-fb.log && ok_fb=1
+          grep -q 'VXTUX-SHELL-READY' /tmp/serial-fb.log && ok_ready=1
+          grep -q 'SHELL-CMD: uname -a' /tmp/serial-fb.log && ok_cmd=1
+          grep -q 'VXTUX-SHELL-DEMO-DONE' /tmp/serial-fb.log && ok_done=1
+
+          fb_px=0
+          last=$(ls /tmp/fbrenum/*.ppm 2>/dev/null | sort | tail -1)
+          if [ -n "$last" ]; then
+            python3 - "$last" <<'EOFPY'
+          import sys
+          f = open(sys.argv[1], 'rb')
+          assert f.readline().strip() == b'P6', 'format PPM bukan P6'
+          line = f.readline()
+          while line.startswith(b'#'):
+              line = f.readline()
+          w, h = map(int, line.split())
+          mx = int(f.readline())
+          data = f.read(w * h * 3)
+          nb = sum(1 for i in range(0, len(data), 3) if data[i:i+3] != b'\x00\x00\x00')
+          pct = 100 * nb // (w * h)
+          print('frame terakhir: %dx%d, piksel tak-hitam=%d (%d%%)' % (w, h, nb, pct))
+          sys.exit(0 if nb > 500 else 1)
+          EOFPY
+            [ $? -eq 0 ] && fb_px=1
+          fi
+
+          echo "marker: fb=$ok_fb ready=$ok_ready cmd=$ok_cmd done=$ok_done px=$fb_px frames=$frames"
+
+          # ---- video: frame -> mp4 (fps = frame/durasi nyata) ----
+          vid=0
+          if [ "$frames" -ge 20 ]; then
+            dur=$((t1 - t0)); [ "$dur" -lt 1 ] && dur=1
+            fps=$(awk -v f="$frames" -v e="$dur" 'BEGIN{ x=f/e; if (x<0.2) x=0.2; if (x>8) x=8; printf "%.3f", x }')
+            echo "[fb] encode video: $frames frame @ ${fps} fps"
+            if ffmpeg -y -loglevel error -framerate "$fps" -i /tmp/fbrenum/f%04d.ppm \
+                 -pix_fmt yuv420p -c:v libx264 -crf 23 -movflags +faststart \
+                 /tmp/fbcon-session.mp4; then
+              vid=1
+              ls -lh /tmp/fbcon-session.mp4
+              [ -n "$last" ] && ffmpeg -y -loglevel error -i "$last" -frames:v 1 /tmp/fbcon-final.png
+            else
+              echo '::error::ffmpeg gagal encode video sesi fbcon'
+            fi
+          else
+            echo "::error::frame terekam hanya $frames (< 20) — rekaman gagal"
+          fi
+
+          if [ "$ok_fb" = 1 ] && [ "$ok_ready" = 1 ] && [ "$ok_cmd" = 1 ] && [ "$ok_done" = 1 ] \
+             && [ "$fb_px" = 1 ] && [ "$vid" = 1 ]; then
+            echo 'FBCON CLI SESSION OK — sesi shell interaktif terekam penuh (fbcon-session.mp4)'
+            exit 0
+          fi
+          echo '::error::sesi CLI fbcon belum lengkap — lihat gate di atas'
+          echo '  fb=marker boot, ready=banner login, cmd=perintah tereksekusi,'
+          echo '  done=poweroff dieksekusi, px=frame terakhir berisi teks, vid=video jadi'
+          exit 1
+
+      - name: Upload serial log + video
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -318,6 +669,7 @@ jobs:
             /tmp/qemu-stock.debug.log
             /tmp/qemu-custom.debug.log
             /tmp/qemu-fb.debug.log
-            /tmp/fbcon.ppm
-            /tmp/fbcon.png
+            /tmp/init-arch.txt
+            /tmp/fbcon-session.mp4
+            /tmp/fbcon-final.png
           if-no-files-found: warn
