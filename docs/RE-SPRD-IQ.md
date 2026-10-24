@@ -2,22 +2,41 @@
 
 Blob: `donors/stock_vendor_modules_all/sprd_iq.ko` (32 KB, kernel 5.4.210).
 Disassembly: [evidence-20261023/sprd_iq.objdump.txt](evidence-20261023/sprd_iq.objdump.txt)
-(per fungsi, dari `donors/blobre.py … dis <fungsi>`).
+(miring, `adrp` semua `#0`) dan
+[evidence-20261023/sprd_iq.resolved.txt](evidence-20261023/sprd_iq.resolved.txt)
+(relokasi `adrp`/`add`/`ldst` diterapkan seperti linker, jadi `.bss`/`.rodata`
+menunjuk offset sebenarnya).
 
-Status: **analisis selesai, driver belum ditulis** — lihat "Yang masih gelap".
+Status: **diport** — `drivers/vxtux/soc/iq/sprd_iq.c`, Kconfig `SPRD_IQ`,
+`CONFIG_SPRD_IQ=m` di `enhanced_config.cfg`.
 
-## 1. Simbol dan tata letak global
+## 0. Kenapa dua dump
+
+Dump miring memperlihatkan `adrp x8, #0 ; -> sym#134+0x38` untuk setiap akses
+global, karena relokasi `ADR_PREL_PG_HI21` belum diterapkan dan nama
+`sym#134` hanya hasil terkaan alat. Itu yang dulu memunculkan teori "layout
+state tidak konsisten: sebagian akses berbasis `.bss+0x08`, sebagian
+`.bss+0x10`". Teori itu **salah**.
+
+Relokasi sebenarnya ada di `.rela.text.unlikely.__cfi_check_fail`, dan
+addend-nya absolut terhadap seksinya (`.bss+0x38`, `.rodata+0x247`, dst).
+Dengan `.symtab`: `iq_size` di `.bss+0x00` (4 B), `iq_base` di `.bss+0x04`
+(4 B), `iq` di `.bss+0x08` (88 B). Setelah offset itu dipetakan, seluruh
+akses konsisten (lihat §2) — termasuk `x20 = &iq+8` di awal probe, yang
+hanya berarti field yang diakses memang `base`/`size`/`va` di `iq+0x08..`.
+
+## 1. Simbol dan tata letak
 
 | Simbol | Seksi | Ukuran | Isi |
 |---|---|---|---|
-| `iq_size` | .bss+0x00 | 4 | module_param (`iq_sizetype`) |
-| `iq_base` | .bss+0x04 | 4 | module_param (`iq_basetype`) |
+| `iq_size` | .bss+0x00 | 4 | module_param `uint`, perm 0, tidak pernah dibaca |
+| `iq_base` | .bss+0x04 | 4 | module_param `uint`, perm 0, tidak pernah dibaca |
 | `iq` | .bss+0x08 | 88 | state driver |
 | `sprd_iq_probe.__key` | .bss+0x60 | 8 | kunci lockdep untuk `&iq.wait` |
 | `iq_driver` | .data+0x000 | 240 | `platform_driver` |
-| `iq_mem_dev` | .data+0x0f0 | 80 | `miscdevice` |
+| `iq_mem_dev` | .data+0x0f0 | 80 | `miscdevice`, `minor = 0xff`, `name = "iq_mem"` |
 | `iq_mem_fops` | .rodata+0x598 | 288 | `file_operations` |
-| `sprd_iq_ids` | .rodata+0x408 | 400 | `of_device_id`, entri pertama `compatible = "sprd,iq"` |
+| `sprd_iq_ids` | .rodata+0x408 | 400 | `of_device_id`, `compatible = "sprd,iq"` |
 
 Fungsi (15): `init_module` 80 B, `in_iqmode` 152, `sprd_iq_probe` 840,
 `sprd_iq_remove` 80, `iq_mem_poll` 260, `iq_mem_ioctl` 768,
@@ -25,155 +44,218 @@ Fungsi (15): `init_module` 80 B, `in_iqmode` 152, `sprd_iq_probe` 840,
 `_copy_to_user` 292, `_copy_from_user` 348, `sprd_iq_complete` 204,
 `sprd_iq_thread` 652, `__cfi_check` 436.
 
-`file_operations` (offset 5.4 arm64 diverifikasi lewat stub CFI di
-`.text+0x11b8..`): `.poll` = `iq_mem_poll`, `.unlocked_ioctl` = `iq_mem_ioctl`,
-`.mmap` = `iq_mem_nocache_mmap`, `.open` = `iq_mem_open`,
-`.release` = `iq_mem_release`, `.owner` = `__this_module`. Tidak ada
-`read`/`write`; seluruh I/O lewat `ioctl` + `mmap`.
+`file_operations`: `.poll`, `.unlocked_ioctl`, `.mmap`, `.open`, `.release`
+(tanpa `read`/`write`), `.owner = __this_module`.
+`iq_driver`: `.probe`/`.remove`, `.driver.name = "sprd-iq"`,
+`.driver.of_match_table = sprd_iq_ids`, tanpa `.id_table`.
 
-`iq_driver`: `.probe` = `sprd_iq_probe`, `.remove` = `sprd_iq_remove`,
-`.driver.name` = `"sprd-iq"`, `.driver.of_match_table` = `sprd_iq_ids`,
-`.id_table` tidak ada. Nama misc device `"iq_mem"`, `mode = 0xff`
-(`MISC_DYNAMIC_MINOR`).
+`in_iqmode()` adalah **dead code**: tidak ada pemanggil di dalam modul, isinya
+diduplikasi inline di awal probe. Di port hanya versi inline yang dipakai.
 
-## 2. Gate: bootargs, bukan DT
+## 2. Tata letak state `iq` (offset pasti)
 
-`in_iqmode()` dan `sprd_iq_probe()` sama-sama:
+| Offset | Tipe | Isi |
+|---|---|---|
+| +0x00 | u32 | tidak pernah disentuh blob |
+| +0x04 | u32 | `mode` (0/1/2) |
+| +0x08 | u64 | `base` — `res.start` dari `sprd,region` |
+| +0x10 | u64 | `size` — `resource_size(res)` (`end - start + 1`) |
+| +0x18 | u32 | `offs` — `sprd,mapping-offs` (opsional, 0 bila tidak ada) |
+| +0x20 | ptr | `va` hasil `shmem_ram_vmap_nocache_ex(5, 0, base, size)` |
+| +0x30 | ptr | `chan` — `kzalloc(0x18)`, lihat di bawah |
+| +0x38 | ptr | `thread` — `struct task_struct *`, argumen `iq_thread` |
+| +0x40 | 24 B | `wait_queue_head_t`, nama lockdep `"&iq.wait"` |
+
+`88 = 0x58` pas: `0x40 + sizeof(wait_queue_head_t)`.
+
+`chan` (24 B, `kzalloc`, bukan bagian statis):
+
+| Offset | Isi |
+|---|---|
+| +0x00 | `head` = `va` (deskriptor kepala) |
+| +0x08 | `tail` = `va + size - 0x10` |
+| +0x10 | `status` = `va + 0x10` — hanya diisi di `SET_MODE 2` |
+
+`base`/`size` memakai jalur DT bila `base == 0`; kalau tidak, probe melewati
+pembacaan DT. Parameter modul `iq_base`/`iq_size` **tidak** masuk ke state
+(hanya ditulis di akhir probe sebagai informasi dengan perm 0), jadi
+`insmod iq_base=...` tidak berpengaruh — di port parameternya dibuang.
+
+## 3. Gate: bootargs, bukan DT
+
+Awal probe (dan `in_iqmode()` yang tidak terpakai):
 
 1. `of_find_node_opts_by_path("/chosen", NULL)`;
 2. `of_property_read_string(chosen, "bootargs", &s)`;
 3. `strstr(s, "androidboot.mode=iq")`.
 
-Di probe: bootargs tidak ada → `printk` **"Can't not parse bootargs"** lalu
-`-ENODEV`; string tidak cocok → `printk` **"Not in iq mode"** lalu `-ENODEV`
-(probe tidak pernah `printk` "In iq mode" — itu milik `in_iqmode`).
+- `/chosen` tidak ada atau `bootargs` tidak bisa dibaca → `pr_err`
+  **"Can't not parse bootargs"**, `-ENODEV`;
+- string tidak cocok → `pr_info` **"Not in iq mode"**, `-ENODEV`;
+- cocok → `pr_info` **"In iq mode"**, lanjut.
 
-Artinya driver ini **hanya hidup di mode pabrik** dan aman untuk perangkat
-normal: tanpa `androidboot.mode=iq` probe gagal sebelum menyentuh memori.
+Jadi driver ini hanya hidup di mode pabrik; di boot normal probe gagal
+sebelum menyentuh memori.
 
-## 3. Region memori
+## 4. Region memori dan mailbox
 
-Dua jalur di probe:
-
-- jalur DT (dipakai bila `iq` state belum berisi pointer region):
-  `of_parse_phandle(dev->of_node, "sprd,region", 0)` →
-  `of_address_to_resource()` → `iq.base = res.start`,
-  `iq.size = res.end - res.start + 1` (perhatikan `+ 1`).
-  `_dev_info` mencetak `"iq base: 0x%lx, iq size: 0x%lx"`.
-- jalur fallback: memakai nilai yang sudah ada di state (dari module_param
-  `iq_base`/`iq_size`), lalu tetap membaca
-  `of_property_read_variable_u32_array(np, "sprd,mapping-offs", &off, 1, NULL)`
-  (opsional). `_dev_info` mencetak `"iq mapping_offs: 0x%x"`.
-- Akhir probe: `iq_base = base + mapping_offs` (u32, hanya 32 bit bawah) dan
-  `iq_size = size`.
-
-Pemetaan tidak memakai `ioremap`/`memremap`, melainkan API SIPC:
-
-```c
-iq.va = shmem_ram_vmap_nocache_ex(5 /* dst */, 0 /* smem */, base, size);
-...
-shmem_ram_unmap_ex(5, 0, iq.va);
+```
+va + 0x000   struct iq_pkt  head      (magic, offset, size, 4 byte pad)
+va + 0x010   status block   140 byte  (playback mailbox, opaque)
+va + 0x100   payload pertama
+va + size-0x10  struct iq_pkt  tail
 ```
 
-Keduanya **sudah ada** di tree 6.18:
-`include/linux/soc/sprd/sipc.h` (deklarasi) dan
-`drivers/soc/sprd/sipc/smem.c` (implementasi, termasuk varian `_ex`).
+- `sprd,region` (phandle) → `of_address_to_resource()` → `base`, `size`.
+  `_dev_info "iq base: 0x%lx, iq size: 0x%lx"`.
+- `sprd,mapping-offs` opsional → `offs`; `_dev_info "iq mapping_offs: 0x%x"`.
+- Pemetaan lewat SIPC: `shmem_ram_vmap_nocache_ex(SIPC_ID_PSCP /*5*/, 0,
+  base, size)`, dilepas dengan `shmem_ram_unmap_ex(5, 0, va)`.
+- Probe menulis magic `0x5a5a5a5a` ke `head->magic` dan `tail->magic`.
+- `tail = va + size - 0x10` (**tanpa** `offs`; versi lama dokumen ini salah).
 
-Setelah map, probe menulis magic `0x5a5a5a5a` di **dua slot 16-byte**:
-slot kepala di `va + 0` dan slot ekor di `va + size + mapping_offs - 0x10`
-(dihitung sebagai `iq.size + iq.mapping_offs - 0x10`, lalu disimpan ke
-pointer kedua di state). Kedua slot itu yang dipakai sebagai mailbox
-status antara AP, modem, dan userspace.
+Magic yang dipakai:
 
-## 4. `ioctl` — perintah yang terbaca
+| Nilai | Byte | Arti |
+|---|---|---|
+| `0x81005a00` | — | slot bebas |
+| `0x81815a5a` | — | slot terisi, thread harus mengonsumsi |
+| `0x5a5a5a5a` | — | tanda probe di kedua slot |
+| `0x424f504e` | `"NPOB"` | `SET_MODE 2` mengisi `head` |
+| `0x44435049` | `"IPCD"` | status playback: permintaan |
+| `0x424c434b` | `"KCLB"` | status playback: ack, ditulis ke `head->magic` |
+| `0x4441504d` | `"MPAD"` | modem memindahkan data (dibaca thread) |
+| `0x504d4441` | `"ADMP"` | AP sudah meng-ack (ditulis thread, ditunggu `poll`) |
 
-Semua cabang masuk lewat `printk("enter ioctl cmd = 0x%x", cmd)`. Guard awal:
-bila pointer region atau ukurannya nol → `return -1` (`-EPERM`) tanpa pesan.
+## 5. `ioctl`
+
+Setiap panggilan `pr_info("enter ioctl cmd = 0x%x")`. Guard: `chan`, `head`,
+atau `tail` kosong → `-EPERM` **tanpa pesan**. Perintah tak dikenal → `0`
+(bukan `-ENODEV`).
 
 | cmd | Perilaku |
 |---|---|
-| `0` | Baca slot kepal/ekor yang ber-magic `0x81005a00`, hitung `offset = slot.offset - iq_base - mapping_offs`, ambil `len = slot.len`, `copy_to_user(arg, &{offset,len}, 8)`. Gagal salin → `"copy iq buf info to user space failed."`, `-EFAULT`. |
-| `1` | `copy_to_user(arg, playback, 0x8c)`; gagal → `"copy iq playback data info to user space failed."`, `-EFAULT`. |
-| `0x80` | Set mode kerja: `arg > 2` → `printk("param error")`, `-EINVAL`. `mode = arg`; untuk `arg == 2` state diarahkan ke `va + 0x10` lalu slot ditandai magic `"PNOB"`-family (`0x424f4e50`) dengan field panjang `+0x100`; untuk `arg == 1` hanya `__wake_up(&iq.wait, 1, 1, NULL)`. Mode bukan playback → `"current mode is not playback mode"`. |
-| `0x82` | Bila magic slot `0x81005a00` → tulis `0x81815a5a` (bit "data siap" untuk thread). Slot kedua diperiksa dengan cara sama. |
-| `0x83` | Wajib `mode == 2`, kalau tidak `"current mode is not playback mode"`. `copy_from_user(playback, arg, 0x8c)`, lalu `slot.len = playback.len`; bila magic playback `"IPCD"`/`"KBLC"` → tulis magic `"KBLC"` ke slot. Gagal salin → `-EFAULT`. |
-| lain | `return 0` (tanpa aksi). |
+| `0` | Slot pertama yang ber-magic `0x81005a00` (kepala dulu, lalu ekor). `buf.offset = slot.offset - (u32)base - offs`, `buf.size = slot.size`; keduanya sibuk → `{0,0}`. `copy_to_user(arg, &buf, 8)` gagal → `"copy iq buf info to user space failed."`, `-EFAULT`. |
+| `1` | Wajib `mode == 2`, kalau tidak `"current mode is not playback mode"`, `-EINVAL`. `copy_to_user(arg, status, 0x8c)`; gagal → `"copy iq playback data info to user space failed."`, `-EFAULT`. |
+| `0x80` | `arg > 2` → `"iq ch type invalid"`, `-EINVAL`. `mode = arg`. `arg == 1`: bila kepala **atau** ekor ber-magic `0x81005a00` → `__wake_up(&iq.wait)`. `arg == 2`: `chan->status = va + 0x10`, `head->offset = (u32)base + 0x100`, `head->magic = 0x424f504e`. `arg == 0`: hanya set mode. |
+| `0x82` | `head->magic == 0x81005a00` → `0x81815a5a`; kalau tidak, `tail` dengan cara sama. Selalu `0`. |
+| `0x83` | Wajib `mode == 2`. `copy_from_user(status, arg, 0x8c)` gagal → `"copy iq playback data info from user space failed."`, `-EFAULT`. `head->size = status[2]`; bila `status[0] == "IPCD"` → `head->magic = "KCLB"`. |
 
-`0x8c` = 140 byte: struktur playback yang dipakai tool IQ vendorside
-(disalin bolak-balik, tidak pernah di-parse driver).
+Catatan: `SET_MODE 2` menulis **kepala**, bukan ekor (versi lama dokumen ini
+salah). `0x8c` = 140 byte, struktur playback milik tool vendor; driver tidak
+mem-parsing-nya selain `status[0]` dan `status[2]`.
 
-## 5. `poll`
+## 6. `poll`
 
-`poll_wait()` lalu cek state:
+`poll_wait(filp, &iq.wait, wait)` lalu:
 
-- pointer region kosong → `POLLERR` (`0x8`);
-- `mode == 2` dan `slot.magic == 0x4441504d` (`"MPAD"` — "DATA_AP_MOVING")
-  → `printk("I/Q playback status DATA_AP_MOVING")` lalu `POLLIN|POLLRDNORM`
-  (`0x41`);
-- `mode == 1` dan `slot.magic == 0x81005a00` → `0x41`;
-- selain itu `0` (tidur lagi).
+- `chan`/`head`/`tail` kosong → `EPOLLERR`;
+- `mode == 2` dan `status[0] == 0x504d4441` (`"ADMP"`) → `pr_err`
+  `"I/Q playback status DATA_AP_MOVING"` lalu `EPOLLIN|EPOLLRDNORM`; magic
+  lain → `0`;
+- `mode == 1` dan kepala **atau** ekor ber-magic `0x81005a00` →
+  `EPOLLIN|EPOLLRDNORM`;
+- selain itu `0`.
 
-Tidak ada `POLLOUT`, jadi device ini hanya bisa di-`poll` untuk "ada data".
+Tidak ada `POLLOUT`.
 
-## 6. `mmap`
+## 7. `mmap`
 
-- state/region kosong → `printk("get iq mem info failed")`, `-EAGAIN`;
-- `vma->vm_end - vma->vm_start > iq_size` → `"map size to big, exceed maxsize."`,
-  `-EAGAIN`;
-- `vma->vm_page_prot` dibersihkan bit 2..4 lalu di-OR `0x60000000000000`
-  (atribut normal-non-cache = `PROT_NORMAL_NC` di pgprot arm64),
-  `remap_pfn_range(vma, start, va >> PAGE_SHIFT, len, prot)`;
-- sukses `printk("iq mmap %x,%x,%x")`; gagal → `"remap_pfn_range failed"`,
+- `base == 0` → `"get iq mem info failed"`, `-EAGAIN`;
+- `vm_end - vm_start > size` → `"map size to big, exceed maxsize."`, `-EAGAIN`;
+- `pfn = base >> PAGE_SHIFT` — **alamat fisik**, bukan `va` (versi lama
+  dokumen ini salah); `vm_page_prot` dibersihkan bit 2..4 lalu di-OR
+  `0x60000000000000` (= `PROT_NORMAL_NC` arm64), `remap_pfn_range()`;
+- sukses → `pr_info("iq mmap %x,%x,%x")`; gagal → `"remap_pfn_range failed"`,
   `-EAGAIN`.
 
-Perhatikan: `remap_pfn_range` dipanggil dengan `pfn` dari **virtual address**
-hasil `shmem_ram_vmap_nocache_ex`, yaitu pola khas blob vendor 5.4 untuk
-region yang di-map linear; pada 6.18 perlu dikonversi ke PFN fisik
-(`__pa(iq.va) >> PAGE_SHIFT`) agar tidak salah halaman.
+Jadi userspace melihat region fisik mulai `base`, tanpa `offs`.
 
-## 7. Thread `iq_thread`
+## 8. Thread `iq_thread`
 
-Dibuat `kthread_create_on_node(iq_thread, &iq, -1, "iq_thread")` +
-`wake_up_process`; `sched_setscheduler(current, SCHED_FIFO, {.prio = 0x50})`.
-Loop:
+Dibuat `kthread_run(iq_thread, &iq, "iq_thread")`;
+`sched_setscheduler(current, SCHED_FIFO, {.prio = 0x50})`. Loop:
 
 1. `kthread_should_stop()` → keluar;
-2. `mode == 2` dan slot magic `"MPAD"` → tulis `"MPAD"` balik lalu
-   `__wake_up(&iq.wait, 1, 1, NULL)`;
-3. slot kepala magic `0x81815a5a` → tulis `0x81005a00`; lalu:
-   - `mode == 1` → `__wake_up()` dan lanjut;
-   - `mode == 0` → `printk("iq write 0x%x, 0x%x", off - iq_base, len)` lalu
-     kirim payload ke USB lewat `vser_pass_user_write(phys_to_virt(off), n)`
-     dalam potongan maksimum `0xd0000` byte, `msleep(200)` bila gagal;
-   - mode lain → `printk("ch: %d, hand1: 0x%x, flag2: 0x%x")` +
-     `msleep(1500)`;
-4. slot ekor dibuat dengan cara yang sama (dua salinan blok kode, satu untuk
-   kepala satu untuk ekor).
+2. `mode == 2` dan `status[0] == 0x4441504d` → tulis `0x504d4441`,
+   `__wake_up(&iq.wait)`;
+3. kepala ber-magic `0x81815a5a` → tulis `0x81005a00`, lalu:
+   - `mode == 1` → `__wake_up()` dan ulang;
+   - `mode == 0` → `pr_info("iq write 0x%x, 0x%x", offset - offs, size)` lalu
+     kirim `__va(offset - offs + terkirim)` lewat `vser_pass_user_write()`
+     dalam potongan maksimum `0xd0000`, `msleep(200)` bila gagal (tidak
+     memajukan `terkirim`);
+   - `mode` lain → ulang tanpa aksi;
+4. kalau kepala bukan `0x81815a5a`, langkah 3 diulang untuk ekor;
+5. tidak ada yang cocok → `pr_info("ch: %d, hand1: 0x%x, flag2: 0x%x")` +
+   `msleep(1500)`.
 
-Callback `sprd_iq_complete(addr, len)` didaftarkan lewat
-`kernel_vser_register_callback()`: bila `mode != 0` langsung kembali;
-mencetak `"sprd-iq: complete 0x%p, 0x%x"` lalu menulis magic `0x81815a5a`
-bila `addr` sama dengan alamat fisik slot kepala atau ekor
-(`phys = (slot.offset - iq_base + slot.len) - memstart_addr | 0xffffff8000000000`).
+## 9. Callback `sprd_iq_complete`
 
-## 8. Yang masih gelap (alasan belum diport)
+Didaftarkan `kernel_vser_register_callback(sprd_iq_complete, 0)`.
+Bila `mode != 0` → langsung kembali. `pr_info("complete 0x%p, 0x%x")`; lalu
+bila `buf + len == __va(head->offset - offs + head->size)` → `head->magic =
+0x81815a5a`, dan sama untuk `tail`.
 
-1. **Offset field di dalam state `iq`** tidak konsisten bila dibaca dari
-   relokasi: sebagian akses memakai basis `.bss+0x08` (`&iq`), sebagian
-   `.bss+0x10` (`iq+8`). Artinya ada anggota pertama berukuran 8 byte yang
-   tidak pernah diset oleh probe (kandidat: `struct device_node *` atau
-   pointer `struct resource`). Menulis driver berarti menebak layout itu, dan
-   salah tebak = menulis ke memori reserved milik modem.
-2. **Arti `mode` 0/1/2 dan magic `0x81005a00` / `0x81815a5a` /
-   `0x4441504d` / `"PNOB"` / `"IPCD"` / `"KBLC"`** hanya terbaca sebagai
-   konstanta; arah transisinya (siapa menulis apa lebih dulu) belum
-   terverifikasi terhadap sisi modem/tool.
-3. `_dev_info` "iq base/size" dan `mmap` memakai PFN dari VA — konversi ke
-   6.18 harus diuji di perangkat mode IQ, tidak bisa diverifikasi di CI
-   biasa.
+## 10. Bug blob yang tidak ditiru
 
-Yang **tidak** lagi menjadi penghalang: `usb_f_vser` (fungsi gadget vendor)
-sudah ada di `drivers/usb/gadget/function/f_vserial.c` dan mengekspor
-`kernel_vser_register_callback`, `kernel_vser_set_pass_mode`,
-`vser_pass_user_write` (commit sebelumnya), dan API SIPC `_ex` sudah
-tersedia. Jadi sisa pekerjaan murni pada model state/mailbox di atas.
+1. `sprd_iq_remove()` melepas mapping hanya bila `va == 0` (kondisi terbalik),
+   tidak memanggil `kthread_stop()`, dan thread tetap berjalan setelah `kfree`.
+   Port: stop thread, deregister callback, unmap, lalu `kfree`.
+2. `probe` memanggil `misc_register()` sebelum region di-map; kegagalan
+   berikutnya harus men-`misc_deregister()`. Port mendaftarkan device setelah
+   mapping siap.
+3. `chan->status` baru diisi di `SET_MODE 2`, padahal `poll()` mode 2
+   membacanya. Port mengisi `va + 0x10` sejak probe.
+4. `head`/`tail`/`offset`/`size` dari region dipakai apa adanya sebagai alamat
+   `__va()`. Port menolak deskriptor di luar `[base, base+size)` sebelum
+   mengirim (`iq_pkt_valid()`); panjang 0 tetap diterima seperti blob.
+   Probe juga menolak region yang tidak cukup untuk dua deskriptor
+   (`size <= 0x10 + sizeof(struct iq_pkt)`), memakai pesan blob sendiri
+   `"invalid iq_base(0x%llx)."` yang di blob tidak pernah tercetak.
+5. `mmap` memakai `remap_pfn_range()` dengan `vm_page_prot` yang diutak-atik
+   manual. Port memakai `pgprot_writecombine()` + `VM_IO|VM_PFNMAP`.
+
+## 11. Node DT belum ada di DTS port
+
+Di DT stok yang benar-benar dipakai device ([STOCK-DT-NODES.md](STOCK-DT-NODES.md))
+kedua node ini ada:
+
+```dts
+reserved-memory {
+	iq_mem_reserved: iq-mem@90000000 {
+		compatible = "sprd,iq-mem";
+		reg = <0x0 0x90000000 0x0 0x4000000>;   /* 64 MB */
+		/* tanpa no-map: driver memakai __va() pada region ini */
+	};
+};
+
+/ {
+	sprd-iq {
+		compatible = "sprd,iq";
+		sprd,region = <&iq_mem_reserved>;
+		sprd,mapping-offs = <0x0>;
+	};
+};
+```
+
+`arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dts` **belum** memuat keduanya, dan
+`0x90000000..0x94000000` di DTS itu masih bagian dari `memory@80000000`
+(`reg = <0x0 0x80000000 0x0 0x80000000>`) serta tidak dipakai node lain.
+Artinya dengan DTB hasil port ini driver **tidak akan probe** walau bootargs
+memuat `androidboot.mode=iq`; ia baru bisa jalan dengan DTB stok, atau setelah
+node di atas ditambahkan (konsekuensinya 64 MB RAM direservasi di setiap boot,
+sama seperti firmware stok).
+
+## 12. Yang belum diverifikasi
+
+Build belum dijalankan: codespace `reimagined-palm-tree-g49xvp9vxx652ww5q`
+sudah tidak ada, satu-satunya codespace tersisa
+(`solid-tribble-9rjjxvjqq5pcpq5g`) menolak start dengan HTTP 402 (billing),
+dan tidak ada WSL/toolchain lokal — `make olddefconfig` di Windows gagal di
+`scripts/kconfig` (mingw tidak punya `getline`/`mkdir(mode)`).
+
+Yang bisa diuji tanpa build: pemetaan relokasi di
+[sprd_iq.resolved.txt](evidence-20261023/sprd_iq.resolved.txt) dan
+pencocokan offset state di §2. Perilaku mode IQ (vmap SIPC, PFN, handshake
+mailbox) hanya bisa diuji di perangkat dengan `androidboot.mode=iq`.

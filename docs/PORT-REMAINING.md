@@ -1,6 +1,8 @@
 # 10 blob yang belum tertangani — bukti dan langkah berikutnya
 
-**Status 2026-10-23 (codespace, 235 `.ko`, rc=0): 6 dari 10 sudah diport.**
+**Status 2026-10-24: 7 dari 10 sudah diport.** Tujuh driver itu belum
+melewati build ulang sejak codespace berhenti bisa start (HTTP 402); angka
+`235 .ko` di bawah berasal dari build CI 2026-10-23, sebelum `sprd_iq`.
 
 | # | blob | status |
 |---|---|---|
@@ -12,7 +14,7 @@
 | 3 | `mmc_swcq.ko` | belum — 40 fungsi, butuh pembacaan penuh |
 | 4 | `sprd-cpufreq-v2.ko` | belum — 23 fungsi, disassembly tersedia |
 | 5 | `sprd-cpufreq-public.ko` | belum — bergantung semantik #4 |
-| 7 | `sprd_iq.ko` | belum — RE selesai, layout state/mailbox masih gelap |
+| 7 | `sprd_iq.ko` | **selesai** — `sprd_iq`, layout state dipulihkan dari relokasi |
 
 Angka lama (build CI `39946023755`, commit `a0f2e70ce`, 229 `.ko`):
 
@@ -125,23 +127,30 @@ berguna lebih dulu.
 `keypad` (index 0) dan register kontrol 0x1bc0 (index 1); UMP9620 memakai
 kunci 0x23d8. Port + node DT: [RE-SPRD-7SRESET.md](RE-SPRD-7SRESET.md).
 
-## 7. `sprd_iq.ko` — camera IQ
+## 7. `sprd_iq.ko` — camera IQ — **SELESAI (diport)**
 
 15 fungsi, 32 KB, `depends = usb_f_vser,sipc-core`; node `/sprd-iq` dengan
 properti `sprd,region` (phandle) dan opsional `sprd,mapping-offs`.
 
-**RE selesai, driver belum ditulis.** Premis lama ("butuh `usb_f_vser` yang
-tidak ada di tree") **salah**: `drivers/usb/gadget/function/f_vserial.c`
-sudah ada, namanya `usb_f_vser.ko` dan mengekspor
-`kernel_vser_register_callback`, `kernel_vser_set_pass_mode`,
-`vser_pass_user_write`; API SIPC `shmem_ram_vmap_nocache_ex`/`_unmap_ex`
-juga tersedia di `include/linux/soc/sprd/sipc.h`. Rincian lengkap (gate
-bootargs `androidboot.mode=iq`, `misc` device `iq_mem`, tabel `ioctl`
-0/1/0x80/0x82/0x83, kondisi `poll`, alur `iq_thread`, magic
-`0x81005a00`/`0x81815a5a`/`"MPAD"`): [RE-SPRD-IQ.md](RE-SPRD-IQ.md).
-Yang menahan port sekarang: layout 8 byte pertama state `iq` dan arah
-transisi mode/mailbox belum terbaca pasti, dan salah tebak berarti menulis
-ke region reserved modem.
+Premis lama ("butuh `usb_f_vser` yang tidak ada di tree") **salah**:
+`drivers/usb/gadget/function/f_vserial.c` sudah ada sebagai `usb_f_vser.ko`
+dan mengekspor `kernel_vser_register_callback`, `kernel_vser_set_pass_mode`,
+`vser_pass_user_write`; API SIPC `shmem_ram_vmap_nocache_ex`/`_unmap_ex` juga
+tersedia.
+
+Hambatan kedua ("layout state `iq` dan arah mailbox masih gelap") juga
+**hilang**: relokasi `adrp`/`add`/`ldst` di
+`.rela.text.unlikely.__cfi_check_fail` memberi offset absolut tiap akses
+`.bss`, sehingga seluruh field state dan transisi magic-nya terbaca pasti
+(`base` +0x08, `size` +0x10, `offs` +0x18, `va` +0x20, `chan` +0x30,
+`thread` +0x38, `wait` +0x40). Rincian, tabel ioctl, handshake playback, dan
+daftar bug blob yang tidak ditiru: [RE-SPRD-IQ.md](RE-SPRD-IQ.md); disassembly
+terselesaikan: [evidence-20261023/sprd_iq.resolved.txt](evidence-20261023/sprd_iq.resolved.txt).
+
+Port ada di `drivers/vxtux/soc/iq/` (Kconfig `SPRD_IQ`, `depends on
+SPRD_SIPC && USB_F_VSERIAL`), `CONFIG_SPRD_IQ=m` di `enhanced_config.cfg`.
+Hanya hidup dengan `androidboot.mode=iq`, jadi inert di perangkat normal.
+Belum dikompilasi: codespace CI tidak bisa start (HTTP 402 billing).
 
 ## 8. `sprd_manufacturer_model.ko` — model/manufacturer SoC
 
@@ -211,7 +220,7 @@ mask 0xff) mengikuti [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md).
 2. `sprd-cpufreq-v2` lalu `sprd-cpufreq-public`.
 3. `sprd_7sreset` (butuh peta bit regmap PMIC).
 4. `sprd_manufacturer_model` (butuh asal string).
-5. `sprd_iq` (RE selesai; butuh model state/mailbox yang pasti).
+5. `sprd_iq` — selesai, menunggu kompilasi ulang di lingkungan build.
 6. `mmc_swcq` (paling besar, butuh sumber).
 7. `core.ko` + `gpio.ko` (autotest) — ABI ioctl sudah terbaca, tinggal
    `gpio_test`.

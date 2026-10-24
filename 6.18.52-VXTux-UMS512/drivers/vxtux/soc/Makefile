@@ -31,3 +31,6 @@ obj-$(CONFIG_SPRD_7SRESET)	+= sprd_7sreset/
 
 # Framework autotest vendor (stock blob core.ko + gpio.ko).
 obj-$(CONFIG_SPRD_AUTOTEST)	+= autotest/
+
+# IQ playback / modem data region (stock blob sprd_iq.ko).
+obj-$(CONFIG_SPRD_IQ)	+= iq/

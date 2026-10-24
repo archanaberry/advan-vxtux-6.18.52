@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_IQ
+	tristate "Spreadtrum IQ playback / I-Q data device"
+	depends on OF
+	depends on SPRD_SIPC
+	depends on USB_F_VSERIAL
+	help
+	  Character device (/dev/iq_mem) exposing the reserved RAM region
+	  shared with the protocol stack processor for I/Q playback and
+	  modem data capture.
+
+	  The region is named by the "sprd,region" phandle of the
+	  "sprd,iq" device tree node and mapped through SIPC.  Data can
+	  be pushed to the host over the vser USB bypass path, handed to
+	  user space with mmap(), or moved by the modem straight into the
+	  shared region; the mode is selected through the SET_MODE ioctl.
+
+	  The driver only binds when the kernel command line contains
+	  "androidboot.mode=iq"; on a normal boot it stays inert.
+
+	  Port of the vendor 5.4 `sprd_iq.ko`.  Say M to build the module.
