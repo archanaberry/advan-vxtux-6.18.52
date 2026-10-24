@@ -641,7 +641,10 @@ err_clear:
 	platform_set_drvdata(pdev, NULL);
 	iq_dev = NULL;
 	kfree(iq->chan);
-	shmem_ram_unmap_ex(IQ_SIPC_DST, 0, iq->va);
+err_unmap:
+	if (iq->va)
+		shmem_ram_unmap_ex(IQ_SIPC_DST, 0, iq->va);
+err_free:
 	kfree(iq);
 	return ret;
 }
