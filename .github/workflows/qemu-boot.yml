@@ -1,0 +1,127 @@
+name: QEMU Boot Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [test1]
+    paths:
+      - '6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dts'
+      - '6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/Makefile'
+      - '6.18.52-VXTux-UMS512/arch/arm64/configs/vxtux_618_qemu.defconfig'
+      - '.github/workflows/qemu-boot.yml'
+jobs:
+  boot:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu flex bison bc \
+            libssl-dev libelf-dev qemu-system-arm busybox-static cpio
+
+      # Pola config sama dengan v17-build: .config device + enhanced_config.cfg,
+      # ditambah fragmen khusus QEMU (vxtux_618_qemu.defconfig: dummy_hcd, i2c-sprd,
+      # virtio-console). Ketiga file disimpan CRLF — wajib LF sebelum merge.
+      - name: Config (device + enhanced + fragmen QEMU)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          find scripts/ -type f -exec chmod +x {} +
+          cp .config .config.device
+          sed -i 's/\r$//' .config.device ../enhanced_config.cfg arch/arm64/configs/vxtux_618_qemu.defconfig
+          scripts/kconfig/merge_config.sh -m -O . .config.device \
+            ../enhanced_config.cfg arch/arm64/configs/vxtux_618_qemu.defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          # Guard: simbol konsol QEMU harus selamat setelah olddefconfig.
+          # PL011 sengaja tidak dicek — driver AMBA memang tidak ada di tree V17
+          # (docs/CI-KNOWN-DROPPED.txt); console memakai virtio-console (hvc0).
+          rc=0
+          for s in CONFIG_VIRTIO=y CONFIG_VIRTIO_PCI=y CONFIG_VIRTIO_CONSOLE=y \
+                   CONFIG_BLK_DEV_INITRD=y CONFIG_RD_GZIP=y CONFIG_BINFMT_SCRIPT=y \
+                   CONFIG_DEVTMPFS=y CONFIG_ARCH_SPRD=y CONFIG_ARM_GIC_V3=y; do
+            if ! grep -qx "$s" .config; then
+              echo "::error::HILANG setelah olddefconfig: $s"
+              rc=1
+            fi
+          done
+          exit $rc
+
+      - name: Build Image + DTB QEMU
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- sprd/qemu-ums512-t1030.dtb -j$(nproc)
+          ls -l arch/arm64/boot/Image arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
+
+      - name: Initramfs (busybox)
+        run: |
+          rm -rf /tmp/initramfs
+          mkdir -p /tmp/initramfs/bin /tmp/initramfs/proc /tmp/initramfs/sys /tmp/initramfs/dev
+          cp /bin/busybox /tmp/initramfs/bin/busybox
+          for a in sh mount dmesg tail echo poweroff ls cat grep sleep insmod basename; do
+            ln -sf busybox /tmp/initramfs/bin/$a
+          done
+          cat > /tmp/initramfs/init <<'EOF'
+          #!/bin/busybox sh
+          /bin/busybox mount -t proc none /proc
+          /bin/busybox mount -t sysfs none /sys
+          /bin/busybox mount -t devtmpfs none /dev
+          echo "=== VXTUX INIT BERJALAN ==="
+          /bin/busybox dmesg | /bin/busybox tail -n 100
+          echo "=== VXTUX-QEMU-BOOT-OK ==="
+          /bin/busybox poweroff -f
+          EOF
+          chmod +x /tmp/initramfs/init
+          (cd /tmp/initramfs && find . | cpio -o -H newc --owner root:root | gzip -9) > /tmp/initramfs.cpio.gz
+          ls -lh /tmp/initramfs.cpio.gz
+
+      # QEMU virt: GICv3, CPU cortex-a72 (model TCG yang selalu ada; DTB cpu
+      # compatible hanya untuk konsumsi kernel), console=hvc0 via virtconsole.
+      # Gate: marker "VXTUX-QEMU-BOOT-OK" dari /init TANPA panic di serial log.
+      - name: Boot QEMU (gate)
+        run: |
+          set +e
+          timeout --signal=KILL 420 qemu-system-aarch64 \
+            -machine virt,gic-version=3 \
+            -cpu cortex-a72 -smp 8 -m 2G \
+            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
+            -dtb 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb \
+            -initrd /tmp/initramfs.cpio.gz \
+            -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=8" \
+            -device virtio-serial-pci \
+            -device virtconsole,chardev=vc0 \
+            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial.log \
+            -display none -monitor none -no-reboot \
+            > /tmp/qemu-stdout.log 2>&1
+          rc=$?
+          echo "qemu exit=$rc"
+          echo "--- serial.log tail ---"
+          tail -n 60 /tmp/serial.log 2>/dev/null
+          echo "--- qemu stdout tail ---"
+          tail -n 20 /tmp/qemu-stdout.log 2>/dev/null
+          if ! grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial.log; then
+            echo '::error::MARKER tidak ditemukan — boot tidak sampai userspace'
+            echo '--- indikasi panic/oops (bila ada) ---'
+            grep -nE 'Kernel panic|BUG:|Unable to handle kernel|Call trace' /tmp/serial.log | tail -n 20 || true
+            exit 1
+          fi
+          if grep -q 'Kernel panic' /tmp/serial.log; then
+            echo '::error::Kernel panic terdeteksi di log serial'
+            exit 1
+          fi
+          echo 'BOOT OK — sampai userspace tanpa panic'
+
+      - name: Upload serial log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-serial
+          path: |
+            /tmp/serial.log
+            /tmp/qemu-stdout.log
+          if-no-files-found: warn

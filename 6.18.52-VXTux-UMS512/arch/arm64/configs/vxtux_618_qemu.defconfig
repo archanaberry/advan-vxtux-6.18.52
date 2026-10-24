@@ -32,3 +32,12 @@ CONFIG_USB_GADGET=y
 CONFIG_USB_CONFIGFS=y
 CONFIG_USB_CONFIGFS_F_FS=y
 CONFIG_USB_CONFIGFS_ACM=y
+
+# --- 4) konsol QEMU via virtio-console (2026-10-24) ------------------------
+#  Tree V17 tidak punya driver AMBA PL011 (docs/CI-KNOWN-DROPPED.txt), jadi
+#  PL011 milik -M virt mustahil dipakai. Console tamu memakai hvc0 di atas
+#  -device virtio-serial-pci + -device virtconsole (console=hvc0).
+#  Dependensi sudah terpenuhi: VIRTIO=y, PCI=y, PCI_MSI=y, TTY=y;
+#  VIRTIO_CONSOLE otomatis select HVC_DRIVER.
+CONFIG_VIRTIO_PCI=y
+CONFIG_VIRTIO_CONSOLE=y
