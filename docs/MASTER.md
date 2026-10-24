@@ -849,6 +849,9 @@ Rincian di [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) §5.
 | run `40100295454` | TICK12 | **boot gate LULUS** — stok+custom marker, tanpa panic |
 | `e44869cca` | TICK12 | uji fbcon/DRM-KMS: fragmen + boot virtio-gpu + screendump ke PNG |
 | `2a235f06b` | TICK12 | jendela poweroff 8 detik + retry screendump (race QEMU mati) |
+| `8f45b6455`–`53b089ef0` | TICK12 | docs: skor 129/129, changelog TICK17, tabel diregenerasi + hasil fbcon |
+| `f515e35d6` | TICK12 | QEMU: sesi CLI fbcon interaktif gaya Arch + rekam video (virtio-keyboard sendkey, console=tty0) |
+| run `40129138896` | TICK12 | **sesi CLI fbcon LULUS** — 8 perintah tereksekusi, video 108 frame mp4 (gate fb=1 ready=1 cmd=1 done=1 px=1) |
 
 ### 9.6 Cronjob
 
@@ -873,6 +876,7 @@ Rincian di [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) §5.
 - **129/129 blob vendor tertangani** (regenerasi TICK12 2026-10-24, bukti ko list V17 — STATUS-129/COVERAGE-129/PORT-AUDIT)
 - **239 .ko** di build V17 CI (run `40097613453`) — 10 port terakhir ikut terbangun
 - **Boot QEMU LULUS** (run `40100295454`, [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md)) + uji fbcon/DRM-KMS di QEMU
+- **Sesi CLI fbcon interaktif LULUS + terekam video** (run `40129138896`, 108 frame → [fbcon-session.mp4](evidence-20261024/fbcon-session.mp4)) — shell sungguhan di tty1 digerakkan sendkey CI, 8 perintah `uname -a`→`poweroff`
 
 Bestieee, kalau ada yang perlu di-update atau di-drill-down lagi, kasih tau aja. Pyaa~ 🍓
 

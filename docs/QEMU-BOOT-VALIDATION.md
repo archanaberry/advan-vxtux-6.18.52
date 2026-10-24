@@ -115,7 +115,46 @@ Status di **perangkat UMS512 asli**: config device masih `CONFIG_FB=n`
 menyala setelah config + perbaikan panel DRM dilakukan; QEMU di atas
 membuktikan jalur fbcon/kernel-nya sendiri sehat.
 
-## 6. Batas validasi (jujur)
+## 6. Sesi CLI interaktif gaya Arch + video (run 40129138896)
+
+Setelah banner statis §5, sesi fbcon ditingkatkan menjadi **shell sungguhan**
+di `tty1` yang digerakkan keyboard — bukan tulisan sekali jadi:
+
+- **Init dua mode.** `/proc/cmdline` `vxtux.shell=1` memilih mode sesi;
+  boot bisect stock/custom tanpa opsi itu tetap jalur lama (marker +
+  poweroff 8 detik). Mode sesi: banner login `VXTux 6.18.52 (tty1)` +
+  `root@vxtux login: root`, lalu prompt `root@vxtux ~ #` dengan echo VT
+  asli (termios ICANON/ECHO) dan builtin: `uname ls cat dmesg free echo
+  clear help poweroff`.
+- **Teks kernel ikut di fbcon**: append boot ketiga kini `console=tty0
+  console=hvc0` — printk jatuh ke VT (fbcon) sekaligus serial, sehingga
+  wall-of-text dmesg ala Arch mengisi layar sebelum banner login.
+- **Input nyata dari CI**: `-device virtio-keyboard-pci` +
+  `CONFIG_VIRTIO_INPUT=y` (fragmen QEMU; input core sudah `=y` dari
+  enhanced_config). Perintah diketik lewat HMP `sendkey` — melewati
+  jalur input-asli QEMU → virtio-input → kbd handler VT → tty1.
+- **Rekaman video**: satu koneksi HMP persisten mengirim `sendkey` +
+  `screendump` (~2 frame/detik) sepanjang 50 detik sesi → 108 frame
+  PPM → renumber → `ffmpeg` encode H.264 → `fbcon-session.mp4` (673 KB,
+  artefak run). Frame akhir juga diekspor `fbcon-final.png`.
+
+**Gate diperluas** (semua harus 1): `fb` marker boot, `ready` banner
+login, `cmd` perintah `uname -a` tereksekusi (terbaca dari marker
+`=== SHELL-CMD: ... ===` yang ditulis init ke hvc0 — serial, supaya
+mencatat transkrip tanpa mencoret layar), `done` `poweroff` dieksekusi,
+`px` piksel tak-hitam di frame terakhir (68.307 piksel / 8%), `vid`
+mp4 jadi. Hasil run: `marker: fb=1 ready=1 cmd=1 done=1 px=1
+frames=108` → **FBCON CLI SESSION OK**.
+
+![Sesi CLI fbcon: dmesg, prompt root@vxtux, perintah tereksekusi](evidence-20261024/fbcon-final.png)
+
+Video sesi penuh: [evidence-20261024/fbcon-session.mp4](evidence-20261024/fbcon-session.mp4)
+(artefak `qemu-serial` run
+[40129138896](https://github.com/gryzzlaycutzy121/advan-vxtux-6.18.52/actions/runs/40129138896)).
+Transkrip tercatat di serial: 8 perintah `uname -a` → `poweroff`
+berurutan, ditutup `=== VXTUX-SHELL-DEMO-DONE ===`.
+
+## 7. Batas validasi (jujur)
 
 - QEMU `-M virt` + TCG **bukan** hardware UMS512: alamat periferal QEMU
   berbeda total dari DT perangkat; yang divalidasi adalah perilaku kernel
