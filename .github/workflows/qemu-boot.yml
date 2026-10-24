@@ -130,6 +130,10 @@ jobs:
             out("=== VXTUX INIT BERJALAN (init C statis arm64) ===\n");
             tty1_banner();
             out("=== VXTUX-QEMU-BOOT-OK ===\n");
+            /* Jendela 8 detik sebelum poweroff: QEMU boot fbcon perlu
+             * waktu menjalankan HMP screendump (fbcon.ppm) sebelum tamu
+             * mati — tanpa ini screendump selalu Connection refused. */
+            sleep(8);
             sync();
             reboot(RB_POWER_OFF);
             for (;;) sleep(1);
@@ -225,8 +229,15 @@ jobs:
           done
           echo "[fb] marker=$ok_fb pid=$qpid"
           if [ "$ok_fb" = 1 ]; then
-            sleep 2   # beri waktu fbcon merender banner tty1
-            timeout 15 bash -c 'exec 3<>/dev/tcp/127.0.0.1/55555; printf "screendump /tmp/fbcon.ppm\nquit\n" >&3; cat <&3' || true
+            # Retry: kirim screendump+quit via HMP/TCP selama QEMU masih
+            # hidup (jendela 8 detik dari init sebelum poweroff).
+            for try in 1 2 3 4; do
+              kill -0 $qpid 2>/dev/null || { echo "[fb] QEMU keluar sebelum screendump"; break; }
+              if timeout 8 bash -c 'exec 3<>/dev/tcp/127.0.0.1/55555; printf "screendump /tmp/fbcon.ppm\nquit\n" >&3; cat <&3'; then
+                [ -f /tmp/fbcon.ppm ] && break
+              fi
+              sleep 1
+            done
           else
             timeout 10 bash -c 'exec 3<>/dev/tcp/127.0.0.1:55555; printf "quit\n" >&3; cat <&3' || true
           fi
