@@ -43,7 +43,9 @@ jobs:
           rc=0
           for s in CONFIG_VIRTIO=y CONFIG_VIRTIO_PCI=y CONFIG_VIRTIO_CONSOLE=y \
                    CONFIG_BLK_DEV_INITRD=y CONFIG_RD_GZIP=y CONFIG_BINFMT_SCRIPT=y \
-                   CONFIG_DEVTMPFS=y CONFIG_ARCH_SPRD=y CONFIG_ARM_GIC_V3=y; do
+                   CONFIG_DEVTMPFS=y CONFIG_ARCH_SPRD=y CONFIG_ARM_GIC_V3=y \
+                   CONFIG_DRM_VIRTIO_GPU=y CONFIG_FRAMEBUFFER_CONSOLE=y \
+                   CONFIG_DRM_FBDEV_EMULATION=y CONFIG_VT_CONSOLE=y; do
             if ! grep -qx "$s" .config; then
               echo "::error::HILANG setelah olddefconfig: $s"
               rc=1
@@ -79,7 +81,9 @@ jobs:
           set -e
           mkdir -p /tmp/src
           cat > /tmp/src/init.c <<'EOFC'
+          #include <errno.h>
           #include <fcntl.h>
+          #include <stdio.h>
           #include <sys/reboot.h>
           #include <string.h>
           #include <sys/mount.h>
@@ -93,12 +97,38 @@ jobs:
             fd = open("/dev/kmsg", O_WRONLY);
             if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
           }
+          /* Banner CLI ke /dev/tty1 (VT) — inilah yang dirender fbcon ke
+           * framebuffer virtio-gpu pada boot fbcon, hasil dicapture lewat
+           * screendump QEMU menjadi fbcon.png. Bila fbcon tidak ada,
+           * tulisan tetap masuk buffer VT tapi tak pernah dirender. */
+          static void tty1_banner(void)
+          {
+            char msg[80];
+            int fd = open("/dev/tty1", O_WRONLY | O_NOCTTY);
+            if (fd < 0) {
+              snprintf(msg, sizeof msg, "=== tty1 GAGAL: errno=%d ===\n", errno);
+              out(msg);
+              return;
+            }
+            const char *cli =
+              "\033[2J\033[H"
+              "VXTux 6.18.52 - fbcon CLI test\r\n"
+              "===========================================\r\n"
+              "[ OK ] framebuffer console menampilkan teks\r\n"
+              "===========================================\r\n"
+              "> ";
+            int n = write(fd, cli, strlen(cli));
+            close(fd);
+            snprintf(msg, sizeof msg, "=== tty1: %d byte CLI tertulis ===\n", n);
+            out(msg);
+          }
           int main(void)
           {
             mount("none", "/proc", "proc", 0, 0);
             mount("none", "/sys", "sysfs", 0, 0);
             mount("none", "/dev", "devtmpfs", 0, 0);
             out("=== VXTUX INIT BERJALAN (init C statis arm64) ===\n");
+            tty1_banner();
             out("=== VXTUX-QEMU-BOOT-OK ===\n");
             sync();
             reboot(RB_POWER_OFF);
@@ -163,10 +193,81 @@ jobs:
           boot stock   # tanpa -dtb: DTB dibuat QEMU sendiri
           boot custom -dtb 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
 
+          # Boot C: fbcon/KMS — jawaban atas "apakah fbcon & DRM/KMS sudah
+          # bisa print CLI?". virtio-gpu-pci dienumerasi lewat pcie+ITS yang
+          # sudah ada di DTB kustom; VNC headless dipakai supaya QEMU punya
+          # permukaan display untuk HMP screendump; monitor TCP menerima
+          # perintah screendump ke /tmp/fbcon.ppm lalu diubah jadi PNG.
+          # Gerbang: marker boot + piksel tak-hitam di framebuffer (teks
+          # fbcon, bukan layar hitam kosong).
+          tag=fb
+          qemu-system-aarch64 \
+            -machine virt,gic-version=3,highmem=off \
+            -cpu cortex-a72 -smp 8 -m 2G \
+            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
+            -initrd /tmp/initramfs.cpio.gz \
+            -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=8" \
+            -device virtio-serial-pci \
+            -device virtconsole,chardev=vc0 \
+            -device virtio-gpu-pci \
+            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial-fb.log \
+            -vnc 127.0.0.1:0 \
+            -monitor tcp:127.0.0.1:55555,server,nowait \
+            -no-reboot \
+            -d guest_errors,unimp,cpu_reset -D /tmp/qemu-fb.debug.log \
+            > /tmp/qemu-fb-stdout.log 2>&1 &
+          qpid=$!
+          ok_fb=0
+          for i in $(seq 1 120); do
+            if grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-fb.log 2>/dev/null; then ok_fb=1; break; fi
+            kill -0 $qpid 2>/dev/null || break
+            sleep 1
+          done
+          echo "[fb] marker=$ok_fb pid=$qpid"
+          if [ "$ok_fb" = 1 ]; then
+            sleep 2   # beri waktu fbcon merender banner tty1
+            timeout 15 bash -c 'exec 3<>/dev/tcp/127.0.0.1/55555; printf "screendump /tmp/fbcon.ppm\nquit\n" >&3; cat <&3' || true
+          else
+            timeout 10 bash -c 'exec 3<>/dev/tcp/127.0.0.1:55555; printf "quit\n" >&3; cat <&3' || true
+          fi
+          wait $qpid; echo "[fb] qemu exit=$?"
+          echo "[fb] serial bytes: $(wc -c < /tmp/serial-fb.log 2>/dev/null)"
+          echo '--- jejak DRM/fbcon di serial fb ---'
+          grep -nE 'fb0|fbcon|frame buffer|virtio_gpu|drm ' /tmp/serial-fb.log | head -20
+          ls -l /tmp/fbcon.ppm 2>/dev/null
+          fb_px=1
+          if [ -f /tmp/fbcon.ppm ]; then
+            command -v convert >/dev/null 2>&1 && convert /tmp/fbcon.ppm /tmp/fbcon.png && ls -l /tmp/fbcon.png
+            python3 - <<'EOFPY'
+          import sys
+          f = open('/tmp/fbcon.ppm', 'rb')
+          assert f.readline().strip() == b'P6', 'format PPM bukan P6'
+          line = f.readline()
+          while line.startswith(b'#'):
+            line = f.readline()
+          w, h = map(int, line.split())
+          mx = int(f.readline())
+          data = f.read(w * h * 3)
+          nb = sum(1 for i in range(0, len(data), 3) if data[i:i+3] != b'\x00\x00\x00')
+          pct = 100 * nb // (w * h)
+          print('fbcon framebuffer: %dx%d, piksel tak-hitam=%d (%d%%)' % (w, h, nb, pct))
+          sys.exit(0 if nb > 500 else 1)
+          EOFPY
+            if [ $? -eq 0 ]; then
+              echo 'FBCON RENDER OK — framebuffer berisi teks, bukan hitam'
+            else
+              echo '::warning::framebuffer hitam/kosong — fbcon tidak merender (lihat jejak DRM di atas)'
+              fb_px=0
+            fi
+          else
+            echo '::warning::screendump tidak menghasilkan fbcon.ppm'
+            fb_px=0
+          fi
+
           ok_stock=0; ok_custom=0
           grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-stock.log && ok_stock=1
           grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-custom.log && ok_custom=1
-          echo "marker: stock=$ok_stock custom=$ok_custom"
+          echo "marker: stock=$ok_stock custom=$ok_custom fb=$ok_fb px=$fb_px"
 
           if [ "$ok_custom" = 1 ]; then
             if grep -q 'Kernel panic' /tmp/serial-custom.log; then
@@ -174,7 +275,12 @@ jobs:
               exit 1
             fi
             echo 'BOOT OK — DTB kustom tembus userspace tanpa panic'
-            exit 0
+            if [ "$ok_fb" = 1 ] && [ "$fb_px" = 1 ]; then
+              echo 'FBCON OK — DRM virtio-gpu + fbcon merender CLI (fbcon.png di artefak)'
+              exit 0
+            fi
+            echo '::error::boot kustom OK tetapi uji fbcon gagal — lihat jejak DRM di log fb'
+            exit 1
           fi
           if [ "$ok_stock" = 1 ]; then
             echo '::error::Kernel OK dengan DTB stok, tetapi DTB kustom gagal — perbaiki DTS'
@@ -194,8 +300,13 @@ jobs:
           path: |
             /tmp/serial-stock.log
             /tmp/serial-custom.log
+            /tmp/serial-fb.log
             /tmp/qemu-stock-stdout.log
             /tmp/qemu-custom-stdout.log
+            /tmp/qemu-fb-stdout.log
             /tmp/qemu-stock.debug.log
             /tmp/qemu-custom.debug.log
+            /tmp/qemu-fb.debug.log
+            /tmp/fbcon.ppm
+            /tmp/fbcon.png
           if-no-files-found: warn

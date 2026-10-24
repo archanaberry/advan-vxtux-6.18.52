@@ -48,3 +48,17 @@ CONFIG_VIRTIO_CONSOLE=y
 #  host driver generik ini, -device virtio-serial-pci tidak terenumerasi
 #  sehingga hvc0 (konsol tamu) tidak pernah ada pada boot DTB kustom.
 CONFIG_PCI_HOST_GENERIC=y
+
+# --- 6) fbcon / KMS via virtio-gpu (2026-10-24) -----------------------------
+#  Check: "fbcon & DRM/KMS sudah bisa print CLI?" — sebelumnya TIDAK mungkin
+#  di manapun: CONFIG_FB=n (enhanced_config baris 594), tak ada driver GPU
+#  di QEMU (DRM_VIRTIO_GPU/BOCHS not set), FRAMEBUFFER_CONSOLE tak terdefinisi
+#  (depends FB_CORE yang tak pernah ter-select). Rantai yang dinyalakan:
+#  DRM_VIRTIO_GPU=y -> select DRM_CLIENT_SELECTION -> DRM_FBDEV_EMULATION=y
+#  -> select FB_CORE (oleh DRM) -> FRAMEBUFFER_CONSOLE=y (default FBDEV).
+#  VT_CONSOLE=y supaya printk boot ikut dirender fbcon (gaya Arch: teks
+#  scrolling di layar) di samping hvc0. FONT sudah y dari basis.
+CONFIG_DRM_VIRTIO_GPU=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_FRAMEBUFFER_CONSOLE=y
+CONFIG_VT_CONSOLE=y
