@@ -278,3 +278,25 @@ config ARM_PXA2xx_CPUFREQ
 	  This add the CPUFreq driver support for Intel PXA2xx SOCs.
 
 	  If in doubt, say N.
+
+config ARM_SPRD_CPUFREQ_V2
+	tristate "Unisoc AP CPUFreq (DVFS over SIP) support"
+	depends on ARCH_SPRD || COMPILE_TEST
+	select SPRD_SIP_SVC
+	help
+	  This enables the Unisoc/Spreadtrum AP CPU cluster cpufreq driver for
+	  the UMS512/Sharkl5 platform.  Frequency and voltage scaling is done
+	  through the secure monitor (SIP) DVFS service exposed by sprd_sip_svc.
+
+	  Ported from the stock sprd-cpufreq-v2.ko blob.  If in doubt, say N.
+
+config ARM_SPRD_CPUFREQ_PUBLIC
+	tristate "Unisoc cpufreq public OPP-update API"
+	depends on ARM_SPRD_CPUFREQ_V2
+	help
+	  Exports sprd_cpufreq_update_opp(), which thermal/cooling consumers use
+	  to ask the cpufreq-v2 driver to refresh a cluster's DVFS table for the
+	  current temperature.  Requires ARM_SPRD_CPUFREQ_V2 to populate the
+	  per-cluster driver_data this API dispatches through.
+
+	  Ported from the stock sprd-cpufreq-public.ko blob.  If in doubt, say N.

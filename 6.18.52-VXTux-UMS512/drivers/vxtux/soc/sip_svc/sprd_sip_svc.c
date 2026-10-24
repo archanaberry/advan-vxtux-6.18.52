@@ -41,7 +41,31 @@ static inline int sip_ret(struct arm_smccc_res *res)
 	return sip_failed(res) ? -EOPNOTSUPP : (int)res->a0;
 }
 
+/*
+ * Vendor error remapping, recovered from the blob's `sprd_sip_remap_err`.
+ * The monitor returns a0 = -1 (or any value with the top bit set) for
+ * "not supported"; everything else is passed straight through as a
+ * positive-or-negative status the caller checks.  This is what the
+ * cpufreq DVFS wrappers use, so their return value is the raw firmware
+ * status rather than the coerced -EOPNOTSUPP that sip_ret() gives.
+ */
+static inline int sip_remap_err(unsigned long a0)
+{
+	if (sip_failed(&(struct arm_smccc_res){ .a0 = a0 }))
+		return -EOPNOTSUPP;
+	return (int)a0;
+}
+
 static struct sprd_sip_svc_handle sprd_handle;
+
+/*
+ * Vendor groups its function pointers into per-service sub-structs that
+ * each carry a `struct sprd_sip_svc_rev_info rev`.  cpufreq-v2 walks
+ * sip->dvfs_ops.* with those exact signatures, so the dvfs_ops sub-struct
+ * mirrors the vendor's field-for-field (see include/linux/sprd_sip_svc.h).
+ * The other services (PERF/PWR/NPU/STORAGE/DBG) stay flat because nothing
+ * in-tree consumes their rev fields.
+ */
 
 static u32 sip_probe(u32 id, const char *name)
 {
@@ -186,107 +210,108 @@ static int sip_pwr_get_pdbg_info_words(u32 id, u64 out[4])
 
 /* ------------------------------------------------------------------ DVFS */
 
-static int sip_dvfs_enable(u32 enable)
+static int sip_dvfs_enable(u32 cluster)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_ENABLE, enable, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_ENABLE, cluster, 0, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_table_update(u32 index, u64 table)
+static int sip_dvfs_table_update(u32 cluster, u32 temp, u32 *num)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_TABLE_UPDATE, index, table, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_TABLE_UPDATE, cluster, temp, 0, 0, 0, 0);
+	if (num)
+		*num = (u32)res.a1;
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_step_set(u32 step)
+static int sip_dvfs_step_set(u32 cluster, u32 step)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_STEP_SET, step, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_STEP_SET, cluster, step, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_margin_set(u32 margin)
+static int sip_dvfs_margin_set(u32 cluster, u32 margin)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_MARGIN_SET, margin, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_MARGIN_SET, cluster, margin, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_freq_set(u32 index, u64 freq)
+static int sip_dvfs_freq_set(u32 cluster, u32 index)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_FREQ_SET, index, freq, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_FREQ_SET, cluster, index, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static u64 sip_dvfs_freq_get(u32 index)
+static int sip_dvfs_freq_get(u32 cluster, u64 *freq)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_FREQ_GET, index, 0, 0, 0, 0, 0);
-	return sip_failed(&res) ? 0 : res.a0;
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_FREQ_GET, cluster, 0, 0, 0, 0, 0);
+	if (freq)
+		*freq = res.a1;
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_pair_get(u32 index, u64 *pair)
+static int sip_dvfs_pair_get(u32 cluster, u32 index, u64 *freq, u64 *vol)
 {
 	struct arm_smccc_res res;
 
-	if (!pair)
-		return -EINVAL;
-
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_PAIR_GET, index, 0, 0, 0, 0, 0);
-	if (sip_failed(&res))
-		return -EOPNOTSUPP;
-
-	*pair = res.a0;
-	return 0;
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_PAIR_GET, cluster, index, 0, 0, 0, 0);
+	if (freq)
+		*freq = res.a1;
+	if (vol)
+		*vol = res.a2;
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_pmic_set(u32 type, u64 addr)
+static int sip_dvfs_pmic_set(u32 cluster, u32 num)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_PMIC_SET, type, addr, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_PMIC_SET, cluster, num, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_bin_set(u32 bin)
+static int sip_dvfs_bin_set(u32 cluster, u32 bin)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_BIN_SET, bin, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_BIN_SET, cluster, bin, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_version_set(u32 version)
+static int sip_dvfs_version_set(u32 cluster, u64 *ver)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_VERSION_SET, version, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_VERSION_SET, cluster, *ver, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_init(u64 table, u32 num)
+static int sip_dvfs_init(u32 flag)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_INIT, table, num, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_INIT, flag, 0, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
-static int sip_dvfs_debug_init(u32 enable)
+static int sip_dvfs_debug_init(void)
 {
 	struct arm_smccc_res res;
 
-	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_DEBUG_INIT, enable, 0, 0, 0, 0, 0);
-	return sip_ret(&res);
+	SIP_ARGS(&res, SPRD_SIP_SVC_DVFS_DEBUG_INIT, 0, 0, 0, 0, 0, 0);
+	return sip_remap_err(res.a0);
 }
 
 /* ------------------------------------------------------------------- NPU */
@@ -415,18 +440,18 @@ static int __init sprd_sip_svc_init(void)
 	sprd_handle.pwr_get_pdbg_info = sip_pwr_get_pdbg_info;
 	sprd_handle.pwr_get_pdbg_info_words = sip_pwr_get_pdbg_info_words;
 
-	sprd_handle.dvfs_enable = sip_dvfs_enable;
-	sprd_handle.dvfs_table_update = sip_dvfs_table_update;
-	sprd_handle.dvfs_step_set = sip_dvfs_step_set;
-	sprd_handle.dvfs_margin_set = sip_dvfs_margin_set;
-	sprd_handle.dvfs_freq_set = sip_dvfs_freq_set;
-	sprd_handle.dvfs_freq_get = sip_dvfs_freq_get;
-	sprd_handle.dvfs_pair_get = sip_dvfs_pair_get;
-	sprd_handle.dvfs_pmic_set = sip_dvfs_pmic_set;
-	sprd_handle.dvfs_bin_set = sip_dvfs_bin_set;
-	sprd_handle.dvfs_version_set = sip_dvfs_version_set;
-	sprd_handle.dvfs_init = sip_dvfs_init;
-	sprd_handle.dvfs_debug_init = sip_dvfs_debug_init;
+	sprd_handle.dvfs_ops.dvfs_enable = sip_dvfs_enable;
+	sprd_handle.dvfs_ops.table_update = sip_dvfs_table_update;
+	sprd_handle.dvfs_ops.step_set = sip_dvfs_step_set;
+	sprd_handle.dvfs_ops.margin_set = sip_dvfs_margin_set;
+	sprd_handle.dvfs_ops.freq_set = sip_dvfs_freq_set;
+	sprd_handle.dvfs_ops.freq_get = sip_dvfs_freq_get;
+	sprd_handle.dvfs_ops.pair_get = sip_dvfs_pair_get;
+	sprd_handle.dvfs_ops.pmic_set = sip_dvfs_pmic_set;
+	sprd_handle.dvfs_ops.bin_set = sip_dvfs_bin_set;
+	sprd_handle.dvfs_ops.version_set = sip_dvfs_version_set;
+	sprd_handle.dvfs_ops.dvfs_init = sip_dvfs_init;
+	sprd_handle.dvfs_ops.dvfs_debug_init = sip_dvfs_debug_init;
 
 	sprd_handle.npu_set_freq = sip_npu_set_freq;
 	sprd_handle.npu_disable_idle = sip_npu_disable_idle;

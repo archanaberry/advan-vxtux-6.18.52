@@ -1,8 +1,10 @@
-# 10 blob yang belum tertangani — bukti dan langkah berikutnya
+# 10 blob — status port dan buktinya
 
-**Status 2026-10-24: 7 dari 10 sudah diport.** Tujuh driver itu belum
-melewati build ulang sejak codespace berhenti bisa start (HTTP 402); angka
-`235 .ko` di bawah berasal dari build CI 2026-10-23, sebelum `sprd_iq`.
+**Status 2026-10-24: 10 dari 10 sudah diport.** Tiga terakhir (`mmc_swcq`,
+`sprd-cpufreq-v2`, `sprd-cpufreq-public`) masuk bersama `sprd_iq`; kesepuluh
+driver belum melewati build ulang sejak codespace berhenti bisa start
+(HTTP 402), jadi angka `235 .ko` di bawah masih dari build CI 2026-10-23,
+sebelum `sprd_iq` dan tiga driver terakhir.
 
 | # | blob | status |
 |---|---|---|
@@ -11,9 +13,9 @@ melewati build ulang sejak codespace berhenti bisa start (HTTP 402); angka
 | 8 | `sprd_manufacturer_model.ko` | **selesai** — path root `/`, bukan node `soc-manufacturer` |
 | 9 | `sprd_pdbg.ko` | **selesai** (commit `cb5e91d35`) |
 | 10 | `sprd_power_stat.ko` | **selesai** sebagai `sprd_debugstat` (commit `8bf97026b`) |
-| 3 | `mmc_swcq.ko` | belum — 40 fungsi, butuh pembacaan penuh |
-| 4 | `sprd-cpufreq-v2.ko` | belum — 23 fungsi, disassembly tersedia |
-| 5 | `sprd-cpufreq-public.ko` | belum — bergantung semantik #4 |
+| 3 | `mmc_swcq.ko` | **selesai** — port dari sumber GPL vendor, [RE-MMC-SWCQ.md](RE-MMC-SWCQ.md) |
+| 4 | `sprd-cpufreq-v2.ko` | **selesai** — `drivers/cpufreq/sprd-cpufreq-v2-*` |
+| 5 | `sprd-cpufreq-public.ko` | **selesai** — `drivers/cpufreq/sprd-cpufreq-public.c` |
 | 7 | `sprd_iq.ko` | **selesai** — `sprd_iq`, layout state dipulihkan dari relokasi |
 
 Angka lama (build CI `39946023755`, commit `a0f2e70ce`, 229 `.ko`):
@@ -78,10 +80,29 @@ Port: `drivers/vxtux/soc/autotest/`. Rincian: [RE-SPRD-AUTOTEST.md](RE-SPRD-AUTO
 | EXPORT | `dbg_add_host_log`, `mmc_swcq_finalize_request`, `mmc_swcq_init`, `mmc_swcq_resume`, `mmc_swcq_suspend` |
 | simbol | 62, didominasi `blk_mq_*` (`__blk_mq_end_request`, `blk_mq_*`) + `mmc_*` |
 
-Blob ini menambah lapisan antrean di atas `mmc_host` dan blk-mq. 40 fungsi
-tanpa satu pun header/ABI publik yang bisa dipakai sebagai acuan; ini
-kandidat paling mahal dari sepuluh sisanya. **Butuh sumber vendor** (atau
-dekompilasi penuh) sebelum bisa ditulis.
+**SELESAI.** Sumber GPL vendor ada di
+[donors/gpl/mmc_swcq.c](../donors/gpl/mmc_swcq.c) (2.413 baris, + header),
+dan itu bukan 5.4 mentah: `mmc_cqe_ops` sudah memakai nama 6.x, jadi
+port-nya tipis. Hasil: `drivers/mmc/host/mmc_swcq.c` + `mmc_swcq.h`,
+`CONFIG_MMC_SWCQ` (`drivers/mmc/host/Kconfig` + Makefile), dipilih saat
+probe oleh `mmc_hsq_swcq_init()`.
+
+Wiring didekode dari `sdhci-sprd.ko` (`mmc_hsq_swcq_init` @ 0x4af0): eMMC =
+`(caps2 & (MMC_CAP2_NO_SDIO|MMC_CAP2_NO_SD)) == keduanya`. Probe
+`sdhci_sprd_probe()` menyetel kedua bit itu untuk controller
+`non-removable`, dan node eMMC `sdio3` di `ums512.dtsi` kini `non-removable`.
+`sdhci_sprd_request_done()` memakai `mmc_swcq_finalize_request()` bila
+`mmc->cqe_private` terpasang, runtime PM memakai `mmc_swcq_suspend()/resume()`.
+
+Delta 6.18 yang diterapkan (rincian + bukti di
+[RE-MMC-SWCQ.md](RE-MMC-SWCQ.md)): `mq->use_cqe` → `host->cqe_enabled`,
+`from_timer()` → `timer_container_of()`, stash `android_kabi_reserved1/2`
+dihapus, `proc_create()` → `struct proc_ops`, bit `MMC_CQE_QUEUE_FULL`
+dihapus, `host->cqe_qdepth` diisi di `mmc_swcq_enable()` (tanpa itu tag set
+6.18 jadi 0), include privat `mmc_sdhci_sprd.h` dibuang, dan definisi privat
+`struct mmc_blk_data` disamakan dengan layout 6.18 (`kref`).
+
+Belum diverifikasi: build ulang CI dan boot QEMU.
 
 ## 4. `sprd-cpufreq-v2.ko` — cpufreq DVFS
 
@@ -92,24 +113,34 @@ dekompilasi penuh) sebelum bisa ditulis.
 | penanda DT | `sprd,cpufreq-v2`, `sprd,cpufreq-boost`, `sprd,voltage-margin`, `sprd,multi-version`, `sprd,transition-delay`, `sprd,multi-supply`, `sprd,voltage-step`, `sprd,temp-threshold`, `sprd,cluster-cpumask`, `sprd,pmic-type` |
 | node stok | `/soc/aon/apcpu-dvfs` (`compatible = "sprd,cpufreq-v2"`) |
 
-Sisi firmware sudah terbuka: `sprd_sip_svc` sekarang mengekspor
-`dvfs_*` (ID `0x82000601`..`0x8200060c` dari
-[RE-SPRD-SIP-SVC.md](RE-SPRD-SIP-SVC.md)). Yang belum ada: tabel OPP, arti
-tiap properti DT di atas, dan urutan `dvfs_init`/`table_update` yang dipakai
-driver. Butuh pembacaan `sprd_cpufreq_probe` + `sprd_cpufreq_dvfs_*`.
+**SELESAI.** Port memakai sumber GPL vendor
+([donors/gpl/sprd-cpufreq-v2-driver.c](../donors/gpl/sprd-cpufreq-v2-driver.c)
+dan `sprd-cpufreq-common.h`) dengan sambungan firmware yang sudah terbuka:
+`sprd_sip_svc` mengekspor `dvfs_*` (ID `0x82000601`..`0x8200060c`, lihat
+[RE-SPRD-SIP-SVC.md](RE-SPRD-SIP-SVC.md)) dan `ARM_SPRD_CPUFREQ_V2`
+`select SPRD_SIP_SVC`.
+
+Hasil di `drivers/cpufreq/`: `sprd-cpufreq-v2-driver.c`,
+`sprd-cpufreq-v2-debug.c`, `sprd-cpufreq-v2.h`, `sprd-cpufreq-common.h`,
+`CONFIG_ARM_SPRD_CPUFREQ_V2=m`.
+
+Tidak ikut diport (tidak dipakai jalur DVFS yang diport, tidak ada konsumen
+in-tree): `sprd-cpufreq-common.c` (binning `dev_pm_opp_of_add_table_binning`,
+cpuhp online/offline) dan `sprd-cpufreqsw.c` (gpu volt lock + slave notify,
+modul terpisah di vendor). Bila GPU/devfreq kelak butuh, keduanya tinggal
+ditambah sebagai file terpisah.
 
 ## 5. `sprd-cpufreq-public.ko` — API cpufreq untuk modul lain
 
-3 fungsi (`sprd_cpufreq_update_opp` 476 B, `sprd_cpufreq_update_normal` dan
-`sprd_cpufreq_update_common` masing-masing 148 B), 1 ekspor GPL:
-`sprd_cpufreq_update_opp`. Undefined symbol-nya cuma
-`cpufreq_get_policy`, `get_cpu_device`, `of_parse_phandle`, `strcmp`,
-`memset`, `printk` — jadi modul ini memang tipis: ambil `policy->driver_data`
-dari cluster 0 lalu panggil salah satu dari dua pointer fungsi di dalamnya
-(offset 400 untuk nama node `cpufreq-cluster0`, offset 232 untuk
-`cpufreq-clus0`), meneruskan dua argumen u32. Bergantung penuh pada #4: tanpa
-`cpufreq-v2` tidak ada yang mengisi `driver_data`, sehingga port-nya tidak
-berguna lebih dulu.
+**SELESAI.** `drivers/cpufreq/sprd-cpufreq-public.c`:
+`sprd_cpufreq_update_normal()` (layout `cluster_info`, node
+`cpufreq-cluster0`), `sprd_cpufreq_update_common()` (layout
+`sprd_cpufreq_driver_data`, node `cpufreq-clus0`), dan
+`sprd_cpufreq_update_opp()` dengan `EXPORT_SYMBOL_GPL`.
+
+Satu delta API: blob memakai `cpufreq_get_policy(&policy, 0)` (4.14), yang
+sudah tidak ada; port memakai `cpufreq_cpu_get(0)` + `cpufreq_cpu_put()` di
+semua jalur keluar. `CONFIG_ARM_SPRD_CPUFREQ_PUBLIC=m` bergantung pada #4.
 
 ## 6. `sprd_7sreset.ko` — PMIC 7S reset
 

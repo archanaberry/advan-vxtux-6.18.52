@@ -190,6 +190,20 @@ config MMC_HSQ
 	
 	  If unsure, say N.
 	
+config MMC_SWCQ
+	tristate "Unisoc MMC Host Software Command Queue support"
+	depends on MMC_SDHCI
+	help
+	  This selects the Unisoc software command queue for eMMC hosts
+	  (SW-CQ).  It implements the mmc_cqe_ops interface on top of the
+	  host controller's request_atomic() callback, so the eMMC command
+	  queue (CMD44/45/46/47) works without hardware CQE support.
+	
+	  Chosen at probe time by sdhci-sprd for non-removable (eMMC)
+	  controllers; SD and SDIO hosts keep using MMC_HSQ.
+	
+	  If unsure, say N.
+	
 config MMC_DW
 	tristate "Synopsys DesignWare Memory Card Interface"
 	depends on ARC || ARM || ARM64 || MIPS || RISCV || CSKY || COMPILE_TEST

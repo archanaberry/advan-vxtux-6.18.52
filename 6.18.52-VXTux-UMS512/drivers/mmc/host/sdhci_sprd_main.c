@@ -22,6 +22,16 @@
 #include "sdhci-pltfm.h"
 #include "mmc_hsq.h"
 
+/*
+ * Stock blob wiring: eMMC hosts run the Unisoc software command queue
+ * (mmc_swcq.c, CONFIG_MMC_SWCQ), SD/SDIO hosts the upstream HSQ.  Both are
+ * selected in mmc_hsq_swcq_init() (sdhci-sprd-ext.c).
+ */
+int mmc_hsq_swcq_init(struct sdhci_host *host, struct platform_device *pdev);
+bool mmc_swcq_finalize_request(struct mmc_host *mmc, struct mmc_request *mrq);
+void mmc_swcq_suspend(struct mmc_host *mmc);
+int mmc_swcq_resume(struct mmc_host *mmc);
+
 /* Exported below; the stock blob exports it under the same name. */
 int mmc_send_tuning_cmd(struct mmc_card *card);
 
@@ -416,8 +426,13 @@ static void sdhci_sprd_request_done(struct sdhci_host *host,
 				    struct mmc_request *mrq)
 {
 	/* Validate if the request was from software queue firstly. */
-	if (mmc_hsq_finalize_request(host->mmc, mrq))
+	if (IS_ENABLED(CONFIG_MMC_SWCQ) && host->mmc->cqe_private) {
+		/* SW-CQ host: mmc_hsq was never initialised for it. */
+		if (mmc_swcq_finalize_request(host->mmc, mrq))
+			return;
+	} else if (mmc_hsq_finalize_request(host->mmc, mrq)) {
 		return;
+	}
 
 	mmc_request_done(host->mmc, mrq);
 }
@@ -736,7 +751,6 @@ static int sdhci_sprd_probe(struct platform_device *pdev)
 {
 	struct sdhci_host *host;
 	struct sdhci_sprd_host *sprd_host;
-	struct mmc_hsq *hsq;
 	struct clk *clk;
 	int ret = 0;
 
@@ -769,6 +783,14 @@ static int sdhci_sprd_probe(struct platform_device *pdev)
 	ret = mmc_of_parse(host->mmc);
 	if (ret)
 		return ret;
+
+	/*
+	 * An eMMC has no SD/SDIO personality and is never removable.  The stock
+	 * probe mirrored that into caps2 and mmc_hsq_swcq_init() uses exactly
+	 * this test to pick the SW-CQ, so set the bits here, before it runs.
+	 */
+	if (!mmc_card_is_removable(host->mmc))
+		host->mmc->caps2 |= MMC_CAP2_NO_SD | MMC_CAP2_NO_SDIO;
 
 	if (!mmc_card_is_removable(host->mmc))
 		host->mmc_host_ops.request_atomic = sdhci_sprd_request_atomic;
@@ -853,13 +875,8 @@ static int sdhci_sprd_probe(struct platform_device *pdev)
 
 	sprd_host->flags = host->flags;
 
-	hsq = devm_kzalloc(&pdev->dev, sizeof(*hsq), GFP_KERNEL);
-	if (!hsq) {
-		ret = -ENOMEM;
-		goto err_cleanup_host;
-	}
-
-	ret = mmc_hsq_init(hsq, host->mmc);
+	/* eMMC -> Unisoc SW-CQ, SD/SDIO -> upstream HSQ (see mmc_hsq_swcq_init). */
+	ret = mmc_hsq_swcq_init(host, pdev);
 	if (ret)
 		goto err_cleanup_host;
 
@@ -912,7 +929,10 @@ static int sdhci_sprd_runtime_suspend(struct device *dev)
 	struct sdhci_host *host = dev_get_drvdata(dev);
 	struct sdhci_sprd_host *sprd_host = TO_SPRD_HOST(host);
 
-	mmc_hsq_suspend(host->mmc);
+	if (IS_ENABLED(CONFIG_MMC_SWCQ) && host->mmc->cqe_private)
+		mmc_swcq_suspend(host->mmc);
+	else
+		mmc_hsq_suspend(host->mmc);
 	sdhci_runtime_suspend_host(host);
 
 	clk_disable_unprepare(sprd_host->clk_sdio);
@@ -941,7 +961,10 @@ static int sdhci_sprd_runtime_resume(struct device *dev)
 		goto clk_disable;
 
 	sdhci_runtime_resume_host(host, 1);
-	mmc_hsq_resume(host->mmc);
+	if (IS_ENABLED(CONFIG_MMC_SWCQ) && host->mmc->cqe_private)
+		mmc_swcq_resume(host->mmc);
+	else
+		mmc_hsq_resume(host->mmc);
 
 	return 0;
 

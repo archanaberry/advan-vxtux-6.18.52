@@ -1,0 +1,2404 @@
+; init_module @ 0x0 (44 B)
+  0x0000: str      x30, [x18], #8
+  0x0004: stp      x29, x30, [sp, #-0x10]!
+  0x0008: mov      x29, sp
+  0x000c: cbz      x0, #0x28
+  0x0010: ldrb     w8, [x0]
+  0x0014: cmp      w8, #5
+  0x0018: b.lo     #0x28
+  0x001c: ldp      x29, x30, [sp], #0x10
+  0x0020: ldr      x30, [x18, #-8]!
+  0x0024: ret      
+  0x0028: mov      w0, #2
+
+; __cfi_check_fail @ 0x0 (48 B)
+  0x0000: str      x30, [x18], #8
+  0x0004: stp      x29, x30, [sp, #-0x10]!
+  0x0008: mov      x29, sp
+  0x000c: cbz      x0, #0x28
+  0x0010: ldrb     w8, [x0]
+  0x0014: cmp      w8, #5
+  0x0018: b.lo     #0x28
+  0x001c: ldp      x29, x30, [sp], #0x10
+  0x0020: ldr      x30, [x18, #-8]!
+  0x0024: ret      
+  0x0028: mov      w0, #2
+  0x002c: bl       #0x2c   ; -> __ubsan_handle_cfi_check_fail_abort
+
+; sprd_cpufreq_update_opp_v2 @ 0x30 (688 B)
+  0x0030: sub      sp, sp, #0x50
+  0x0034: str      x30, [x18], #8
+  0x0038: stp      x29, x30, [sp, #0x10]
+  0x003c: str      x23, [sp, #0x20]
+  0x0040: stp      x22, x21, [sp, #0x30]
+  0x0044: stp      x20, x19, [sp, #0x40]
+  0x0048: add      x29, sp, #0x10
+  0x004c: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x0050: ldr      x8, [x8]   ; -> undef+0x0
+  0x0054: mov      w21, w1
+  0x0058: mov      w20, w0
+  0x005c: str      x8, [sp, #8]
+  0x0060: str      xzr, [sp]
+  0x0064: bl       #0x64   ; -> cpufreq_cpu_get
+  0x0068: cbz      x0, #0x214
+  0x006c: ldr      x22, [x0, #0x288]
+  0x0070: mov      x19, x0
+  0x0074: cbz      x22, #0x1e8
+  0x0078: ldr      x8, [x22, #0xe0]
+  0x007c: cbz      x8, #0x1e8
+  0x0080: mov      w8, #0x4dd3
+  0x0084: movk     w8, #0x1062, lsl #16
+  0x0088: smull    x8, w21, w8
+  0x008c: add      x20, x22, #8
+  0x0090: lsr      x9, x8, #0x3f
+  0x0094: asr      x8, x8, #0x26
+  0x0098: mov      x0, x20
+  0x009c: add      w21, w8, w9
+  0x00a0: bl       #0xa0   ; -> mutex_lock
+  0x00a4: add      w8, w21, #0x112
+  0x00a8: cmp      w8, #0x224
+  0x00ac: b.hs     #0x238
+  0x00b0: add      x9, x22, #0xb8
+  0x00b4: ldr      x10, [x9]
+  0x00b8: cmp      x9, x10
+  0x00bc: sub      x8, x10, #0x10
+  0x00c0: b.eq     #0xe0
+  0x00c4: ldr      w11, [x8]
+  0x00c8: ldr      x10, [x10]
+  0x00cc: cmp      w11, w21
+  0x00d0: b.gt     #0xb8
+  0x00d4: ldur     w11, [x10, #-0x10]
+  0x00d8: cmp      w11, w21
+  0x00dc: b.le     #0xb8
+  0x00e0: cbz      x8, #0x258
+  0x00e4: ldr      x9, [x22, #0xa8]
+  0x00e8: ldr      w10, [x8]
+  0x00ec: ldr      w11, [x9]
+  0x00f0: cmp      w10, w11
+  0x00f4: b.le     #0x1c0
+  0x00f8: mov      w11, #4
+  0x00fc: mov      x10, x22
+  0x0100: str      w11, [x10, #0xa4]!
+  0x0104: stur     x8, [x10, #0xc]
+  0x0108: cmp      x8, x9
+  0x010c: str      wzr, [x10]
+  0x0110: b.eq     #0x264
+  0x0114: adrp     x23, #0   ; .bss page +0x0
+  0x0118: ldr      w3, [x22]
+  0x011c: ldr      x0, [x23]   ; -> $d.38
+  0x0120: ldr      w5, [x8]
+  0x0124: adrp     x1, #0   ; .rodata page +0x8e5
+  0x0128: adrp     x2, #0   ; .rodata page +0x5c9
+  0x012c: add      x1, x1, #0   ; -> $d.39+0x5d3
+  0x0130: add      x2, x2, #0   ; -> $d.39+0x2b7
+  0x0134: mov      w4, w21
+  0x0138: bl       #0x138   ; -> _dev_info
+  0x013c: ldr      x1, [x22, #0xb0]
+  0x0140: mov      x0, x19
+  0x0144: bl       #0x144   ; -> 0x2e0
+  0x0148: cbnz     w0, #0x2a8
+  0x014c: ldr      x21, [x22, #0xe0]
+  0x0150: ldr      x8, [x22, #0xb0]
+  0x0154: mov      x0, #0xaf81
+  0x0158: movk     x0, #0x90f5, lsl #16
+  0x015c: movk     x0, #0xcd8c, lsl #32
+  0x0160: movk     x0, #0x33fb, lsl #48
+  0x0164: mov      x1, x21
+  0x0168: str      x8, [x22, #0xa8]
+  0x016c: bl       #0x16c   ; -> __cfi_slowpath
+  0x0170: ldr      w8, [x22, #0x9c]
+  0x0174: ldr      w0, [x22]
+  0x0178: mov      x2, sp
+  0x017c: mov      x3, xzr
+  0x0180: sub      w1, w8, #1
+  0x0184: blr      x21
+  0x0188: cbnz     w0, #0x2bc
+  0x018c: mov      x0, x19
+  0x0190: bl       #0x190   ; -> cpufreq_cpu_put
+  0x0194: mov      x0, x20
+  0x0198: bl       #0x198   ; -> mutex_unlock
+  0x019c: ldr      x8, [sp]
+  0x01a0: mov      x9, #0xf7cf
+  0x01a4: movk     x9, #0xe353, lsl #16
+  0x01a8: movk     x9, #0x9ba5, lsl #32
+  0x01ac: lsr      x8, x8, #3
+  0x01b0: movk     x9, #0x20c4, lsl #48
+  0x01b4: umulh    x8, x8, x9
+  0x01b8: lsr      x0, x8, #4
+  0x01bc: b        #0x278
+  0x01c0: ldr      x10, [x22, #0xb0]
+  0x01c4: cmp      x8, x10
+  0x01c8: b.ne     #0x25c
+  0x01cc: mov      x10, x22
+  0x01d0: ldr      w11, [x10, #0xa4]!
+  0x01d4: add      w11, w11, #1
+  0x01d8: cmp      w11, #3
+  0x01dc: str      w11, [x10]
+  0x01e0: b.hs     #0x108
+  0x01e4: b        #0x264
+  0x01e8: adrp     x8, #0   ; .bss page +0x0
+  0x01ec: ldr      x0, [x8]   ; -> $d.38
+  0x01f0: adrp     x1, #0   ; .rodata page +0x470
+  0x01f4: adrp     x2, #0   ; .rodata page +0x5c9
+  0x01f8: add      x1, x1, #0   ; -> $d.39+0x15e
+  0x01fc: add      x2, x2, #0   ; -> $d.39+0x2b7
+  0x0200: mov      w3, w20
+  0x0204: bl       #0x204   ; -> _dev_err
+  0x0208: mov      x0, x19
+  0x020c: bl       #0x20c   ; -> cpufreq_cpu_put
+  0x0210: b        #0x274
+  0x0214: adrp     x8, #0   ; .bss page +0x0
+  0x0218: ldr      x0, [x8]   ; -> $d.38
+  0x021c: adrp     x1, #0   ; .rodata page +0x312
+  0x0220: adrp     x2, #0   ; .rodata page +0x5c9
+  0x0224: add      x1, x1, #0   ; -> $d.39
+  0x0228: add      x2, x2, #0   ; -> $d.39+0x2b7
+  0x022c: mov      w3, w20
+  0x0230: bl       #0x230   ; -> _dev_err
+  0x0234: b        #0x274
+  0x0238: adrp     x8, #0   ; .bss page +0x0
+  0x023c: ldr      x0, [x8]   ; -> $d.38
+  0x0240: adrp     x1, #0   ; .rodata page +0x637
+  0x0244: adrp     x2, #0   ; .rodata page +0x1ba
+  0x0248: add      x1, x1, #0   ; -> $d.39+0x325
+  0x024c: add      x2, x2, #0   ; -> .rodata+0x1ba
+  0x0250: mov      w3, w21
+  0x0254: bl       #0x254   ; -> _dev_err
+  0x0258: ldr      x8, [x22, #0xa8]
+  0x025c: str      x8, [x22, #0xb0]
+  0x0260: str      wzr, [x22, #0xa4]
+  0x0264: mov      x0, x19
+  0x0268: bl       #0x268   ; -> cpufreq_cpu_put
+  0x026c: mov      x0, x20
+  0x0270: bl       #0x270   ; -> mutex_unlock
+  0x0274: mov      w0, wzr
+  0x0278: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x027c: ldr      x8, [sp, #8]
+  0x0280: ldr      x9, [x9]   ; -> undef+0x0
+  0x0284: cmp      x9, x8
+  0x0288: b.ne     #0x2dc
+  0x028c: ldp      x29, x30, [sp, #0x10]
+  0x0290: ldp      x20, x19, [sp, #0x40]
+  0x0294: ldp      x22, x21, [sp, #0x30]
+  0x0298: ldr      x23, [sp, #0x20]
+  0x029c: ldr      x30, [x18, #-8]!
+  0x02a0: add      sp, sp, #0x50
+  0x02a4: ret      
+  0x02a8: ldr      x0, [x23]   ; -> $d.38
+  0x02ac: ldr      w3, [x22]
+  0x02b0: adrp     x1, #0   ; .rodata page +0xacf
+  0x02b4: add      x1, x1, #0   ; -> $d.39+0x7bd
+  0x02b8: b        #0x2cc
+  0x02bc: ldr      x0, [x23]   ; -> $d.38
+  0x02c0: ldr      w3, [x22]
+  0x02c4: adrp     x1, #0   ; .rodata page +0x86
+  0x02c8: add      x1, x1, #0   ; -> .rodata+0x86
+  0x02cc: adrp     x2, #0   ; .rodata page +0x5c9
+  0x02d0: add      x2, x2, #0   ; -> $d.39+0x2b7
+  0x02d4: bl       #0x2d4   ; -> _dev_err
+  0x02d8: b        #0x264
+  0x02dc: bl       #0x2dc   ; -> __stack_chk_fail
+
+; sprd_policy_table_update @ 0x2e0 (716 B)
+  0x02e0: sub      sp, sp, #0x80
+  0x02e4: str      x30, [x18], #8
+  0x02e8: stp      x29, x30, [sp, #0x20]
+  0x02ec: stp      x28, x27, [sp, #0x30]
+  0x02f0: stp      x26, x25, [sp, #0x40]
+  0x02f4: stp      x24, x23, [sp, #0x50]
+  0x02f8: stp      x22, x21, [sp, #0x60]
+  0x02fc: stp      x20, x19, [sp, #0x70]
+  0x0300: add      x29, sp, #0x20
+  0x0304: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x0308: ldr      x8, [x8]   ; -> undef+0x0
+  0x030c: mov      x19, x0
+  0x0310: mov      x20, x1
+  0x0314: stur     x8, [x29, #-8]
+  0x0318: stp      xzr, xzr, [sp, #8]
+  0x031c: str      xzr, [sp]
+  0x0320: ldr      w0, [x0, #0x1c]
+  0x0324: bl       #0x324   ; -> get_cpu_device
+  0x0328: cbnz     x0, #0x344
+  0x032c: adrp     x8, #0   ; .bss page +0x0
+  0x0330: ldr      x0, [x8]   ; -> $d.38
+  0x0334: ldr      w3, [x19, #0x1c]
+  0x0338: adrp     x1, #0   ; .rodata page +0x583
+  0x033c: add      x1, x1, #0   ; -> $d.39+0x271
+  0x0340: b        #0x370
+  0x0344: ldr      x27, [x19, #0x288]
+  0x0348: cbz      x27, #0x35c
+  0x034c: ldr      x8, [x27, #0xc8]
+  0x0350: cbz      x8, #0x35c
+  0x0354: ldr      x8, [x27, #0xe0]
+  0x0358: cbnz     x8, #0x3b8
+  0x035c: adrp     x8, #0   ; .bss page +0x0
+  0x0360: ldr      x0, [x8]   ; -> $d.38
+  0x0364: ldr      w3, [x19, #0x1c]
+  0x0368: adrp     x1, #0   ; .rodata page +0x6d8
+  0x036c: add      x1, x1, #0   ; -> $d.39+0x3c6
+  0x0370: adrp     x2, #0   ; .rodata page +0x997
+  0x0374: add      x2, x2, #0   ; -> $d.39+0x685
+  0x0378: bl       #0x378   ; -> _dev_err
+  0x037c: mov      w0, #-0x16
+  0x0380: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x0384: ldur     x8, [x29, #-8]
+  0x0388: ldr      x9, [x9]   ; -> undef+0x0
+  0x038c: cmp      x9, x8
+  0x0390: b.ne     #0x574
+  0x0394: ldp      x29, x30, [sp, #0x20]
+  0x0398: ldp      x20, x19, [sp, #0x70]
+  0x039c: ldp      x22, x21, [sp, #0x60]
+  0x03a0: ldp      x24, x23, [sp, #0x50]
+  0x03a4: ldp      x26, x25, [sp, #0x40]
+  0x03a8: ldp      x28, x27, [sp, #0x30]
+  0x03ac: ldr      x30, [x18, #-8]!
+  0x03b0: add      sp, sp, #0x80
+  0x03b4: ret      
+  0x03b8: adrp     x28, #0   ; .bss page +0x0
+  0x03bc: mov      x21, x0
+  0x03c0: ldr      w3, [x27]
+  0x03c4: ldr      x0, [x28]   ; -> $d.38
+  0x03c8: ldr      w4, [x20]
+  0x03cc: adrp     x1, #0   ; .rodata page +0x1ce
+  0x03d0: adrp     x2, #0   ; .rodata page +0x997
+  0x03d4: add      x1, x1, #0   ; -> .rodata+0x1ce
+  0x03d8: add      x2, x2, #0   ; -> $d.39+0x685
+  0x03dc: bl       #0x3dc   ; -> _dev_info
+  0x03e0: ldr      x23, [x27, #0xc8]
+  0x03e4: mov      x0, #0x70cd
+  0x03e8: movk     x0, #0x725d, lsl #16
+  0x03ec: movk     x0, #0xfcb1, lsl #32
+  0x03f0: movk     x0, #0x9dd8, lsl #48
+  0x03f4: mov      x1, x23
+  0x03f8: bl       #0x3f8   ; -> __cfi_slowpath
+  0x03fc: ldr      w0, [x27]
+  0x0400: ldr      w1, [x20]
+  0x0404: add      x22, x27, #0x9c
+  0x0408: mov      x2, x22
+  0x040c: blr      x23
+  0x0410: cbnz     w0, #0x4f4
+  0x0414: nop      
+  0x0418: ldr      w8, [x22]
+  0x041c: cbz      w8, #0x4b4
+  0x0420: adrp     x24, #0   ; .rodata page +0x818
+  0x0424: adrp     x25, #0   ; .rodata page +0x997
+  0x0428: mov      w23, wzr
+  0x042c: add      x24, x24, #0   ; -> $d.39+0x506
+  0x0430: add      x25, x25, #0   ; -> $d.39+0x685
+  0x0434: ldr      x26, [x27, #0xe0]
+  0x0438: mov      x0, #0xaf81
+  0x043c: movk     x0, #0x90f5, lsl #16
+  0x0440: movk     x0, #0xcd8c, lsl #32
+  0x0444: movk     x0, #0x33fb, lsl #48
+  0x0448: mov      x1, x26
+  0x044c: bl       #0x44c   ; -> __cfi_slowpath
+  0x0450: ldr      w0, [x27]
+  0x0454: add      x2, sp, #8
+  0x0458: mov      x3, sp
+  0x045c: mov      w1, w23
+  0x0460: blr      x26
+  0x0464: ldr      x8, [x28]   ; -> $d.38
+  0x0468: cbnz     w0, #0x50c
+  0x046c: ldp      x4, x3, [sp]
+  0x0470: mov      x0, x8
+  0x0474: mov      x1, x24
+  0x0478: mov      x2, x25
+  0x047c: bl       #0x47c   ; -> _dev_info
+  0x0480: ldr      x8, [x19, #0x170]
+  0x0484: cbz      x8, #0x494
+  0x0488: ldr      x1, [sp, #8]
+  0x048c: mov      x0, x21
+  0x0490: bl       #0x490   ; -> dev_pm_opp_remove
+  0x0494: ldp      x2, x1, [sp]
+  0x0498: mov      x0, x21
+  0x049c: bl       #0x49c   ; -> dev_pm_opp_add
+  0x04a0: cbnz     w0, #0x550
+  0x04a4: ldr      w8, [x22]
+  0x04a8: add      w23, w23, #1
+  0x04ac: cmp      w23, w8
+  0x04b0: b.lo     #0x434
+  0x04b4: ldr      x8, [x20, #8]
+  0x04b8: cbz      x8, #0x4c4
+  0x04bc: str      x8, [x19, #0x170]
+  0x04c0: b        #0x4e4
+  0x04c4: add      x1, sp, #0x10
+  0x04c8: mov      x0, x21
+  0x04cc: bl       #0x4cc   ; -> dev_pm_opp_init_cpufreq_table
+  0x04d0: cbnz     w0, #0x52c
+  0x04d4: ldr      x8, [sp, #0x10]
+  0x04d8: str      x8, [x19, #0x170]
+  0x04dc: str      x8, [x20, #8]
+  0x04e0: ldr      x8, [x19, #0x170]
+  0x04e4: ldr      w8, [x8, #8]
+  0x04e8: mov      w0, wzr
+  0x04ec: str      w8, [x19, #0x44]
+  0x04f0: b        #0x380
+  0x04f4: ldr      x0, [x28]   ; -> $d.38
+  0x04f8: ldr      w3, [x27]
+  0x04fc: ldr      w4, [x20]
+  0x0500: adrp     x1, #0   ; .rodata page +0x5e4
+  0x0504: add      x1, x1, #0   ; -> $d.39+0x2d2
+  0x0508: b        #0x540
+  0x050c: ldr      w3, [x27]
+  0x0510: adrp     x1, #0   ; .rodata page +0xdb1
+  0x0514: adrp     x2, #0   ; .rodata page +0x997
+  0x0518: add      x1, x1, #0   ; -> $d.39+0xa9f
+  0x051c: add      x2, x2, #0   ; -> $d.39+0x685
+  0x0520: mov      x0, x8
+  0x0524: mov      w4, w23
+  0x0528: b        #0x548
+  0x052c: mov      w4, w0
+  0x0530: ldr      x0, [x28]   ; -> $d.38
+  0x0534: ldr      w3, [x27]
+  0x0538: adrp     x1, #0   ; .rodata page +0x3fa
+  0x053c: add      x1, x1, #0   ; -> $d.39+0xe8
+  0x0540: adrp     x2, #0   ; .rodata page +0x997
+  0x0544: add      x2, x2, #0   ; -> $d.39+0x685
+  0x0548: bl       #0x548   ; -> _dev_err
+  0x054c: b        #0x37c
+  0x0550: mov      w5, w0
+  0x0554: ldr      x0, [x28]   ; -> $d.38
+  0x0558: ldp      x4, x3, [sp]
+  0x055c: adrp     x1, #0   ; .rodata page +0xb5f
+  0x0560: adrp     x2, #0   ; .rodata page +0x997
+  0x0564: add      x1, x1, #0   ; -> $d.39+0x84d
+  0x0568: add      x2, x2, #0   ; -> $d.39+0x685
+  0x056c: bl       #0x56c   ; -> _dev_err
+  0x0570: b        #0x37c
+  0x0574: bl       #0x574   ; -> __stack_chk_fail
+  0x0578: ldr      x1, [x28]   ; -> $d.38
+  0x057c: ldr      w4, [x27]
+  0x0580: ldr      w5, [x27, #0x9c]
+  0x0584: adrp     x0, #0   ; __verbose page +0x0
+  0x0588: adrp     x2, #0   ; .rodata page +0xcb6
+  0x058c: adrp     x3, #0   ; .rodata page +0x997
+  0x0590: add      x0, x0, #0   ; -> $d.40
+  0x0594: add      x2, x2, #0   ; -> $d.39+0x9a4
+  0x0598: add      x3, x3, #0   ; -> $d.39+0x685
+  0x059c: bl       #0x59c   ; -> __dynamic_dev_dbg
+  0x05a0: ldr      w8, [x22]
+  0x05a4: cbnz     w8, #0x420
+  0x05a8: b        #0x4b4
+
+; sprd_cpufreq_probe @ 0x5ac (656 B)
+  0x05ac: sub      sp, sp, #0x50
+  0x05b0: str      x30, [x18], #8
+  0x05b4: stp      x29, x30, [sp, #0x20]
+  0x05b8: stp      x22, x21, [sp, #0x30]
+  0x05bc: stp      x20, x19, [sp, #0x40]
+  0x05c0: add      x29, sp, #0x20
+  0x05c4: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x05c8: ldr      x8, [x8]   ; -> undef+0x0
+  0x05cc: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x05d0: mov      w10, #0x3a98
+  0x05d4: adrp     x1, #0   ; .rodata page +0x48f
+  0x05d8: stur     x8, [x29, #-8]
+  0x05dc: ldr      x8, [x9]   ; -> undef+0x0
+  0x05e0: adrp     x2, #0   ; .rodata page +0x799
+  0x05e4: adrp     x9, #0   ; .bss page +0x8
+  0x05e8: add      x0, x0, #0x10
+  0x05ec: adrp     x21, #0   ; .bss page +0x0
+  0x05f0: add      x8, x8, x10
+  0x05f4: add      x1, x1, #0   ; -> $d.39+0x17d
+  0x05f8: add      x2, x2, #0   ; -> $d.39+0x487
+  0x05fc: str      x8, [x9]   ; -> $d.38+0x40
+  0x0600: str      x0, [x21]   ; -> $d.38
+  0x0604: bl       #0x604   ; -> _dev_info
+  0x0608: adrp     x0, #0   ; .rodata page +0x9b0
+  0x060c: add      x0, x0, #0   ; -> $d.39+0x69e
+  0x0610: mov      x1, xzr
+  0x0614: str      xzr, [sp, #0x10]
+  0x0618: str      wzr, [sp, #0xc]
+  0x061c: bl       #0x61c   ; -> of_find_node_opts_by_path
+  0x0620: adrp     x1, #0   ; .rodata page +0x67
+  0x0624: add      x1, x1, #0   ; -> .rodata+0x67
+  0x0628: add      x2, sp, #0x10
+  0x062c: bl       #0x62c   ; -> of_property_read_string
+  0x0630: cbnz     w0, #0x654
+  0x0634: ldr      x0, [sp, #0x10]
+  0x0638: adrp     x1, #0   ; .rodata page +0x120
+  0x063c: add      x1, x1, #0   ; -> .rodata+0x120
+  0x0640: bl       #0x640   ; -> strstr
+  0x0644: cbnz     x0, #0x750
+  0x0648: adrp     x0, #0   ; .rodata page +0x725
+  0x064c: add      x0, x0, #0   ; -> $d.39+0x413
+  0x0650: b        #0x65c
+  0x0654: adrp     x0, #0   ; .rodata page +0x91c
+  0x0658: add      x0, x0, #0   ; -> $d.39+0x60a
+  0x065c: bl       #0x65c   ; -> printk
+  0x0660: mov      w19, wzr
+  0x0664: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x0668: ldr      w0, [x8]   ; -> undef+0x0
+  0x066c: ldr      x20, [x21]   ; -> $d.38
+  0x0670: bl       #0x670   ; -> __sw_hweight64
+  0x0674: sub      w8, w0, #1
+  0x0678: cmp      w8, #0x20
+  0x067c: b.hs     #0x830
+  0x0680: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x0684: add      x9, x9, #0   ; -> undef+0x0
+  0x0688: mov      w10, #0x28
+  0x068c: umaddl   x8, w8, w10, x9
+  0x0690: ldr      w8, [x8, #8]
+  0x0694: mov      w9, #0xf0
+  0x0698: mov      w2, #0xdc0
+  0x069c: mov      x0, x20
+  0x06a0: add      w8, w8, #1
+  0x06a4: umull    x1, w8, w9
+  0x06a8: bl       #0x6a8   ; -> devm_kmalloc
+  0x06ac: adrp     x22, #0   ; .bss page +0x10
+  0x06b0: str      x0, [x22]   ; -> $d.38+0x80
+  0x06b4: cbnz     x0, #0x6d8
+  0x06b8: ldr      x0, [x21]   ; -> $d.38
+  0x06bc: adrp     x1, #0   ; .rodata page +0x3b1
+  0x06c0: adrp     x2, #0   ; .rodata page +0x799
+  0x06c4: add      x1, x1, #0   ; -> $d.39+0x9f
+  0x06c8: add      x2, x2, #0   ; -> $d.39+0x487
+  0x06cc: bl       #0x6cc   ; -> _dev_err
+  0x06d0: mov      w20, #-0xc
+  0x06d4: b        #0x7e4
+  0x06d8: bl       #0x6d8   ; -> 0x83c
+  0x06dc: cbnz     w0, #0x790
+  0x06e0: ldr      x8, [x22]   ; -> $d.38+0x80
+  0x06e4: mov      x0, #0xadbd
+  0x06e8: movk     x0, #0x8d51, lsl #16
+  0x06ec: movk     x0, #0x7859, lsl #32
+  0x06f0: ldr      x20, [x8, #0x30]
+  0x06f4: movk     x0, #0xac37, lsl #48
+  0x06f8: mov      x1, x20
+  0x06fc: bl       #0x6fc   ; -> __cfi_slowpath
+  0x0700: mov      w0, w19
+  0x0704: blr      x20
+  0x0708: ldr      x8, [x21]   ; -> $d.38
+  0x070c: cbnz     w0, #0x7b0
+  0x0710: mov      x0, x8
+  0x0714: bl       #0x714   ; -> sprd_debug_init
+  0x0718: cbnz     w0, #0x7c8
+  0x071c: adrp     x0, #0   ; .data page +0xf0
+  0x0720: add      x0, x0, #0   ; -> $d.41+0xf0
+  0x0724: bl       #0x724   ; -> cpufreq_register_driver
+  0x0728: ldr      x8, [x21]   ; -> $d.38
+  0x072c: mov      w20, w0
+  0x0730: cbnz     w0, #0x814
+  0x0734: adrp     x1, #0   ; .rodata page +0x0
+  0x0738: adrp     x2, #0   ; .rodata page +0x799
+  0x073c: add      x1, x1, #0   ; -> .rodata+0x0
+  0x0740: add      x2, x2, #0   ; -> $d.39+0x487
+  0x0744: mov      x0, x8
+  0x0748: bl       #0x748   ; -> _dev_info
+  0x074c: b        #0x7e4
+  0x0750: adrp     x1, #0   ; .rodata page +0x654
+  0x0754: add      x1, x1, #0   ; -> $d.39+0x342
+  0x0758: add      x2, sp, #0xc
+  0x075c: bl       #0x75c   ; -> sscanf
+  0x0760: ldr      w19, [sp, #0xc]
+  0x0764: and      w8, w19, #0xff
+  0x0768: cmp      w8, #0x5a
+  0x076c: b.ne     #0x664
+  0x0770: ldr      x0, [x21]   ; -> $d.38
+  0x0774: adrp     x1, #0   ; .rodata page +0xaf2
+  0x0778: adrp     x2, #0   ; .rodata page +0x799
+  0x077c: add      x1, x1, #0   ; -> $d.39+0x7e0
+  0x0780: add      x2, x2, #0   ; -> $d.39+0x487
+  0x0784: bl       #0x784   ; -> _dev_info
+  0x0788: mov      w20, wzr
+  0x078c: b        #0x7e4
+  0x0790: mov      w20, w0
+  0x0794: ldr      x0, [x21]   ; -> $d.38
+  0x0798: adrp     x1, #0   ; .rodata page +0x836
+  0x079c: adrp     x2, #0   ; .rodata page +0x799
+  0x07a0: add      x1, x1, #0   ; -> $d.39+0x524
+  0x07a4: add      x2, x2, #0   ; -> $d.39+0x487
+  0x07a8: bl       #0x7a8   ; -> _dev_err
+  0x07ac: b        #0x7e4
+  0x07b0: adrp     x1, #0   ; .rodata page +0x66e
+  0x07b4: adrp     x2, #0   ; .rodata page +0x799
+  0x07b8: add      x1, x1, #0   ; -> $d.39+0x35c
+  0x07bc: add      x2, x2, #0   ; -> $d.39+0x487
+  0x07c0: mov      x0, x8
+  0x07c4: b        #0x7dc
+  0x07c8: ldr      x0, [x21]   ; -> $d.38
+  0x07cc: adrp     x1, #0   ; .rodata page +0xe02
+  0x07d0: adrp     x2, #0   ; .rodata page +0x799
+  0x07d4: add      x1, x1, #0   ; -> $d.39+0xaf0
+  0x07d8: add      x2, x2, #0   ; -> $d.39+0x487
+  0x07dc: bl       #0x7dc   ; -> _dev_err
+  0x07e0: mov      w20, #-0x16
+  0x07e4: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x07e8: ldur     x8, [x29, #-8]
+  0x07ec: ldr      x9, [x9]   ; -> undef+0x0
+  0x07f0: cmp      x9, x8
+  0x07f4: b.ne     #0x838
+  0x07f8: ldp      x29, x30, [sp, #0x20]
+  0x07fc: mov      w0, w20
+  0x0800: ldp      x20, x19, [sp, #0x40]
+  0x0804: ldp      x22, x21, [sp, #0x30]
+  0x0808: ldr      x30, [x18, #-8]!
+  0x080c: add      sp, sp, #0x50
+  0x0810: ret      
+  0x0814: adrp     x1, #0   ; .rodata page +0x1f8
+  0x0818: adrp     x2, #0   ; .rodata page +0x799
+  0x081c: add      x1, x1, #0   ; -> .rodata+0x1f8
+  0x0820: add      x2, x2, #0   ; -> $d.39+0x487
+  0x0824: mov      x0, x8
+  0x0828: bl       #0x828   ; -> _dev_err
+  0x082c: b        #0x7e4
+  0x0830: mov      w0, #0x12
+  0x0834: bl       #0x834   ; -> __ubsan_handle_cfi_check_fail_abort
+  0x0838: bl       #0x838   ; -> __stack_chk_fail
+
+; sprd_cluster_info_init @ 0x83c (2976 B)
+  0x083c: sub      sp, sp, #0xc0
+  0x0840: str      x30, [x18], #8
+  0x0844: stp      x29, x30, [sp, #0x60]
+  0x0848: stp      x28, x27, [sp, #0x70]
+  0x084c: stp      x26, x25, [sp, #0x80]
+  0x0850: stp      x24, x23, [sp, #0x90]
+  0x0854: stp      x22, x21, [sp, #0xa0]
+  0x0858: stp      x20, x19, [sp, #0xb0]
+  0x085c: add      x29, sp, #0x60
+  0x0860: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x0864: ldr      x8, [x8]   ; -> undef+0x0
+  0x0868: adrp     x1, #0   ; SHN_UNDEF page +0x0
+  0x086c: mov      x23, x0
+  0x0870: add      x1, x1, #0   ; -> undef+0x0
+  0x0874: mov      w0, #-1
+  0x0878: stur     x8, [x29, #-8]
+  0x087c: bl       #0x87c   ; -> cpumask_next
+  0x0880: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x0884: ldr      w8, [x8]   ; -> undef+0x0
+  0x0888: cmp      w0, w8
+  0x088c: b.hs     #0x1174
+  0x0890: adrp     x20, #0   ; SHN_UNDEF page +0x0
+  0x0894: mov      w21, w0
+  0x0898: add      x20, x20, #0   ; -> undef+0x0
+  0x089c: mov      w22, #0x28
+  0x08a0: mov      w26, #0xf0
+  0x08a4: str      x23, [sp, #0x20]
+  0x08a8: cmp      w21, #0x20
+  0x08ac: b.hs     #0x13cc
+  0x08b0: umaddl   x19, w21, w22, x20
+  0x08b4: ldrsw    x9, [x19, #8]!
+  0x08b8: madd     x25, x9, x26, x23
+  0x08bc: mov      x24, x25
+  0x08c0: ldr      x8, [x24, #0x28]!
+  0x08c4: cbz      x8, #0x8f4
+  0x08c8: nop      
+  0x08cc: adrp     x1, #0   ; SHN_UNDEF page +0x0
+  0x08d0: mov      w0, w21
+  0x08d4: add      x1, x1, #0   ; -> undef+0x0
+  0x08d8: bl       #0x8d8   ; -> cpumask_next
+  0x08dc: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x08e0: ldr      w8, [x8]   ; -> undef+0x0
+  0x08e4: mov      w21, w0
+  0x08e8: cmp      w0, w8
+  0x08ec: b.lo     #0x8a8
+  0x08f0: b        #0x1174
+  0x08f4: mov      w0, w21
+  0x08f8: str      x9, [sp, #0x18]
+  0x08fc: bl       #0x8fc   ; -> get_cpu_device
+  0x0900: cbz      x0, #0x11b4
+  0x0904: ldr      x0, [x0, #0x300]
+  0x0908: adrp     x1, #0   ; .rodata page +0x7ac
+  0x090c: add      x1, x1, #0   ; -> $d.39+0x49a
+  0x0910: mov      w2, wzr
+  0x0914: bl       #0x914   ; -> of_parse_phandle
+  0x0918: str      x0, [x24]
+  0x091c: cbz      x0, #0x11b8
+  0x0920: ldr      w8, [x19]
+  0x0924: ldr      x19, [sp, #0x18]
+  0x0928: adrp     x1, #0   ; .rodata page +0xcf6
+  0x092c: adrp     x2, #0   ; .bss page +0x18
+  0x0930: add      x1, x1, #0   ; -> $d.39+0x9e4
+  0x0934: madd     x9, x19, x26, x23
+  0x0938: add      x0, x9, #8
+  0x093c: add      x2, x2, #0   ; -> $d.38+0x18
+  0x0940: str      w8, [x25]
+  0x0944: bl       #0x944   ; -> __mutex_init
+  0x0948: bl       #0x948   ; -> sprd_sip_svc_get_handle
+  0x094c: cbz      x0, #0x11f4
+  0x0950: ldr      x8, [x0, #0x70]
+  0x0954: madd     x27, x19, x26, x23
+  0x0958: mov      x9, x27
+  0x095c: mov      x19, x27
+  0x0960: str      x8, [x27, #0x40]
+  0x0964: ldr      x8, [x0, #0x78]
+  0x0968: mov      x20, x27
+  0x096c: mov      x28, x27
+  0x0970: mov      x11, x27
+  0x0974: str      x8, [x27, #0xc8]
+  0x0978: ldr      x8, [x0, #0x80]
+  0x097c: adrp     x26, #0   ; .rodata page +0xbd3
+  0x0980: add      x26, x26, #0   ; -> $d.39+0x8c1
+  0x0984: mov      w3, #1
+  0x0988: str      x8, [x9, #0x50]!
+  0x098c: ldr      x10, [x0, #0x88]
+  0x0990: cmp      x9, #0
+  0x0994: mov      x1, x26
+  0x0998: mov      x4, xzr
+  0x099c: str      x10, [x19, #0x60]!
+  0x09a0: ldr      x10, [x0, #0x90]
+  0x09a4: csel     x23, xzr, x8, eq
+  0x09a8: str      x10, [x27, #0xd0]
+  0x09ac: ldr      x10, [x0, #0x98]
+  0x09b0: str      x10, [x27, #0xd8]
+  0x09b4: ldr      x10, [x0, #0xa0]
+  0x09b8: str      x10, [x27, #0xe0]
+  0x09bc: ldr      x10, [x0, #0xa8]
+  0x09c0: str      x10, [x20, #0x70]!
+  0x09c4: ldr      x10, [x0, #0xb0]
+  0x09c8: str      x10, [x28, #0x80]!
+  0x09cc: ldr      x10, [x0, #0xb8]
+  0x09d0: str      x10, [x11, #0x90]!
+  0x09d4: ldr      x10, [x0, #0xc0]
+  0x09d8: str      x11, [sp, #8]
+  0x09dc: adrp     x11, #0   ; .rodata page +0xff0
+  0x09e0: add      x11, x11, #0   ; -> $d.39+0xcde
+  0x09e4: str      x10, [x27, #0x30]
+  0x09e8: ldr      x10, [x0, #0xc8]
+  0x09ec: ldr      x11, [x11]
+  0x09f0: str      x10, [x27, #0x38]!
+  0x09f4: mov      x10, #0x2d63
+  0x09f8: movk     x10, #0x7974, lsl #16
+  0x09fc: movk     x10, #0x6570, lsl #32
+  0x0a00: stp      xzr, xzr, [x29, #-0x18]
+  0x0a04: stp      x11, x10, [x29, #-0x28]
+  0x0a08: ldr      x0, [x24]
+  0x0a0c: add      x22, x27, #0x10
+  0x0a10: mov      x2, x22
+  0x0a14: bl       #0xa14   ; -> of_property_read_variable_u32_array
+  0x0a18: str      x25, [sp, #0x10]
+  0x0a1c: tbnz     w0, #0x1f, #0xa58
+  0x0a20: cbz      x23, #0xa4c
+  0x0a24: mov      x0, #0x503d
+  0x0a28: movk     x0, #0x4f12, lsl #16
+  0x0a2c: movk     x0, #0x1f8c, lsl #32
+  0x0a30: movk     x0, #0xcea3, lsl #48
+  0x0a34: mov      x1, x23
+  0x0a38: bl       #0xa38   ; -> __cfi_slowpath
+  0x0a3c: ldr      w0, [x25]
+  0x0a40: ldr      w1, [x22]
+  0x0a44: blr      x23
+  0x0a48: cbnz     w0, #0x1298
+  0x0a4c: cbnz     x19, #0xa84
+  0x0a50: mov      x22, xzr
+  0x0a54: b        #0xa88
+  0x0a58: adrp     x8, #0   ; .bss page +0x0
+  0x0a5c: ldr      x0, [x8]   ; -> $d.38
+  0x0a60: ldr      w3, [x25]
+  0x0a64: adrp     x1, #0   ; .rodata page +0xd06
+  0x0a68: adrp     x2, #0   ; .rodata page +0x25
+  0x0a6c: add      x1, x1, #0   ; -> $d.39+0x9f4
+  0x0a70: add      x2, x2, #0   ; -> .rodata+0x25
+  0x0a74: mov      x4, x26
+  0x0a78: bl       #0xa78   ; -> _dev_warn
+  0x0a7c: str      wzr, [x22]
+  0x0a80: cbz      x19, #0xa50
+  0x0a84: ldr      x22, [x19]
+  0x0a88: ldr      x0, [x24]
+  0x0a8c: adrp     x19, #0   ; .rodata page +0x424
+  0x0a90: add      x19, x19, #0   ; -> $d.39+0x112
+  0x0a94: add      x25, x27, #0x20
+  0x0a98: adrp     x23, #0   ; .rodata page +0x8b8
+  0x0a9c: mov      w3, #1
+  0x0aa0: mov      x1, x19
+  0x0aa4: mov      x2, x25
+  0x0aa8: mov      x4, xzr
+  0x0aac: mov      w26, #0xf0
+  0x0ab0: add      x23, x23, #0   ; -> $d.39+0x5a6
+  0x0ab4: bl       #0xab4   ; -> of_property_read_variable_u32_array
+  0x0ab8: tbnz     w0, #0x1f, #0xaf0
+  0x0abc: cbz      x22, #0xb1c
+  0x0ac0: mov      x0, #0x503d
+  0x0ac4: movk     x0, #0x4f12, lsl #16
+  0x0ac8: movk     x0, #0x1f8c, lsl #32
+  0x0acc: movk     x0, #0xcea3, lsl #48
+  0x0ad0: mov      x1, x22
+  0x0ad4: bl       #0xad4   ; -> __cfi_slowpath
+  0x0ad8: ldr      x8, [sp, #0x10]
+  0x0adc: ldr      w1, [x25]
+  0x0ae0: ldr      w0, [x8]
+  0x0ae4: blr      x22
+  0x0ae8: cbz      w0, #0xb1c
+  0x0aec: b        #0x12a4
+  0x0af0: adrp     x8, #0   ; .bss page +0x0
+  0x0af4: ldr      x0, [x8]   ; -> $d.38
+  0x0af8: ldr      x8, [sp, #0x10]
+  0x0afc: adrp     x1, #0   ; .rodata page +0xd06
+  0x0b00: adrp     x2, #0   ; .rodata page +0x25
+  0x0b04: add      x1, x1, #0   ; -> $d.39+0x9f4
+  0x0b08: ldr      w3, [x8]
+  0x0b0c: add      x2, x2, #0   ; -> .rodata+0x25
+  0x0b10: mov      x4, x19
+  0x0b14: bl       #0xb14   ; -> _dev_warn
+  0x0b18: str      wzr, [x25]
+  0x0b1c: ldr      x0, [x24]
+  0x0b20: add      x22, x27, #0x60
+  0x0b24: adrp     x1, #0   ; .rodata page +0x59d
+  0x0b28: mov      w3, #1
+  0x0b2c: add      x1, x1, #0   ; -> $d.39+0x28b
+  0x0b30: mov      x2, x22
+  0x0b34: mov      x4, xzr
+  0x0b38: bl       #0xb38   ; -> of_property_read_variable_u32_array
+  0x0b3c: ldr      x19, [sp, #0x10]
+  0x0b40: tbz      w0, #0x1f, #0xb70
+  0x0b44: adrp     x8, #0   ; .bss page +0x0
+  0x0b48: ldr      x0, [x8]   ; -> $d.38
+  0x0b4c: ldr      w3, [x19]
+  0x0b50: adrp     x1, #0   ; .rodata page +0xd06
+  0x0b54: adrp     x2, #0   ; .rodata page +0x25
+  0x0b58: adrp     x4, #0   ; .rodata page +0x59d
+  0x0b5c: add      x1, x1, #0   ; -> $d.39+0x9f4
+  0x0b60: add      x2, x2, #0   ; -> .rodata+0x25
+  0x0b64: add      x4, x4, #0   ; -> $d.39+0x28b
+  0x0b68: bl       #0xb68   ; -> _dev_warn
+  0x0b6c: str      wzr, [x22]
+  0x0b70: ldr      x0, [x24]
+  0x0b74: adrp     x1, #0   ; .rodata page +0xa9b
+  0x0b78: add      x1, x1, #0   ; -> $d.39+0x789
+  0x0b7c: mov      x2, xzr
+  0x0b80: bl       #0xb80   ; -> of_find_property
+  0x0b84: cbz      x0, #0xbe4
+  0x0b88: adrp     x0, #0   ; .rodata page +0x9b0
+  0x0b8c: mov      w8, #-1
+  0x0b90: add      x0, x0, #0   ; -> $d.39+0x69e
+  0x0b94: mov      x1, xzr
+  0x0b98: str      xzr, [sp, #0x30]
+  0x0b9c: str      w8, [sp, #0x2c]
+  0x0ba0: bl       #0xba0   ; -> of_find_node_opts_by_path
+  0x0ba4: adrp     x1, #0   ; .rodata page +0x67
+  0x0ba8: add      x2, sp, #0x30
+  0x0bac: add      x1, x1, #0   ; -> .rodata+0x67
+  0x0bb0: bl       #0xbb0   ; -> of_property_read_string
+  0x0bb4: cbnz     w0, #0xbd8
+  0x0bb8: ldr      x0, [sp, #0x30]
+  0x0bbc: adrp     x1, #0   ; .rodata page +0x624
+  0x0bc0: add      x1, x1, #0   ; -> $d.39+0x312
+  0x0bc4: bl       #0xbc4   ; -> strstr
+  0x0bc8: cbnz     x0, #0x1044
+  0x0bcc: adrp     x0, #0   ; .rodata page +0xa17
+  0x0bd0: add      x0, x0, #0   ; -> $d.39+0x705
+  0x0bd4: b        #0xbe0
+  0x0bd8: adrp     x0, #0   ; .rodata page +0x91c
+  0x0bdc: add      x0, x0, #0   ; -> $d.39+0x60a
+  0x0be0: bl       #0xbe0   ; -> printk
+  0x0be4: adrp     x8, #0   ; .bss page +0x0
+  0x0be8: ldr      x0, [x8]   ; -> $d.38
+  0x0bec: ldr      w3, [x19]
+  0x0bf0: adrp     x1, #0   ; .rodata page +0x438
+  0x0bf4: adrp     x2, #0   ; .rodata page +0x25
+  0x0bf8: sub      x4, x29, #0x28
+  0x0bfc: add      x1, x1, #0   ; -> $d.39+0x126
+  0x0c00: add      x2, x2, #0   ; -> .rodata+0x25
+  0x0c04: bl       #0xc04   ; -> _dev_info
+  0x0c08: ldp      x9, x8, [sp, #0x18]
+  0x0c0c: ldr      x0, [x24]
+  0x0c10: sub      x1, x29, #0x28
+  0x0c14: mov      w3, #1
+  0x0c18: madd     x8, x9, x26, x8
+  0x0c1c: add      x22, x8, #0x68
+  0x0c20: mov      x2, x22
+  0x0c24: mov      x4, xzr
+  0x0c28: bl       #0xc28   ; -> of_property_read_variable_u32_array
+  0x0c2c: tbnz     w0, #0x1f, #0xc5c
+  0x0c30: ldr      x20, [x20]
+  0x0c34: mov      x0, #0x503d
+  0x0c38: movk     x0, #0x4f12, lsl #16
+  0x0c3c: movk     x0, #0x1f8c, lsl #32
+  0x0c40: movk     x0, #0xcea3, lsl #48
+  0x0c44: mov      x1, x20
+  0x0c48: bl       #0xc48   ; -> __cfi_slowpath
+  0x0c4c: ldr      w0, [x19]
+  0x0c50: ldr      w1, [x22]
+  0x0c54: blr      x20
+  0x0c58: cbnz     w0, #0x1350
+  0x0c5c: ldr      w8, [x19]
+  0x0c60: cbnz     w8, #0xc80
+  0x0c64: ldr      x20, [x27]
+  0x0c68: adrp     x8, #0   ; .text page +0x8ac
+  0x0c6c: add      x8, x8, #0   ; -> $x.0+0x28ac
+  0x0c70: cmp      x20, x8
+  0x0c74: b.ne     #0x1124
+  0x0c78: blr      x20
+  0x0c7c: cbnz     w0, #0x13b8
+  0x0c80: ldr      x0, [x24]
+  0x0c84: adrp     x1, #0   ; .rodata page +0xe5
+  0x0c88: add      x1, x1, #0   ; -> .rodata+0xe5
+  0x0c8c: mov      x2, x23
+  0x0c90: bl       #0xc90   ; -> of_property_match_string
+  0x0c94: cmn      w0, #0x16
+  0x0c98: b.eq     #0x1090
+  0x0c9c: ldp      x9, x8, [sp, #0x18]
+  0x0ca0: ldr      x0, [x24]
+  0x0ca4: mov      x1, x23
+  0x0ca8: str      xzr, [sp, #0x30]
+  0x0cac: madd     x8, x9, x26, x8
+  0x0cb0: add      x25, x8, #0x78
+  0x0cb4: bl       #0xcb4   ; -> of_nvmem_cell_get
+  0x0cb8: mov      x27, x0
+  0x0cbc: cmn      x0, #0xfff
+  0x0cc0: b.hs     #0x10e0
+  0x0cc4: add      x1, sp, #0x30
+  0x0cc8: mov      x0, x27
+  0x0ccc: bl       #0xccc   ; -> nvmem_cell_read
+  0x0cd0: mov      x22, x0
+  0x0cd4: cmn      x0, #0xfff
+  0x0cd8: b.lo     #0xcf0
+  0x0cdc: mov      x0, x27
+  0x0ce0: bl       #0xce0   ; -> nvmem_cell_put
+  0x0ce4: mov      w27, w22
+  0x0ce8: cbz      w27, #0xd24
+  0x0cec: b        #0x132c
+  0x0cf0: ldr      x2, [sp, #0x30]
+  0x0cf4: cmp      x2, #5
+  0x0cf8: b.lo     #0xd08
+  0x0cfc: mov      w8, #4
+  0x0d00: mov      w2, #4
+  0x0d04: str      x8, [sp, #0x30]
+  0x0d08: mov      x0, x25
+  0x0d0c: mov      x1, x22
+  0x0d10: bl       #0xd10   ; -> memcpy
+  0x0d14: mov      x0, x22
+  0x0d18: bl       #0xd18   ; -> kfree
+  0x0d1c: mov      x0, x27
+  0x0d20: bl       #0xd20   ; -> nvmem_cell_put
+  0x0d24: ldr      x20, [x28]
+  0x0d28: mov      x0, #0x503d
+  0x0d2c: movk     x0, #0x4f12, lsl #16
+  0x0d30: movk     x0, #0x1f8c, lsl #32
+  0x0d34: movk     x0, #0xcea3, lsl #48
+  0x0d38: mov      x1, x20
+  0x0d3c: bl       #0xd3c   ; -> __cfi_slowpath
+  0x0d40: ldr      x8, [sp, #0x10]
+  0x0d44: ldr      w1, [x25]
+  0x0d48: ldr      w0, [x8]
+  0x0d4c: blr      x20
+  0x0d50: ldr      x23, [sp, #0x20]
+  0x0d54: cbnz     w0, #0x1304
+  0x0d58: ldr      x0, [x24]
+  0x0d5c: adrp     x1, #0   ; .rodata page +0x53f
+  0x0d60: add      x1, x1, #0   ; -> $d.39+0x22d
+  0x0d64: mov      x2, xzr
+  0x0d68: bl       #0xd68   ; -> of_find_property
+  0x0d6c: cbz      x0, #0xde4
+  0x0d70: adrp     x0, #0   ; .rodata page +0x8c1
+  0x0d74: add      x0, x0, #0   ; -> $d.39+0x5af
+  0x0d78: mov      x1, xzr
+  0x0d7c: bl       #0xd7c   ; -> of_find_node_opts_by_path
+  0x0d80: mov      x25, x0
+  0x0d84: cbz      x0, #0x10fc
+  0x0d88: cmn      x25, #1, lsl #12
+  0x0d8c: b.hi     #0x10fc
+  0x0d90: adrp     x1, #0   ; .rodata page +0x70
+  0x0d94: mov      x0, x25
+  0x0d98: add      x1, x1, #0   ; -> .rodata+0x70
+  0x0d9c: mov      x2, xzr
+  0x0da0: bl       #0xda0   ; -> of_get_property
+  0x0da4: ldr      x8, [sp, #0x18]
+  0x0da8: madd     x19, x8, x26, x23
+  0x0dac: ldr      x8, [sp, #8]
+  0x0db0: str      x0, [x19, #0x88]
+  0x0db4: mov      x0, #0x516c
+  0x0db8: movk     x0, #0x8b9d, lsl #16
+  0x0dbc: ldr      x20, [x8]
+  0x0dc0: movk     x0, #0xd5bf, lsl #32
+  0x0dc4: movk     x0, #0xa0fd, lsl #48
+  0x0dc8: mov      x1, x20
+  0x0dcc: bl       #0xdcc   ; -> __cfi_slowpath
+  0x0dd0: ldr      x8, [sp, #0x10]
+  0x0dd4: ldr      x1, [x19, #0x88]
+  0x0dd8: ldr      w0, [x8]
+  0x0ddc: blr      x20
+  0x0de0: cbnz     w0, #0x1368
+  0x0de4: ldr      x0, [x24]
+  0x0de8: adrp     x1, #0   ; .rodata page +0x297
+  0x0dec: add      x1, x1, #0   ; -> .rodata+0x297
+  0x0df0: mov      x2, xzr
+  0x0df4: bl       #0xdf4   ; -> of_find_property
+  0x0df8: ldr      x10, [sp, #0x18]
+  0x0dfc: cbz      x0, #0xe0c
+  0x0e00: madd     x8, x10, x26, x23
+  0x0e04: mov      w9, #1
+  0x0e08: strb     w9, [x8, #0xa0]
+  0x0e0c: madd     x19, x10, x26, x23
+  0x0e10: add      x26, x19, #0xb8
+  0x0e14: stur     wzr, [x29, #-0x28]
+  0x0e18: str      wzr, [sp, #0x30]
+  0x0e1c: str      x26, [x19, #0xb8]
+  0x0e20: str      x26, [x19, #0xc0]!
+  0x0e24: adrp     x8, #0   ; .bss page +0x0
+  0x0e28: ldr      x0, [x8]   ; -> $d.38
+  0x0e2c: mov      w1, #0x20
+  0x0e30: mov      w2, #0xdc0
+  0x0e34: mov      w27, #0xf0
+  0x0e38: bl       #0xe38   ; -> devm_kmalloc
+  0x0e3c: cbz      x0, #0x12d0
+  0x0e40: mov      x25, x0
+  0x0e44: mov      w8, #0x112
+  0x0e48: str      w8, [x25], #0x10
+  0x0e4c: ldr      x20, [x26]
+  0x0e50: mov      x22, x0
+  0x0e54: mov      x0, x25
+  0x0e58: mov      x1, x26
+  0x0e5c: mov      x2, x20
+  0x0e60: bl       #0xe60   ; -> __list_add_valid
+  0x0e64: tbz      w0, #0, #0xe74
+  0x0e68: str      x25, [x20, #8]
+  0x0e6c: stp      x20, x26, [x22, #0x10]
+  0x0e70: str      x25, [x26]
+  0x0e74: adrp     x8, #0   ; .bss page +0x0
+  0x0e78: ldr      x0, [x8]   ; -> $d.38
+  0x0e7c: mov      w1, #0x20
+  0x0e80: mov      w2, #0xdc0
+  0x0e84: bl       #0xe84   ; -> devm_kmalloc
+  0x0e88: cbz      x0, #0x12dc
+  0x0e8c: mov      x22, x0
+  0x0e90: mov      w8, #-0x112
+  0x0e94: str      w8, [x22], #0x10
+  0x0e98: ldr      x20, [x26]
+  0x0e9c: mov      x25, x0
+  0x0ea0: mov      x0, x22
+  0x0ea4: mov      x1, x26
+  0x0ea8: mov      x2, x20
+  0x0eac: bl       #0xeac   ; -> __list_add_valid
+  0x0eb0: tbz      w0, #0, #0xec4
+  0x0eb4: str      x22, [x20, #8]
+  0x0eb8: stp      x20, x26, [x25, #0x10]
+  0x0ebc: str      x22, [x26]
+  0x0ec0: b        #0xec8
+  0x0ec4: ldr      x22, [x26]
+  0x0ec8: ldp      x20, x10, [sp, #0x10]
+  0x0ecc: cmp      x26, x22
+  0x0ed0: sub      x8, x22, #0x10
+  0x0ed4: b.ne     #0xee8
+  0x0ed8: b        #0xf04
+  0x0edc: cmp      x26, x22
+  0x0ee0: sub      x8, x22, #0x10
+  0x0ee4: b.eq     #0xf04
+  0x0ee8: ldr      w9, [x8]
+  0x0eec: ldr      x22, [x22]
+  0x0ef0: cmn      w9, #0x112
+  0x0ef4: b.gt     #0xedc
+  0x0ef8: ldur     w9, [x22, #-0x10]
+  0x0efc: cmn      w9, #0x112
+  0x0f00: b.le     #0xedc
+  0x0f04: madd     x9, x10, x27, x23
+  0x0f08: stp      x8, x8, [x9, #0xa8]
+  0x0f0c: str      wzr, [x9, #0xa4]
+  0x0f10: ldr      x0, [x24]
+  0x0f14: adrp     x1, #0   ; .rodata page +0xc8b
+  0x0f18: sub      x2, x29, #0x28
+  0x0f1c: add      x1, x1, #0   ; -> $d.39+0x979
+  0x0f20: bl       #0xf20   ; -> of_find_property
+  0x0f24: cbz      x0, #0x10bc
+  0x0f28: ldur     w8, [x29, #-0x28]
+  0x0f2c: cbz      w8, #0x10bc
+  0x0f30: cmp      w8, #4
+  0x0f34: b.hs     #0xf64
+  0x0f38: ldr      x9, [sp, #0x18]
+  0x0f3c: mov      w8, #0xf0
+  0x0f40: adrp     x20, #0   ; SHN_UNDEF page +0x0
+  0x0f44: mov      w26, #0xf0
+  0x0f48: madd     x8, x9, x8, x23
+  0x0f4c: adrp     x9, #0   ; .text page +0x8a8
+  0x0f50: add      x9, x9, #0   ; -> $x.0+0x28a8
+  0x0f54: str      x9, [x8, #0xe8]
+  0x0f58: add      x20, x20, #0   ; -> undef+0x0
+  0x0f5c: mov      w22, #0x28
+  0x0f60: b        #0x8cc
+  0x0f64: mov      w25, wzr
+  0x0f68: b        #0xf84
+  0x0f6c: ldur     w8, [x29, #-0x28]
+  0x0f70: ldr      x23, [sp, #0x20]
+  0x0f74: add      w25, w25, #1
+  0x0f78: sxtw     x9, w25
+  0x0f7c: cmp      x9, x8, lsr #2
+  0x0f80: b.hs     #0xf38
+  0x0f84: ldr      x0, [x24]
+  0x0f88: adrp     x1, #0   ; .rodata page +0xc8b
+  0x0f8c: add      x3, sp, #0x30
+  0x0f90: add      x1, x1, #0   ; -> $d.39+0x979
+  0x0f94: mov      w2, w25
+  0x0f98: bl       #0xf98   ; -> of_property_read_u32_index
+  0x0f9c: cbnz     w0, #0x1224
+  0x0fa0: ldr      w22, [sp, #0x30]
+  0x0fa4: add      w8, w22, #0x112
+  0x0fa8: cmp      w8, #0x223
+  0x0fac: b.hi     #0x11d0
+  0x0fb0: ldr      x27, [x26]
+  0x0fb4: cmp      x27, x26
+  0x0fb8: b.eq     #0xfe0
+  0x0fbc: ldur     w8, [x27, #-0x10]
+  0x0fc0: cmp      w8, w22
+  0x0fc4: b.eq     #0xf6c
+  0x0fc8: b.gt     #0xff4
+  0x0fcc: ldr      x27, [x27]
+  0x0fd0: cmp      x26, x27
+  0x0fd4: b.ne     #0xfbc
+  0x0fd8: mov      x23, x26
+  0x0fdc: b        #0xff8
+  0x0fe0: ldr      x8, [x19]
+  0x0fe4: mov      x23, x26
+  0x0fe8: cmp      x26, x8
+  0x0fec: b.ne     #0xff8
+  0x0ff0: b        #0x11d0
+  0x0ff4: mov      x23, x27
+  0x0ff8: adrp     x8, #0   ; .bss page +0x0
+  0x0ffc: ldr      x0, [x8]   ; -> $d.38
+  0x1000: mov      w1, #0x20
+  0x1004: mov      w2, #0xdc0
+  0x1008: bl       #0x1008   ; -> devm_kmalloc
+  0x100c: cbz      x0, #0x1238
+  0x1010: mov      x20, x0
+  0x1014: str      w22, [x20], #0x10
+  0x1018: ldr      x22, [x27, #8]
+  0x101c: mov      x28, x0
+  0x1020: mov      x0, x20
+  0x1024: mov      x2, x23
+  0x1028: mov      x1, x22
+  0x102c: bl       #0x102c   ; -> __list_add_valid
+  0x1030: tbz      w0, #0, #0xf6c
+  0x1034: str      x20, [x27, #8]
+  0x1038: stp      x27, x22, [x28, #0x10]
+  0x103c: str      x20, [x22]
+  0x1040: b        #0xf6c
+  0x1044: adrp     x1, #0x1000   ; .rodata page +0x7bc
+  0x1048: add      x2, sp, #0x2c
+  0x104c: add      x1, x1, #0   ; -> $d.39+0x4aa
+  0x1050: bl       #0x1050   ; -> sscanf
+  0x1054: ldr      w8, [sp, #0x2c]
+  0x1058: cbnz     w8, #0xbe4
+  0x105c: sub      x0, x29, #0x28
+  0x1060: bl       #0x1060   ; -> strlen
+  0x1064: cmp      x0, #0x20
+  0x1068: b.hi     #0x13d8
+  0x106c: mov      w8, #0x20
+  0x1070: sub      x8, x8, x0
+  0x1074: cmp      x8, #4
+  0x1078: b.lo     #0x13d8
+  0x107c: mov      w9, #0x762d
+  0x1080: sub      x8, x29, #0x28
+  0x1084: movk     w9, #0x32, lsl #16
+  0x1088: str      w9, [x8, x0]
+  0x108c: b        #0xbe4
+  0x1090: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1094: ldr      x0, [x8]   ; -> $d.38
+  0x1098: adrp     x1, #0x1000   ; .rodata page +0xc05
+  0x109c: adrp     x2, #0x1000   ; .rodata page +0x25
+  0x10a0: add      x1, x1, #0   ; -> $d.39+0x8f3
+  0x10a4: add      x2, x2, #0   ; -> .rodata+0x25
+  0x10a8: bl       #0x10a8   ; -> _dev_warn
+  0x10ac: ldp      x8, x23, [sp, #0x18]
+  0x10b0: madd     x8, x8, x26, x23
+  0x10b4: str      wzr, [x8, #0x78]
+  0x10b8: b        #0xd58
+  0x10bc: adrp     x8, #0x1000   ; .bss page +0x0
+  0x10c0: ldr      x0, [x8]   ; -> $d.38
+  0x10c4: ldr      w3, [x20]
+  0x10c8: adrp     x1, #0x1000   ; .rodata page +0xd88
+  0x10cc: adrp     x2, #0x1000   ; .rodata page +0xc9f
+  0x10d0: add      x1, x1, #0   ; -> $d.39+0xa76
+  0x10d4: add      x2, x2, #0   ; -> $d.39+0x98d
+  0x10d8: bl       #0x10d8   ; -> _dev_warn
+  0x10dc: b        #0xf38
+  0x10e0: cmn      w27, #0x205
+  0x10e4: b.eq     #0x131c
+  0x10e8: adrp     x0, #0x1000   ; .rodata page +0x149
+  0x10ec: add      x0, x0, #0   ; -> .rodata+0x149
+  0x10f0: bl       #0x10f0   ; -> printk
+  0x10f4: cbz      w27, #0xd24
+  0x10f8: b        #0x132c
+  0x10fc: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1100: ldr      x0, [x8]   ; -> $d.38
+  0x1104: adrp     x1, #0x1000   ; .rodata page +0x36a
+  0x1108: adrp     x2, #0x1000   ; .rodata page +0x25
+  0x110c: add      x1, x1, #0   ; -> $d.39+0x58
+  0x1110: add      x2, x2, #0   ; -> .rodata+0x25
+  0x1114: bl       #0x1114   ; -> _dev_err
+  0x1118: ldr      x10, [sp, #0x18]
+  0x111c: cbz      w25, #0xe0c
+  0x1120: b        #0x1390
+  0x1124: mov      x0, #0x2445
+  0x1128: movk     x0, #0x2924, lsl #16
+  0x112c: movk     x0, #0xa43e, lsl #32
+  0x1130: movk     x0, #0x2b3, lsl #48
+  0x1134: mov      x1, x20
+  0x1138: bl       #0x1138   ; -> __cfi_slowpath
+  0x113c: blr      x20
+  0x1140: cbz      w0, #0xc80
+  0x1144: b        #0x13b8
+  0x1148: adrp     x8, #0x1000   ; .bss page +0x0
+  0x114c: ldr      x1, [x8]   ; -> $d.38
+  0x1150: ldr      w4, [x25]
+  0x1154: adrp     x0, #0x1000   ; __verbose page +0x38
+  0x1158: adrp     x2, #0x1000   ; .rodata page +0x9d0
+  0x115c: adrp     x3, #0x1000   ; .rodata page +0x6fb
+  0x1160: add      x0, x0, #0   ; -> $d.40+0x38
+  0x1164: add      x2, x2, #0   ; -> $d.39+0x6be
+  0x1168: add      x3, x3, #0   ; -> $d.39+0x3e9
+  0x116c: bl       #0x116c   ; -> __dynamic_dev_dbg
+  0x1170: b        #0x8cc
+  0x1174: mov      w25, wzr
+  0x1178: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x117c: ldur     x8, [x29, #-8]
+  0x1180: ldr      x9, [x9]   ; -> undef+0x0
+  0x1184: cmp      x9, x8
+  0x1188: b.ne     #0x13d4
+  0x118c: ldp      x29, x30, [sp, #0x60]
+  0x1190: mov      w0, w25
+  0x1194: ldp      x20, x19, [sp, #0xb0]
+  0x1198: ldp      x22, x21, [sp, #0xa0]
+  0x119c: ldp      x24, x23, [sp, #0x90]
+  0x11a0: ldp      x26, x25, [sp, #0x80]
+  0x11a4: ldp      x28, x27, [sp, #0x70]
+  0x11a8: ldr      x30, [x18, #-8]!
+  0x11ac: add      sp, sp, #0xc0
+  0x11b0: ret      
+  0x11b4: str      xzr, [x24]
+  0x11b8: adrp     x8, #0x1000   ; .bss page +0x0
+  0x11bc: ldr      x0, [x8]   ; -> $d.38
+  0x11c0: ldr      w3, [x25]
+  0x11c4: adrp     x1, #0x1000   ; .rodata page +0xbe5
+  0x11c8: add      x1, x1, #0   ; -> $d.39+0x8d3
+  0x11cc: b        #0x1284
+  0x11d0: adrp     x19, #0x1000   ; .bss page +0x0
+  0x11d4: ldr      x0, [x19]   ; -> $d.38
+  0x11d8: adrp     x1, #0x1000   ; .rodata page +0x6ba
+  0x11dc: adrp     x2, #0x1000   ; .rodata page +0xd75
+  0x11e0: add      x1, x1, #0   ; -> $d.39+0x3a8
+  0x11e4: add      x2, x2, #0   ; -> $d.39+0xa63
+  0x11e8: mov      w3, w22
+  0x11ec: bl       #0x11ec   ; -> _dev_err
+  0x11f0: b        #0x1254
+  0x11f4: adrp     x19, #0x1000   ; .bss page +0x0
+  0x11f8: ldr      x0, [x19]   ; -> $d.38
+  0x11fc: adrp     x1, #0x1000   ; .rodata page +0x712
+  0x1200: adrp     x2, #0x1000   ; .rodata page +0xa85
+  0x1204: add      x1, x1, #0   ; -> $d.39+0x400
+  0x1208: add      x2, x2, #0   ; -> $d.39+0x773
+  0x120c: bl       #0x120c   ; -> _dev_err
+  0x1210: ldr      x0, [x19]   ; -> $d.38
+  0x1214: ldr      w3, [x25]
+  0x1218: adrp     x1, #0x1000   ; .rodata page +0x278
+  0x121c: add      x1, x1, #0   ; -> .rodata+0x278
+  0x1220: b        #0x1284
+  0x1224: ldr      x20, [sp, #0x10]
+  0x1228: adrp     x1, #0x1000   ; .rodata page +0x957
+  0x122c: adrp     x19, #0x1000   ; .bss page +0x0
+  0x1230: add      x1, x1, #0   ; -> $d.39+0x645
+  0x1234: b        #0x1260
+  0x1238: adrp     x19, #0x1000   ; .bss page +0x0
+  0x123c: ldr      x0, [x19]   ; -> $d.38
+  0x1240: adrp     x1, #0x1000   ; .rodata page +0x17c
+  0x1244: adrp     x2, #0x1000   ; .rodata page +0xd75
+  0x1248: add      x1, x1, #0   ; -> .rodata+0x17c
+  0x124c: add      x2, x2, #0   ; -> $d.39+0xa63
+  0x1250: bl       #0x1250   ; -> _dev_err
+  0x1254: adrp     x1, #0x1000   ; .rodata page +0x19b
+  0x1258: add      x1, x1, #0   ; -> .rodata+0x19b
+  0x125c: ldr      x20, [sp, #0x10]
+  0x1260: ldr      x0, [x19]   ; -> $d.38
+  0x1264: ldr      w3, [x20]
+  0x1268: adrp     x2, #0x1000   ; .rodata page +0xc9f
+  0x126c: add      x2, x2, #0   ; -> $d.39+0x98d
+  0x1270: bl       #0x1270   ; -> _dev_err
+  0x1274: ldr      x0, [x19]   ; -> $d.38
+  0x1278: ldr      w3, [x20]
+  0x127c: adrp     x1, #0x1000   ; .rodata page +0xf6
+  0x1280: add      x1, x1, #0   ; -> .rodata+0xf6
+  0x1284: adrp     x2, #0x1000   ; .rodata page +0x6fb
+  0x1288: add      x2, x2, #0   ; -> $d.39+0x3e9
+  0x128c: bl       #0x128c   ; -> _dev_err
+  0x1290: mov      w25, #-0x16
+  0x1294: b        #0x1178
+  0x1298: adrp     x4, #0x1000   ; .rodata page +0xbd3
+  0x129c: add      x4, x4, #0   ; -> $d.39+0x8c1
+  0x12a0: b        #0x12ac
+  0x12a4: ldr      x25, [sp, #0x10]
+  0x12a8: mov      x4, x19
+  0x12ac: adrp     x8, #0x1000   ; .bss page +0x0
+  0x12b0: ldr      x0, [x8]   ; -> $d.38
+  0x12b4: ldr      w3, [x25]
+  0x12b8: adrp     x1, #0x1000   ; .rodata page +0x9f2
+  0x12bc: adrp     x2, #0x1000   ; .rodata page +0x25
+  0x12c0: add      x1, x1, #0   ; -> $d.39+0x6e0
+  0x12c4: add      x2, x2, #0   ; -> .rodata+0x25
+  0x12c8: bl       #0x12c8   ; -> _dev_err
+  0x12cc: b        #0x138c
+  0x12d0: adrp     x1, #0x1000   ; .rodata page +0xd50
+  0x12d4: add      x1, x1, #0   ; -> $d.39+0xa3e
+  0x12d8: b        #0x12e4
+  0x12dc: adrp     x1, #0x1000   ; .rodata page +0xb15
+  0x12e0: add      x1, x1, #0   ; -> $d.39+0x803
+  0x12e4: adrp     x19, #0x1000   ; .bss page +0x0
+  0x12e8: ldr      x0, [x19]   ; -> $d.38
+  0x12ec: adrp     x2, #0x1000   ; .rodata page +0x8d1
+  0x12f0: add      x2, x2, #0   ; -> $d.39+0x5bf
+  0x12f4: bl       #0x12f4   ; -> _dev_err
+  0x12f8: adrp     x1, #0x1000   ; .rodata page +0x7f2
+  0x12fc: add      x1, x1, #0   ; -> $d.39+0x4e0
+  0x1300: b        #0x125c
+  0x1304: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1308: ldr      x0, [x8]   ; -> $d.38
+  0x130c: ldr      x8, [sp, #0x10]
+  0x1310: adrp     x1, #0x1000   ; .rodata page +0xc61
+  0x1314: add      x1, x1, #0   ; -> $d.39+0x94f
+  0x1318: b        #0x137c
+  0x131c: adrp     x0, #0x1000   ; .rodata page +0xc2b
+  0x1320: add      x0, x0, #0   ; -> $d.39+0x919
+  0x1324: bl       #0x1324   ; -> printk
+  0x1328: mov      w27, #-0x205
+  0x132c: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1330: ldr      x0, [x8]   ; -> $d.38
+  0x1334: adrp     x1, #0x1000   ; .rodata page +0xd2b
+  0x1338: adrp     x2, #0x1000   ; .rodata page +0x25
+  0x133c: add      x1, x1, #0   ; -> $d.39+0xa19
+  0x1340: add      x2, x2, #0   ; -> .rodata+0x25
+  0x1344: bl       #0x1344   ; -> _dev_err
+  0x1348: mov      w25, w27
+  0x134c: b        #0x1390
+  0x1350: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1354: ldr      x0, [x8]   ; -> $d.38
+  0x1358: ldr      w3, [x19]
+  0x135c: adrp     x1, #0x1000   ; .rodata page +0x21b
+  0x1360: add      x1, x1, #0   ; -> .rodata+0x21b
+  0x1364: b        #0x1380
+  0x1368: adrp     x8, #0x1000   ; .bss page +0x0
+  0x136c: ldr      x0, [x8]   ; -> $d.38
+  0x1370: ldr      x8, [sp, #0x10]
+  0x1374: adrp     x1, #0x1000   ; .rodata page +0x3d
+  0x1378: add      x1, x1, #0   ; -> .rodata+0x3d
+  0x137c: ldr      w3, [x8]
+  0x1380: adrp     x2, #0x1000   ; .rodata page +0x25
+  0x1384: add      x2, x2, #0   ; -> .rodata+0x25
+  0x1388: bl       #0x1388   ; -> _dev_err
+  0x138c: mov      w25, #-0x16
+  0x1390: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1394: ldr      x0, [x8]   ; -> $d.38
+  0x1398: ldr      x8, [sp, #0x10]
+  0x139c: adrp     x1, #0x1000   ; .rodata page +0x7d1
+  0x13a0: adrp     x2, #0x1000   ; .rodata page +0x6fb
+  0x13a4: add      x1, x1, #0   ; -> $d.39+0x4bf
+  0x13a8: ldr      w3, [x8]
+  0x13ac: add      x2, x2, #0   ; -> $d.39+0x3e9
+  0x13b0: bl       #0x13b0   ; -> _dev_err
+  0x13b4: b        #0x1178
+  0x13b8: mov      w25, w0
+  0x13bc: adrp     x0, #0x1000   ; .rodata page +0x50b
+  0x13c0: add      x0, x0, #0   ; -> $d.39+0x1f9
+  0x13c4: bl       #0x13c4   ; -> printk
+  0x13c8: b        #0x1390
+  0x13cc: mov      w0, #0x12
+  0x13d0: bl       #0x13d0   ; -> __ubsan_handle_cfi_check_fail_abort
+  0x13d4: bl       #0x13d4   ; -> __stack_chk_fail
+  0x13d8: brk      #1
+
+; sprd_cpufreq_init @ 0x13dc (676 B)
+  0x13dc: sub      sp, sp, #0x70
+  0x13e0: str      x30, [x18], #8
+  0x13e4: stp      x29, x30, [sp, #0x20]
+  0x13e8: stp      x26, x25, [sp, #0x30]
+  0x13ec: stp      x24, x23, [sp, #0x40]
+  0x13f0: stp      x22, x21, [sp, #0x50]
+  0x13f4: stp      x20, x19, [sp, #0x60]
+  0x13f8: add      x29, sp, #0x20
+  0x13fc: adrp     x8, #0x1000   ; SHN_UNDEF page +0x0
+  0x1400: ldr      x8, [x8]   ; -> undef+0x0
+  0x1404: stur     x8, [x29, #-8]
+  0x1408: stur     wzr, [x29, #-0xc]
+  0x140c: str      xzr, [sp, #8]
+  0x1410: adrp     x8, #0x1000   ; .bss page +0x10
+  0x1414: ldr      x21, [x8]   ; -> $d.38+0x80
+  0x1418: ldr      w3, [x0, #0x1c]
+  0x141c: cbz      x21, #0x158c
+  0x1420: adrp     x8, #0x1000   ; SHN_UNDEF page +0x0
+  0x1424: ldr      w8, [x8]   ; -> undef+0x0
+  0x1428: cmp      w8, w3
+  0x142c: b.ls     #0x158c
+  0x1430: cmp      w3, #0x20
+  0x1434: b.hs     #0x1674
+  0x1438: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x143c: mov      w8, #0x28
+  0x1440: add      x9, x9, #0   ; -> undef+0x0
+  0x1444: madd     x8, x3, x8, x9
+  0x1448: ldr      w25, [x8, #8]
+  0x144c: mov      w8, #0xf0
+  0x1450: madd     x22, x25, x8, x21
+  0x1454: cbz      x22, #0x158c
+  0x1458: mov      w8, #0xf0
+  0x145c: madd     x24, x25, x8, x21
+  0x1460: ldr      x8, [x24, #0xd8]!
+  0x1464: cbz      x8, #0x158c
+  0x1468: mov      w8, #0xf0
+  0x146c: madd     x23, x25, x8, x21
+  0x1470: ldr      x8, [x23, #0x40]!
+  0x1474: cbz      x8, #0x158c
+  0x1478: mov      w8, #0xf0
+  0x147c: madd     x26, x25, x8, x21
+  0x1480: add      x19, x26, #8
+  0x1484: mov      x20, x0
+  0x1488: mov      x0, x19
+  0x148c: bl       #0x148c   ; -> mutex_lock
+  0x1490: ldr      x0, [x26, #0x28]
+  0x1494: adrp     x1, #0x1000   ; .rodata page +0xce1
+  0x1498: add      x1, x1, #0   ; -> $d.39+0x9cf
+  0x149c: sub      x2, x29, #0xc
+  0x14a0: mov      w3, #1
+  0x14a4: mov      x4, xzr
+  0x14a8: mov      w26, #1
+  0x14ac: bl       #0x14ac   ; -> of_property_read_variable_u32_array
+  0x14b0: tbnz     w0, #0x1f, #0x15ac
+  0x14b4: ldur     w8, [x29, #-0xc]
+  0x14b8: ldr      x9, [x20]
+  0x14bc: mov      w10, #0xf0
+  0x14c0: strb     w26, [x20, #0x248]
+  0x14c4: madd     x10, x25, x10, x21
+  0x14c8: orr      x8, x9, x8
+  0x14cc: str      x8, [x20]
+  0x14d0: ldr      w8, [x10, #0x98]
+  0x14d4: str      x22, [x20, #0x288]
+  0x14d8: mov      x0, x20
+  0x14dc: str      w8, [x20, #0x244]
+  0x14e0: ldr      x1, [x10, #0xa8]
+  0x14e4: bl       #0x14e4   ; -> 0x2e0
+  0x14e8: cbnz     w0, #0x15cc
+  0x14ec: ldr      x21, [x24]
+  0x14f0: mov      x0, #0x516c
+  0x14f4: movk     x0, #0x8b9d, lsl #16
+  0x14f8: movk     x0, #0xd5bf, lsl #32
+  0x14fc: movk     x0, #0xa0fd, lsl #48
+  0x1500: mov      x1, x21
+  0x1504: bl       #0x1504   ; -> __cfi_slowpath
+  0x1508: ldr      w0, [x22]
+  0x150c: add      x1, sp, #8
+  0x1510: blr      x21
+  0x1514: cbnz     w0, #0x15e4
+  0x1518: ldr      x8, [sp, #8]
+  0x151c: mov      x9, #0xf7cf
+  0x1520: movk     x9, #0xe353, lsl #16
+  0x1524: movk     x9, #0x9ba5, lsl #32
+  0x1528: movk     x9, #0x20c4, lsl #48
+  0x152c: lsr      x8, x8, #3
+  0x1530: umulh    x8, x8, x9
+  0x1534: lsr      x8, x8, #4
+  0x1538: mov      x0, x20
+  0x153c: str      x8, [sp, #8]
+  0x1540: str      w8, [x20, #0x3c]
+  0x1544: bl       #0x1544   ; -> dev_pm_opp_of_register_em
+  0x1548: ldr      x21, [x23]
+  0x154c: mov      x0, #0xadbd
+  0x1550: movk     x0, #0x8d51, lsl #16
+  0x1554: movk     x0, #0x7859, lsl #32
+  0x1558: movk     x0, #0xac37, lsl #48
+  0x155c: mov      x1, x21
+  0x1560: bl       #0x1560   ; -> __cfi_slowpath
+  0x1564: ldr      w0, [x22]
+  0x1568: blr      x21
+  0x156c: cbnz     w0, #0x15fc
+  0x1570: mov      x0, x20
+  0x1574: bl       #0x1574   ; -> sprd_debug_cluster_init
+  0x1578: cbnz     w0, #0x1614
+  0x157c: mov      x0, x19
+  0x1580: bl       #0x1580   ; -> mutex_unlock
+  0x1584: mov      w0, wzr
+  0x1588: b        #0x1640
+  0x158c: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1590: ldr      x0, [x8]   ; -> $d.38
+  0x1594: adrp     x1, #0x1000   ; .rodata page +0x6d8
+  0x1598: adrp     x2, #0x1000   ; .rodata page +0x75d
+  0x159c: add      x1, x1, #0   ; -> $d.39+0x3c6
+  0x15a0: add      x2, x2, #0   ; -> $d.39+0x44b
+  0x15a4: bl       #0x15a4   ; -> _dev_err
+  0x15a8: b        #0x163c
+  0x15ac: adrp     x8, #0x1000   ; .bss page +0x0
+  0x15b0: ldr      x0, [x8]   ; -> $d.38
+  0x15b4: adrp     x1, #0x1000   ; .rodata page +0xbad
+  0x15b8: adrp     x2, #0x1000   ; .rodata page +0x75d
+  0x15bc: add      x1, x1, #0   ; -> $d.39+0x89b
+  0x15c0: add      x2, x2, #0   ; -> $d.39+0x44b
+  0x15c4: bl       #0x15c4   ; -> _dev_err
+  0x15c8: b        #0x1634
+  0x15cc: adrp     x8, #0x1000   ; .bss page +0x0
+  0x15d0: ldr      x0, [x8]   ; -> $d.38
+  0x15d4: ldr      w3, [x22]
+  0x15d8: adrp     x1, #0x1000   ; .rodata page +0xacf
+  0x15dc: add      x1, x1, #0   ; -> $d.39+0x7bd
+  0x15e0: b        #0x1628
+  0x15e4: adrp     x8, #0x1000   ; .bss page +0x0
+  0x15e8: ldr      x0, [x8]   ; -> $d.38
+  0x15ec: ldr      w3, [x22]
+  0x15f0: adrp     x1, #0x1000   ; .rodata page +0x343
+  0x15f4: add      x1, x1, #0   ; -> $d.39+0x31
+  0x15f8: b        #0x1628
+  0x15fc: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1600: ldr      x0, [x8]   ; -> $d.38
+  0x1604: ldr      w3, [x22]
+  0x1608: adrp     x1, #0x1000   ; .rodata page +0x896
+  0x160c: add      x1, x1, #0   ; -> $d.39+0x584
+  0x1610: b        #0x1628
+  0x1614: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1618: ldr      x0, [x8]   ; -> $d.38
+  0x161c: ldr      w3, [x22]
+  0x1620: adrp     x1, #0x1000   ; .rodata page +0x4ea
+  0x1624: add      x1, x1, #0   ; -> $d.39+0x1d8
+  0x1628: adrp     x2, #0x1000   ; .rodata page +0x75d
+  0x162c: add      x2, x2, #0   ; -> $d.39+0x44b
+  0x1630: bl       #0x1630   ; -> _dev_err
+  0x1634: mov      x0, x19
+  0x1638: bl       #0x1638   ; -> mutex_unlock
+  0x163c: mov      w0, #-0x16
+  0x1640: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x1644: ldur     x8, [x29, #-8]
+  0x1648: ldr      x9, [x9]   ; -> undef+0x0
+  0x164c: cmp      x9, x8
+  0x1650: b.ne     #0x167c
+  0x1654: ldp      x29, x30, [sp, #0x20]
+  0x1658: ldp      x20, x19, [sp, #0x60]
+  0x165c: ldp      x22, x21, [sp, #0x50]
+  0x1660: ldp      x24, x23, [sp, #0x40]
+  0x1664: ldp      x26, x25, [sp, #0x30]
+  0x1668: ldr      x30, [x18, #-8]!
+  0x166c: add      sp, sp, #0x70
+  0x1670: ret      
+  0x1674: mov      w0, #0x12
+  0x1678: bl       #0x1678   ; -> __ubsan_handle_cfi_check_fail_abort
+  0x167c: bl       #0x167c   ; -> __stack_chk_fail
+
+; sprd_cpufreq_table_verify @ 0x1680 (28 B)
+  0x1680: str      x30, [x18], #8
+  0x1684: stp      x29, x30, [sp, #-0x10]!
+  0x1688: mov      x29, sp
+  0x168c: bl       #0x168c   ; -> cpufreq_generic_frequency_table_verify
+  0x1690: ldp      x29, x30, [sp], #0x10
+  0x1694: ldr      x30, [x18, #-8]!
+  0x1698: ret      
+
+; sprd_cpufreq_set_target_index @ 0x169c (416 B)
+  0x169c: str      x30, [x18], #8
+  0x16a0: stp      x29, x30, [sp, #-0x40]!
+  0x16a4: str      x23, [sp, #0x10]
+  0x16a8: stp      x22, x21, [sp, #0x20]
+  0x16ac: stp      x20, x19, [sp, #0x30]
+  0x16b0: mov      x29, sp
+  0x16b4: ldr      x23, [x0, #0x288]
+  0x16b8: cbz      x23, #0x1718
+  0x16bc: ldr      x8, [x23, #0xd0]
+  0x16c0: cbz      x8, #0x1718
+  0x16c4: ldrb     w8, [x23, #0xa0]
+  0x16c8: mov      x20, x0
+  0x16cc: mov      w19, w1
+  0x16d0: cbz      w8, #0x1758
+  0x16d4: adrp     x8, #0x1000   ; .bss page +0x8
+  0x16d8: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x16dc: ldr      x8, [x8]   ; -> $d.38+0x40
+  0x16e0: ldr      x9, [x9]   ; -> undef+0x0
+  0x16e4: cmp      x8, x9
+  0x16e8: b.mi     #0x173c
+  0x16ec: ldr      w8, [x20, #0x38]
+  0x16f0: ldr      w9, [x20, #0x28]
+  0x16f4: cmp      w8, w9
+  0x16f8: b.hs     #0x17c0
+  0x16fc: strb     wzr, [x23, #0xa0]
+  0x1700: ldr      w1, [x20, #0x38]
+  0x1704: ldr      w2, [x20, #0x28]
+  0x1708: adrp     x0, #0x1000   ; .rodata page +0xa9
+  0x170c: add      x0, x0, #0   ; -> .rodata+0xa9
+  0x1710: bl       #0x1710   ; -> printk
+  0x1714: b        #0x1758
+  0x1718: adrp     x8, #0x1000   ; .bss page +0x0
+  0x171c: ldr      x0, [x8]   ; -> $d.38
+  0x1720: adrp     x1, #0x1000   ; .rodata page +0x9b8
+  0x1724: adrp     x2, #0x1000   ; .rodata page +0x69c
+  0x1728: add      x1, x1, #0   ; -> $d.39+0x6a6
+  0x172c: add      x2, x2, #0   ; -> $d.39+0x38a
+  0x1730: bl       #0x1730   ; -> _dev_err
+  0x1734: mov      w0, #-0x16
+  0x1738: b        #0x17c4
+  0x173c: adrp     x0, #0x1000   ; .rodata page +0x853
+  0x1740: add      x0, x0, #0   ; -> $d.39+0x541
+  0x1744: mov      w1, #0x3c
+  0x1748: strb     wzr, [x23, #0xa0]
+  0x174c: bl       #0x174c   ; -> printk
+  0x1750: ldrb     w8, [x23, #0xa0]
+  0x1754: cbnz     w8, #0x16ec
+  0x1758: add      x21, x23, #8
+  0x175c: mov      x0, x21
+  0x1760: bl       #0x1760   ; -> mutex_lock
+  0x1764: ldr      w8, [x23, #0x9c]
+  0x1768: cmp      w8, w19
+  0x176c: b.ls     #0x17dc
+  0x1770: ldr      x22, [x23, #0xd0]
+  0x1774: mov      x0, #0x503d
+  0x1778: movk     x0, #0x4f12, lsl #16
+  0x177c: movk     x0, #0x1f8c, lsl #32
+  0x1780: movk     x0, #0xcea3, lsl #48
+  0x1784: mov      x1, x22
+  0x1788: bl       #0x1788   ; -> __cfi_slowpath
+  0x178c: ldr      w0, [x23]
+  0x1790: mov      w1, w19
+  0x1794: blr      x22
+  0x1798: cbnz     w0, #0x1804
+  0x179c: ldr      x8, [x20, #0x170]
+  0x17a0: mov      w9, #0xc
+  0x17a4: ldr      w2, [x20, #0x28]
+  0x17a8: add      x0, x20, #8
+  0x17ac: umaddl   x8, w19, w9, x8
+  0x17b0: ldr      w1, [x8, #8]
+  0x17b4: bl       #0x17b4   ; -> arch_set_freq_scale
+  0x17b8: mov      x0, x21
+  0x17bc: bl       #0x17bc   ; -> mutex_unlock
+  0x17c0: mov      w0, wzr
+  0x17c4: ldp      x20, x19, [sp, #0x30]
+  0x17c8: ldp      x22, x21, [sp, #0x20]
+  0x17cc: ldr      x23, [sp, #0x10]
+  0x17d0: ldp      x29, x30, [sp], #0x40
+  0x17d4: ldr      x30, [x18, #-8]!
+  0x17d8: ret      
+  0x17dc: adrp     x8, #0x1000   ; .bss page +0x0
+  0x17e0: ldr      x0, [x8]   ; -> $d.38
+  0x17e4: ldr      w3, [x23]
+  0x17e8: adrp     x1, #0x1000   ; .rodata page +0x4c8
+  0x17ec: adrp     x2, #0x1000   ; .rodata page +0x69c
+  0x17f0: add      x1, x1, #0   ; -> $d.39+0x1b6
+  0x17f4: add      x2, x2, #0   ; -> $d.39+0x38a
+  0x17f8: mov      w4, w19
+  0x17fc: bl       #0x17fc   ; -> _dev_err
+  0x1800: b        #0x182c
+  0x1804: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1808: mov      w5, w0
+  0x180c: ldr      x0, [x8]   ; -> $d.38
+  0x1810: ldr      w3, [x23]
+  0x1814: adrp     x1, #0x1000   ; .rodata page +0x251
+  0x1818: adrp     x2, #0x1000   ; .rodata page +0x69c
+  0x181c: add      x1, x1, #0   ; -> .rodata+0x251
+  0x1820: add      x2, x2, #0   ; -> $d.39+0x38a
+  0x1824: mov      w4, w19
+  0x1828: bl       #0x1828   ; -> _dev_err
+  0x182c: mov      x0, x21
+  0x1830: bl       #0x1830   ; -> mutex_unlock
+  0x1834: mov      w0, #-0x16
+  0x1838: b        #0x17c4
+
+; sprd_cpufreq_get @ 0x183c (372 B)
+  0x183c: sub      sp, sp, #0x40
+  0x1840: str      x30, [x18], #8
+  0x1844: stp      x29, x30, [sp, #0x10]
+  0x1848: str      x21, [sp, #0x20]
+  0x184c: stp      x20, x19, [sp, #0x30]
+  0x1850: add      x29, sp, #0x10
+  0x1854: adrp     x8, #0x1000   ; SHN_UNDEF page +0x0
+  0x1858: ldr      x8, [x8]   ; -> undef+0x0
+  0x185c: mov      w3, w0
+  0x1860: str      x8, [sp, #8]
+  0x1864: adrp     x8, #0x1000   ; .bss page +0x10
+  0x1868: ldr      x8, [x8]   ; -> $d.38+0x80
+  0x186c: str      xzr, [sp]
+  0x1870: cbz      x8, #0x1950
+  0x1874: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x1878: ldr      w9, [x9]   ; -> undef+0x0
+  0x187c: cmp      w9, w3
+  0x1880: b.ls     #0x1950
+  0x1884: cmp      w3, #0x20
+  0x1888: b.hs     #0x19a4
+  0x188c: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x1890: add      x9, x9, #0   ; -> undef+0x0
+  0x1894: mov      w10, #0x28
+  0x1898: umaddl   x9, w3, w10, x9
+  0x189c: ldr      w9, [x9, #8]
+  0x18a0: mov      w10, #0xf0
+  0x18a4: madd     x21, x9, x10, x8
+  0x18a8: cbz      x21, #0x1950
+  0x18ac: mov      w10, #0xf0
+  0x18b0: madd     x20, x9, x10, x8
+  0x18b4: ldr      x10, [x20, #0xd8]!
+  0x18b8: cbz      x10, #0x1950
+  0x18bc: mov      w10, #0xf0
+  0x18c0: madd     x8, x9, x10, x8
+  0x18c4: add      x19, x8, #8
+  0x18c8: mov      x0, x19
+  0x18cc: bl       #0x18cc   ; -> mutex_lock
+  0x18d0: ldr      x20, [x20]
+  0x18d4: mov      x0, #0x516c
+  0x18d8: movk     x0, #0x8b9d, lsl #16
+  0x18dc: movk     x0, #0xd5bf, lsl #32
+  0x18e0: movk     x0, #0xa0fd, lsl #48
+  0x18e4: mov      x1, x20
+  0x18e8: bl       #0x18e8   ; -> __cfi_slowpath
+  0x18ec: ldr      w0, [x21]
+  0x18f0: mov      x1, sp
+  0x18f4: blr      x20
+  0x18f8: cbnz     w0, #0x1974
+  0x18fc: mov      x0, x19
+  0x1900: bl       #0x1900   ; -> mutex_unlock
+  0x1904: ldr      x8, [sp]
+  0x1908: mov      x9, #0xf7cf
+  0x190c: movk     x9, #0xe353, lsl #16
+  0x1910: movk     x9, #0x9ba5, lsl #32
+  0x1914: lsr      x8, x8, #3
+  0x1918: movk     x9, #0x20c4, lsl #48
+  0x191c: umulh    x8, x8, x9
+  0x1920: lsr      x0, x8, #4
+  0x1924: adrp     x9, #0x1000   ; SHN_UNDEF page +0x0
+  0x1928: ldr      x8, [sp, #8]
+  0x192c: ldr      x9, [x9]   ; -> undef+0x0
+  0x1930: cmp      x9, x8
+  0x1934: b.ne     #0x19ac
+  0x1938: ldp      x29, x30, [sp, #0x10]
+  0x193c: ldp      x20, x19, [sp, #0x30]
+  0x1940: ldr      x21, [sp, #0x20]
+  0x1944: ldr      x30, [x18, #-8]!
+  0x1948: add      sp, sp, #0x40
+  0x194c: ret      
+  0x1950: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1954: ldr      x0, [x8]   ; -> $d.38
+  0x1958: adrp     x1, #0x1000   ; .rodata page +0x6d8
+  0x195c: adrp     x2, #0x1000   ; .rodata page +0x138
+  0x1960: add      x1, x1, #0   ; -> $d.39+0x3c6
+  0x1964: add      x2, x2, #0   ; -> .rodata+0x138
+  0x1968: bl       #0x1968   ; -> _dev_err
+  0x196c: mov      w0, wzr
+  0x1970: b        #0x1924
+  0x1974: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1978: ldr      x0, [x8]   ; -> $d.38
+  0x197c: ldr      w3, [x21]
+  0x1980: adrp     x1, #0x1000   ; .rodata page +0x343
+  0x1984: adrp     x2, #0x1000   ; .rodata page +0x138
+  0x1988: add      x1, x1, #0   ; -> $d.39+0x31
+  0x198c: add      x2, x2, #0   ; -> .rodata+0x138
+  0x1990: bl       #0x1990   ; -> _dev_err
+  0x1994: mov      x0, x19
+  0x1998: bl       #0x1998   ; -> mutex_unlock
+  0x199c: mov      w0, wzr
+  0x19a0: b        #0x1924
+  0x19a4: mov      w0, #0x12
+  0x19a8: bl       #0x19a8   ; -> __ubsan_handle_cfi_check_fail_abort
+  0x19ac: bl       #0x19ac   ; -> __stack_chk_fail
+
+; sprd_cpufreq_online @ 0x19b0 (8 B)
+  0x19b0: mov      w0, wzr
+  0x19b4: ret      
+
+; sprd_cpufreq_offline @ 0x19b8 (8 B)
+  0x19b8: mov      w0, wzr
+  0x19bc: ret      
+
+; sprd_cpufreq_exit @ 0x19c0 (328 B)
+  0x19c0: str      x30, [x18], #8
+  0x19c4: stp      x29, x30, [sp, #-0x40]!
+  0x19c8: str      x23, [sp, #0x10]
+  0x19cc: stp      x22, x21, [sp, #0x20]
+  0x19d0: stp      x20, x19, [sp, #0x30]
+  0x19d4: mov      x29, sp
+  0x19d8: ldr      x22, [x0, #0x288]
+  0x19dc: cbz      x22, #0x1a84
+  0x19e0: mov      x19, x0
+  0x19e4: ldr      w0, [x0, #0x1c]
+  0x19e8: bl       #0x19e8   ; -> get_cpu_device
+  0x19ec: cbz      x0, #0x1aa8
+  0x19f0: add      x20, x22, #8
+  0x19f4: mov      x21, x0
+  0x19f8: mov      x0, x20
+  0x19fc: bl       #0x19fc   ; -> mutex_lock
+  0x1a00: add      x1, x19, #0x170
+  0x1a04: mov      x0, x21
+  0x1a08: bl       #0x1a08   ; -> dev_pm_opp_free_cpufreq_table
+  0x1a0c: mov      x0, x21
+  0x1a10: bl       #0x1a10   ; -> dev_pm_opp_of_remove_table
+  0x1a14: cbz      x19, #0x1ae4
+  0x1a18: adrp     x21, #0x1000   ; .bss page +0x18
+  0x1a1c: ldr      x0, [x21]   ; -> $d.38+0xc0
+  0x1a20: cbz      x0, #0x1ae4
+  0x1a24: ldr      x8, [x19, #0x288]
+  0x1a28: cbz      x8, #0x1ad0
+  0x1a2c: adrp     x9, #0x1000   ; .bss page +0x20
+  0x1a30: ldr      x9, [x9]   ; -> $d.38+0x100
+  0x1a34: ldr      w8, [x8]
+  0x1a38: add      x22, x9, x8, lsl #4
+  0x1a3c: ldr      x23, [x22, #8]
+  0x1a40: ldr      x0, [x23]
+  0x1a44: bl       #0x1a44   ; -> debugfs_remove
+  0x1a48: str      xzr, [x23]
+  0x1a4c: ldr      x0, [x21]   ; -> $d.38+0xc0
+  0x1a50: ldr      x1, [x22, #8]
+  0x1a54: bl       #0x1a54   ; -> devm_kfree
+  0x1a58: str      xzr, [x22, #8]
+  0x1a5c: mov      x0, x20
+  0x1a60: str      xzr, [x19, #0x288]
+  0x1a64: bl       #0x1a64   ; -> mutex_unlock
+  0x1a68: mov      w0, wzr
+  0x1a6c: ldp      x20, x19, [sp, #0x30]
+  0x1a70: ldp      x22, x21, [sp, #0x20]
+  0x1a74: ldr      x23, [sp, #0x10]
+  0x1a78: ldp      x29, x30, [sp], #0x40
+  0x1a7c: ldr      x30, [x18, #-8]!
+  0x1a80: ret      
+  0x1a84: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1a88: ldr      x0, [x8]   ; -> $d.38
+  0x1a8c: adrp     x1, #0x1000   ; .rodata page +0x9b8
+  0x1a90: adrp     x2, #0x1000   ; .rodata page +0x68a
+  0x1a94: add      x1, x1, #0   ; -> $d.39+0x6a6
+  0x1a98: add      x2, x2, #0   ; -> $d.39+0x378
+  0x1a9c: bl       #0x1a9c   ; -> _dev_err
+  0x1aa0: mov      w0, #-0x16
+  0x1aa4: b        #0x1a6c
+  0x1aa8: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1aac: ldr      x0, [x8]   ; -> $d.38
+  0x1ab0: ldr      w3, [x19, #0x1c]
+  0x1ab4: adrp     x1, #0x1000   ; .rodata page +0x2f5
+  0x1ab8: adrp     x2, #0x1000   ; .rodata page +0x68a
+  0x1abc: add      x1, x1, #0   ; -> .rodata+0x2f5
+  0x1ac0: add      x2, x2, #0   ; -> $d.39+0x378
+  0x1ac4: bl       #0x1ac4   ; -> _dev_err
+  0x1ac8: mov      w0, #-0x16
+  0x1acc: b        #0x1a6c
+  0x1ad0: adrp     x1, #0x1000   ; .rodata page +0x2d2
+  0x1ad4: adrp     x2, #0x1000   ; .rodata page +0xe26
+  0x1ad8: add      x1, x1, #0   ; -> .rodata+0x2d2
+  0x1adc: add      x2, x2, #0   ; -> $d.39+0xb14
+  0x1ae0: bl       #0x1ae0   ; -> _dev_err
+  0x1ae4: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1ae8: ldr      x0, [x8]   ; -> $d.38
+  0x1aec: ldr      w3, [x22]
+  0x1af0: adrp     x1, #0x1000   ; .rodata page +0xb8c
+  0x1af4: adrp     x2, #0x1000   ; .rodata page +0x68a
+  0x1af8: add      x1, x1, #0   ; -> $d.39+0x87a
+  0x1afc: add      x2, x2, #0   ; -> $d.39+0x378
+  0x1b00: bl       #0x1b00   ; -> _dev_warn
+  0x1b04: b        #0x1a5c
+
+; sprd_cpufreq_suspend @ 0x1b08 (136 B)
+  0x1b08: str      x30, [x18], #8
+  0x1b0c: stp      x29, x30, [sp, #-0x20]!
+  0x1b10: stp      x20, x19, [sp, #0x10]
+  0x1b14: mov      x29, sp
+  0x1b18: ldr      x20, [x0, #0x50]
+  0x1b1c: adrp     x1, #0x1000   ; .rodata page +0x535
+  0x1b20: mov      x19, x0
+  0x1b24: add      x1, x1, #0   ; -> $d.39+0x223
+  0x1b28: mov      x0, x20
+  0x1b2c: bl       #0x1b2c   ; -> strcmp
+  0x1b30: cbz      w0, #0x1b68
+  0x1b34: ldr      x8, [x19, #0x288]
+  0x1b38: ldrb     w9, [x8, #0xa0]
+  0x1b3c: cbz      w9, #0x1b50
+  0x1b40: mov      x0, x19
+  0x1b44: mov      w1, wzr
+  0x1b48: strb     wzr, [x8, #0xa0]
+  0x1b4c: bl       #0x1b4c   ; -> 0x169c
+  0x1b50: mov      x0, x19
+  0x1b54: bl       #0x1b54   ; -> cpufreq_generic_suspend
+  0x1b58: ldp      x20, x19, [sp, #0x10]
+  0x1b5c: ldp      x29, x30, [sp], #0x20
+  0x1b60: ldr      x30, [x18, #-8]!
+  0x1b64: ret      
+  0x1b68: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1b6c: ldr      x0, [x8]   ; -> $d.38
+  0x1b70: adrp     x1, #0x1000   ; .rodata page +0x3da
+  0x1b74: adrp     x2, #0x1000   ; .rodata page +0x60f
+  0x1b78: add      x1, x1, #0   ; -> $d.39+0xc8
+  0x1b7c: add      x2, x2, #0   ; -> $d.39+0x2fd
+  0x1b80: mov      x3, x20
+  0x1b84: bl       #0x1b84   ; -> _dev_info
+  0x1b88: mov      w0, wzr
+  0x1b8c: b        #0x1b58
+
+; sprd_cpufreq_resume @ 0x1b90 (108 B)
+  0x1b90: str      x30, [x18], #8
+  0x1b94: stp      x29, x30, [sp, #-0x20]!
+  0x1b98: stp      x20, x19, [sp, #0x10]
+  0x1b9c: mov      x29, sp
+  0x1ba0: ldr      x19, [x0, #0x50]
+  0x1ba4: adrp     x1, #0x1000   ; .rodata page +0x535
+  0x1ba8: mov      x20, x0
+  0x1bac: add      x1, x1, #0   ; -> $d.39+0x223
+  0x1bb0: mov      x0, x19
+  0x1bb4: bl       #0x1bb4   ; -> strcmp
+  0x1bb8: cbz      w0, #0x1bd4
+  0x1bbc: mov      x0, x20
+  0x1bc0: bl       #0x1bc0   ; -> cpufreq_generic_suspend
+  0x1bc4: ldp      x20, x19, [sp, #0x10]
+  0x1bc8: ldp      x29, x30, [sp], #0x20
+  0x1bcc: ldr      x30, [x18, #-8]!
+  0x1bd0: ret      
+  0x1bd4: adrp     x8, #0x1000   ; .bss page +0x0
+  0x1bd8: ldr      x0, [x8]   ; -> $d.38
+  0x1bdc: adrp     x1, #0x1000   ; .rodata page +0x3da
+  0x1be0: adrp     x2, #0x1000   ; .rodata page +0x32f
+  0x1be4: add      x1, x1, #0   ; -> $d.39+0xc8
+  0x1be8: add      x2, x2, #0   ; -> $d.39+0x1d
+  0x1bec: mov      x3, x19
+  0x1bf0: bl       #0x1bf0   ; -> _dev_info
+  0x1bf4: mov      w0, wzr
+  0x1bf8: b        #0x1bc4
+
+; __cfi_check @ 0x2000 (488 B)
+  0x2000: mov      x8, #0x2444
+  0x2004: movk     x8, #0x2924, lsl #16
+  0x2008: movk     x8, #0xa43e, lsl #32
+  0x200c: movk     x8, #0x2b3, lsl #48
+  0x2010: cmp      x0, x8
+  0x2014: b.gt     #0x2094
+  0x2018: mov      x8, #0x723f
+  0x201c: movk     x8, #0x4c4c, lsl #16
+  0x2020: movk     x8, #0x154, lsl #32
+  0x2024: movk     x8, #0xa34b, lsl #48
+  0x2028: cmp      x0, x8
+  0x202c: b.le     #0x2100
+  0x2030: mov      x8, #0x7240
+  0x2034: movk     x8, #0x4c4c, lsl #16
+  0x2038: movk     x8, #0x154, lsl #32
+  0x203c: movk     x8, #0xa34b, lsl #48
+  0x2040: cmp      x0, x8
+  0x2044: b.eq     #0x2178
+  0x2048: mov      x8, #0x848f
+  0x204c: movk     x8, #0x472f, lsl #16
+  0x2050: movk     x8, #0xce70, lsl #32
+  0x2054: movk     x8, #0xcaa8, lsl #48
+  0x2058: cmp      x0, x8
+  0x205c: b.eq     #0x21a4
+  0x2060: mov      x8, #0x5ac8
+  0x2064: movk     x8, #0xfc53, lsl #16
+  0x2068: movk     x8, #0x7fe6, lsl #32
+  0x206c: movk     x8, #0xf723, lsl #48
+  0x2070: cmp      x0, x8
+  0x2074: b.ne     #0x2190
+  0x2078: adrp     x8, #0x2000   ; .text page +0x8e0
+  0x207c: add      x8, x8, #0   ; -> $x.0+0x28e0
+  0x2080: sub      x8, x1, x8
+  0x2084: ror      x8, x8, #2
+  0x2088: cmp      x8, #2
+  0x208c: b.lo     #0x21e4
+  0x2090: b        #0x2190
+  0x2094: mov      x8, #0x949d
+  0x2098: movk     x8, #0x88d4, lsl #16
+  0x209c: movk     x8, #0x69b8, lsl #32
+  0x20a0: movk     x8, #0x3219, lsl #48
+  0x20a4: cmp      x0, x8
+  0x20a8: b.le     #0x213c
+  0x20ac: mov      x8, #0x949e
+  0x20b0: movk     x8, #0x88d4, lsl #16
+  0x20b4: movk     x8, #0x69b8, lsl #32
+  0x20b8: movk     x8, #0x3219, lsl #48
+  0x20bc: cmp      x0, x8
+  0x20c0: b.eq     #0x21b0
+  0x20c4: mov      x8, #0x9d7f
+  0x20c8: movk     x8, #0x75ab, lsl #16
+  0x20cc: movk     x8, #0x81c4, lsl #32
+  0x20d0: movk     x8, #0x4477, lsl #48
+  0x20d4: cmp      x0, x8
+  0x20d8: b.eq     #0x21bc
+  0x20dc: mov      x8, #0x7aa5
+  0x20e0: movk     x8, #0x37e5, lsl #16
+  0x20e4: movk     x8, #0xcb8, lsl #32
+  0x20e8: movk     x8, #0x77c3, lsl #48
+  0x20ec: cmp      x0, x8
+  0x20f0: b.ne     #0x2190
+  0x20f4: adrp     x8, #0x2000   ; .text page +0x8bc
+  0x20f8: add      x8, x8, #0   ; -> $x.0+0x28bc
+  0x20fc: b        #0x21dc
+  0x2100: mov      x8, #0xfbc0
+  0x2104: movk     x8, #0xb152, lsl #16
+  0x2108: movk     x8, #0xeb00, lsl #32
+  0x210c: movk     x8, #0x90ea, lsl #48
+  0x2110: cmp      x0, x8
+  0x2114: b.eq     #0x21c8
+  0x2118: mov      x8, #0x237e
+  0x211c: movk     x8, #0xa505, lsl #16
+  0x2120: movk     x8, #0x9c33, lsl #32
+  0x2124: movk     x8, #0x9eab, lsl #48
+  0x2128: cmp      x0, x8
+  0x212c: b.ne     #0x2190
+  0x2130: adrp     x8, #0x2000   ; .text page +0x8a8
+  0x2134: add      x8, x8, #0   ; -> $x.0+0x28a8
+  0x2138: b        #0x21dc
+  0x213c: mov      x8, #0x2445
+  0x2140: movk     x8, #0x2924, lsl #16
+  0x2144: movk     x8, #0xa43e, lsl #32
+  0x2148: movk     x8, #0x2b3, lsl #48
+  0x214c: cmp      x0, x8
+  0x2150: b.eq     #0x21d4
+  0x2154: mov      x8, #0xb1a6
+  0x2158: movk     x8, #0x3d37, lsl #16
+  0x215c: movk     x8, #0x5a21, lsl #32
+  0x2160: movk     x8, #0x7ff, lsl #48
+  0x2164: cmp      x0, x8
+  0x2168: b.ne     #0x2190
+  0x216c: adrp     x8, #0x2000   ; .text page +0x8dc
+  0x2170: add      x8, x8, #0   ; -> $x.0+0x28dc
+  0x2174: b        #0x21dc
+  0x2178: adrp     x8, #0x2000   ; .text page +0x8c0
+  0x217c: add      x8, x8, #0   ; -> $x.0+0x28c0
+  0x2180: sub      x8, x1, x8
+  0x2184: ror      x8, x8, #2
+  0x2188: cmp      x8, #6
+  0x218c: b.lo     #0x21e4
+  0x2190: str      x30, [sp, #-0x10]!
+  0x2194: mov      x0, x2
+  0x2198: bl       #0x2198   ; -> __cfi_check_fail
+  0x219c: ldr      x30, [sp], #0x10
+  0x21a0: ret      
+  0x21a4: adrp     x8, #0x2000   ; .text page +0x8b0
+  0x21a8: add      x8, x8, #0   ; -> $x.0+0x28b0
+  0x21ac: b        #0x21dc
+  0x21b0: adrp     x8, #0x2000   ; .text page +0x8d8
+  0x21b4: add      x8, x8, #0   ; -> $x.0+0x28d8
+  0x21b8: b        #0x21dc
+  0x21bc: adrp     x8, #0x2000   ; .text page +0x8b8
+  0x21c0: add      x8, x8, #0   ; -> $x.0+0x28b8
+  0x21c4: b        #0x21dc
+  0x21c8: adrp     x8, #0x2000   ; .text page +0x8b4
+  0x21cc: add      x8, x8, #0   ; -> $x.0+0x28b4
+  0x21d0: b        #0x21dc
+  0x21d4: adrp     x8, #0x2000   ; .text page +0x8ac
+  0x21d8: add      x8, x8, #0   ; -> $x.0+0x28ac
+  0x21dc: cmp      x1, x8
+  0x21e0: b.ne     #0x2190
+  0x21e4: ret      
+
+; sprd_debug_cluster_init @ 0x21e8 (280 B)
+  0x21e8: str      x30, [x18], #8
+  0x21ec: stp      x29, x30, [sp, #-0x40]!
+  0x21f0: stp      x24, x23, [sp, #0x10]
+  0x21f4: stp      x22, x21, [sp, #0x20]
+  0x21f8: stp      x20, x19, [sp, #0x30]
+  0x21fc: mov      x29, sp
+  0x2200: mov      x19, x0
+  0x2204: mov      w0, #-0x16
+  0x2208: cbz      x19, #0x227c
+  0x220c: adrp     x21, #0x2000   ; .bss page +0x18
+  0x2210: ldr      x8, [x21]   ; -> $d.38+0xc0
+  0x2214: cbz      x8, #0x227c
+  0x2218: ldr      x22, [x19, #0x288]
+  0x221c: cbz      x22, #0x2294
+  0x2220: adrp     x9, #0x2000   ; .bss page +0x20
+  0x2224: ldr      x23, [x9]   ; -> $d.38+0x100
+  0x2228: ldr      w24, [x22]
+  0x222c: mov      w1, #8
+  0x2230: mov      w2, #0xdc0
+  0x2234: mov      x0, x8
+  0x2238: bl       #0x2238   ; -> devm_kmalloc
+  0x223c: add      x8, x23, x24, lsl #4
+  0x2240: str      x0, [x8, #8]
+  0x2244: cbz      x0, #0x22b0
+  0x2248: lsl      x8, x24, #4
+  0x224c: ldr      x2, [x23, x8]
+  0x2250: mov      x20, x0
+  0x2254: adrp     x0, #0x2000   ; .rodata page +0xa6a
+  0x2258: adrp     x4, #0x2000   ; .rodata page +0x10
+  0x225c: add      x0, x0, #0   ; -> $d.39+0x758
+  0x2260: add      x4, x4, #0   ; -> $d.39+0xcfe
+  0x2264: mov      w1, #0x124
+  0x2268: mov      x3, x19
+  0x226c: bl       #0x226c   ; -> debugfs_create_file
+  0x2270: str      x0, [x20]
+  0x2274: cbz      x0, #0x22d4
+  0x2278: mov      w0, wzr
+  0x227c: ldp      x20, x19, [sp, #0x30]
+  0x2280: ldp      x22, x21, [sp, #0x20]
+  0x2284: ldp      x24, x23, [sp, #0x10]
+  0x2288: ldp      x29, x30, [sp], #0x40
+  0x228c: ldr      x30, [x18, #-8]!
+  0x2290: ret      
+  0x2294: adrp     x1, #0x2000   ; .rodata page +0x2aa
+  0x2298: adrp     x2, #0x2000   ; .rodata page +0x458
+  0x229c: add      x1, x1, #0   ; -> .rodata+0x2aa
+  0x22a0: add      x2, x2, #0   ; -> $d.39+0x146
+  0x22a4: mov      x0, x8
+  0x22a8: bl       #0x22a8   ; -> _dev_err
+  0x22ac: b        #0x22f8
+  0x22b0: ldr      x0, [x21]   ; -> $d.38+0xc0
+  0x22b4: ldr      w3, [x22]
+  0x22b8: adrp     x1, #0x2000   ; .rodata page +0x76f
+  0x22bc: adrp     x2, #0x2000   ; .rodata page +0x458
+  0x22c0: add      x1, x1, #0   ; -> $d.39+0x45d
+  0x22c4: add      x2, x2, #0   ; -> $d.39+0x146
+  0x22c8: bl       #0x22c8   ; -> _dev_err
+  0x22cc: mov      w0, #-0xc
+  0x22d0: b        #0x227c
+  0x22d4: ldr      x0, [x21]   ; -> $d.38+0xc0
+  0x22d8: ldr      w3, [x22]
+  0x22dc: adrp     x1, #0x2000   ; .rodata page +0x38c
+  0x22e0: adrp     x2, #0x2000   ; .rodata page +0x458
+  0x22e4: adrp     x4, #0x2000   ; .rodata page +0xa6a
+  0x22e8: add      x1, x1, #0   ; -> $d.39+0x7a
+  0x22ec: add      x2, x2, #0   ; -> $d.39+0x146
+  0x22f0: add      x4, x4, #0   ; -> $d.39+0x758
+  0x22f4: bl       #0x22f4   ; -> _dev_err
+  0x22f8: mov      w0, #-0x16
+  0x22fc: b        #0x227c
+
+; sprd_debug_table_read @ 0x2300 (548 B)
+  0x2300: str      x30, [x18], #8
+  0x2304: stp      x29, x30, [sp, #-0x60]!
+  0x2308: stp      x28, x27, [sp, #0x10]
+  0x230c: stp      x26, x25, [sp, #0x20]
+  0x2310: stp      x24, x23, [sp, #0x30]
+  0x2314: stp      x22, x21, [sp, #0x40]
+  0x2318: stp      x20, x19, [sp, #0x50]
+  0x231c: mov      x29, sp
+  0x2320: sub      sp, sp, #0x230
+  0x2324: adrp     x8, #0x2000   ; SHN_UNDEF page +0x0
+  0x2328: ldr      x8, [x8]   ; -> undef+0x0
+  0x232c: mov      x25, x2
+  0x2330: mov      x26, x1
+  0x2334: mov      w2, #0x200
+  0x2338: stur     x8, [x29, #-0x10]
+  0x233c: ldr      x20, [x0, #0xc8]
+  0x2340: add      x0, sp, #0x20
+  0x2344: mov      w1, wzr
+  0x2348: mov      x21, x3
+  0x234c: bl       #0x234c   ; -> memset
+  0x2350: ldr      x19, [x20, #0x288]
+  0x2354: str      xzr, [sp, #0x18]
+  0x2358: add      x22, x19, #8
+  0x235c: mov      x0, x22
+  0x2360: bl       #0x2360   ; -> mutex_lock
+  0x2364: ldr      w0, [x20, #0x1c]
+  0x2368: bl       #0x2368   ; -> get_cpu_device
+  0x236c: cbz      x0, #0x2490
+  0x2370: mov      x24, x0
+  0x2374: bl       #0x2374   ; -> dev_pm_opp_get_opp_count
+  0x2378: mov      w23, w0
+  0x237c: tbnz     w0, #0x1f, #0x24b0
+  0x2380: ldr      x8, [x19, #0xb0]
+  0x2384: adrp     x2, #0x2000   ; .rodata page +0xb38
+  0x2388: add      x2, x2, #0   ; -> $d.39+0x826
+  0x238c: add      x0, sp, #0x20
+  0x2390: ldr      w3, [x8]
+  0x2394: mov      w1, #0x200
+  0x2398: stp      x26, x25, [sp]
+  0x239c: str      x21, [sp, #0x10]
+  0x23a0: add      x20, sp, #0x20
+  0x23a4: bl       #0x23a4   ; -> scnprintf
+  0x23a8: mov      w25, w0
+  0x23ac: str      xzr, [sp, #0x18]
+  0x23b0: cbz      w23, #0x2430
+  0x23b4: adrp     x26, #0x2000   ; .rodata page +0xe1d
+  0x23b8: mov      w21, #0x200
+  0x23bc: add      x26, x26, #0   ; -> $d.39+0xb0b
+  0x23c0: add      x1, sp, #0x18
+  0x23c4: mov      x0, x24
+  0x23c8: bl       #0x23c8   ; -> dev_pm_opp_find_freq_ceil
+  0x23cc: cmn      x0, #0xfff
+  0x23d0: b.hs     #0x24e0
+  0x23d4: mov      x27, x0
+  0x23d8: bl       #0x23d8   ; -> dev_pm_opp_get_freq
+  0x23dc: mov      x28, x0
+  0x23e0: mov      x0, x27
+  0x23e4: bl       #0x23e4   ; -> dev_pm_opp_get_voltage
+  0x23e8: mov      x19, x0
+  0x23ec: mov      x0, x27
+  0x23f0: bl       #0x23f0   ; -> dev_pm_opp_put
+  0x23f4: sxtw     x8, w25
+  0x23f8: add      x0, x20, x8
+  0x23fc: sub      x1, x21, x8
+  0x2400: mov      x2, x26
+  0x2404: mov      x3, x28
+  0x2408: mov      x4, x19
+  0x240c: bl       #0x240c   ; -> scnprintf
+  0x2410: add      w25, w0, w25
+  0x2414: cmp      w25, #0x200
+  0x2418: b.hs     #0x24f4
+  0x241c: ldr      x8, [sp, #0x18]
+  0x2420: subs     w23, w23, #1
+  0x2424: add      x8, x8, #1
+  0x2428: str      x8, [sp, #0x18]
+  0x242c: b.ne     #0x23c0
+  0x2430: mov      x0, x22
+  0x2434: bl       #0x2434   ; -> mutex_unlock
+  0x2438: sxtw     x4, w25
+  0x243c: ldp      x25, x21, [sp, #8]
+  0x2440: ldr      x26, [sp]
+  0x2444: add      x3, sp, #0x20
+  0x2448: mov      x0, x26
+  0x244c: mov      x1, x25
+  0x2450: mov      x2, x21
+  0x2454: bl       #0x2454   ; -> simple_read_from_buffer
+  0x2458: adrp     x9, #0x2000   ; SHN_UNDEF page +0x0
+  0x245c: ldur     x8, [x29, #-0x10]
+  0x2460: ldr      x9, [x9]   ; -> undef+0x0
+  0x2464: cmp      x9, x8
+  0x2468: b.ne     #0x2520
+  0x246c: add      sp, sp, #0x230
+  0x2470: ldp      x20, x19, [sp, #0x50]
+  0x2474: ldp      x22, x21, [sp, #0x40]
+  0x2478: ldp      x24, x23, [sp, #0x30]
+  0x247c: ldp      x26, x25, [sp, #0x20]
+  0x2480: ldp      x28, x27, [sp, #0x10]
+  0x2484: ldp      x29, x30, [sp], #0x60
+  0x2488: ldr      x30, [x18, #-8]!
+  0x248c: ret      
+  0x2490: adrp     x8, #0x2000   ; .bss page +0x18
+  0x2494: ldr      x0, [x8]   ; -> $d.38+0xc0
+  0x2498: adrp     x1, #0x2000   ; .rodata page +0xa4f
+  0x249c: adrp     x2, #0x2000   ; .rodata page +0x247
+  0x24a0: add      x1, x1, #0   ; -> $d.39+0x73d
+  0x24a4: add      x2, x2, #0   ; -> .rodata+0x247
+  0x24a8: bl       #0x24a8   ; -> _dev_err
+  0x24ac: b        #0x24d0
+  0x24b0: adrp     x8, #0x2000   ; .bss page +0x18
+  0x24b4: ldr      x0, [x8]   ; -> $d.38+0xc0
+  0x24b8: adrp     x1, #0x2000   ; .rodata page +0xaad
+  0x24bc: adrp     x2, #0x2000   ; .rodata page +0x247
+  0x24c0: add      x1, x1, #0   ; -> $d.39+0x79b
+  0x24c4: add      x2, x2, #0   ; -> .rodata+0x247
+  0x24c8: mov      w3, w23
+  0x24cc: bl       #0x24cc   ; -> _dev_err
+  0x24d0: mov      x0, x22
+  0x24d4: bl       #0x24d4   ; -> mutex_unlock
+  0x24d8: mov      x4, xzr
+  0x24dc: b        #0x2444
+  0x24e0: adrp     x8, #0x2000   ; .bss page +0x18
+  0x24e4: ldr      x0, [x8]   ; -> $d.38+0xc0
+  0x24e8: adrp     x1, #0x2000   ; .rodata page +0x4b1
+  0x24ec: add      x1, x1, #0   ; -> $d.39+0x19f
+  0x24f0: b        #0x2504
+  0x24f4: adrp     x8, #0x2000   ; .bss page +0x18
+  0x24f8: ldr      x0, [x8]   ; -> $d.38+0xc0
+  0x24fc: adrp     x1, #0x2000   ; .rodata page +0x5b3
+  0x2500: add      x1, x1, #0   ; -> $d.39+0x2a1
+  0x2504: adrp     x2, #0x2000   ; .rodata page +0x247
+  0x2508: add      x2, x2, #0   ; -> .rodata+0x247
+  0x250c: bl       #0x250c   ; -> _dev_err
+  0x2510: mov      x0, x22
+  0x2514: bl       #0x2514   ; -> mutex_unlock
+  0x2518: mov      x4, xzr
+  0x251c: b        #0x243c
+  0x2520: bl       #0x2520   ; -> __stack_chk_fail
+
+; sprd_debug_table_open @ 0x2524 (36 B)
+  0x2524: str      x30, [x18], #8
+  0x2528: stp      x29, x30, [sp, #-0x10]!
+  0x252c: mov      x29, sp
+  0x2530: ldr      x8, [x0, #0x280]
+  0x2534: str      x8, [x1, #0xc8]
+  0x2538: bl       #0x2538   ; -> nonseekable_open
+  0x253c: ldp      x29, x30, [sp], #0x10
+  0x2540: ldr      x30, [x18, #-8]!
+  0x2544: ret      
+
+; sprd_debug_table_release @ 0x2548 (8 B)
+  0x2548: mov      w0, wzr
+  0x254c: ret      
+
+; sprd_debug_cluster_exit @ 0x2550 (156 B)
+  0x2550: str      x30, [x18], #8
+  0x2554: stp      x29, x30, [sp, #-0x30]!
+  0x2558: str      x21, [sp, #0x10]
+  0x255c: stp      x20, x19, [sp, #0x20]
+  0x2560: mov      x29, sp
+  0x2564: mov      x9, x0
+  0x2568: mov      w0, #-0x16
+  0x256c: cbz      x9, #0x25b8
+  0x2570: adrp     x19, #0x2000   ; .bss page +0x18
+  0x2574: ldr      x8, [x19]   ; -> $d.38+0xc0
+  0x2578: cbz      x8, #0x25b8
+  0x257c: ldr      x9, [x9, #0x288]
+  0x2580: cbz      x9, #0x25cc
+  0x2584: adrp     x8, #0x2000   ; .bss page +0x20
+  0x2588: ldr      x8, [x8]   ; -> $d.38+0x100
+  0x258c: ldr      w9, [x9]
+  0x2590: add      x20, x8, x9, lsl #4
+  0x2594: ldr      x21, [x20, #8]
+  0x2598: ldr      x0, [x21]
+  0x259c: bl       #0x259c   ; -> debugfs_remove
+  0x25a0: str      xzr, [x21]
+  0x25a4: ldr      x0, [x19]   ; -> $d.38+0xc0
+  0x25a8: ldr      x1, [x20, #8]
+  0x25ac: bl       #0x25ac   ; -> devm_kfree
+  0x25b0: mov      w0, wzr
+  0x25b4: str      xzr, [x20, #8]
+  0x25b8: ldp      x20, x19, [sp, #0x20]
+  0x25bc: ldr      x21, [sp, #0x10]
+  0x25c0: ldp      x29, x30, [sp], #0x30
+  0x25c4: ldr      x30, [x18, #-8]!
+  0x25c8: ret      
+  0x25cc: adrp     x1, #0x2000   ; .rodata page +0x2d2
+  0x25d0: adrp     x2, #0x2000   ; .rodata page +0xe26
+  0x25d4: add      x1, x1, #0   ; -> .rodata+0x2d2
+  0x25d8: add      x2, x2, #0   ; -> $d.39+0xb14
+  0x25dc: mov      x0, x8
+  0x25e0: bl       #0x25e0   ; -> _dev_err
+  0x25e4: mov      w0, #-0x16
+  0x25e8: b        #0x25b8
+
+; sprd_debug_init @ 0x25ec (484 B)
+  0x25ec: sub      sp, sp, #0x80
+  0x25f0: str      x30, [x18], #8
+  0x25f4: stp      x29, x30, [sp, #0x30]
+  0x25f8: stp      x26, x25, [sp, #0x40]
+  0x25fc: stp      x24, x23, [sp, #0x50]
+  0x2600: stp      x22, x21, [sp, #0x60]
+  0x2604: stp      x20, x19, [sp, #0x70]
+  0x2608: add      x29, sp, #0x30
+  0x260c: adrp     x8, #0x2000   ; SHN_UNDEF page +0x0
+  0x2610: ldr      x8, [x8]   ; -> undef+0x0
+  0x2614: mov      x19, x0
+  0x2618: mov      w0, #-0x16
+  0x261c: stur     x8, [x29, #-8]
+  0x2620: stp      xzr, xzr, [sp, #0x18]
+  0x2624: stp      xzr, xzr, [sp, #8]
+  0x2628: cbz      x19, #0x2750
+  0x262c: adrp     x8, #0x2000   ; .bss page +0x18
+  0x2630: ldr      x9, [x8]   ; -> $d.38+0xc0
+  0x2634: cbnz     x9, #0x2750
+  0x2638: adrp     x0, #0x2000   ; .rodata page +0x552
+  0x263c: add      x0, x0, #0   ; -> $d.39+0x240
+  0x2640: mov      x1, xzr
+  0x2644: str      x19, [x8]   ; -> $d.38+0xc0
+  0x2648: bl       #0x2648   ; -> debugfs_create_dir
+  0x264c: adrp     x22, #0x2000   ; .bss page +0x28
+  0x2650: str      x0, [x22]   ; -> $d.38+0x140
+  0x2654: cbz      x0, #0x2784
+  0x2658: adrp     x8, #0x2000   ; SHN_UNDEF page +0x0
+  0x265c: ldr      w0, [x8]   ; -> undef+0x0
+  0x2660: bl       #0x2660   ; -> __sw_hweight64
+  0x2664: sub      w8, w0, #1
+  0x2668: cmp      w8, #0x20
+  0x266c: b.hs     #0x27c8
+  0x2670: adrp     x9, #0x2000   ; SHN_UNDEF page +0x0
+  0x2674: add      x9, x9, #0   ; -> undef+0x0
+  0x2678: mov      w10, #0x28
+  0x267c: umaddl   x8, w8, w10, x9
+  0x2680: ldr      w8, [x8, #8]
+  0x2684: mov      w2, #0xdc0
+  0x2688: mov      x0, x19
+  0x268c: add      w21, w8, #1
+  0x2690: sbfiz    x1, x21, #4, #0x20
+  0x2694: bl       #0x2694   ; -> devm_kmalloc
+  0x2698: adrp     x23, #0x2000   ; .bss page +0x20
+  0x269c: str      x0, [x23]   ; -> $d.38+0x100
+  0x26a0: cbz      x0, #0x27a4
+  0x26a4: cmp      w21, #1
+  0x26a8: b.lt     #0x274c
+  0x26ac: adrp     x1, #0x2000   ; .rodata page +0x116
+  0x26b0: mov      x20, x0
+  0x26b4: add      x1, x1, #0   ; -> .rodata+0x116
+  0x26b8: add      x0, sp, #8
+  0x26bc: mov      w2, wzr
+  0x26c0: bl       #0x26c0   ; -> sprintf
+  0x26c4: ldr      x1, [x22]   ; -> $d.38+0x140
+  0x26c8: add      x0, sp, #8
+  0x26cc: bl       #0x26cc   ; -> debugfs_create_dir
+  0x26d0: str      x0, [x20]
+  0x26d4: mov      w20, wzr
+  0x26d8: cbz      x0, #0x2728
+  0x26dc: mov      w8, w21
+  0x26e0: adrp     x21, #0x2000   ; .rodata page +0x116
+  0x26e4: mov      w24, #0x10
+  0x26e8: lsl      x25, x8, #4
+  0x26ec: add      x21, x21, #0   ; -> .rodata+0x116
+  0x26f0: cmp      x25, x24
+  0x26f4: b.eq     #0x274c
+  0x26f8: ldr      x26, [x23]   ; -> $d.38+0x100
+  0x26fc: add      w20, w20, #1
+  0x2700: add      x0, sp, #8
+  0x2704: mov      x1, x21
+  0x2708: mov      w2, w20
+  0x270c: bl       #0x270c   ; -> sprintf
+  0x2710: ldr      x1, [x22]   ; -> $d.38+0x140
+  0x2714: add      x0, sp, #8
+  0x2718: bl       #0x2718   ; -> debugfs_create_dir
+  0x271c: str      x0, [x26, x24]
+  0x2720: add      x24, x24, #0x10
+  0x2724: cbnz     x0, #0x26f0
+  0x2728: adrp     x1, #0x2000   ; .rodata page +0x562
+  0x272c: adrp     x2, #0x2000   ; .rodata page +0x76
+  0x2730: add      x1, x1, #0   ; -> $d.39+0x250
+  0x2734: add      x2, x2, #0   ; -> .rodata+0x76
+  0x2738: mov      x0, x19
+  0x273c: mov      w3, w20
+  0x2740: bl       #0x2740   ; -> _dev_err
+  0x2744: mov      w0, #-0x16
+  0x2748: b        #0x2750
+  0x274c: mov      w0, wzr
+  0x2750: adrp     x9, #0x2000   ; SHN_UNDEF page +0x0
+  0x2754: ldur     x8, [x29, #-8]
+  0x2758: ldr      x9, [x9]   ; -> undef+0x0
+  0x275c: cmp      x9, x8
+  0x2760: b.ne     #0x27c4
+  0x2764: ldp      x29, x30, [sp, #0x30]
+  0x2768: ldp      x20, x19, [sp, #0x70]
+  0x276c: ldp      x22, x21, [sp, #0x60]
+  0x2770: ldp      x24, x23, [sp, #0x50]
+  0x2774: ldp      x26, x25, [sp, #0x40]
+  0x2778: ldr      x30, [x18, #-8]!
+  0x277c: add      sp, sp, #0x80
+  0x2780: ret      
+  0x2784: adrp     x1, #0x2000   ; .rodata page +0xe3e
+  0x2788: adrp     x2, #0x2000   ; .rodata page +0x76
+  0x278c: add      x1, x1, #0   ; -> $d.39+0xb2c
+  0x2790: add      x2, x2, #0   ; -> .rodata+0x76
+  0x2794: mov      x0, x19
+  0x2798: bl       #0x2798   ; -> _dev_err
+  0x279c: mov      w0, #-0x16
+  0x27a0: b        #0x2750
+  0x27a4: adrp     x1, #0x2000   ; .rodata page +0x976
+  0x27a8: adrp     x2, #0x2000   ; .rodata page +0x76
+  0x27ac: add      x1, x1, #0   ; -> $d.39+0x664
+  0x27b0: add      x2, x2, #0   ; -> .rodata+0x76
+  0x27b4: mov      x0, x19
+  0x27b8: bl       #0x27b8   ; -> _dev_err
+  0x27bc: mov      w0, #-0xc
+  0x27c0: b        #0x2750
+  0x27c4: bl       #0x27c4   ; -> __stack_chk_fail
+  0x27c8: mov      w0, #0x12
+  0x27cc: bl       #0x27cc   ; -> __ubsan_handle_cfi_check_fail_abort
+
+; sprd_debug_exit @ 0x27d0 (216 B)
+  0x27d0: str      x30, [x18], #8
+  0x27d4: stp      x29, x30, [sp, #-0x40]!
+  0x27d8: str      x23, [sp, #0x10]
+  0x27dc: stp      x22, x21, [sp, #0x20]
+  0x27e0: stp      x20, x19, [sp, #0x30]
+  0x27e4: mov      x29, sp
+  0x27e8: adrp     x19, #0x2000   ; .bss page +0x18
+  0x27ec: ldr      x8, [x19]   ; -> $d.38+0xc0
+  0x27f0: cbz      x8, #0x27fc
+  0x27f4: mov      w0, #-0x16
+  0x27f8: b        #0x2888
+  0x27fc: adrp     x8, #0x2000   ; SHN_UNDEF page +0x0
+  0x2800: ldr      w0, [x8]   ; -> undef+0x0
+  0x2804: bl       #0x2804   ; -> __sw_hweight64
+  0x2808: sub      w8, w0, #1
+  0x280c: cmp      w8, #0x20
+  0x2810: b.hs     #0x28a0
+  0x2814: adrp     x9, #0x2000   ; SHN_UNDEF page +0x0
+  0x2818: add      x9, x9, #0   ; -> undef+0x0
+  0x281c: mov      w10, #0x28
+  0x2820: umaddl   x8, w8, w10, x9
+  0x2824: ldr      w8, [x8, #8]
+  0x2828: adrp     x20, #0x2000   ; .bss page +0x20
+  0x282c: add      w8, w8, #1
+  0x2830: cmp      w8, #1
+  0x2834: b.lt     #0x2860
+  0x2838: mov      w8, w8
+  0x283c: mov      x21, xzr
+  0x2840: lsl      x22, x8, #4
+  0x2844: ldr      x23, [x20]   ; -> $d.38+0x100
+  0x2848: ldr      x0, [x23, x21]
+  0x284c: bl       #0x284c   ; -> debugfs_remove
+  0x2850: str      xzr, [x23, x21]
+  0x2854: add      x21, x21, #0x10
+  0x2858: cmp      x22, x21
+  0x285c: b.ne     #0x2844
+  0x2860: ldr      x0, [x19]   ; -> $d.38+0xc0
+  0x2864: ldr      x1, [x20]   ; -> $d.38+0x100
+  0x2868: bl       #0x2868   ; -> devm_kfree
+  0x286c: adrp     x21, #0x2000   ; .bss page +0x28
+  0x2870: ldr      x0, [x21]   ; -> $d.38+0x140
+  0x2874: str      xzr, [x20]   ; -> $d.38+0x100
+  0x2878: bl       #0x2878   ; -> debugfs_remove
+  0x287c: mov      w0, wzr
+  0x2880: str      xzr, [x21]   ; -> $d.38+0x140
+  0x2884: str      xzr, [x19]   ; -> $d.38+0xc0
+  0x2888: ldp      x20, x19, [sp, #0x30]
+  0x288c: ldp      x22, x21, [sp, #0x20]
+  0x2890: ldr      x23, [sp, #0x10]
+  0x2894: ldp      x29, x30, [sp], #0x40
+  0x2898: ldr      x30, [x18, #-8]!
+  0x289c: ret      
+  0x28a0: mov      w0, #0x12
+  0x28a4: bl       #0x28a4   ; -> __ubsan_handle_cfi_check_fail_abort
+
+; __typeid__ZTSFivE_global_addr @ 0x28ac (1 B)
+

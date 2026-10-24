@@ -63,12 +63,36 @@
 #define SPRD_SIP_SVC_DBG_SET_HANG_HDL		0xc2000201
 #define SPRD_SIP_SVC_DBG_GET_HANG_CTX		0xc2000202
 
+/*
+ * DVFS operations, mirroring the vendor's `struct sprd_sip_svc_dvfs_ops`
+ * field-for-field (recovered from the GPL release of sprd-cpufreq-v2 and
+ * drivers/firmware/sprd_sip_svc.c).  Every wrapper takes the cluster id in
+ * x1 and pulls its result out of a1/a2; see sprd_sip_svc.c for the exact
+ * SMC marshalling.
+ */
+struct sprd_sip_svc_dvfs_ops {
+	/* Firmware-reported DVFS version, as (major << 16 | minor). */
+	u32 rev;
+
+	int (*dvfs_enable)(u32 cluster);
+	int (*table_update)(u32 cluster, u32 temp, u32 *num);
+	int (*step_set)(u32 cluster, u32 step);
+	int (*margin_set)(u32 cluster, u32 margin);
+	int (*freq_set)(u32 cluster, u32 index);
+	int (*freq_get)(u32 cluster, u64 *freq);
+	int (*pair_get)(u32 cluster, u32 index, u64 *freq, u64 *vol);
+	int (*pmic_set)(u32 cluster, u32 num);
+	int (*bin_set)(u32 cluster, u32 bin);
+	int (*version_set)(u32 cluster, u64 *ver);
+	int (*dvfs_init)(u32 flag);
+	int (*dvfs_debug_init)(void);
+};
+
 struct sprd_sip_svc_handle {
 	/* Versions reported by the firmware, as (major << 16 | minor). */
 	u32 perf_version;
 	u32 storage_version;
 	u32 pwr_version;
-	u32 dvfs_version;
 	u32 npu_version;
 	u32 dbg_version;
 
@@ -95,18 +119,7 @@ struct sprd_sip_svc_handle {
 	int (*pwr_get_pdbg_info_words)(u32 id, u64 out[4]);
 
 	/* DVFS */
-	int (*dvfs_enable)(u32 enable);
-	int (*dvfs_table_update)(u32 index, u64 table);
-	int (*dvfs_step_set)(u32 step);
-	int (*dvfs_margin_set)(u32 margin);
-	int (*dvfs_freq_set)(u32 index, u64 freq);
-	u64 (*dvfs_freq_get)(u32 index);
-	int (*dvfs_pair_get)(u32 index, u64 *pair);
-	int (*dvfs_pmic_set)(u32 type, u64 addr);
-	int (*dvfs_bin_set)(u32 bin);
-	int (*dvfs_version_set)(u32 version);
-	int (*dvfs_init)(u64 table, u32 num);
-	int (*dvfs_debug_init)(u32 enable);
+	struct sprd_sip_svc_dvfs_ops dvfs_ops;
 
 	/* NPU */
 	int (*npu_set_freq)(u32 freq);

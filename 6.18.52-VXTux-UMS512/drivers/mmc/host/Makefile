@@ -25,6 +25,10 @@ sdhci-sprd-y				:= sdhci_sprd_main.o sdhci-sprd-ext.o
 # CONFIG_MMC_HSQ is selected by MMC_SDHCI_SPRD and this is the real
 # implementation from 6.18.
 obj-$(CONFIG_MMC_HSQ)			+= mmc_hsq.o
+
+# Unisoc software command queue for eMMC (SW-CQ): same mmc_cqe_ops surface
+# as cqhci, but driven through the host's request_atomic() callback.
+obj-$(CONFIG_MMC_SWCQ)			+= mmc_swcq.o
 obj-$(CONFIG_MMC_DW)			+= dw_mmc.o
 obj-$(CONFIG_MMC_DW_PLTFM)		+= dw_mmc-pltfm.o
 obj-$(CONFIG_MMC_DW_PCI)		+= dw_mmc-pci.o
