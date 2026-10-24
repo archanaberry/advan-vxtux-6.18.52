@@ -414,7 +414,6 @@ static int sprd_cpufreq_table_verify(struct cpufreq_policy_data *policy_data)
 static int sprd_cpufreq_set_target_index(struct cpufreq_policy *policy, u32 index)
 {
 	struct cluster_info *cluster;
-	unsigned int freq;
 	int ret;
 
 	cluster = (struct cluster_info *)policy->driver_data;
@@ -444,9 +443,12 @@ static int sprd_cpufreq_set_target_index(struct cpufreq_policy *policy, u32 inde
 		return -EINVAL;
 	}
 
-	freq = policy->freq_table[index].frequency;
-
-	arch_set_freq_scale(policy->related_cpus, freq, policy->cpuinfo.max_freq);
+	/*
+	 * Versi 5.4 memanggil arch_set_freq_scale() di sini. Pada 6.18
+	 * simbol itu tidak lagi diekspor ke modul dan cpufreq core sudah
+	 * memperbarui freq scale sendiri pada setiap transisi
+	 * (drivers/cpufreq/cpufreq.c), jadi panggilan eksplisit dihapus.
+	 */
 
 	mutex_unlock(&cluster->mutex);
 

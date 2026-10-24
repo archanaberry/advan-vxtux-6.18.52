@@ -1051,7 +1051,7 @@ again:
 reset:
 	if (swcq->timer_running) {
 		swcq->timer_running = false;
-		del_timer(&swcq->check_timer);
+		timer_delete(&swcq->check_timer);
 	}
 
 	swcq_dump_host_regs(mmc);
@@ -1129,7 +1129,7 @@ static void mmc_swcq_post_request(struct mmc_swcq *swcq)
 	else {
 		if (swcq->timer_running) {
 			swcq->timer_running = false;
-			del_timer(&swcq->check_timer);
+			timer_delete(&swcq->check_timer);
 		}
 	}
 }
@@ -1584,7 +1584,7 @@ reset_card:
 			if (atomic_read(&swcq->qcnt) == 0 && swcq->timer_running &&
 				atomic_read(&swcq->changes_cnt) == 0) {
 				swcq->timer_running = false;
-				del_timer(&swcq->check_timer);
+				timer_delete(&swcq->check_timer);
 			}
 			if (atomic_read(&swcq->qcnt) > 0) {
 				SCHED_PUMP_WORK(&swcq->delayed_pump_work, 0);
@@ -2428,7 +2428,7 @@ void mmc_swcq_suspend(struct mmc_host *mmc)
 
 	if (swcq->timer_running) {
 		swcq->timer_running = false;
-		del_timer(&swcq->check_timer);
+		timer_delete(&swcq->check_timer);
 	}
 	mmc_swcq_disable(mmc);
 	mmc_swcq_restore_ddr(mmc);
