@@ -13,10 +13,14 @@
  *     0x100,0x200,... (Aff1) tidak pernah match topologi QEMU dan CPU
  *     sekunder tidak akan hidup.
  *
- * Node stub UMS512 dipertahankan untuk pengujian bertahap. Dua node yang
- * MMIO-nya jatuh DI DALAM RAM QEMU (musb @ 0x5fff0000, sdhci @ 0x70700000)
- * dipasang status="disabled": QEMU tidak memetakan perangkat itu, jadi
- * tulisan "register" driver akan jatuh ke memori tamu dan merusaknya.
+ * Node stub UMS512 dipertahankan untuk pengujian bertahap, tetapi SEMUA stub
+ * kini status="disabled" pada fase 1 (run 40090028825: boot kustom nol byte
+ * output sementara DTB stok QEMU tembus — kandidatnya probe stub di MMIO
+ * tak terpetakan yang menggantung SEBELUM virtio-console mendaftarkan hvc0,
+ * dan konsol hvc tanpa replay membuat semua print awal hilang). Aktifkan
+ * kembali satu per satu setelah boot dasar hijau. Dua node yang MMIO-nya
+ * jatuh DI DALAM RAM QEMU (musb @ 0x5fff0000, sdhci @ 0x70700000) tetap
+ * disabled permanen: tulisan register driver akan merusak memori tamu.
  * File ini juga dirender LF (versi lama CRLF + terpotong di tengah node
  * sdhci sehingga tidak pernah bisa dikompilasi).
  */
@@ -135,6 +139,7 @@
 	syscon: syscon@32070000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x32070000 0 0x1000>;
+		status = "disabled"; /* fase 1: core-only, lihat catatan kepala file */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x32070000 0x1000>;
@@ -212,6 +217,7 @@
 	aon_apb_regs: syscon@327d0000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x327d0000 0 0x3000>;
+		status = "disabled"; /* fase 1: core-only */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x327d0000 0x3000>;
@@ -229,6 +235,7 @@
 	anlg_phy_g2_regs: syscon@323b0000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x323b0000 0 0x3000>;
+		status = "disabled"; /* fase 1: core-only */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x323b0000 0x3000>;
@@ -238,7 +245,7 @@
 	extcon_usb: extcon-gpio {
 		compatible = "linux,extcon-usb-gpio";
 		vbus-gpio = <&pmic_eic 0 GPIO_ACTIVE_HIGH>;
-		status = "okay";
+		status = "disabled"; /* fase 1: core-only */
 	};
 
 	/* SC2730 PMIC at 0x32100000 (I2C 0x6B) - stubbed for QEMU */
@@ -250,7 +257,7 @@
 		clocks = <&ext_26m>;
 		#address-cells = <1>;
 		#size-cells = <0>;
-		status = "okay";
+		status = "disabled"; /* fase 1: core-only (kandidat hang probe i2c-sprd) */
 
 		/* SC2730 PMIC on I2C bus at address 0x6B */
 		sc2730_pmic: pmic@6b {

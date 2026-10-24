@@ -65,15 +65,55 @@ jobs:
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
           ls -l arch/arm64/boot/Image
 
-      - name: Initramfs (busybox)
+      # busybox HARUS binary arm64. Copy /bin/busybox milik runner x86-64
+      # (run 40090028825) memberi ENOEXEC (error -8) di tamu: "Failed to
+      # execute /init" -> panic "No working init found". Diambil lewat
+      # apt-get download (tanpa install, jadi tidak bentrok dengan busybox
+      # amd64 runner), lalu diekstrak. Fallback: init statis kecil hasil
+      # cross-compile kalau paket arm64 tidak tersedia.
+      - name: Initramfs (busybox arm64)
         run: |
+          set -e
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          mkdir -p /tmp/bbd && cd /tmp/bbd
+          if apt-get download busybox-static:arm64 && ls busybox-static_*_arm64.deb >/dev/null 2>&1; then
+            dpkg-deb -x busybox-static_*_arm64.deb /tmp/bb-arm64
+            BB=$(find /tmp/bb-arm64 -name busybox -type f | head -1)
+          else
+            echo 'WARN: busybox-static:arm64 tak tersedia — pakai init C fallback'
+            mkdir -p /tmp/fbinit && cat > /tmp/fbinit/init.c <<'EOFC'
+            #include <fcntl.h>
+            #include <reboot.h>
+            #include <string.h>
+            #include <sys/mount.h>
+            #include <unistd.h>
+            static void out(const char *s) { int fd = open("/dev/kmsg", O_WRONLY); if (fd >= 0) { write(fd, s, strlen(s)); close(fd); } write(1, s, strlen(s)); }
+            int main(void) {
+              mount("none", "/proc", "proc", 0, 0);
+              mount("none", "/sys", "sysfs", 0, 0);
+              mount("none", "/dev", "devtmpfs", 0, 0);
+              out("=== VXTUX INIT BERJALAN (fallback) ===\n");
+              out("=== VXTUX-QEMU-BOOT-OK ===\n");
+              sync();
+              reboot(RB_POWER_OFF);
+              for (;;) sleep(1);
+            }
+          EOFC
+            aarch64-linux-gnu-gcc -static -O2 -o /tmp/fbinit/init /tmp/fbinit/init.c
+            BB=/tmp/fbinit/init
+          fi
+          file "$BB" | tee /tmp/busybox-arch.txt
+          file "$BB" | grep -q 'ARM aarch64' || { echo "::error::binari init bukan aarch64: $(file "$BB")"; exit 1; }
+
           rm -rf /tmp/initramfs
           mkdir -p /tmp/initramfs/bin /tmp/initramfs/proc /tmp/initramfs/sys /tmp/initramfs/dev
-          cp /bin/busybox /tmp/initramfs/bin/busybox
+          cp "$BB" /tmp/initramfs/bin/busybox
           for a in sh mount dmesg tail echo poweroff ls cat grep sleep insmod basename; do
             ln -sf busybox /tmp/initramfs/bin/$a
           done
-          cat > /tmp/initramfs/init <<'EOF'
+          if [ ! -x /tmp/fbinit/init ] || [ "$BB" != /tmp/fbinit/init ]; then
+            cat > /tmp/initramfs/init <<'EOF'
           #!/bin/busybox sh
           /bin/busybox mount -t proc none /proc
           /bin/busybox mount -t sysfs none /sys
@@ -83,7 +123,10 @@ jobs:
           echo "=== VXTUX-QEMU-BOOT-OK ==="
           /bin/busybox poweroff -f
           EOF
-          chmod +x /tmp/initramfs/init
+            chmod +x /tmp/initramfs/init
+          else
+            cp /tmp/fbinit/init /tmp/initramfs/init
+          fi
           (cd /tmp/initramfs && find . | cpio -o -H newc --owner root:root | gzip -9) > /tmp/initramfs.cpio.gz
           ls -lh /tmp/initramfs.cpio.gz
 
