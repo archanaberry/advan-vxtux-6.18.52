@@ -65,76 +65,62 @@ jobs:
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
           ls -l arch/arm64/boot/Image
 
-      # busybox HARUS binary arm64. Copy /bin/busybox milik runner x86-64
-      # (run 40090028825) memberi ENOEXEC (error -8) di tamu: "Failed to
-      # execute /init" -> panic "No working init found". Diambil lewat
-      # apt-get download (tanpa install, jadi tidak bentrok dengan busybox
-      # amd64 runner), lalu diekstrak. Fallback: init statis kecil hasil
-      # cross-compile kalau paket arm64 tidak tersedia.
-      - name: Initramfs (busybox arm64)
+      # Init C statis arm64, tanpa busybox sama sekali. Dua kegagalan
+      # busybox tercatat: (1) run 40090028825 memakai /bin/busybox milik
+      # runner yang x86-64 -> kernel gagal exec (ENOEXEC, exitcode 5) lalu
+      # "No working init found"; (2) run 40094005980 memakai
+      # busybox-static:arm64 hasil unduhan ports -> tamu melempar undefined
+      # instruction (el0_undef, exitcode 0x4) — binari Ubuntu mengandung
+      # instruksi di atas baseline -cpu cortex-a72. Init ini dikompilasi
+      # -march=armv8-a eksplisit: mount proc/sys/dev, tulis marker
+      # "VXTUX-QEMU-BOOT-OK" ke console+kmsg, lalu poweroff.
+      - name: Initramfs (init C statis arm64)
         run: |
           set -e
-          # arm64 resmi ada di ports.ubuntu.com — archive/security hanya
-          # melayani amd64, jadi update penuh setelah add-architecture arm64
-          # menghasilkan 404 + exit 100 (run 40092717352). Maka: daftarkan
-          # ports untuk arm64, lalu update HANYA daftar itu. Gagal di sini
-          # tidak fatal — langkah download di bawah punya fallback init C.
-          sudo dpkg --add-architecture arm64
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main universe multiverse restricted' | sudo tee /etc/apt/sources.list.d/arm64-ports.list
-          sudo apt-get update -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/arm64-ports.list -o Dir::Etc::sourceparts=/dev/null || echo 'WARN: update ports arm64 gagal — kemungkinan jatuh ke fallback init C'
-          mkdir -p /tmp/bbd && cd /tmp/bbd
-          if apt-get download busybox-static:arm64 && ls busybox-static_*_arm64.deb >/dev/null 2>&1; then
-            dpkg-deb -x busybox-static_*_arm64.deb /tmp/bb-arm64
-            BB=$(find /tmp/bb-arm64 -name busybox -type f | head -1)
-          else
-            echo 'WARN: busybox-static:arm64 tak tersedia — pakai init C fallback'
-            mkdir -p /tmp/fbinit && cat > /tmp/fbinit/init.c <<'EOFC'
-            #include <fcntl.h>
-            #include <reboot.h>
-            #include <string.h>
-            #include <sys/mount.h>
-            #include <unistd.h>
-            static void out(const char *s) { int fd = open("/dev/kmsg", O_WRONLY); if (fd >= 0) { write(fd, s, strlen(s)); close(fd); } write(1, s, strlen(s)); }
-            int main(void) {
-              mount("none", "/proc", "proc", 0, 0);
-              mount("none", "/sys", "sysfs", 0, 0);
-              mount("none", "/dev", "devtmpfs", 0, 0);
-              out("=== VXTUX INIT BERJALAN (fallback) ===\n");
-              out("=== VXTUX-QEMU-BOOT-OK ===\n");
-              sync();
-              reboot(RB_POWER_OFF);
-              for (;;) sleep(1);
-            }
+          mkdir -p /tmp/src
+          cat > /tmp/src/init.c <<'EOFC'
+          #include <fcntl.h>
+          #include <reboot.h>
+          #include <string.h>
+          #include <sys/mount.h>
+          #include <unistd.h>
+          static void out(const char *s)
+          {
+            int fd;
+            write(1, s, strlen(s));
+            fd = open("/dev/console", O_WRONLY | O_NOCTTY);
+            if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
+            fd = open("/dev/kmsg", O_WRONLY);
+            if (fd >= 0) { write(fd, s, strlen(s)); close(fd); }
+          }
+          int main(void)
+          {
+            mount("none", "/proc", "proc", 0, 0);
+            mount("none", "/sys", "sysfs", 0, 0);
+            mount("none", "/dev", "devtmpfs", 0, 0);
+            out("=== VXTUX INIT BERJALAN (init C statis arm64) ===\n");
+            out("=== VXTUX-QEMU-BOOT-OK ===\n");
+            sync();
+            reboot(RB_POWER_OFF);
+            for (;;) sleep(1);
+          }
           EOFC
-            aarch64-linux-gnu-gcc -static -O2 -o /tmp/fbinit/init /tmp/fbinit/init.c
-            BB=/tmp/fbinit/init
-          fi
-          file "$BB" | tee /tmp/busybox-arch.txt
-          file "$BB" | grep -q 'ARM aarch64' || { echo "::error::binari init bukan aarch64: $(file "$BB")"; exit 1; }
+          aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
+            -o /tmp/init /tmp/src/init.c
+          file /tmp/init | tee /tmp/init-arch.txt
+          file /tmp/init | grep -q 'ARM aarch64' || \
+            { echo "::error::init bukan aarch64: $(file /tmp/init)"; exit 1; }
 
           rm -rf /tmp/initramfs
           mkdir -p /tmp/initramfs/bin /tmp/initramfs/proc /tmp/initramfs/sys /tmp/initramfs/dev
-          cp "$BB" /tmp/initramfs/bin/busybox
-          for a in sh mount dmesg tail echo poweroff ls cat grep sleep insmod basename; do
-            ln -sf busybox /tmp/initramfs/bin/$a
-          done
-          if [ ! -x /tmp/fbinit/init ] || [ "$BB" != /tmp/fbinit/init ]; then
-            cat > /tmp/initramfs/init <<'EOF'
-          #!/bin/busybox sh
-          /bin/busybox mount -t proc none /proc
-          /bin/busybox mount -t sysfs none /sys
-          /bin/busybox mount -t devtmpfs none /dev
-          echo "=== VXTUX INIT BERJALAN ==="
-          /bin/busybox dmesg | /bin/busybox tail -n 100
-          echo "=== VXTUX-QEMU-BOOT-OK ==="
-          /bin/busybox poweroff -f
-          EOF
-            chmod +x /tmp/initramfs/init
-          else
-            cp /tmp/fbinit/init /tmp/initramfs/init
-          fi
+          cp /tmp/init /tmp/initramfs/init
+          chmod 755 /tmp/initramfs/init
           (cd /tmp/initramfs && find . | cpio -o -H newc --owner root:root | gzip -9) > /tmp/initramfs.cpio.gz
           ls -lh /tmp/initramfs.cpio.gz
+          gzip -t /tmp/initramfs.cpio.gz
+          gzip -dc /tmp/initramfs.cpio.gz | cpio -t > /tmp/cpio-list.txt
+          grep -qx './init' /tmp/cpio-list.txt || \
+            { echo '::error::initramfs tanpa /init'; exit 1; }
 
       # Bisect dua boot dalam satu run (run 40087667380: tamu menggantung420s,
       # serial 0 byte — entah DTB kustom atau kernelnya yang belum pernah boot).
@@ -148,7 +134,7 @@ jobs:
           boot() {
             tag=$1; shift
             timeout --signal=KILL 240 qemu-system-aarch64 \
-              -machine virt,gic-version=3 \
+              -machine virt,gic-version=3,highmem=off \
               -cpu cortex-a72 -smp 8 -m 2G \
               -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
               -initrd /tmp/initramfs.cpio.gz \

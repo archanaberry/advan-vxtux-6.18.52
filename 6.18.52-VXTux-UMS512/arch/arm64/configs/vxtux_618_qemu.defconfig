@@ -41,3 +41,10 @@ CONFIG_USB_CONFIGFS_ACM=y
 #  VIRTIO_CONSOLE otomatis select HVC_DRIVER.
 CONFIG_VIRTIO_PCI=y
 CONFIG_VIRTIO_CONSOLE=y
+
+# --- 5) host PCIe generik (2026-10-24) ------------------------------------
+#  DTB kustom qemu-ums512-t1030.dts kini memuat node pcie@10000000 (ECAM,
+#  alamat persis QEMU -M virt base_memmap) + ITS GICv3 @0x8080000. Tanpa
+#  host driver generik ini, -device virtio-serial-pci tidak terenumerasi
+#  sehingga hvc0 (konsol tamu) tidak pernah ada pada boot DTB kustom.
+CONFIG_PCI_HOST_GENERIC=y

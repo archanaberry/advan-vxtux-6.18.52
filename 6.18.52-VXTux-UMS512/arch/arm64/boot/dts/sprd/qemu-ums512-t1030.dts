@@ -104,10 +104,15 @@
 		};
 	};
 
-	/* PSCI for CPU power management */
+	/* PSCI: method WAJIB hvc. QEMU 6.2 virt.c menentukan conduit dari
+	 * properti `virtualization` yang default OFF, sehingga hasilnya
+	 * QEMU_PSCI_CONDUIT_HVC (rumus di virt.c: secure&&fw ? DISABLED :
+	 * virtualization ? SMC : HVC). Dengan EL2 mati, instruksi SMC dari EL1
+	 * (metode "smc" lama) adalah undefined instruction -> trap dini di
+	 * kernel sebelum konsol hidup. */
 	psci {
 		compatible = "arm,psci-0.2";
-		method = "smc";
+		method = "hvc";
 	};
 
 	/* Generic timer */
@@ -123,8 +128,14 @@
 	/* GICv3 persis peta QEMU virt: GICD @ 0x08000000, GICR @ 0x08010000 */
 	gic: interrupt-controller@8000000 {
 		compatible = "arm,gic-v3";
+		/* Alamat persis base_memmap QEMU 6.2 hw/arm/virt.c: GICD @0x08000000,
+		 * GICR @0x080A0000 (0xF60000 = 123 redist x 0x20000, berakhir tepat
+		 * di UART 0x09000000). GICR lama @0x08010000 jatuh di area
+		 * VIRT_GIC_CPU yang TIDAK dipetakan QEMU pada mode gicv3 — probe GIC
+		 * menggantung di redistributor tak terpetakan SEBELUM konsol hvc
+		 * hidup (run 40094005980: boot kustom 0 byte, 240s timeout). */
 		reg = <0x0 0x8000000 0 0x10000>,   /* GICD */
-		      <0x0 0x8010000 0 0x100000>;  /* GICR: 8 redist x 0x20000 */
+		      <0x0 0x80a0000 0 0xf60000>;  /* GICR */
 		#interrupt-cells = <3>;
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -133,6 +144,37 @@
 		#redistributor-regions = <1>;
 		interrupt-controller;
 		interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	/* GICv3 ITS (MSI) — alamat virt.c VIRT_GIC_ITS. Syarat utama virtio-pci
+	 * memakai MSI-X; tanpa ITS, konsol hvc0 tetap bisa jalan via INTx,
+	 * tetapi PCI butuh interrupt-map (sengaja tidak ditulis, lihat node
+	 * pcie) — jadi ITS dicantumkan agar jalur MSI lengkap. */
+	its: its@8080000 {
+		compatible = "arm,gic-v3-its";
+		msi-controller;
+		reg = <0x0 0x8080000 0 0x20000>;
+	};
+
+	/* Host PCIe virt (GPEX/ECAM) — properti & alamat identik keluaran
+	 * QEMU 6.2 virt.c dengan highmem=off (rentang hanya PIO + MMIO32).
+	 * Sebelumnya DTB kustom TIDAK punya PCIe sama sekali: perangkat
+	 * -device virtio-serial-pci tak pernah terenumerasi sehingga hvc0
+	 * tidak pernah ada dan boot kustom mustahil menampilkan apa pun. */
+	pcie: pcie@10000000 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		#interrupt-cells = <1>;
+		linux,pci-domain = <0>;
+		bus-range = <0 0>;
+		dma-coherent;
+		reg = <0x0 0x3f000000 0x0 0x1000000>; /* ECAM */
+		ranges =
+			<0x01000000 0x0 0x0        0x0 0x3eff0000 0x0 0x10000>,
+			<0x02000000 0x0 0x10000000 0x0 0x10000000 0x0 0x2eff0000>;
+		msi-parent = <&its>;
 	};
 
 	/* System control / global registers for clock gating */
