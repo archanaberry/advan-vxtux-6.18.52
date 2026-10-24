@@ -74,8 +74,14 @@ jobs:
       - name: Initramfs (busybox arm64)
         run: |
           set -e
+          # arm64 resmi ada di ports.ubuntu.com — archive/security hanya
+          # melayani amd64, jadi update penuh setelah add-architecture arm64
+          # menghasilkan 404 + exit 100 (run 40092717352). Maka: daftarkan
+          # ports untuk arm64, lalu update HANYA daftar itu. Gagal di sini
+          # tidak fatal — langkah download di bawah punya fallback init C.
           sudo dpkg --add-architecture arm64
-          sudo apt-get update
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main universe multiverse restricted' | sudo tee /etc/apt/sources.list.d/arm64-ports.list
+          sudo apt-get update -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/arm64-ports.list -o Dir::Etc::sourceparts=/dev/null || echo 'WARN: update ports arm64 gagal — kemungkinan jatuh ke fallback init C'
           mkdir -p /tmp/bbd && cd /tmp/bbd
           if apt-get download busybox-static:arm64 && ls busybox-static_*_arm64.deb >/dev/null 2>&1; then
             dpkg-deb -x busybox-static_*_arm64.deb /tmp/bb-arm64
