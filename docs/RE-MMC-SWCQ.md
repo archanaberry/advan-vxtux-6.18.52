@@ -115,10 +115,20 @@ Sudah (statis, terhadap source 6.18 di tree ini):
   dipanggil .c (donor punya salinan `static swcq_mmc_*`), jadi tak perlu
   `EXPORT_SYMBOL` tambahan di `core/queue.c`.
 
+Sudah juga (CI `quick-cc.yml`, ref `test1` di fork):
+
+- `drivers/mmc/host/mmc_swcq.o` — compile hijau (run 40071542452);
+- `drivers/mmc/host/sdhci-sprd-ext.o` dan `sdhci_sprd_main.o` — hijau;
+- `drivers/cpufreq/sprd-cpufreq-v2-driver.o`, `-v2-debug.o`,
+  `sprd-cpufreq-public.o` — hijau;
+- DTB `sprd/ums512-1h10-vxtux.dtb` — hijau, jadi `non-removable` di
+  `ums512.dtsi` valid (run 40072165556).
+
 Belum:
 
-- build ulang lewat CI (`quick-cc.yml` target
-  `drivers/mmc/host/mmc_swcq.o`, lalu `v17-build.yml`);
+- link/modpost penuh (`v17-build.yml`): quick-cc hanya mengompilasi satu
+  objek, jadi ketergantungan ekspor antar-modul
+  (`sdhci-sprd.ko` ↔ `mmc_swcq.ko`) belum diuji;
 - boot QEMU + uji eMMC CMDQ (butuh node eMMC `non-removable` dan
   `CONFIG_MMC_SWCQ=m`).
 

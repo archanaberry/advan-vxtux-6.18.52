@@ -102,7 +102,10 @@ dihapus, `host->cqe_qdepth` diisi di `mmc_swcq_enable()` (tanpa itu tag set
 6.18 jadi 0), include privat `mmc_sdhci_sprd.h` dibuang, dan definisi privat
 `struct mmc_blk_data` disamakan dengan layout 6.18 (`kref`).
 
-Belum diverifikasi: build ulang CI dan boot QEMU.
+Verifikasi: `mmc_swcq.o`, `sdhci-sprd-ext.o`, `sdhci_sprd_main.o`, ketiga
+objek cpufreq, dan DTB `ums512-1h10-vxtux.dtb` semuanya hijau di CI
+`quick-cc` (ref `test1`). Link/modpost penuh (`v17-build`) dan boot QEMU
+belum.
 
 ## 4. `sprd-cpufreq-v2.ko` — cpufreq DVFS
 
