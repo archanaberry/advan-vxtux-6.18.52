@@ -21,6 +21,8 @@
  * sdhci sehingga tidak pernah bisa dikompilasi).
  */
 
+/dts-v1/;
+
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/gpio/gpio.h>

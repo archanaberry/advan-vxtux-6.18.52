@@ -51,12 +51,19 @@ jobs:
           done
           exit $rc
 
-      - name: Build Image + DTB QEMU
+      # DTB dibangun PERTAMA: kesalahan sintaks DTS ketahuan dalam ~3 menit,
+      # jadi iterasi perbaikan DTS tidak menunggu build Image 25 menit.
+      - name: Build DTB QEMU (gagal cepat)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- sprd/qemu-ums512-t1030.dtb -j$(nproc)
+          ls -l arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
+
+      - name: Build Image
         run: |
           cd 6.18.52-VXTux-UMS512
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- sprd/qemu-ums512-t1030.dtb -j$(nproc)
-          ls -l arch/arm64/boot/Image arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
+          ls -l arch/arm64/boot/Image
 
       - name: Initramfs (busybox)
         run: |
