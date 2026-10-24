@@ -1,32 +1,25 @@
 # Cakupan 129 blob stok — skor otoritatif
 
-Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config live ([config_tick16.txt](evidence-20261023/config_tick16.txt), 8,000 baris) dan daftar `.ko` hasil build (ko_list_tick16.txt), bukan snapshot dokumen lama.
+Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap config live ([config_v17.txt](evidence-20261024/config_v17.txt), 8,010 baris) dan daftar `.ko` hasil build (ko_list_v17.txt), bukan snapshot dokumen lama.
 
-## **119/129** tertangani
+## **129/129** tertangani
 
 | Verdict | Jumlah | Arti |
 |---|---:|---|
-| `KO` | 58 | ada `.ko` penggantinya di build |
+| `KO` | 68 | ada `.ko` penggantinya di build |
 | `Y` | 47 | pemetaan Kconfig-nya `=y` -> ikut `Image` |
 | `BUILT-IN` | 12 | verdict triage, kode ikut Image |
 | `SUPERSEDED` | 2 | fungsinya sudah ada di modul lain |
-| **BELUM** | **10** | lihat tabel |
+| **BELUM** | **0** | lihat tabel |
 | total | **129** | |
 
 ## Yang masih BELUM
 
-| # | blob | alasan | simbol port | simbol hilang |
-|---:|---|---|---:|---:|
-| 1 | `core.ko` | pemetaan nama -> Kconfig tidak ditemukan | 0 | 0 |
-| 2 | `gpio.ko` | pemetaan nama -> Kconfig tidak ditemukan | 2 | 0 |
-| 3 | `mmc_swcq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 4 | `sprd-cpufreq-public.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 5 | `sprd-cpufreq-v2.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
-| 6 | `sprd_7sreset.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 7 | `sprd_iq.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 8 | `sprd_manufacturer_model.ko` | PERLU-PORT: sumber tidak ada di pohon | 0 | 0 |
-| 9 | `sprd_pdbg.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 1 |
-| 10 | `sprd_power_stat.ko` | PERLU-PORT: sumber tidak ada di pohon | 1 | 0 |
+Tidak ada — seluruh 129 blob sudah tertangani. Sepuluh entri terakhir
+(`core`, `gpio`, `mmc_swcq`, `sprd-cpufreq-public/v2`, `sprd_7sreset`,
+`sprd_iq`, `sprd_manufacturer_model`, `sprd_pdbg`, `sprd_power_stat`)
+ditutup oleh port 2026-10-23→24; bukti build: CI `v17-build` hijau
+(run `40097613453`) + [PORT-REMAINING.md](PORT-REMAINING.md).
 
 ## Blokir simbol per blob (dari symreach)
 
@@ -34,10 +27,6 @@ Angka `port`/`hilang` di atas adalah referensi undefined yang belum ter-resolve 
 
 | blob | kelas | port | hilang |
 |---|---|---:|---:|
-| `gpio.ko` | BELUM | 2 | 0 |
-| `sprd-cpufreq-v2.ko` | BELUM | 1 | 1 |
-| `sprd_pdbg.ko` | BELUM | 1 | 1 |
-| `sprd_power_stat.ko` | BELUM | 1 | 0 |
 
 ## Catatan jujur
 

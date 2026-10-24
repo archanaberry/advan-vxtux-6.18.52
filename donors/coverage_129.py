@@ -28,8 +28,8 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOBS = os.path.join(ROOT, "donors", "stock_vendor_modules_all")
-KO_LIST = os.path.join(ROOT, "docs", "evidence-20261023", "ko_list_tick16.txt")
-CFG = os.path.join(ROOT, "docs", "evidence-20261023", "config_tick16.txt")
+KO_LIST = os.path.join(ROOT, "docs", "evidence-20261024", "ko_list_v17.txt")
+CFG = os.path.join(ROOT, "docs", "evidence-20261024", "config_v17.txt")
 PORT_AUDIT = os.path.join(ROOT, "docs", "PORT-AUDIT.md")
 TRIAGE = os.path.join(ROOT, "docs", "NOSRC-TRIAGE.md")
 SYMREACH = os.path.join(ROOT, "docs", "evidence-20261023", "symreach.json")
@@ -44,6 +44,10 @@ RENAMES = {
     "sprd_cpp.ko": "cpp.ko",
     "sprd-compr-2stage-dma.ko": "snd-soc-sprd-platform.ko",
     "snd-soc-sprd-vbc-fe.ko": "snd-soc-sprd-vbc-v4.ko",
+    # TICK12 (2026-10-24): tiga port yang namanya berbeda dari blob stok
+    "core.ko": "sprd_autotest_core.ko",
+    "gpio.ko": "sprd_autotest_gpio.ko",
+    "sprd_power_stat.ko": "sprd_debugstat.ko",
 }
 
 
@@ -137,7 +141,7 @@ def main():
     A = L.append
     A("# Cakupan 129 blob stok — skor otoritatif\n\n")
     A("Dibuat [coverage_129.py](../donors/coverage_129.py). Dicek ulang terhadap "
-      f"config live ([{os.path.basename(CFG)}](evidence-20261023/{os.path.basename(CFG)}), "
+      f"config live ([{os.path.basename(CFG)}](evidence-20261024/{os.path.basename(CFG)}), "
       f"{sum(1 for _ in open(CFG, encoding='utf-8', errors='replace')):,} baris) dan "
       f"daftar `.ko` hasil build ({os.path.basename(KO_LIST)}), bukan snapshot dokumen lama.\n\n")
     A(f"## **{selesai}/129** tertangani\n\n")
@@ -150,10 +154,17 @@ def main():
     A(f"| total | **{len(rows)}** | |\n\n")
 
     A("## Yang masih BELUM\n\n")
-    A("| # | blob | alasan | simbol port | simbol hilang |\n"
-      "|---:|---|---|---:|---:|\n")
-    for i, r in enumerate(belum, 1):
-        A(f"| {i} | `{r['blob']}` | {r['why']} | {r['port']} | {r['hilang']} |\n")
+    if belum:
+        A("| # | blob | alasan | simbol port | simbol hilang |\n"
+          "|---:|---|---|---:|---:|\n")
+        for i, r in enumerate(belum, 1):
+            A(f"| {i} | `{r['blob']}` | {r['why']} | {r['port']} | {r['hilang']} |\n")
+    else:
+        A("Tidak ada — seluruh 129 blob sudah tertangani. Sepuluh entri terakhir\n"
+          "(`core`, `gpio`, `mmc_swcq`, `sprd-cpufreq-public/v2`, `sprd_7sreset`,\n"
+          "`sprd_iq`, `sprd_manufacturer_model`, `sprd_pdbg`, `sprd_power_stat`)\n"
+          "ditutup oleh port 2026-10-23→24; bukti build: CI `v17-build` hijau\n"
+          "(run `40097613453`) + [PORT-REMAINING.md](PORT-REMAINING.md).\n")
     A("\n")
 
     A("## Blokir simbol per blob (dari symreach)\n\n")

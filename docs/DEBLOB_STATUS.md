@@ -614,3 +614,59 @@ Yang diperbaiki di jalan:
 Skor: **119/129** (KO 58, Y 47, BUILT-IN 12, SUPERSEDED 2, BELUM 10). Rincian
 sepuluh yang tersisa, lengkap dengan bukti dan blokirnya:
 [PORT-REMAINING.md](PORT-REMAINING.md).
+
+## TICK17 — 10 blob terakhir ditutup, boot QEMU LULUS, fbcon diuji (2026-10-24)
+
+Skor akhir: **129/129 ✅, 0 BELUM** (regenerasi otomatis terhadap bukti
+build V17: [STATUS-129.md](STATUS-129.md), [COVERAGE-129.md](COVERAGE-129.md),
+[PORT-AUDIT.md](PORT-AUDIT.md) — KO 68 / Y 47 / NOSRC 14-builtin).
+
+**Sepuluh blob yang menutup skor** (semua `=m` di `enhanced_config.cfg` dan
+terbukti ada di artefak `v17-built-kos`, run `40097613453`, 239 `.ko`):
+
+| blob | modul hasil | commit |
+|---|---|---|
+| `core.ko` / `gpio.ko` | `sprd_autotest_core.ko` / `sprd_autotest_gpio.ko` | `b1d692f09` |
+| `sprd_7sreset.ko` | `sprd_7sreset.ko` | `b1d692f09` |
+| `sprd_manufacturer_model.ko` | `sprd_manufacturer_model.ko` | `b1d692f09` |
+| `sprd_pdbg.ko` | `sprd_pdbg.ko` | `cb5e91d35` |
+| `sprd_power_stat.ko` | `sprd_debugstat.ko` | `8bf97026b` |
+| `sprd_iq.ko` | `sprd_iq.ko` | `9953413ba` |
+| `sprd-cpufreq-v2.ko` | `sprd-cpufreq-v2.ko` | `91e7838b2` |
+| `sprd-cpufreq-public.ko` | `sprd-cpufreq-public.ko` | `91e7838b2` |
+| `mmc_swcq.ko` | `mmc_swcq.ko` | `91e7838b2` |
+
+**Alat regenerasi diperbaiki saat regenerasi:**
+
+1. `port_audit.py::vendor_list()` dibatasi tabel §2 crosscheck — sebelumnya
+   ikut membaca tabel §4 (11 driver) dan §5 (13 compile-verified yang
+   berisi nama `.ko` port), sehingga daftar vendor melebar 129 → 153.
+2. `UNRESOLVED` (hardcode NOSRC untuk `core.ko`/`gpio.ko`) dikosongkan —
+   framework `SPRD_AUTOTEST` kini ada di pohon dan kedua `.ko` terbangun;
+   logika AMBIGUOUS untuk nama generik tetap aktif.
+3. `coverage_129.py` dialihkan ke bukti segar:
+   `evidence-20261024/ko_list_v17.txt` (239 `.ko`) +
+   `evidence-20261024/config_v17.txt` (8.010 baris, efektif V17); tiga
+   RENAMES ditambahkan (core/gpio/power_stat → nama penggantinya).
+
+**Boot test QEMU — LULUS** (run `40100295454`): DTB kustom
+`qemu-ums512-t1030.dtb` tembus userspace ~4 detik tanpa panic pada kedua
+boot (stok `-M virt` dan kustom), gate `marker: stock=1 custom=1`. Tiga akar
+masalah "boot 0 byte" diperbaiki dengan bukti kode QEMU 6.2 `hw/arm/virt.c`:
+GICR `0x08010000` → `0x080A0000` (area `VIRT_GIC_CPU` tak dipetakan mode
+gicv3), PSCI `smc` → `hvc` (properti `virtualization` default OFF), dan
+penambahan node `pcie@10000000` + `its@8080000` (tanpa PCIe, `-device
+virtio-serial-pci` tak terenumerasi dan `hvc0` mustahil ada). Initramfs
+berganti total ke init C statis `-march=armv8-a` (busybox x86 → ENOEXEC;
+busybox arm64 ports → undefined instruction di cortex-a72). Rincian:
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
+
+**fbcon/DRM-KMS diuji di QEMU** (workflow `qemu-boot`): `CONFIG_FB=n` lama +
+`FRAMEBUFFER_CONSOLE` tak terdefinisi + QEMU tanpa driver GPU dinyalakan lewat
+fragmen (`DRM_VIRTIO_GPU=y`, `DRM_FBDEV_EMULATION=y`,
+`FRAMEBUFFER_CONSOLE=y`, `VT_CONSOLE=y`); boot ketiga memakai
+`-device virtio-gpu-pci` + VNC headless + HMP screendump → `fbcon.png`
+(artefak). Bukti probe dari run pertama: `[drm] Initialized virtio_gpu`,
+`Console: switching to colour frame buffer device 128x48`,
+`fb0: virtio_gpudrmfb`, dan init menulis 176 byte banner ke `/dev/tty1`.
+Hasil gate lengkap: [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).

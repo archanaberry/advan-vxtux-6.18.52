@@ -49,6 +49,10 @@ RENAMES = {
     # dan bq25601d_get/set_chrg_volt. Blob vendor memakai chip yang sama lewat
     # sprd_charger_manager (juga ada di pohon).
     "bq2560x-charger.ko": "bq256xx_charger.o",
+    # TICK12 (2026-10-24): tiga port yang namanya berbeda dari blob stok
+    "core.ko": "sprd_autotest_core.ko",
+    "gpio.ko": "sprd_autotest_gpio.ko",
+    "sprd_power_stat.ko": "sprd_debugstat.ko",
 }
 
 MOD_RE = re.compile(r"^obj-\$\((CONFIG_[A-Z0-9_]+)\)\s*\+?=\s*(.*)$")
@@ -57,8 +61,19 @@ JSON = json_dump = None
 
 def vendor_list(doc):
     names = []
+    in_sec2 = False
     for line in open(doc, encoding="utf-8"):
-        if not line.startswith("|"):
+        # Hanya tabel §2 ("Tabel 129 driver vendor") — tanpa batas ini,
+        # tabel §4 (11 driver sama persis) dan §5 (13 compile-verified,
+        # berisi nama .ko PORT seperti sprd_vdsp.ko) ikut terbaca dan daftar
+        # vendor melebar 129 -> 153 (regenerasi TICK12/2026-10-24).
+        if line.startswith("## "):
+            if in_sec2:
+                break
+            if line.startswith("## 2."):
+                in_sec2 = True
+            continue
+        if not in_sec2 or not line.startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) < 2 or not cells[0].isdigit():
@@ -145,12 +160,11 @@ def config_state(cfg):
 # sendiri (MODULE_DESCRIPTION/depends), bukan dari namanya. Tanpa entri ini,
 # pencocokan nama saja memetakan `gpio.ko` ke CONFIG_MTD_NAND_GPIO — driver
 # yang sama sekali berbeda (blob ini "sprd autotest gpio driver", depends=core).
-UNRESOLVED = {
-    "core.ko": "blob: sprd autotest core driver; framework SPRD_AUTOTEST "
-                "tidak ada di tree",
-    "gpio.ko": "blob: sprd autotest gpio driver (depends=core); "
-                "SPRD_AUTOTEST/SPRD_AUTOTEST_GPIO tidak ada di tree",
-}
+# TICK12 (2026-10-24): core/gpio + framework SPRD_AUTOTEST kini ADA di pohon
+# (drivers/vxtux/soc/autotest/, terbangun jadi sprd_autotest_core.ko +
+# sprd_autotest_gpio.ko — bukti ko_list_v17.txt), jadi daftar paksa-NOSRC
+# ini dikosongkan; logika AMBIGUOUS di bawah tetap menjaga nama generik.
+UNRESOLVED = {}
 
 
 def variants(base):

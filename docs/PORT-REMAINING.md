@@ -1,10 +1,13 @@
 # 10 blob — status port dan buktinya
 
 **Status 2026-10-24: 10 dari 10 sudah diport.** Tiga terakhir (`mmc_swcq`,
-`sprd-cpufreq-v2`, `sprd-cpufreq-public`) masuk bersama `sprd_iq`; kesepuluh
-driver belum melewati build ulang sejak codespace berhenti bisa start
-(HTTP 402), jadi angka `235 .ko` di bawah masih dari build CI 2026-10-23,
-sebelum `sprd_iq` dan tiga driver terakhir.
+`sprd-cpufreq-v2`, `sprd-cpufreq-public`) masuk bersama `sprd_iq`.
+**Update malam (2026-10-24): kesepuluhnya sudah lewat build ulang penuh** —
+CI `v17-build` hijau berkali-kali setelah port (run `40087667424` dan
+`40097613453`, artefak `v17-built-kos` terunggah), jadi angka `235 .ko` dari
+build CI 2026-10-23 di bawah bukan lagi statusnya; lihat regenerasi
+[STATUS-129.md](STATUS-129.md)/[PORT-AUDIT.md](PORT-AUDIT.md) terhadap ko
+list V17.
 
 | # | blob | status |
 |---|---|---|
@@ -104,8 +107,10 @@ dihapus, `host->cqe_qdepth` diisi di `mmc_swcq_enable()` (tanpa itu tag set
 
 Verifikasi: `mmc_swcq.o`, `sdhci-sprd-ext.o`, `sdhci_sprd_main.o`, ketiga
 objek cpufreq, dan DTB `ums512-1h10-vxtux.dtb` semuanya hijau di CI
-`quick-cc` (ref `test1`). Link/modpost penuh (`v17-build`) dan boot QEMU
-belum.
+`quick-cc` (ref `test1`). Link/modpost penuh (`v17-build`) **hijau** — run
+`40097613453` (2026-10-24), artefak `v17-built-kos`. Runtime modul tidak
+dieksekusi di QEMU (eMMC/swcq tak ada di DTB QEMU); verifikasi runtime
+tetap di hardware.
 
 ## 4. `sprd-cpufreq-v2.ko` — cpufreq DVFS
 
@@ -184,7 +189,8 @@ terselesaikan: [evidence-20261023/sprd_iq.resolved.txt](evidence-20261023/sprd_i
 Port ada di `drivers/vxtux/soc/iq/` (Kconfig `SPRD_IQ`, `depends on
 SPRD_SIPC && USB_F_VSERIAL`), `CONFIG_SPRD_IQ=m` di `enhanced_config.cfg`.
 Hanya hidup dengan `androidboot.mode=iq`, jadi inert di perangkat normal.
-Belum dikompilasi: codespace CI tidak bisa start (HTTP 402 billing).
+Kompilasi: **sudah hijau** — `v17-build` run `40097613453` (2026-10-24)
+setelah codespace yang mati (HTTP 402) tergantikan CI GitHub.
 
 ## 8. `sprd_manufacturer_model.ko` — model/manufacturer SoC
 
@@ -228,7 +234,8 @@ pada 6.18) terhadap 8 string DT, sekali per IRQ lalu nama di-null-kan;
 - module_param `sprd_pdbg_log_force` (level KERN_ERR, sama seperti blob).
 
 Terverifikasi: `sprd_pdbg.o` rc=0 via `cs_quick.sh`, DTB `ums512-1h10-vxtux`
-rc=0; build penuh untuk `.ko` — lihat status di commit.
+rc=0; **build penuh hijau** — `v17-build` run `40097613453` (2026-10-24)
+menghasilkan `sprd_pdbg.ko` bersama modul lain di artefak `v17-built-kos`.
 
 ## 10. `sprd_power_stat.ko` — statistik tidur — **SELESAI (diport)**
 
@@ -247,7 +254,10 @@ mask 0xff) mengikuti [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md).
 
 ---
 
-## Urutan yang paling murah lebih dulu
+## Urutan yang paling murah lebih dulu — RIWAYAT (semua SELESAI)
+
+> Urutan ini sudah dijalankan penuh 2026-10-23→24; dipertahankan sebagai
+> catatan prioritas asli. Semua 10 blob kini diport + terbangun di CI V17.
 
 1. `sprd_power_stat` dan `sprd_pdbg` — SMC sudah ada; sisa pekerjaan RE
    terbatas pada format sysfs + pemetaan irq-domain.

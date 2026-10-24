@@ -5,7 +5,7 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 - ✅ = fungsinya sudah tersedia di build 6.18.52 (`.ko` pengganti, kode ikut `Image`, atau fungsi sudah ada di modul lain)
 - **(X)** = belum ada penggantinya
 
-**119/129** ✅ · **10** (X)
+**129/129** ✅ · **0** (X)
 
 | # | driver stok 5.4 | di 6.18.52 | catatan |
 |---:|---|---|---|
@@ -22,13 +22,13 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 | 11 | `ax88179_178a.ko` | ✅ `KO` | ax88179_178a.ko |
 | 12 | `bq2560x-charger.ko` | ✅ `Y` | CONFIG_CHARGER_BQ256XX |
 | 13 | `clk-sprd.ko` | ✅ `KO` | clk-sprd.ko |
-| 14 | `core.ko` | **(X)** | pemetaan nama -> Kconfig tidak ditemukan |
+| 14 | `core.ko` | ✅ `KO` | sprd_autotest_core.ko |
 | 15 | `extcon-usb-gpio.ko` | ✅ `KO` | extcon-usb-gpio.ko |
 | 16 | `ghash-ce.ko` | ✅ `Y` | CONFIG_CRYPTO_GHASH_ARM64_CE |
 | 17 | `gpio-eic-sprd.ko` | ✅ `Y` | CONFIG_GPIO_EIC_SPRD |
 | 18 | `gpio-pmic-eic-sprd.ko` | ✅ `KO` | gpio-pmic-eic-sprd.ko |
 | 19 | `gpio-sprd.ko` | ✅ `Y` | CONFIG_GPIO_SPRD |
-| 20 | `gpio.ko` | **(X)** | pemetaan nama -> Kconfig tidak ditemukan |
+| 20 | `gpio.ko` | ✅ `KO` | sprd_autotest_gpio.ko |
 | 21 | `hxchipset_83102e.ko` | ✅ `BUILT-IN` | triage + config pendukung =y |
 | 22 | `i2c-sprd-hw.ko` | ✅ `BUILT-IN` | triage + config pendukung =y |
 | 23 | `i2c-sprd.ko` | ✅ `Y` | CONFIG_I2C_SPRD |
@@ -42,7 +42,7 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 | 31 | `mipi_driver.ko` | ✅ `KO` | mipi_driver.ko |
 | 32 | `misc_sprd_uid.ko` | ✅ `BUILT-IN` | triage + config pendukung =y |
 | 33 | `mmc_hsq.ko` | ✅ `KO` | mmc_hsq.ko |
-| 34 | `mmc_swcq.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 34 | `mmc_swcq.ko` | ✅ `KO` | mmc_swcq.ko |
 | 35 | `mmdvfs.ko` | ✅ `KO` | mmdvfs.ko |
 | 36 | `musb_hdrc.ko` | ✅ `Y` | CONFIG_USB_MUSB_HDRC |
 | 37 | `musb_sprd.ko` | ✅ `BUILT-IN` | triage + config pendukung =y |
@@ -84,8 +84,8 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 | 73 | `spool.ko` | ✅ `Y` | CONFIG_SPRD_SIPC_SPOOL |
 | 74 | `sprd-charger-manager.ko` | ✅ `Y` | CONFIG_CHARGER_SPRD_MANAGER |
 | 75 | `sprd-compr-2stage-dma.ko` | ✅ `Y` | CONFIG_SND_SOC_SPRD |
-| 76 | `sprd-cpufreq-public.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
-| 77 | `sprd-cpufreq-v2.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 76 | `sprd-cpufreq-public.ko` | ✅ `KO` | sprd-cpufreq-public.ko |
+| 77 | `sprd-cpufreq-v2.ko` | ✅ `KO` | sprd-cpufreq-v2.ko |
 | 78 | `sprd-dma.ko` | ✅ `Y` | CONFIG_SPRD_DMA |
 | 79 | `sprd-dmaengine-pcm.ko` | ✅ `KO` | sprd-dmaengine-pcm.ko |
 | 80 | `sprd-drm.ko` | ✅ `KO` | sprd-drm.ko |
@@ -95,7 +95,7 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 | 84 | `sprd-sc27xx-spi.ko` | ✅ `Y` | CONFIG_MFD_SC27XX_PMIC |
 | 85 | `sprd-sipc-virt-bus.ko` | ✅ `KO` | sprd-sipc-virt-bus.ko |
 | 86 | `sprd-vsp-pw-domain.ko` | ✅ `Y` | CONFIG_SPRD_VSP_PW_DOMAIN |
-| 87 | `sprd_7sreset.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 87 | `sprd_7sreset.ko` | ✅ `KO` | sprd_7sreset.ko |
 | 88 | `sprd_apipe.ko` | ✅ `KO` | sprd_apipe.ko |
 | 89 | `sprd_audcp_boot.ko` | ✅ `KO` | sprd_audcp_boot.ko |
 | 90 | `sprd_audcp_dvfs.ko` | ✅ `KO` | sprd_audcp_dvfs.ko |
@@ -105,14 +105,14 @@ Dibuat otomatis [coverage_129.py](../donors/coverage_129.py) dari daftar `.ko` h
 | 94 | `sprd_cpp.ko` | ✅ `Y` | CONFIG_SPRD_CPP |
 | 95 | `sprd_flash_drv.ko` | ✅ `KO` | sprd_flash_drv.ko |
 | 96 | `sprd_hwspinlock.ko` | ✅ `Y` | CONFIG_HWSPINLOCK_SPRD |
-| 97 | `sprd_iq.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
-| 98 | `sprd_manufacturer_model.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 97 | `sprd_iq.ko` | ✅ `KO` | sprd_iq.ko |
+| 98 | `sprd_manufacturer_model.ko` | ✅ `KO` | sprd_manufacturer_model.ko |
 | 99 | `sprd_mipi.ko` | ✅ `KO` | sprd_mipi.ko |
 | 100 | `sprd_modem_loader.ko` | ✅ `Y` | CONFIG_SPRD_MODEM_LOADER |
-| 101 | `sprd_pdbg.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 101 | `sprd_pdbg.ko` | ✅ `KO` | sprd_pdbg.ko |
 | 102 | `sprd_pmic_syscon.ko` | ✅ `Y` | CONFIG_SPRD_PMIC_SYSCON |
 | 103 | `sprd_power_manager.ko` | ✅ `KO` | sprd_power_manager.ko |
-| 104 | `sprd_power_stat.ko` | **(X)** | PERLU-PORT: sumber tidak ada di pohon |
+| 104 | `sprd_power_stat.ko` | ✅ `KO` | sprd_debugstat.ko |
 | 105 | `sprd_sensor.ko` | ✅ `Y` | CONFIG_SPRD_SENSOR |
 | 106 | `sprd_shm.ko` | ✅ `KO` | sprd_shm.ko |
 | 107 | `sprd_sip_svc.ko` | ✅ `KO` | sprd_sip_svc.ko |

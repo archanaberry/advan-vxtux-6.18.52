@@ -4,10 +4,10 @@
 > **Dokumen konsolidasi komplit** untuk menjelaskan "berapa driver VXTux sebenarnya,
 > mana yang dari vendor Advan, mana yang port, mana yang NV, dan kenapa NV".
 >
-> **Generated**: 2026-10-15 (TICK10)
-> **Author**: Raspya Berry Chan (Hermes)
+> **Generated**: 2026-10-15 (TICK10) · **Revisi v1.1**: 2026-10-24 (TICK12+)
+> **Author**: Raspya Berry Chan (Hermes); revisi TICK11–12: sesi Buffy
 > **License**: GPL-2 (sama dengan VXTux)
-> **Status**: Final v1.0
+> **Status**: Final v1.1 — 129/129 blob vendor ditutup, build V17 hijau, boot QEMU LULUS (+ fbcon)
 
 ---
 
@@ -41,8 +41,13 @@
 | Modul compile-verified llvm-nm | 13 | TICK7+TICK9 evidence |
 | 13 NV (klasifikasi) | 6 A + 2 C + 2 D + 3 E | lihat §5 |
 | 88 vendor-only | belum di-port | lihat §6 |
-| Branch aktif | `test1` | archanaberry/advan-vxtux-6.18.52 |
-| Commit terakhir | `a50656589` | TICK10 + Appendix A |
+| Branch aktif | `test1` | push ke fork `gryzzlaycutzy121/advan-vxtux-6.18.52` (origin archanaberry tanpa izin tulis) |
+| Commit terakhir | `2a235f06b` | TICK12+ (uji fbcon QEMU) |
+| **Port coverage 129 blob** | **129/129 ✅ (0 BELUM)** | regenerasi 2026-10-24: [STATUS-129](STATUS-129.md), [COVERAGE-129](COVERAGE-129.md), [PORT-AUDIT](PORT-AUDIT.md) |
+| Build CI device penuh (V17) | **hijau** run `40097613453` | artefak `v17-built-kos` (239 .ko) + `v17-config` + `v17-dtb` |
+| Boot test QEMU DTB kustom | **LULUS** run `40100295454` | [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) |
+| Uji fbcon + DRM/KMS (QEMU) | run `40105064859` | virtio-gpu + fbcon + screendump `fbcon.png` |
+| CI workflow aktif | `v17-build` · `qemu-boot` · `quick-cc` | terpicu push ke `test1` |
 
 ### 1.2 Cross-check ringkas
 
@@ -51,6 +56,11 @@
 | **Port 103** (driver di 6.18) | **90** ada di vendor | **13** NV | Lihat §5 untuk klasifikasi |
 | **Vendor 129** (driver di 5.4) | **41** ada di port | **88** vendor-only | Lihat §6 untuk action items |
 | **Gabungan unik** | ~150 entry | | Ada overlap (misal `core.ko` di vendor = `wcn_core.ko` di port) |
+
+> **Catatan TICK12 (2026-10-24)**: angka 90/41/88 di atas adalah snapshot
+> TICK10. Status otoritatif terkini: **129/129 blob vendor tertangani**
+> ([STATUS-129.md](STATUS-129.md), [COVERAGE-129.md](COVERAGE-129.md)) —
+> sepuluh entri terakhir ditutup port 2026-10-23→24 (tabel §6.2).
 
 ---
 
@@ -488,9 +498,12 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 
 ---
 
-## 6. 88 Vendor-Only: Action Items TICK11+
+## 6. 88 Vendor-Only: Action Items TICK11+ — SUDAH SEBAGIAN BESAR DITUTUP
 
-88 entry dari vendor 129 yang **tidak** ada di port 103. Ini beban kerja berikutnya (TICK11+).
+88 entry dari vendor 129 yang **tidak** ada di port 103 pada snapshot TICK10.
+**Update TICK12 (2026-10-24): daftar ini kedaluwarsa** — skor otoritatif kini
+**129/129 tertangani** (regenerasi terhadap bukti build V17; tabel §6.2 di
+bawah). Snapshot daftar dipertahankan sebagai riwayat TICK10.
 
 ### 6.1 Kategori 88 vendor-only
 
@@ -596,7 +609,26 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 - `spi-sprd.ko`
 - `sprd-drm.ko`
 
-**Total: 142 vendor-only**
+**Total: 142 vendor-only** (angka snapshot TICK10; judul “88” vs jumlah ini
+memang kontradiktif — keduanya kedaluwarsa, lihat §6.2 dan STATUS-129)
+
+### 6.2 Sepuluh entri terakhir ditutup (TICK11–TICK12, 2026-10-23 → 24)
+
+Semua sudah diport + terbangun di CI V17 (bukti ko:
+[evidence-20261024/ko_list_v17.txt](evidence-20261024/ko_list_v17.txt)):
+
+| # | blob stok | hasil port di tree 6.18 | commit | dokumen bukti |
+|---:|---|---|---|---|
+| 1 | `core.ko` | `drivers/vxtux/soc/autotest/sprd_autotest_core.c` | `b1d692f09` | [RE-SPRD-AUTOTEST.md](RE-SPRD-AUTOTEST.md) |
+| 2 | `gpio.ko` | `drivers/vxtux/soc/autotest/sprd_autotest_gpio.c` | `b1d692f09` | [RE-SPRD-AUTOTEST.md](RE-SPRD-AUTOTEST.md) |
+| 3 | `sprd_7sreset.ko` | `drivers/vxtux/soc/sprd_7sreset/` + node DT `hw-reset` | `b1d692f09` | [RE-SPRD-7SRESET.md](RE-SPRD-7SRESET.md) |
+| 4 | `sprd_manufacturer_model.ko` | `drivers/vxtux/soc/manufacturer_model/` | `b1d692f09` | [RE-SPRD-MANUFACTURER.md](RE-SPRD-MANUFACTURER.md) |
+| 5 | `sprd_pdbg.ko` | `drivers/vxtux/soc/pdbg/` | `cb5e91d35` | [RE-SPRD-PDBG.md](RE-SPRD-PDBG.md) |
+| 6 | `sprd_power_stat.ko` | `drivers/vxtux/soc/debugstat/` → `sprd_debugstat.ko` | `8bf97026b` | [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md) |
+| 7 | `sprd_iq.ko` | `drivers/vxtux/soc/iq/` | `9953413ba` | [RE-SPRD-IQ.md](RE-SPRD-IQ.md) |
+| 8 | `sprd-cpufreq-v2.ko` | `drivers/cpufreq/sprd-cpufreq-v2-*` | `91e7838b2` | [PORT-REMAINING.md](PORT-REMAINING.md) §4 |
+| 9 | `sprd-cpufreq-public.ko` | `drivers/cpufreq/sprd-cpufreq-public.c` | `91e7838b2` | [PORT-REMAINING.md](PORT-REMAINING.md) §5 |
+| 10 | `mmc_swcq.ko` | `drivers/mmc/host/mmc_swcq.c` | `91e7838b2` | [RE-MMC-SWCQ.md](RE-MMC-SWCQ.md) |
 
 
 ---
@@ -644,11 +676,64 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 | `wcn_core.ko` (composite) | TBD | — | gcc 16.2.1 | TICK7 | t21_full.log |
 | `sprdwl.ko` | 2,5 MB | — | gcc 16.2.1 | TICK7 | t21_full.log |
 | `sprd_jpg.ko` | 156 KB | — | gcc 16.2.1 | TICK7 | t21_full.log |
-| `sprd_vdsp.ko` | 913.568 B | — | TICK7 | t21_full.log (relink) |
+| `sprd_vdsp.ko` | 913.568 B | — | gcc 16.2.1 (relink penuh) | TICK8 | t21_full.log (relink) |
 | `sprd-gsp.ko` | 767.488 B | `bfefe9af…` | llvm-nm 535 simbol | TICK9 | t22_nohup.out |
 | `novatek_ts_spi.ko` | 512.584 B | `943c7d89…` | llvm-nm 337 simbol | TICK9 | t22_nohup.out |
 | `sprd_flash_drv` (System.map) | 14 simbol | — | 14 Okt 22:18 WIB | TICK9 | System.map.builddmed.20261014_2218 |
 | `spi-sprd` (System.map) | 23 simbol | — | 14 Okt 22:18 WIB | TICK9 | System.map.builddmed.20261014_2218 |
+| `sprd_autotest_core.ko` | 340.976 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_autotest_gpio.ko` | 392.728 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_7sreset.ko` | 359.744 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_manufacturer_model.ko` | 323.328 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_pdbg.ko` | 485.840 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_debugstat.ko` | 385.144 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd_iq.ko` | 471.064 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd-cpufreq-v2.ko` | 630.520 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `sprd-cpufreq-public.ko` | 392.640 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+| `mmc_swcq.ko` | 734.296 B | — | V17 `40097613453` | TICK12 | v17-built-kos |
+
+### 7.6 TICK11–TICK12 (2026-10-22 → 2026-10-24) — 10 port final, CI penuh, boot QEMU LULUS
+
+**TICK11 (2026-10-22, `efa7348c2`)**: 3 modul efuse (`NVMEM_SPRD_EFUSE`,
+`NVMEM_SPRD_CACHE_EFUSE`, `NVMEM_SC27XX_EFUSE`) + thermal DT chain 3/4
+(`ap_efuse`, `ap_thm0/1/2` + 12 sensor, `virtual-sensor`, 13 zona thermal,
+13 sel kalibrasi PMIC) — detail di §8.1.
+
+**TICK12 (2026-10-23→24)** — menutup 10 blob terakhir + peralatan RE:
+
+- Laporan RE lengkap dari blob (objdump + relokasi): [RE-SPRD-PDBG.md](RE-SPRD-PDBG.md),
+  [RE-SPRD-POWER-STAT.md](RE-SPRD-POWER-STAT.md), [RE-SPRD-IQ.md](RE-SPRD-IQ.md),
+  [RE-SPRD-MANUFACTURER.md](RE-SPRD-MANUFACTURER.md), [RE-SPRD-7SRESET.md](RE-SPRD-7SRESET.md),
+  [RE-SPRD-SIP-SVC.md](RE-SPRD-SIP-SVC.md), [RE-MMC-SWCQ.md](RE-MMC-SWCQ.md),
+  [RE-SPRD-AUTOTEST.md](RE-SPRD-AUTOTEST.md) (bukti di `docs/evidence-20261023/`).
+- Dua API yang sudah dihapus di 6.18 disesuaikan (`74209d523`) — modpost lolos.
+- **Regenerasi skor (2026-10-24)** terhadap bukti V17:
+  - [PORT-AUDIT.md](PORT-AUDIT.md): 129 baris (KO 68 / Y 47 / NOSRC 14-builtin);
+    `vendor_list()` kini dibatasi tabel §2 (dulu ikut baca tabel §4/§5 → 153
+    baris), `UNRESOLVED` core/gpio dikosongkan (framework sudah ada di pohon).
+  - [STATUS-129.md](STATUS-129.md) & [COVERAGE-129.md](COVERAGE-129.md):
+    **129/129 ✅, 0 BELUM**.
+
+**CI Build V17 hijau** (guard 124 simbol + DTB + modules + artefak):
+
+| Run | Tanggal | Hasil | Catatan |
+|---|---|---|---|
+| `40087667424` | 2026-10-24 | ✅ 24m17s | build penuh pertama pasca port 10 blob |
+| `40097613453` | 2026-10-24 | ✅ | sumber bukti `ko_list_v17.txt` (239 .ko) + `config_v17.txt` |
+
+**Boot test QEMU — LULUS** (run `40100295454`, gate `marker: stock=1
+custom=1`): DTB kustom `qemu-ums512-t1030.dtb` tembus userspace ~4 detik
+tanpa panic, init C statis mencetak marker ke console+kmsg. Tiga akar
+masalah "boot 0 byte" diperbaiki: GICR pindah ke `0x080A0000`, PSCI `hvc`,
+tambahan node PCIe + ITS — rincian di
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
+
+**fbcon/DRM-KMS diuji** (run `40105064859`): config lama `CONFIG_FB=n` +
+`FRAMEBUFFER_CONSOLE` tak terdefinisi dinyalakan lewat fragmen QEMU
+(`DRM_VIRTIO_GPU` + `DRM_FBDEV_EMULATION` + `FRAMEBUFFER_CONSOLE` +
+`VT_CONSOLE`), boot ketiga memakai `-device virtio-gpu-pci` + screendump
+ke `fbcon.png`. Hasil akhir: lihat
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
 
 ---
 
@@ -735,7 +820,7 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 | https://github.com/archanaberry/advan-vxtux-6.18.52/blob/main/6.18.52-VXTux-UMS512/README.md | README kernel (root) |
 | https://github.com/archanaberry/advan-vxtux-6.18.52/blob/main/6.18.52-VXTux-UMS512/docs/DRIVERS_VENDOR_CROSSCHECK.md | DRIVERS_VENDOR_CROSSCHECK.md |
 
-### 9.5 Commit history test1
+### 9.5 Commit history test1 & changelog TICK8 → TICK12
 
 | Commit | TICK | Pesan |
 |---|---|---|
@@ -747,6 +832,20 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 | `f9231da0f` | TICK10+ | README tabel 103 + kolom Vendor 129 |
 | `7e9b998c9` | TICK10+ | NV entries dikategorikan A/B/C/D/E |
 | `a50656589` | TICK10+ | Appendix A komprehensif |
+| `efa7348c2` | TICK11 | 3 modul efuse + thermal DT chain 3/4 (2026-10-22) |
+| `ec340d849` | TICK12 | tabel status 129 blob (✅ / (X)) dari config + ko build |
+| `5a5182040`–`8bf97026b` | TICK12 | RE power_stat ABI (`stat_info` 0x30/data 0x58) → port `sprd_debugstat` |
+| `cb5e91d35` | TICK12 | port `sprd_pdbg` — wakeup/sleep logging dari blob |
+| `b1d692f09` | TICK12 | port 4 blob: manufacturer_model, 7sreset, autotest core+gpio |
+| `9953413ba` | TICK12 | port `sprd_iq` — /dev/iq_mem + mailbox playback |
+| `91e7838b2` | TICK12 | port 3 blob terakhir: mmc_swcq, sprd-cpufreq-v2, cpufreq-public |
+| `11fb9b18c`–`74209d523` | TICK12 | Kconfig CRLF + dua API 6.18 yang sudah dihapus (modpost) |
+| `5de06f3d0`–`e47c36b29` | TICK12 | seri jalur boot-test CI QEMU (workflow, DTS, initramfs, apt ports) |
+| `f6935dbd0` | TICK12 | QEMU: 3 akar boot menggantung — GICR salah peta, PSCI smc→hvc, PCIe+ITS absen |
+| `0201d1249`–`b196841a2` | TICK12 | init C statis arm64 + verifikasi cpio non-fatal |
+| run `40100295454` | TICK12 | **boot gate LULUS** — stok+custom marker, tanpa panic |
+| `e44869cca` | TICK12 | uji fbcon/DRM-KMS: fragmen + boot virtio-gpu + screendump ke PNG |
+| `2a235f06b` | TICK12 | jendela poweroff 8 detik + retry screendump (race QEMU mati) |
 
 ### 9.6 Cronjob
 
@@ -763,11 +862,14 @@ Driver yang dipakai Advan Tab VX Lite (T1030) dari vendor_ramdisk_stock.cpio, di
 - **129 di vendor** (kernel 5.4 stock Advan, dipakai beneran di device)
 - **90 match** (driver port ada di vendor)
 - **13 NV** (driver port, vendor engga punya — klasifikasi A/B/C/D/E)
-- **88 vendor-only** (driver vendor, belum di-port — beban kerja TICK11+)
+- **88 vendor-only** (driver vendor, belum di-port di TICK10 — **selesai ditutup TICK12**, lihat §6.2)
 - **11 match dari vendor ke port** (driver vendor yang udah di-port)
 - **13 modul compile-verified** (TICK7+TICK9, llvm-nm evidence)
 - **102/102 ledger DEBLOBBED** (TICK9)
 - **Image 50.473.472 byte** + **DTB 45.702 byte** siap flash (belum di-flash/boot-tested)
+- **129/129 blob vendor tertangani** (regenerasi TICK12 2026-10-24, bukti ko list V17 — STATUS-129/COVERAGE-129/PORT-AUDIT)
+- **239 .ko** di build V17 CI (run `40097613453`) — 10 port terakhir ikut terbangun
+- **Boot QEMU LULUS** (run `40100295454`, [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md)) + uji fbcon/DRM-KMS di QEMU
 
 Bestieee, kalau ada yang perlu di-update atau di-drill-down lagi, kasih tau aja. Pyaa~ 🍓
 
