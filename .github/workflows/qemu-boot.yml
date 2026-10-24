@@ -87,41 +87,62 @@ jobs:
           (cd /tmp/initramfs && find . | cpio -o -H newc --owner root:root | gzip -9) > /tmp/initramfs.cpio.gz
           ls -lh /tmp/initramfs.cpio.gz
 
-      # QEMU virt: GICv3, CPU cortex-a72 (model TCG yang selalu ada; DTB cpu
-      # compatible hanya untuk konsumsi kernel), console=hvc0 via virtconsole.
-      # Gate: marker "VXTUX-QEMU-BOOT-OK" dari /init TANPA panic di serial log.
-      - name: Boot QEMU (gate)
+      # Bisect dua boot dalam satu run (run 40087667380: tamu menggantung420s,
+      # serial 0 byte — entah DTB kustom atau kernelnya yang belum pernah boot).
+      #   Boot A = DTB stok -M virt  → memisahkan masalah kernel vs DTB kustom
+      #   Boot B = DTB kustom qemu-ums512-t1030
+      # -d guest_errors,unimp,cpu_reset memberi jejak QEMU bila tamu menyentuh
+      # perangkat yang tidak ada. Gate tetap marker VXTUX-QEMU-BOOT-OK.
+      - name: Boot QEMU — bisect DTB stok vs DTB kustom
         run: |
           set +e
-          timeout --signal=KILL 420 qemu-system-aarch64 \
-            -machine virt,gic-version=3 \
-            -cpu cortex-a72 -smp 8 -m 2G \
-            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
-            -dtb 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb \
-            -initrd /tmp/initramfs.cpio.gz \
-            -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=8" \
-            -device virtio-serial-pci \
-            -device virtconsole,chardev=vc0 \
-            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial.log \
-            -display none -monitor none -no-reboot \
-            > /tmp/qemu-stdout.log 2>&1
-          rc=$?
-          echo "qemu exit=$rc"
-          echo "--- serial.log tail ---"
-          tail -n 60 /tmp/serial.log 2>/dev/null
-          echo "--- qemu stdout tail ---"
-          tail -n 20 /tmp/qemu-stdout.log 2>/dev/null
-          if ! grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial.log; then
-            echo '::error::MARKER tidak ditemukan — boot tidak sampai userspace'
-            echo '--- indikasi panic/oops (bila ada) ---'
-            grep -nE 'Kernel panic|BUG:|Unable to handle kernel|Call trace' /tmp/serial.log | tail -n 20 || true
+          boot() {
+            tag=$1; shift
+            timeout --signal=KILL 240 qemu-system-aarch64 \
+              -machine virt,gic-version=3 \
+              -cpu cortex-a72 -smp 8 -m 2G \
+              -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
+              -initrd /tmp/initramfs.cpio.gz \
+              -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=8" \
+              -device virtio-serial-pci \
+              -device virtconsole,chardev=vc0 \
+              -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial-$tag.log \
+              -display none -monitor none -no-reboot \
+              -d guest_errors,unimp,cpu_reset -D /tmp/qemu-$tag.debug.log \
+              "$@" > /tmp/qemu-$tag-stdout.log 2>&1
+            echo "[$tag] qemu exit=$?"
+            echo "[$tag] serial bytes: $(wc -c < /tmp/serial-$tag.log 2>/dev/null)"
+            echo "[$tag] tail serial:"
+            tail -n 25 /tmp/serial-$tag.log 2>/dev/null
+            echo "[$tag] tail qemu stdout:"
+            tail -n 8 /tmp/qemu-$tag-stdout.log 2>/dev/null
+          }
+
+          boot stock   # tanpa -dtb: DTB dibuat QEMU sendiri
+          boot custom -dtb 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
+
+          ok_stock=0; ok_custom=0
+          grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-stock.log && ok_stock=1
+          grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-custom.log && ok_custom=1
+          echo "marker: stock=$ok_stock custom=$ok_custom"
+
+          if [ "$ok_custom" = 1 ]; then
+            if grep -q 'Kernel panic' /tmp/serial-custom.log; then
+              echo '::error::marker ada tapi Kernel panic tercatat di log kustom'
+              exit 1
+            fi
+            echo 'BOOT OK — DTB kustom tembus userspace tanpa panic'
+            exit 0
+          fi
+          if [ "$ok_stock" = 1 ]; then
+            echo '::error::Kernel OK dengan DTB stok, tetapi DTB kustom gagal — perbaiki DTS'
+            grep -nE 'Kernel panic|BUG:|Unable to handle kernel' /tmp/serial-custom.log | tail -n 10 || true
             exit 1
           fi
-          if grep -q 'Kernel panic' /tmp/serial.log; then
-            echo '::error::Kernel panic terdeteksi di log serial'
-            exit 1
-          fi
-          echo 'BOOT OK — sampai userspace tanpa panic'
+          echo '::error::Kedua boot menggantung tanpa output — masalah di kernel/Image/konsol, bukan DTS'
+          echo '--- debug QEMU stock tail ---'; tail -n 25 /tmp/qemu-stock.debug.log 2>/dev/null
+          echo '--- debug QEMU custom tail ---'; tail -n 25 /tmp/qemu-custom.debug.log 2>/dev/null
+          exit 1
 
       - name: Upload serial log
         if: always()
@@ -129,6 +150,10 @@ jobs:
         with:
           name: qemu-serial
           path: |
-            /tmp/serial.log
-            /tmp/qemu-stdout.log
+            /tmp/serial-stock.log
+            /tmp/serial-custom.log
+            /tmp/qemu-stock-stdout.log
+            /tmp/qemu-custom-stdout.log
+            /tmp/qemu-stock.debug.log
+            /tmp/qemu-custom.debug.log
           if-no-files-found: warn
