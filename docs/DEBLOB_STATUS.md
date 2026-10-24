@@ -661,12 +661,15 @@ berganti total ke init C statis `-march=armv8-a` (busybox x86 → ENOEXEC;
 busybox arm64 ports → undefined instruction di cortex-a72). Rincian:
 [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
 
-**fbcon/DRM-KMS diuji di QEMU** (workflow `qemu-boot`): `CONFIG_FB=n` lama +
-`FRAMEBUFFER_CONSOLE` tak terdefinisi + QEMU tanpa driver GPU dinyalakan lewat
-fragmen (`DRM_VIRTIO_GPU=y`, `DRM_FBDEV_EMULATION=y`,
+**fbcon/DRM-KMS — TERBUKTI BISA PRINT CLI** (run `40105064859` hijau,
+gate `marker: stock=1 custom=1 fb=1 px=1`): `CONFIG_FB=n` lama +
+`FRAMEBUFFER_CONSOLE` tak terdefinisi + QEMU tanpa driver GPU dinyalakan
+lewat fragmen (`DRM_VIRTIO_GPU=y`, `DRM_FBDEV_EMULATION=y`,
 `FRAMEBUFFER_CONSOLE=y`, `VT_CONSOLE=y`); boot ketiga memakai
-`-device virtio-gpu-pci` + VNC headless + HMP screendump → `fbcon.png`
-(artefak). Bukti probe dari run pertama: `[drm] Initialized virtio_gpu`,
-`Console: switching to colour frame buffer device 128x48`,
-`fb0: virtio_gpudrmfb`, dan init menulis 176 byte banner ke `/dev/tty1`.
-Hasil gate lengkap: [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
+`-device virtio-gpu-pci` + VNC headless + HMP screendump → `fbcon.png`.
+Bukti probe: `[drm] Initialized virtio_gpu`, `Console: switching to
+colour frame buffer device 128x48`, `fb0: virtio_gpudrmfb`, dan init
+menulis 176 byte banner ke `/dev/tty1`; 2.842 piksel tak-hitam di
+1024×768 memperlihatkan banner `VXTux 6.18.52 - fbcon CLI test` + prompt
+`>` ([PNG](evidence-20261024/fbcon.png)). Rincian:
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) §5.

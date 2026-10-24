@@ -3,6 +3,9 @@
 **Run hijau:** https://github.com/gryzzlaycutzy121/advan-vxtux-6.18.52/actions/runs/40100295454
 (QEMU Boot Test #8, `test1`, 20m40s, 2026-10-24 — satu warning kosmetik cpio, lihat §4)
 
+**Run fbcon hijau:** https://github.com/gryzzlaycutzy121/advan-vxtux-6.18.52/actions/runs/40105064859
+(2026-10-24 — gerbang `marker: stock=1 custom=1 fb=1 px=1`, lihat §5)
+
 **Gate:** `marker: stock=1 custom=1` → `BOOT OK — DTB kustom tembus userspace tanpa panic`.
 
 Bukti dari artefak `qemu-serial` (diunduh ke `ci_qemu/run8/`):
@@ -64,7 +67,55 @@ Diturunkan jadi `::warning::` non-fatal + dump isi arsip; bukti arsip benar:
 1264 blok × 512 B = 647 KB ≈ ukuran binary init, dan boot gate tetap
 mendeteksi init hilang lewat panic "No working init found".
 
-## 5. Batas validasi (jujur)
+## 5. fbcon & DRM/KMS: PRINT CLI — TERBUKTI (run 40105064859)
+
+Jawaban atas "apakah fbcon dan DRM/KMS sudah bisa print CLI?": **ya,
+setelah rantai berikut dinyalakan** — sebelumnya mustahil karena tiga
+simpul mati: `CONFIG_FB=n` (enhanced_config), `FRAMEBUFFER_CONSOLE` tak
+terdefinisi (`FB_CORE` tak ter-select), dan QEMU tanpa driver GPU
+(`DRM_VIRTIO_GPU`/`BOCHS` not set).
+
+Rantai yang dinyalakan lewat fragmen `vxtux_618_qemu.defconfig` (lolos
+olddefconfig — guard CI memeriksanya):
+
+```
+DRM_VIRTIO_GPU=y → select DRM_CLIENT_SELECTION
+                 → DRM_FBDEV_EMULATION=y → select FB_CORE (oleh DRM)
+                 → FRAMEBUFFER_CONSOLE=y (+ VT_CONSOLE untuk printk boot)
+```
+
+Boot ketiga ditambahkan ke workflow: `-device virtio-gpu-pci`
+(dienumerasi via node PCIe + ITS di DTB kustom), VNC headless sebagai
+permukaan display, monitor HMP TCP → `screendump` → `fbcon.ppm` →
+`fbcon.png`. Init C menulis banner CLI ke `/dev/tty1` (176 byte) dan
+menunda poweroff 8 detik supaya capture tidak kalah cepat.
+
+**Bukti (artefak run, tersimpan di [evidence-20261024/fbcon.png](evidence-20261024/fbcon.png)):**
+
+| Bukti | Nilai |
+|---|---|
+| Probe DRM | `[drm] Initialized virtio_gpu 0.1.0 for 0000:00:03.0 on minor 0` |
+| fbcon menempel | `Console: switching to colour frame buffer device 128x48` |
+| Framebuffer | `fb0: virtio_gpudrmfb frame buffer device` |
+| Tulisan init ke VT | `=== tty1: 176 byte CLI tertulis ===` |
+| Gerbang piksel | `fbcon framebuffer: 1024x768, piksel tak-hitam=2842` → `FBCON RENDER OK` |
+| Gate akhir | `marker: stock=1 custom=1 fb=1 px=1` → run **success** |
+
+![fbcon CLI test di framebuffer QEMU](evidence-20261024/fbcon.png)
+
+Tampilan: banner `VXTux 6.18.52 - fbcon CLI test` + `[ OK ] framebuffer
+console menampilkan teks` + prompt `>` dengan kursor — teks dirender
+DRM/fbcon ke framebuffer 1024×768, bukan lewat serial (huruf pertama
+terpotong tipis di margin kiri — kosmetik, kemungkinan pergeseran sel
+fbcon setelah clear-screen). Konsol `hvc0` tetap menerima printk boot
+gaya Arch (VT_CONSOLE=y) di log serial.
+
+Status di **perangkat UMS512 asli**: config device masih `CONFIG_FB=n`
++ driver `DRM_SPRD` bermasalah (layar garis hijau) — fbcon device akan
+menyala setelah config + perbaikan panel DRM dilakukan; QEMU di atas
+membuktikan jalur fbcon/kernel-nya sendiri sehat.
+
+## 6. Batas validasi (jujur)
 
 - QEMU `-M virt` + TCG **bukan** hardware UMS512: alamat periferal QEMU
   berbeda total dari DT perangkat; yang divalidasi adalah perilaku kernel

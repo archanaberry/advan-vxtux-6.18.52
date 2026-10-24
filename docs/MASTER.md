@@ -46,7 +46,7 @@
 | **Port coverage 129 blob** | **129/129 ✅ (0 BELUM)** | regenerasi 2026-10-24: [STATUS-129](STATUS-129.md), [COVERAGE-129](COVERAGE-129.md), [PORT-AUDIT](PORT-AUDIT.md) |
 | Build CI device penuh (V17) | **hijau** run `40097613453` | artefak `v17-built-kos` (239 .ko) + `v17-config` + `v17-dtb` |
 | Boot test QEMU DTB kustom | **LULUS** run `40100295454` | [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) |
-| Uji fbcon + DRM/KMS (QEMU) | run `40105064859` | virtio-gpu + fbcon + screendump `fbcon.png` |
+| Uji fbcon + DRM/KMS (QEMU) | **LULUS** run `40105064859` | `fb=1 px=1`, teks terlihat di framebuffer — [bukti PNG](evidence-20261024/fbcon.png) |
 | CI workflow aktif | `v17-build` · `qemu-boot` · `quick-cc` | terpicu push ke `test1` |
 
 ### 1.2 Cross-check ringkas
@@ -728,12 +728,15 @@ masalah "boot 0 byte" diperbaiki: GICR pindah ke `0x080A0000`, PSCI `hvc`,
 tambahan node PCIe + ITS — rincian di
 [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
 
-**fbcon/DRM-KMS diuji** (run `40105064859`): config lama `CONFIG_FB=n` +
+**fbcon/DRM-KMS — TERBUKTI BISA PRINT CLI** (run `40105064859` hijau,
+gate `marker: stock=1 custom=1 fb=1 px=1`): config lama `CONFIG_FB=n` +
 `FRAMEBUFFER_CONSOLE` tak terdefinisi dinyalakan lewat fragmen QEMU
 (`DRM_VIRTIO_GPU` + `DRM_FBDEV_EMULATION` + `FRAMEBUFFER_CONSOLE` +
-`VT_CONSOLE`), boot ketiga memakai `-device virtio-gpu-pci` + screendump
-ke `fbcon.png`. Hasil akhir: lihat
-[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
+`VT_CONSOLE`), boot ketiga memakai `-device virtio-gpu-pci` + screendump.
+Bukti probe: `Console: switching to colour frame buffer device 128x48`,
+`fb0: virtio_gpudrmfb`; 2.842 piksel tak-hitam di 1024×768 = banner CLI
+`VXTux 6.18.52 - fbcon CLI test` terlihat ([PNG](evidence-20261024/fbcon.png)).
+Rincian di [QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) §5.
 
 ---
 
