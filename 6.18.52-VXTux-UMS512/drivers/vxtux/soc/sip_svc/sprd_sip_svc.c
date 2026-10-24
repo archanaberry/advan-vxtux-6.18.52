@@ -422,7 +422,8 @@ static int __init sprd_sip_svc_init(void)
 	sprd_handle.perf_version = sip_probe(SPRD_SIP_SVC_HANDLE_ID, "PERF");
 	sprd_handle.storage_version = sip_probe(SPRD_SIP_SVC_STORAGE_ID, "STORAGE");
 	sprd_handle.pwr_version = sip_probe(SPRD_SIP_SVC_PWR_ID, "PWR");
-	sprd_handle.dvfs_version = sip_probe(SPRD_SIP_SVC_DVFS_ID, "DVFS");
+	/* The DVFS version lives inside the ops block (see sprd_sip_svc.h). */
+	sprd_handle.dvfs_ops.rev = sip_probe(SPRD_SIP_SVC_DVFS_ID, "DVFS");
 	sprd_handle.npu_version = sip_probe(SPRD_SIP_SVC_NPU_ID, "NPU");
 	sprd_handle.dbg_version = sip_probe(SPRD_SIP_SVC_DBG_ID, "DBG");
 
