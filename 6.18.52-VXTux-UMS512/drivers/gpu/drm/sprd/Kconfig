@@ -6,6 +6,9 @@ config DRM_SPRD
 	select DRM_KMS_HELPER
 	select DRM_MIPI_DSI
 	select VIDEOMODE_HELPERS
+	# Tanpa ini DRM_FBDEV_EMULATION (depends on DRM_CLIENT_SELECTION) dibuang
+	# oleh olddefconfig dan fbcon tidak pernah muncul di panel Artix.
+	select DRM_CLIENT_SELECTION
 	help
 	  Choose this option if you have a Unisoc chipset.
 	  If M is selected the module will be called sprd_drm.
