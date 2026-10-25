@@ -110,6 +110,23 @@ jobs:
         run: |
           cd 6.18.52-VXTux-UMS512
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules -j$(nproc)
+      # Image (kernel biner) dibutuhkan untuk meracik boot.img Artix di
+      # ci_qemu/mk_boot_artix.py.  `make modules` membangun vmlinux, bukan
+      # boot Image-nya, jadi targetnya diminta eksplisit di sini.
+      - name: Build Image (untuk boot.img partisi boot_a)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image -j$(nproc)
+          ls -lh arch/arm64/boot/Image System.map
+          strings arch/arm64/boot/Image | grep -m1 'Linux version' || true
+      - name: Upload kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: v17-Image
+          path: |
+            6.18.52-VXTux-UMS512/arch/arm64/boot/Image
+            6.18.52-VXTux-UMS512/System.map
+          if-no-files-found: error
       - name: Tar .ko tree
         run: |
           cd 6.18.52-VXTux-UMS512
