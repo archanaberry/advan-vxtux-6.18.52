@@ -29,9 +29,10 @@ import bootimg_tool as bt
 
 # Harus SINKRON dengan CONFIG_CMDLINE di ../enhanced_config.cfg.
 CMDLINE = (
-    "earlycon console=ttyS1,115200n8 loglevel=7 "
+    "console=tty0 console=ttyS1,115200n8 loglevel=8 ignore_loglevel "
+    "rdinit=/vxtux/init "
     "root=PARTLABEL=super rootfstype=ext4 rootwait rw init=/sbin/init "
-    "loop.max_part=7 printk.devkmsg=on androidboot.console=ttyS1 "
+    "loop.max_part=7 printk.devkmsg=on panic=15 androidboot.console=ttyS1 "
     "androidboot.hardware=ums512_1h10 androidboot.slot_suffix=_a "
     "androidboot.serialno=0123456789ABCDEF androidboot.selinux=permissive"
 )
@@ -85,6 +86,9 @@ def main():
     buf[64:576] = CMDLINE.encode()[:511].ljust(512, b"\0")
 
     outb = bytearray(buf)
+    # Header v0 hanya 1632 byte; bootloader membaca kernel mulai offset
+    # page_size (4096). Tanpa padding ini kernel tergeser 0x9A0 byte.
+    outb.extend(b"\0" * (bt.align(len(buf), page) - len(buf)))
 
     def add(blob):
         if not blob:
@@ -100,6 +104,7 @@ def main():
 
     add(kern)
     add(rd)
+    assert len(outb) % page == 0
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     open(out, "wb").write(bytes(outb))
     print(f"ditulis {out}: {len(outb)} byte "

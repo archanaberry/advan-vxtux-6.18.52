@@ -115,3 +115,57 @@ Layout baru diverifikasi: magic `ARM\x64` di 0x1038 (kernel mulai 0x1000,
 sejajar page — sama persis dengan `boot_a_vxtux_arasan.img`), byte di
 `boot[4096:4096+kernel_size]` identik dengan `Image`, dan word di titik
 kegagalan lama (`4096+0xF7288`) kini bukan `brk` lagi.
+
+## Diagnosis dump `artix4` (2026-10-26): kernel JALAN, tapi 100% bisu
+
+`uboot_log` adalah buffer melingkar; sesi **terbaru** ada di awal berkas
+(bukan di akhir). Isinya, untuk image v0 ber-header 4096 yang sekarang:
+
+```
+boot_img_hdr header_version: 0
+bootimage: generic kernel size is 41880064
+bootimage: generic kernel offset is 0x1000
+boot_a kernel read OK, page size = 0x27f1000, locate to 0x80080000
+[start_linux] start linux at PC:0x80080000, dt_addr:0x9df00000
+```
+
+Artinya: **kernel dimuat tepat** (tidak ada lagi `brk #0x800` +
+`bootloader panic` seperti dump sebelumnya). Setelah `start_linux` LK tidak
+mencatat apa pun → kernel berjalan lalu berhenti sendiri di dalam Linux.
+Tidak ada panic yang terlihat karena kernel memang tidak punya kanal
+keluaran:
+
+| Masalah cmdline lama | Bukti |
+|---|---|
+| `earlycon=sprd,uart,0x71400000` bukan UART | stock DTB: `sdio@71400000` (kontroler eMMC); stock bootargs: `androidboot.boot_devices=soc/soc:ap-apb/71400000.sdio` |
+| tidak ada `console=tty0` | fbcon tidak pernah jadi console → panel tetap menampilkan logo LK walau kernel hidup |
+| `loglevel=7` tanpa `ignore_loglevel` | sebagian pesan `pr_info` driver tidak dicetak |
+
+Karena itu kegagalan apa pun (menunggu root device, panic awal, init tidak
+ada) terlihat identik: "diam di logo, tidak restart".
+
+### Perbaikan di build ini
+
+1. `CONFIG_CMDLINE` → `console=tty0 ... loglevel=8 ignore_loglevel
+   rdinit=/vxtux/init ... panic=15`; `earlycon` salah alamat dibuang.
+2. **Initramfs diagnostik ditanam di Image** (`ci_qemu/initramfs/init.c`,
+   `CONFIG_INITRAMFS_SOURCE` di workflow CI): init statis yang membaca
+   `SYSLOG_ACTION_READ_ALL`, menulis seluruh dmesg + daftar partisi + hasil
+   pindai ext4 ke **partisi `cache` (100 MiB, tidak dipakai Artix)**, lalu
+   mencetak ringkasannya ke `/dev/console`, memount partisi ext4 yang punya
+   `/sbin/init`, dan `chroot` + `exec /sbin/init`.
+3. `panic=15` → panic jadi reboot yang kelihatan, bukan diam abadi.
+4. Packer (`mk_boot_artix.py` dan `bootimg_tool.py pack`) kini menggenapkan
+   header ke page **sebelum** menambah kernel, jadi repack tidak bisa
+   mengulang bug 0x9A0.
+
+### Cara membaca hasilnya
+
+```bat
+spd_dump_new.exe --wait 300 fdl fdl1-dl.bin 0x5500 fdl fdl2-dl.bin 0x9efffe00
+  exec path E:\vxtux_build_repo\out\logs\artix5 read_part cache 0 0x6400000 cache.bin reset
+```
+
+Lalu di PC: `findstr /C:"VXTUXLOG1" cache.bin` / `strings cache.bin | more`.
+Bagian `----- dmesg ...` di berkas itu adalah log kernel lengkap sampai
+inisiatif initramfs berjalan.

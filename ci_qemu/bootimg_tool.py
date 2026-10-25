@@ -116,10 +116,16 @@ def pack(outdir, out, cmdline=None, no_ramdisk=False, no_dtb=False):
         buf[1668:1672] = struct.pack("<I", len(dtb))
 
     outb = bytearray(buf)
+    # Header WAJIB digenapkan ke page_size dulu. Tanpa ini kernel mulai di
+    # offset 1632 (0x660) padahal bootloader membacanya di offset page_size
+    # (0x1000) -> kernel tergeser 0x9A0 byte, entry mendarat di tengah kode,
+    # LK menangkap brk #0x800 di EL2 (bootloader panic / bootloop).
+    outb.extend(b"\0" * (align(len(buf), page) - len(buf)))
     def add(blob):
         outb.extend(blob)
         outb.extend(b"\0" * (align(len(blob), page) - len(blob)))
     add(kernel)
+    assert page == 0 or len(outb) % page == 0
     add(ramdisk)
     if dtb:
         add(dtb)

@@ -16,7 +16,7 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu libncurses-dev flex bison bc libssl-dev libelf-dev
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu libncurses-dev flex bison bc libssl-dev libelf-dev cpio
       - name: Fix permissions
         run: |
           cd 6.18.52-VXTux-UMS512
@@ -87,6 +87,29 @@ jobs:
           echo "Simbol yang diminta =m lalu jadi =y: $coerce"
           echo "Pengecualian terdaftar (docs/CI-KNOWN-DROPPED.txt): $known"
           exit $rc
+      # Initramfs diagnostik: init statis yang (a) menulis SELURUH dmesg +
+      # daftar partisi ke partisi `cache`, (b) mencetaknya ke /dev/console
+      # (fbcon -> panel), lalu (c) mount rootfs ext4 dan chroot ke /sbin/init.
+      # DitANAM di dalam Image (CONFIG_INITRAMFS_SOURCE) supaya tidak
+      # bergantung pada cara LK memperlakukan ramdisk di boot.img.
+      - name: Initramfs diagnostik (init C statis arm64) + tanam ke Image
+        run: |
+          set -e
+          mkdir -p /tmp/ir/vxtux /tmp/ir/dev /tmp/ir/proc /tmp/ir/sys \
+                   /tmp/ir/newroot /tmp/ir/tmp
+          aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
+            -o /tmp/ir/vxtux/init ci_qemu/initramfs/init.c
+          file /tmp/ir/vxtux/init
+          ls -l /tmp/ir/vxtux/init
+          ( cd /tmp/ir && find . | cpio -o -H newc --owner root:root | gzip -9 ) \
+            > /tmp/vxtux-initramfs.cpio.gz
+          ls -lh /tmp/vxtux-initramfs.cpio.gz
+          gzip -t /tmp/vxtux-initramfs.cpio.gz
+          cd 6.18.52-VXTux-UMS512
+          scripts/config --file .config \
+            --set-str INITRAMFS_SOURCE "/tmp/vxtux-initramfs.cpio.gz"
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          grep -E '^CONFIG_(INITRAMFS_SOURCE|CMDLINE|CMDLINE_FORCE)' .config
       - name: Simpan config efektif
         if: always()
         run: |
