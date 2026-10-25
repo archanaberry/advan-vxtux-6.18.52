@@ -5,7 +5,7 @@ Ditulis ke partisi **`boot_a`** (64 MB). Isi setelah build CI hijau
 
 ```
 6.18.52-VXTux-UMS512/
-├── boot_6.18.52-VXTux-UMS512-artix.img   ← 41.883.232 byte, diflash ke boot_a
+├── boot_6.18.52-VXTux-UMS512-artix.img   ← 41.885.696 byte, diflash ke boot_a
 ├── Image                                  ← 41.880.064 byte, kernel aarch64 mentah
 ├── System.map                             ← 5.991.872 byte
 ├── ums512-1h10-vxtux.dtb                  ← 53.882 byte (DTS vxtux, untuk QEMU/CI)
@@ -23,20 +23,40 @@ Bukti dari isi `Image` (strings):
 | `fbcon_startup`, `fbcon_resize` | **fbcon ada di dalam kernel** |
 | `PARTLABEL=` | dukungan root lewat label partisi GPT |
 
-## Cmdline yang dipakai (header v0, sama seperti image yang sudah terbukti load)
+## Cmdline yang dipakai — DIPAKSA LURUS oleh `CONFIG_CMDLINE_FORCE`
+
+> **PENTING (fix 2026-10-25, bedah `out/logs/artix3`)**: LK Unisoc
+> mendeduplikasi cmdline per-kunci antara bootargs stok (dari DTB) dan
+> cmdline boot.img, dan bootargs stok SELALU didahulukan → "yang pertama
+> menang". Di log LK terlihat cmdline kita dibaca utuh
+> (`root=PARTLABEL=super ... init=/sbin/init`) tapi `final bootargs` yang
+> dikirim ke kernel hanya memuat milik stok: `init=/init root=/dev/ram0`.
+> Karena boot.img tanpa ramdisk, `prepare_namespace()` lalu menunggu
+> `/dev/ram0` selamanya → layar beku di logo (tanpa panic).
+>
+> Solusi: kernel di-build dengan `CONFIG_CMDLINE` + `CONFIG_CMDLINE_FORCE=y`
+> (`enhanced_config.cfg`), sehingga `drivers/of/fdt.c:1099` melempar bootargs
+> LK dan memakai cmdline bawaan build ini. Arm64 tidak punya
+> `CONFIG_CMDLINE_EXTEND`, pilihannya hanya `FROM_BOOTLOADER` atau `FORCE`.
 
 ```
-console=ttyS0,115200n8 console=ttyS1,115200n8 earlycon=sprd,uart,0x71400000
+earlycon console=ttyS1,115200n8 loglevel=7
+root=PARTLABEL=super rootfstype=ext4 rootwait rw init=/sbin/init
+loop.max_part=7 printk.devkmsg=on
 androidboot.console=ttyS1 androidboot.hardware=ums512_1h10
 androidboot.slot_suffix=_a androidboot.serialno=0123456789ABCDEF
-root=PARTLABEL=super rootfstype=ext4 rootwait rw
-init=/sbin/init androidboot.selinux=permissive
+androidboot.selinux=permissive
 ```
 
 * `root=PARTLABEL=super` → kernel 6.18 mencari partisi lewat
   `block/early-lookup.c`, jadi **tidak perlu initramfs** (ramdisk_size = 0).
 * `rw` → ext4 dibuka read-write sejak awal (bukan `ro` seperti image lama).
 * `rootfstype=ext4` → tidak ada erofs/LP sama sekali.
+* `earlycon` tanpa argumen → pakai `stdout-path` DTB (`serial1` = ttyS1),
+  alamat UART yang benar (`0x70100000`, bukan `0x71400000` yang lama —
+  alamat itu bukan UART di UMS512).
+* Cmdline di `mk_boot_artix.py` disinkronkan sebagai dokumentasi; yang
+  menang adalah `CONFIG_CMDLINE` di kernel.
 
 ## Config kunci (efektif, diverifikasi dari artefak CI)
 
@@ -51,6 +71,7 @@ init=/sbin/init androidboot.selinux=permissive
 | `CONFIG_FRAMEBUFFER_CONSOLE` | `y` | **fbcon** — teks di panel |
 | `CONFIG_VT` / `CONFIG_VT_CONSOLE` | `y` | tty1..tty6 + getty |
 | `CONFIG_LOCALVERSION` | `-VXTux-UMS512-artix` | penanda: kernel ini untuk super ext4 |
+| `CONFIG_CMDLINE` + `_FORCE` | `y` | **fix diam di logo**: paksa cmdline build ini, buang bootargs stok LK (`root=/dev/ram0`)
 
 Sebelumnya `CONFIG_FB=n` membuat `DRM_FBDEV_EMULATION` dibuang `olddefconfig`
 (`depends on DRM && FB`), jadi fbcon tidak pernah ada — panel hanya bisa
@@ -67,3 +88,20 @@ Basis header diambil dari `out/base_boot/` (`header.bin` v0 dari
 `boot_a_vxtux_arasan.img` yang sudah terbukti di-load bootloader UMS512):
 page 4096, kernel addr `0x80080000`, tags `0x86000000`, dtb 0.
 Ramdisk dikosongkan — root diambil langsung dari partisi `super`.
+
+## Perbaikan bootloop 2026-10-25 (padding header → page 4096)
+
+Image hasil racikan sebelumnya menempelkan kernel tepat setelah header
+1632 byte (**offset 0x660**) tanpa mem-kanal-kan header ke `page_size`
+(4096). LK membaca kernel dari offset 4096 sesuai spesifikasi, sehingga
+terjadi dua kali pemuatan kernel geser 0x9A0 byte: entry mendarat di pad
+NOP, `head.S` terlewat, dan dalam ~60 ms kernel menabrak `brk #0x800`
+(lokasi `elr 0x80177288`); LK menangkapnya di EL2 → `bootloader panic,
+reboot` → loop (tercatat 21 sesi di `uboot_log`, semua identik).
+
+Perbaikannya ada di `ci_qemu/mk_boot_artix.py`: tiap komponen kini di-
+kanal-kan ke batas page **sebelum** ditulis (bukan hanya sesudahnya).
+Layout baru diverifikasi: magic `ARM\x64` di 0x1038 (kernel mulai 0x1000,
+sejajar page — sama persis dengan `boot_a_vxtux_arasan.img`), byte di
+`boot[4096:4096+kernel_size]` identik dengan `Image`, dan word di titik
+kegagalan lama (`4096+0xF7288`) kini bukan `brk` lagi.

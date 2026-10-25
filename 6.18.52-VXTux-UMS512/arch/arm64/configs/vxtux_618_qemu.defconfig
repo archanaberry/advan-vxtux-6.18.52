@@ -70,3 +70,11 @@ CONFIG_DRM_VIRTIO_GPU=y
 CONFIG_DRM_FBDEV_EMULATION=y
 CONFIG_FRAMEBUFFER_CONSOLE=y
 CONFIG_VT_CONSOLE=y
+
+#  CMDLINE device-only: enhanced_config memaksa CONFIG_CMDLINE + CMDLINE_FORCE
+#  (root=PARTLABEL=super hanya ada di eMMC device). Di QEMU cmdline datang dari
+#  -append, jadi kosongkan -> pilihan CMDLINE_FORCE ikut mati karena
+#  depends on CMDLINE != "". Merge urutan .config.device -> enhanced -> file ini,
+#  jadi baris ini yang menang.
+# CONFIG_CMDLINE_FORCE is not set
+CONFIG_CMDLINE=""
