@@ -11,8 +11,10 @@
 #include <linux/of_graph.h>
 #include <linux/platform_device.h>
 
+#include <drm/clients/drm_client_setup.h>
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_drv.h>
+#include <drm/drm_fbdev_dma.h>
 #include <drm/drm_gem_dma_helper.h>
 #include <drm/drm_gem_framebuffer_helper.h>
 #include <drm/drm_of.h>
@@ -55,6 +57,13 @@ static struct drm_driver sprd_drm_drv = {
 
 	/* GEM Operations */
 	DRM_GEM_DMA_DRIVER_OPS,
+
+	/*
+	 * fbdev (bukan Android/SurfaceFlinger): tanpa ini tidak ada framebuffer
+	 * konsol, jadi Artix tidak bisa menampilkan CLI di panel.  Makro ini
+	 * menjadi .fbdev_probe = NULL kalau DRM_FBDEV_EMULATION dimatikan.
+	 */
+	DRM_FBDEV_DMA_DRIVER_OPS,
 
 	.name			= DRIVER_NAME,
 	.desc			= DRIVER_DESC,
@@ -105,6 +114,13 @@ static int sprd_drm_bind(struct device *dev)
 	ret = drm_dev_register(drm, 0);
 	if (ret < 0)
 		goto err_kms_helper_poll_fini;
+
+	/*
+	 * Pasang client fbdev di atas KMS.  Inilah /dev/fb0 yang dipakai fbcon,
+	 * sehingga boot Artix menampilkan teks seperti Arch di PC.  NULL = pakai
+	 * client bawaan DRM (fbdev), tidak ada client tambahan.
+	 */
+	drm_client_setup(drm, NULL);
 
 	return 0;
 
