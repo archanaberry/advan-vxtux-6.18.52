@@ -136,6 +136,7 @@ if __name__ == "__main__":
     elif cmd == "split":
         split(sys.argv[2], sys.argv[3])
     elif cmd == "pack":
+        indir, out = sys.argv[2], sys.argv[3]
         kw = {}
         args = sys.argv[4:]
         i = 0
@@ -148,6 +149,6 @@ if __name__ == "__main__":
                 kw["no_dtb"] = True; i += 1
             else:
                 i += 1
-        pack(sys.argv[3], sys.argv[4] if not args or args[0].startswith("--") else sys.argv[3], **kw)
+        pack(indir, out, **kw)
     else:
         raise SystemExit(__doc__)

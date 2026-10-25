@@ -161,11 +161,13 @@ irqreturn_t sdhci_sprd_irq(int irq, void *dev_id)
 
 /*
  * sdhci_sprd_send_command() - the blob's renamed sdhci_send_command().
+ *
+ * The body is NOT defined here: sdhci.c already provides and exports this
+ * exact forwarder (see the comment there).  Keeping a second copy worked
+ * while this file was a module, but breaks the moment CONFIG_MMC_SDHCI_SPRD=y
+ * links it into vmlinux -- "multiple definition of sdhci_sprd_send_command".
+ * One definition, in sdhci.c, works for both =m and =y.
  */
-bool sdhci_sprd_send_command(struct sdhci_host *host, struct mmc_command *cmd)
-{
-	return sdhci_sprd_send_command_body(host, cmd);
-}
 void sdhci_sprd_int_status(struct sdhci_host *host);
 void sdhci_sprd_signal_voltage_on_off(struct mmc_host *mmc, bool on);
 int sdhci_sprd_irq_request_swcq(struct sdhci_host *host);
