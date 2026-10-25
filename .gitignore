@@ -42,3 +42,8 @@ built_kos/
 # Image flash (super 5,6 GB + boot.img) adalah hasil racikan, bukan sumber:
 # jauh di atas batas 100 MB per-file GitHub.
 out/**/*.img
+out/**/Image
+out/**/System.map
+out/**/*.dtb
+out/**/*.tar.gz
+out/**/modules/**
