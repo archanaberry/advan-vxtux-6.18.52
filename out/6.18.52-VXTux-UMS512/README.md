@@ -1,12 +1,13 @@
 # SISI KERNEL — `6.18.52-VXTux-UMS512` (+ varian `-artix`)
 
 Ditulis ke partisi **`boot_a`** (64 MB). Isi setelah build CI hijau
-(run `40163789668`, commit `1aa43626d`, 30m58s):
+(run `40226281881`, commit `d6452468c`, 16m4s — Image + initramfs diagnostik):
 
 ```
 6.18.52-VXTux-UMS512/
-├── boot_6.18.52-VXTux-UMS512-artix.img   ← 41.885.696 byte, diflash ke boot_a
-├── Image                                  ← 41.880.064 byte, kernel aarch64 mentah
+├── boot_6.18.52-VXTux-UMS512-artix.img   ← 42.213.376 byte, diflash ke boot_a
+├── Image                                  ← 42.207.744 byte, kernel aarch64 mentah
+│                                            (+324 KB initramfs gzip di dalamnya)
 ├── System.map                             ← 5.991.872 byte
 ├── ums512-1h10-vxtux.dtb                  ← 53.882 byte (DTS vxtux, untuk QEMU/CI)
 ├── modules/                               ← 233 .ko, vermagic 6.18.52-VXTux-UMS512-artix
