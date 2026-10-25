@@ -89,6 +89,16 @@ Basis header diambil dari `out/base_boot/` (`header.bin` v0 dari
 page 4096, kernel addr `0x80080000`, tags `0x86000000`, dtb 0.
 Ramdisk dikosongkan — root diambil langsung dari partisi `super`.
 
+## Perbaikan diam-di-logo 2026-10-25 (CMDLINE_FORCE)
+
+Build CI `40210117913` (commit `2d0c28c15`, 16m58s) menghasilkan `Image` yang
+membawa cmdline paksa di dalam binernya (diverifikasi via `strings`: teks
+`root=PARTLABEL=super` ada di dalam `Image`). QEMU Boot Test run `40210117912`
+lulus penuh (termasuk sesi CLI fbcon) — fragmen QEMU menetralkan CMDLINE
+lewat `CONFIG_CMDLINE=""`, jadi QEMU tetap memakai `-append` sendiri.
+
+Flash: hanya `boot_a` (super tidak berubah) — lihat `out/flash_boot_only.bat`.
+
 ## Perbaikan bootloop 2026-10-25 (padding header → page 4096)
 
 Image hasil racikan sebelumnya menempelkan kernel tepat setelah header
