@@ -4,9 +4,12 @@ ifneq ($(filter y, $(CONFIG_KALLSYMS_ALL)),)
 	ccflags-y += -D__KERNEL_KALLSYMS_ALL_ENABLED__
 endif
 
-ifneq ($(filter y, $(CONFIG_FB)),)
-	ccflags-y += -DHX_CONFIG_FB
-endif
+# HX_CONFIG_FB TIDAK lagi didefinisikan: 6.18 menghapus API notifier blank fb
+# (FB_EVENT_BLANK / FB_EARLY_EVENT_BLANK tidak ada lagi di include/linux/fb.h),
+# jadi jalur fb notifier ini gugur kompilasi begitu CONFIG_FB=y -- run
+# 40161696112 gagal tepat di himax_platform.c:1035.  Jalur suspend/resume
+# yang dipakai tetap jalur DRM (HX_CONFIG_DRM), persis seperti sebelum
+# CONFIG_FB diaktifkan untuk fbcon Artix.
 
 ifneq ($(filter y, $(CONFIG_DRM)),)
 	ccflags-y += -DHX_CONFIG_DRM
