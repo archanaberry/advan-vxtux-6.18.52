@@ -10,6 +10,10 @@ config VXTUX_LKFB
 	select FB_CFB_FILLRECT
 	select FB_CFB_COPYAREA
 	select FB_CFB_IMAGEBLIT
+	# fb_io_read/fb_io_write/fb_io_mmap dari FB_DEFAULT_IOMEM_OPS
+	# dibangun hanya oleh fb_io_fops.o; tanpa ini link vmlinux gagal
+	# dengan "undefined reference to fb_io_read" (CI 40322990302).
+	select FB_IOMEM_FOPS
 	help
 	  Mendaftarkan framebuffer yang sudah dipindai DISPC
 	  (lcd_base=0x9e000000, 1200x2000 XRGB8888) sebagai perangkat
