@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/debug/Kconfig — instrumen diagnostik boot
+
+config VXTUX_FLIGHTREC
+	bool "Perekam log boot ke partisi cache (diagnostik)"
+	depends on PRINTK
+	depends on BLOCK
+	help
+	  Menyalin isi log buffer kernel (dmesg) ke partisi `cache`
+	  (mmcblk0p49, offset 8 MiB) setiap ~3 detik dari sebuah kthread,
+	  dan sekali lagi saat panic.
+
+	  Gunanya: boot yang menggantung sebelum userspace tidak
+	  meninggalkan jejak apa pun — layar tetap di logo LK, tidak ada
+	  panic, partisi cache kosong. Dengan perekam ini, initcall
+	  terakhir yang sempat berjalan tetap terekam (cmdline memuat
+	  initcall_debug=1) dan bisa dibaca lewat dump partisi cache.
+
+	  Hasilnya ditandai magic "VXTUXFR1". Default n; nyalakan hanya
+	  saat memburu masalah boot karena menulis ke eMMC terus-menerus.

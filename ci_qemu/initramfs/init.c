@@ -207,37 +207,54 @@ static void mkdir_p(const char *p)
 	mkdir(p, 0755);
 }
 
-/* tulis laporan ke partisi cache (100 MiB, tidak dipakai Artix) */
+/* tulis laporan ke satu node blok; 1 = berhasil */
+static int write_report_to(const char *dev)
+{
+	int fd = open(dev, O_WRONLY);
+
+	if (fd < 0) {
+		rep_fmt("  (buka %s: %s)\n", dev, strerror(errno));
+		return 0;
+	}
+	if (pwrite(fd, report, report_len, 0) != (ssize_t)report_len) {
+		both_fmt("VXTUX-STEP: tulis %s tidak penuh: %s\n", dev,
+			 strerror(errno));
+		close(fd);
+		return 0;
+	}
+	both_fmt("VXTUX-STEP: OK %zu byte di %s (offset 0)\n",
+		 report_len, dev);
+	fsync(fd);
+	close(fd);
+	return 1;
+}
+
+/* tulis laporan ke partisi cache (100 MiB, tidak dipakai Artix).
+ * Fallback: nama perangkat tetap mmcblk0p49 (tabel partisi stok, cache =
+ * partisi ke-48 -> p49) supaya laporan tetap tersimpan walau
+ * /proc/partitions tidak sempat terbaca penuh. */
 static void write_report_to_cache(const struct part *parts, int np)
 {
-	int i, fd, found = 0;
+	int i, ok = 0;
 
-	for (i = 0; i < np; i++) {
+	for (i = 0; i < np && !ok; i++) {
 		char dev[96];
 
 		if (parts[i].blocks != CACHE_BLOCKS_1K)
 			continue;
-		found = 1;
 		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
 		both_fmt("\nVXTUX-STEP: menulis laporan ke %s\n", dev);
-		fd = open(dev, O_WRONLY);
-		if (fd < 0) {
-			both_fmt("VXTUX-STEP: gagal buka %s: %s\n", dev,
-				 strerror(errno));
-			continue;
-		}
-		if (pwrite(fd, report, report_len, 0) != (ssize_t)report_len)
-			both_fmt("VXTUX-STEP: tulis %s tidak penuh: %s\n", dev,
-				 strerror(errno));
-		else
-			both_fmt("VXTUX-STEP: OK %zu byte di %s (offset 0)\n",
-				 report_len, dev);
-		fsync(fd);
-		close(fd);
-		break;
+		ok = write_report_to(dev);
 	}
-	if (!found)
-		both("VXTUX-STEP: partisi cache (100 MiB) tidak ditemukan\n");
+	if (!ok) {
+		static const char *cand[] = { "/dev/mmcblk0p49",
+					      "/dev/mmcblk0p48", NULL };
+		both("VXTUX-STEP: cache tak terdeteksi via ukuran, coba nama tetap\n");
+		for (i = 0; cand[i] && !ok; i++)
+			ok = write_report_to(cand[i]);
+	}
+	if (!ok)
+		both("VXTUX-STEP: GAGAL menulis laporan ke mana pun\n");
 }
 
 /* ---------- cari + pasang root ---------- */

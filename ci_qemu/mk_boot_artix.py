@@ -29,15 +29,20 @@ import bootimg_tool as bt
 
 # Harus SINKRON dengan CONFIG_CMDLINE di ../enhanced_config.cfg.
 CMDLINE = (
-    "console=tty0 console=ttyS1,115200n8 loglevel=8 ignore_loglevel "
+    "earlycon console=tty0 console=ttyS1,115200n8 loglevel=8 ignore_loglevel "
     "rdinit=/vxtux/init "
-    "root=PARTLABEL=super rootfstype=ext4 rootwait rw init=/sbin/init "
     "loop.max_part=7 printk.devkmsg=on panic=15 "
     "initcall_debug=1 panic_on_warn softlockup_panic=1 hung_task_panic=1 "
     "androidboot.console=ttyS1 "
     "androidboot.hardware=ums512_1h10 androidboot.slot_suffix=_a "
     "androidboot.serialno=0123456789ABCDEF androidboot.selinux=permissive"
 )
+# 2026-10-26: `earlycon` dikembalikan (DT stok: /chosen/stdout-path =
+# "serial1:115200n8" -> alias serial1 = /soc/apb@70000000/serial@100000),
+# dan `root=PARTLABEL=super rootwait` dibuang: PARTLABEL hanya resolve lewat
+# symlink /dev/disk/by-partlabel milik udev, yang tidak ada di initramfs ->
+# mount_block_root() menunggu tanpa batas. Root dicari sendiri oleh
+# ci_qemu/initramfs/init.c (ext4 >1 GiB) sebelum chroot ke /sbin/init.
 
 
 def main():
@@ -73,8 +78,18 @@ def main():
         p = os.path.join(ramdisk_dir, "ramdisk")
         rd = open(p, "rb").read()
         print(f"ramdisk: {p} ({len(rd)} byte)")
-    else:
-        print("ramdisk: kosong (tanpa initramfs -> root langsung dari cmdline)")
+    if not rd:
+        # LK Unisoc v4: ramdisk_size = 0 di offset 12 -> LK mencari ramdisk
+        # di partisi init_boot.  Partisi init_boot perangkat ini TIDAK
+        # berisi boot image v4 yang valid -> "bad init boot image header,
+        # give up boot!" -> thread kernel_dtb_parse panic -> bootloop tanpa
+        # pernah menjalankan kernel (bukti: uboot_log artix6/7, 21 panic
+        # beruntun "parser init boot image header_v4 fail").  Karena itu
+        # ramdisk WAJIB ada; pakai --ramdisk out/artix_ramdisk (init
+        # diagnostik /vxtux/init, hasil compile ci_qemu/initramfs/init.c).
+        raise SystemExit(
+            "ramdisk kosong -- LK akan panic parse init_boot (bootloop). "
+            "Berikan --ramdisk out/artix_ramdisk")
 
     buf = bytearray(hdr)
     buf[8:48] = struct.pack(

@@ -5,6 +5,9 @@
 
 obj-y += disp_notify.o
 
+# Instrumen diagnostik boot (2026-10-26): perekam dmesg ke partisi cache.
+obj-$(CONFIG_VXTUX_FLIGHTREC)		+= debug/
+
 obj-$(CONFIG_TOUCHSCREEN_HIMAX_CHIPSET)		+= touch/hx83102e/
 obj-$(CONFIG_TOUCHSCREEN_CHIPONE)		+= touch/chipone_tddi/
 obj-$(CONFIG_VXTUX_HYBRIDSWAP_REF)		+= mm/hybridswap/
