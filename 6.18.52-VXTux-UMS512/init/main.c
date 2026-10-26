@@ -935,6 +935,47 @@ static void __init early_numa_node_init(void)
 #define VXTUX_PROBE_PHYS	0xC0000000UL
 #define VXTUX_PROBE_MAGIC	0x56585400U
 
+/*
+ * Panel: LK meninggalkan display controller tetap memindai memorinya (layar
+ * berhenti menampilkan splash LK saat kernel tidak mengambil alih panel).
+ * Log LK menyebut kedua buffer-nya:
+ *   splashimage addr is 0x9d000000   (fb size 0x9e4000)
+ *   [LCD] Using LCD frambuffer at 0x9e000000
+ * Frame 1200x1920, 24bpp -> stride 1200*3.
+ *
+ * Jadi kernel bisa "menggambar kemajuan boot" tanpa satu pun driver: cukup
+ * tulis ke alamat fisik itu lewat linear map (seluruh DRAM sudah dipetakan
+ * oleh PI stub), lalu flush D-cache supaya terbaca oleh DISPC.  Satu kotak
+ * hijau per checkpoint; kalau layar tetap splash LK tanpa kotak sama sekali,
+ * berarti kernel berhenti sebelum start_kernel().
+ */
+#define VXTUX_FB0_PHYS		0x9d000000UL
+#define VXTUX_FB1_PHYS		0x9e000000UL
+#define VXTUX_FB_WIDTH		1200U
+#define VXTUX_FB_LINE		(VXTUX_FB_WIDTH * 3)
+
+static void __init vxtux_paint(unsigned int idx)
+{
+	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
+	unsigned int k, y, x, x0 = 32 + idx * 80;
+
+	for (k = 0; k < ARRAY_SIZE(fbs); k++) {
+		u8 *fb = (u8 *)__va(fbs[k]);
+
+		for (y = 32; y < 96; y++) {
+			u8 *row = fb + (size_t)y * VXTUX_FB_LINE;
+
+			for (x = x0; x < x0 + 64; x++) {
+				row[x * 3 + 0] = 0x00;	/* B */
+				row[x * 3 + 1] = 0xff;	/* G */
+				row[x * 3 + 2] = 0x00;	/* R */
+			}
+		}
+		dcache_clean_poc((unsigned long)fb,
+				 (unsigned long)fb + VXTUX_FB_LINE * 128);
+	}
+}
+
 static void __init vxtux_probe(unsigned int cp)
 {
 	u32 *p = (u32 *)__va(VXTUX_PROBE_PHYS);
@@ -944,6 +985,8 @@ static void __init vxtux_probe(unsigned int cp)
 
 	if (cp == 2)
 		memblock_reserve(VXTUX_PROBE_PHYS, 4096);
+
+	vxtux_paint(cp);
 
 	if (cp && *p == VXTUX_PROBE_MAGIC + cp) {
 		*p = VXTUX_PROBE_MAGIC + cp + 1;
