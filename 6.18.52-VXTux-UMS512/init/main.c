@@ -913,21 +913,38 @@ static void __init early_numa_node_init(void)
  * ----------------------------
  * Kernel Artix berhenti tanpa panic dan tanpa satu baris output: tidak ada
  * UART, layar hanya menampilkan logo LK, dan partisi `cache` tidak pernah
- * ditulis.  Satu-satunya kanal yang tersisa adalah REBOOT.
+ * ditulis.
  *
- * Penghitung disimpan di DRAM fisik 0xC0000000 — di atas tos-mem
- * (b0040000+5fc0000), jauh dari kernel (0x80200000), DTB (0x9df00000) dan
- * ramdisk LK (0xa15bc362).  DRAM tidak hilang saat reset hangat PSCI, jadi
- * penghitung bertahan antar boot.
+ * DUA jebakan ditemukan dari bedah source (2026-10-26 malam):
  *
- * Setiap boot melewati tepat SATU checkpoint lebih jauh lalu panic()
- * (cmdline memuat panic=15 sehingga PSCI reset berjalan).  Jumlah siklus
- * boot di uboot_log = jumlah checkpoint yang lolos, dan boot terakhir
- * menggantung tepat di initcall yang bermasalah.
+ * (1) FATAL — linear map belum ada saat start_kernel() masuk.
+ *     early_map_kernel() (arch/arm64/kernel/pi/map_kernel.c) HANYA
+ *     memetakan citra kernel [_stext.._end], rodata, __init, __bss dan FDT
+ *     di idmap; pemetaan seluruh RAM dibuat oleh paging_init() di dalam
+ *     setup_arch() (arch/arm64/kernel/setup.c:334).  Versi awala probe
+ *     menulis __va(0xC0000000) dan mengecat __va(0x9d000000) pada baris
+ *     PERTAMA start_kernel() -> translation fault senyap, jauh sebelum
+ *     printk/console/memblock sempat jalan -> layar diam di logo LK
+ *     selamanya dan partisi cache tak tersentuh.
+ *
+ *     Karena itu checkpoint 0 kini TIDAK menyentuh memori fisik sama
+ *     sekali; semua akses fisik dipindah ke pemetaan ioremap (memremap
+ *     MEMREMAP_WC) yang aman dipakai setelah paging_init(), sekaligus
+ *     tahan bila DT stok menandai daerah itu no-map.
+ *
+ * (2) Geometri framebuffer salah (lihat vxtux_paint di bawah).
+ *
+ * Setiap checkpoint melukis SATU PITA LEBAR PENUH berwarna berbeda;
+ * kalau layar tetap splash LK tanpa pita, kernel berhenti sebelum
+ * checkpoint pertama.  Panic buatan DIHAPUS: dengan kanal visual yang
+ * terlihat, siklus reboot justru menghapus bukti tiap kali.  Bila kernel
+ * menggantung, layar berhenti menampilkan pita terakhir — itulah
+ * initcall/step yang bermasalah.  Perekam (vxtux_flightrec) tetap
+ * menyalin dmesg ke partisi cache untuk kasus panic alami.
  *
  * Checkpoint:
- *   0  entry start_kernel        (tanpa panic: PSCI belum terpasang)
- *   1  setelah setup_arch        (PSCI + memblock siap)
+ *   0  entry start_kernel        (hanya printk, tanpa akses fisik)
+ *   1  setelah setup_arch        (paging_init + memblock siap)
  *   2  setelah mm_core_init
  *   3  sebelum do_basic_setup
  *   4..11  setelah tiap level initcall (early..late)
@@ -984,6 +1001,27 @@ static const u32 vxtux_bar_col[] = {
 	0x0080ff80,	/* 11 mint     */
 };
 
+/*
+ * Pemetaan fisik->virtual untuk mengecat panel.  memremap(MEMREMAP_WC)
+ * menghasilkan pemetaan ioremap tersendiri: aman dipakai setelah
+ * paging_init() DAN tetap bekerja bila DT stok menandai daerah itu no-map
+ * (linear map tidak pernah dibuat untuk daerah no-map).  Karena pemetaannya
+ * write-combining (tidak cache), tulisan langsung terlihat oleh DISPC tanpa
+ * perlu flush D-cache.
+ */
+static void __iomem *vxtux_fb_io[2];
+
+static void __iomem *__init vxtux_fb_map(phys_addr_t phys)
+{
+	int i = (phys == VXTUX_FB1_PHYS);
+
+	if (!vxtux_fb_io[i])
+		vxtux_fb_io[i] = memremap(phys,
+					   (size_t)VXTUX_FB_LINE * VXTUX_FB_HEIGHT,
+					   MEMREMAP_WC);
+	return vxtux_fb_io[i];
+}
+
 static void __init vxtux_paint(unsigned int idx)
 {
 	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
@@ -998,39 +1036,36 @@ static void __init vxtux_paint(unsigned int idx)
 		return;
 
 	for (k = 0; k < ARRAY_SIZE(fbs); k++) {
-		u8 *fb = (u8 *)__va(fbs[k]);
-		u8 *bar = fb + y0 * VXTUX_FB_LINE;
+		void __iomem *base = vxtux_fb_map(fbs[k]);
 
+		if (!base)
+			continue;
 		for (y = y0; y < y0 + VXTUX_FB_BAR_H; y++) {
-			u32 *row = (u32 *)(fb + y * VXTUX_FB_LINE);
+			u32 __iomem *row = (u32 __iomem *)(base +
+						       y * VXTUX_FB_LINE);
 			unsigned int x;
 
 			for (x = 0; x < VXTUX_FB_WIDTH; x++)
-				row[x] = col;
+				writel(col, row + x);
 		}
-		dcache_clean_poc((unsigned long)bar,
-				 (unsigned long)(bar +
-					 VXTUX_FB_BAR_H * VXTUX_FB_LINE));
 	}
 }
 
 static void __init vxtux_probe(unsigned int cp)
 {
-	u32 *p = (u32 *)__va(VXTUX_PROBE_PHYS);
-
-	if ((*p & 0xffffff00U) != VXTUX_PROBE_MAGIC)
-		*p = VXTUX_PROBE_MAGIC + 1;	/* boot pertama */
-
-	if (cp == 2)
-		memblock_reserve(VXTUX_PROBE_PHYS, 4096);
+	/*
+	 * cp == 0 berjalan di baris pertama start_kernel(): linear map
+	 * belum ada (lihat catatan di atas), jadi TIDAK boleh menyentuh
+	 * __va() / memori fisik apa pun.  Cukup printk — itu memakai
+	 * alamat virtual citra kernel yang sudah dipetakan PI stub.
+	 */
+	if (cp == 0) {
+		pr_emerg("VXTUX-PROBE-0: start_kernel tercapai\n");
+		return;
+	}
 
 	vxtux_paint(cp);
-
-	if (cp && *p == VXTUX_PROBE_MAGIC + cp) {
-		*p = VXTUX_PROBE_MAGIC + cp + 1;
-		pr_emerg("VXTUX-PROBE-%u: checkpoint lolos, panic sengaja\n", cp);
-		panic("VXTUX-PROBE-%u", cp);
-	}
+	pr_emerg("VXTUX-PROBE-%u: lolos\n", cp);
 }
 
 asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
