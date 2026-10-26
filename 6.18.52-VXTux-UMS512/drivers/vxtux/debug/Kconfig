@@ -2,6 +2,29 @@
 #
 # drivers/vxtux/debug/Kconfig — instrumen diagnostik boot
 
+config VXTUX_LKFB
+	bool "Framebuffer LK sebagai fbdev (teks console di layar)"
+	depends on VXTUX_DRIVERS
+	depends on FB
+	depends on FRAMEBUFFER_CONSOLE
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	help
+	  Mendaftarkan framebuffer yang sudah dipindai DISPC
+	  (lcd_base=0x9e000000, 1200x2000 XRGB8888) sebagai perangkat
+	  fbdev, sehingga fbcon mengikat diri dan seluruh pesan
+	  `console=tty0` tercetak di panel — di bawah output terakhir LK
+	  ("INFO: LOCK FLAG IS : UNLOCK!!!").
+
+	  Tanpa ini console=tty0 hanya menulis ke konsol maya: tree tidak
+	  punya CONFIG_FB_SIMPLE (stok tak menaruh node simple-framebuffer
+	  di DTB buatan LK) dan DRM SPRD DPU tidak pernah probe, jadi layar
+	  tetap diam di logo LK walau kernel sudah boot jauh.
+
+	  Memori fb-nya direservasi lewat early_param vxtuxfb=...
+	  (vxtux_beacon.c).  Default n; nyalakan saat memburu boot.
+
 config VXTUX_BEACON
 	bool "Indikator tahap boot di framebuffer LK (diagnostik)"
 	depends on PRINTK

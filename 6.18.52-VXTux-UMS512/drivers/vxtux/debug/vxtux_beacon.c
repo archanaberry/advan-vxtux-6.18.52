@@ -26,7 +26,12 @@
  * Alamat/format framebuffer diambil dari log LK sendiri:
  *   [sprdfb][logo_mem_init] splashimage addr is 0x0x9d000000, fb size is 0x9e4000
  *   [sprdlk][lcd_init] [LCD] Using LCD frambuffer at 0x9e000000
- *   Display-bmp: 1200 x 1920, bpix: 24      (24bpp, stride 1200*3)
+ *   lcd_name=lcd_hx83102e_qc_1200x2000, lcd_base=9e000000
+ *   lcd_console: have 150/125 col/rws on scr 1200x2000
+ *     -> 150*8 = 1200 dan 125*16 = 2000 (font 8x16) => layar 1200x2000
+ *   fb size 0x9e4000 = align4096(1200 * 2160 * 4) => 32 bpp XRGB8888,
+ *   stride 1200*4 = 4800.  (Versi awal memakai 1200x1920 / stride 1200*3,
+ *   salah — barisnya bergeser dan kotak jadi noda yang tak terbaca.)
  *
  * Kedua buffer dicat supaya benar apa pun yang sedang dipindai DISPC.
  *
@@ -49,7 +54,7 @@
 
 #define BEACON_FB_SIZE	0x9e4000U	/* sama dengan "fb size" LK */
 #define BEACON_WIDTH	1200U
-#define BEACON_STRIDE	(BEACON_WIDTH * 3)
+#define BEACON_STRIDE	(BEACON_WIDTH * 4)	/* 32 bpp XRGB8888 */
 #define BEACON_BOX	80U
 #define BEACON_GAP	96U
 #define BEACON_LEFT	40U
@@ -81,9 +86,10 @@ static void beacon_box(int idx, u8 r, u8 g, u8 b)
 			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
 
 			for (x = x0; x < x0 + BEACON_BOX; x++) {
-				writeb(b, row + x * 3 + 0);
-				writeb(g, row + x * 3 + 1);
-				writeb(r, row + x * 3 + 2);
+				writeb(b, row + x * 4 + 0);
+				writeb(g, row + x * 4 + 1);
+				writeb(r, row + x * 4 + 2);
+				writeb(0xff, row + x * 4 + 3);
 			}
 		}
 	}
@@ -218,9 +224,10 @@ static int beacon_panic(struct notifier_block *nb, unsigned long action,
 			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
 
 			for (x = 0; x < BEACON_WIDTH; x++) {
-				writeb(0x00, row + x * 3 + 0);
-				writeb(0x00, row + x * 3 + 1);
-				writeb(0xff, row + x * 3 + 2);
+				writeb(0x00, row + x * 4 + 0);
+				writeb(0x00, row + x * 4 + 1);
+				writeb(0xff, row + x * 4 + 2);
+				writeb(0xff, row + x * 4 + 3);
 			}
 		}
 	}

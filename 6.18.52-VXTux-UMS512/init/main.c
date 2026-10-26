@@ -941,38 +941,76 @@ static void __init early_numa_node_init(void)
  * Log LK menyebut kedua buffer-nya:
  *   splashimage addr is 0x9d000000   (fb size 0x9e4000)
  *   [LCD] Using LCD frambuffer at 0x9e000000
- * Frame 1200x1920, 24bpp -> stride 1200*3.
+ *   lcd_name=lcd_hx83102e_qc_1200x2000  lcd_base=9e000000
+ *   lcd_console: have 150/125 col/rws on scr 1200x2000
+ *     -> 150*8 = 1200, 125*16 = 2000 (font 8x16): layar 1200x2000
+ *   fb size 0x9e4000 = align4096(1200 * 2160 * 4) -> 32 bpp XRGB8888,
+ *   stride = 1200*4 = 4800.
+ *
+ * (Versi awal memakai 1200x1920 stride 1200*3 — salah.  Dengan stride
+ *  yang terlalu kecil setiap baris bergeser dan tulisan jadi noda yang
+ *  tidak terbaca, sehingga "kotak" tidak pernah terlihat.)
  *
  * Jadi kernel bisa "menggambar kemajuan boot" tanpa satu pun driver: cukup
  * tulis ke alamat fisik itu lewat linear map (seluruh DRAM sudah dipetakan
- * oleh PI stub), lalu flush D-cache supaya terbaca oleh DISPC.  Satu kotak
- * hijau per checkpoint; kalau layar tetap splash LK tanpa kotak sama sekali,
- * berarti kernel berhenti sebelum start_kernel().
+ * oleh PI stub), lalu flush D-cache supaya terbaca oleh DISPC.  SATU PITA
+ * LEBAR PENUH per checkpoint, warna berbeda tiap checkpoint; kalau layar
+ * tetap splash LK tanpa pita sama sekali, berarti kernel berhenti sebelum
+ * start_kernel().
  */
 #define VXTUX_FB0_PHYS		0x9d000000UL
 #define VXTUX_FB1_PHYS		0x9e000000UL
 #define VXTUX_FB_WIDTH		1200U
-#define VXTUX_FB_LINE		(VXTUX_FB_WIDTH * 3)
+#define VXTUX_FB_BPP		4U		/* 32 bpp (XRGB8888) */
+#define VXTUX_FB_LINE		(VXTUX_FB_WIDTH * VXTUX_FB_BPP)
+#define VXTUX_FB_HEIGHT		2000U
+#define VXTUX_FB_BAR_H		64U
+#define VXTUX_FB_BAR_PITCH	80U
+#define VXTUX_FB_BAR_TOP	40U
+
+/* Warna per checkpoint, ditulis little-endian XRGB8888 -> B,G,R,X. */
+static const u32 vxtux_bar_col[] = {
+	0x00ffffff,	/* 0 putih     */
+	0x0000ff00,	/* 1 hijau     */
+	0x000000ff,	/* 2 merah     */
+	0x00ffff00,	/* 3 cyan      */
+	0x00ff8000,	/* 4 oranye    */
+	0x00ff00ff,	/* 5 magenta   */
+	0x0000ffff,	/* 6 kuning    */
+	0x008080ff,	/* 7 biru      */
+	0x008000ff,	/* 8 ungu      */
+	0x00404040,	/* 9 abu       */
+	0x00ff0080,	/* 10 merah muda */
+	0x0080ff80,	/* 11 mint     */
+};
 
 static void __init vxtux_paint(unsigned int idx)
 {
 	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
-	unsigned int k, y, x, x0 = 32 + idx * 80;
+	u32 col = 0x00ffffff;
+	size_t y0 = VXTUX_FB_BAR_TOP + (size_t)idx * VXTUX_FB_BAR_PITCH;
+	unsigned int k;
+	size_t y;
+
+	if (idx < ARRAY_SIZE(vxtux_bar_col))
+		col = vxtux_bar_col[idx];
+	if (y0 + VXTUX_FB_BAR_H > VXTUX_FB_HEIGHT)
+		return;
 
 	for (k = 0; k < ARRAY_SIZE(fbs); k++) {
 		u8 *fb = (u8 *)__va(fbs[k]);
+		u8 *bar = fb + y0 * VXTUX_FB_LINE;
 
-		for (y = 32; y < 96; y++) {
-			u8 *row = fb + (size_t)y * VXTUX_FB_LINE;
+		for (y = y0; y < y0 + VXTUX_FB_BAR_H; y++) {
+			u32 *row = (u32 *)(fb + y * VXTUX_FB_LINE);
+			unsigned int x;
 
-			for (x = x0; x < x0 + 64; x++) {
-				row[x * 3 + 0] = 0x00;	/* B */
-				row[x * 3 + 1] = 0xff;	/* G */
-				row[x * 3 + 2] = 0x00;	/* R */
-			}
+			for (x = 0; x < VXTUX_FB_WIDTH; x++)
+				row[x] = col;
 		}
-		dcache_clean_poc((unsigned long)fb,
-				 (unsigned long)fb + VXTUX_FB_LINE * 128);
+		dcache_clean_poc((unsigned long)bar,
+				 (unsigned long)(bar +
+					 VXTUX_FB_BAR_H * VXTUX_FB_LINE));
 	}
 }
 

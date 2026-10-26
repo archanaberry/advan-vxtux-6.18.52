@@ -74,6 +74,40 @@ def main():
     if magic != 0x644D5241:
         print(f"PERINGATAN: magic ARM64 Image tidak cocok (0x{magic:08x}) -- "
               f"lanjut, tapi cek kernel-nya!")
+    # --- RELAY 2MB (2026-10-26, bedah out/logs/artix13) -------------------
+    # LK Unisoc TIDAK membaca text_offset dari Image; ia selalu memuat kernel
+    # ke 0x80080000 (konstanta tetap, log: "[start_linux] start linux at
+    # PC:0x80080000, dt_addr:0x9df00000").  Header Image kernel modern
+    # (>=5.x) berisi text_offset = 0, dan
+    # Documentation/arch/arm64/booting.rst:138 mewajibkan:
+    #   "The Image must be placed text_offset bytes from a 2MB aligned base
+    #    address anywhere in usable system RAM and called there."
+    # Dengan text_offset 0, Image HARUS mendarat di alamat 2MB-aligned.
+    # 0x80080000 = 0x80000000 + 0x80000 -> BUKAN 2MB-aligned, jadi pemetaan
+    # awal/MMU salah 512KB dan kernel mati senyap: tidak ada satu baris pun
+    # di layar maupun partisi cache (bukti: kernel_size kita 42209792 dibaca
+    # benar 19x, nol jejak 6.18.52 di cache.bin).  Kernel stok 5.4 aman
+    # karena Image-nya ber-text_offset 0x80000 (0x80000000 + 0x80000).
+    #
+    # Perbaikan tanpa menyentuh LK: awali blob kernel dengan satu instruksi
+    # `b`.  LK menyalin blob ke 0x80080000, relay melompat ke 0x80200000, dan
+    # Image asli ditaruh RELAY_OFF di dalam blob sehingga mendarat tepat di
+    # 0x80200000 (2MB-aligned).  x0 (DTB) dan seluruh register tidak diubah.
+    LK_LOAD = 0x80080000
+    RELAY_AT = 0x80200000
+    relay_off = RELAY_AT - LK_LOAD              # 0x180000 (1.5 MiB, page-aligned)
+    relay_hdr = bytearray(kern[:64])
+    struct.pack_into("<I", relay_hdr, 0,
+                     0x14000000 | ((relay_off >> 2) & 0x03FFFFFF))  # b 0x80200000
+    struct.pack_into("<I", relay_hdr, 4, 0xD503201F)                  # nop
+    struct.pack_into("<Q", relay_hdr, 8, 0)                           # text_offset
+    struct.pack_into("<Q", relay_hdr, 16, relay_off + len(kern))      # image_size
+    struct.pack_into("<Q", relay_hdr, 24, 0xA)                        # flags
+    struct.pack_into("<I", relay_hdr, 56, 0x644D5241)                 # "ARM\x64"
+    kern = bytes(relay_hdr) + b"\0" * (relay_off - len(relay_hdr)) + kern
+    print(f"relay: blob mulai `b 0x{RELAY_AT:x}` di 0x{LK_LOAD:x}; "
+          f"Image asli di blob+0x{relay_off:x} -> 0x{RELAY_AT:x}")
+
     rd = b""
     if ramdisk_dir:
         p = os.path.join(ramdisk_dir, "ramdisk")
