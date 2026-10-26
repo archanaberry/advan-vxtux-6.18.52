@@ -32,7 +32,9 @@ CMDLINE = (
     "console=tty0 console=ttyS1,115200n8 loglevel=8 ignore_loglevel "
     "rdinit=/vxtux/init "
     "root=PARTLABEL=super rootfstype=ext4 rootwait rw init=/sbin/init "
-    "loop.max_part=7 printk.devkmsg=on panic=15 androidboot.console=ttyS1 "
+    "loop.max_part=7 printk.devkmsg=on panic=15 "
+    "initcall_debug=1 panic_on_warn softlockup_panic=1 hung_task_panic=1 "
+    "androidboot.console=ttyS1 "
     "androidboot.hardware=ums512_1h10 androidboot.slot_suffix=_a "
     "androidboot.serialno=0123456789ABCDEF androidboot.selinux=permissive"
 )
@@ -84,6 +86,24 @@ def main():
         struct.unpack("<I", hdr[40:44])[0],
         struct.unpack("<I", hdr[44:48])[0])
     buf[64:576] = CMDLINE.encode()[:511].ljust(512, b"\0")
+
+    # --- FIX header v4 (bedah dump out/logs/artix5, 2026-10-26) ------------
+    # LK Unisoc mem-parse boot image ini dengan tata letak v3/v4, BUKAN v0
+    # yang dipakai penulisan di atas.  Bukti dari uboot_log:
+    #   * stok : header_version 4, kernel 38085120, ramdisk 1297306
+    #            -> 1297306 ada di offset 12  (v4: ramdisk_size)
+    #   * kita: header_version 4, ramdisk -2146959360 = 0x80080000
+    #            -> nilainya KERNEL_ADDR kita, juga offset 12
+    # Jadi offset 12 = kernel_addr (v0) di sini tertangkap LK sebagai
+    # ramdisk_size 2.148.007.936 byte.  LK lalu "memuat" initrd fiktif
+    # 2.1 GB ke 0xa15bc362 (0xa0000000 + vendor ramdisk) dan
+    # meneruskannya ke kernel lewat linux,initrd-start/end -> kernel
+    # membuang-buang waktu meng-unpack RAM acak (log LK: "boot_a ramdisk
+    # read OK, size = -2146959360, locate to 0xa15bc362").
+    # Samakan makna offset 12 dengan versi yang diklaim: ramdisk_size.
+    # (kernel_addr di 0x80080000 terbukti TIDAK dipakai LK -- stok juga
+    #  memuat kernel ke 0x80080000 padahal offset 12 stok = 1297306.)
+    struct.pack_into("<I", buf, 12, len(rd))
 
     outb = bytearray(buf)
     # Header v0 hanya 1632 byte; bootloader membaca kernel mulai offset

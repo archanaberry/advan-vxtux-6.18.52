@@ -12,7 +12,7 @@ REM ============================================================
 set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe
 set FDL1=G:\UMS512\unlock\advan\fdl1-dl.bin
 set FDL2=G:\UMS512\unlock\advan\fdl2-dl.bin
-set OUT=%~dp0logs\artix5
+set OUT=%~dp0logs\artix6
 set IMG=%OUT%\cache.bin
 
 if not exist "%OUT%" mkdir "%OUT%"

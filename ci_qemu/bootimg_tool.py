@@ -112,6 +112,14 @@ def pack(outdir, out, cmdline=None, no_ramdisk=False, no_dtb=False):
                             struct.unpack("<I", hdr[40:44])[0],
                             struct.unpack("<I", hdr[44:48])[0])
     buf[64:576] = cmd
+    # LK Unisoc mem-parse boot image dengan tata letak v3/v4 (header_version
+    # di offset 40 = 4): offset 12 = ramdisk_size, BUKAN kernel_addr (v0).
+    # Nilai 0x80080000 yang tertinggal di sana dibaca LK sebagai ramdisk
+    # 2.1 GB (log: "generic ramdisk size is -2146959360", "locate to
+    # 0xa15bc362") lalu dikirim ke kernel lewat linux,initrd-start/end.
+    # Samakan makna offset 12 dengan versi yang diklaim header. Detail:
+    # ci_qemu/mk_boot_artix.py (bedah dump out/logs/artix5, 2026-10-26).
+    struct.pack_into("<I", buf, 12, len(ramdisk))
     if len(hdr) >= 1672:
         buf[1668:1672] = struct.pack("<I", len(dtb))
 

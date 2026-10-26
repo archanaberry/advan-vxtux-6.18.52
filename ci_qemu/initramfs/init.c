@@ -352,6 +352,13 @@ int main(void)
 	both("VXTUX-STEP: 2/5 salin dmesg ke laporan\n");
 	dump_kernel_log(1);
 
+	/* LAPORAN AWAL ditulis di sini, sebelum pindai/mount ext4. Langkah 3/5
+	 * adalah titik yang paling mungkin menggantung (probe/port eMMC belum
+	 * stabil). Bila mount macet, dmesg yang sudah terkumpul tetap tersimpan
+	 * di partisi cache dan bisa di-dump lewat spd_dump tanpa layar. */
+	both("VXTUX-STEP: 2b/5 tulis laporan awal ke partisi cache\n");
+	write_report_to_cache(parts, np);
+
 	rep("\n----- pindai partisi ext4 -----\n");
 	both("VXTUX-STEP: 3/5 cari rootfs ext4\n");
 	if (np > 0) {
