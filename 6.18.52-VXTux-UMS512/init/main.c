@@ -908,11 +908,57 @@ static void __init early_numa_node_init(void)
 #endif
 }
 
+/*
+ * VXTUX boot probe (2026-10-26)
+ * ----------------------------
+ * Kernel Artix berhenti tanpa panic dan tanpa satu baris output: tidak ada
+ * UART, layar hanya menampilkan logo LK, dan partisi `cache` tidak pernah
+ * ditulis.  Satu-satunya kanal yang tersisa adalah REBOOT.
+ *
+ * Penghitung disimpan di DRAM fisik 0xC0000000 — di atas tos-mem
+ * (b0040000+5fc0000), jauh dari kernel (0x80200000), DTB (0x9df00000) dan
+ * ramdisk LK (0xa15bc362).  DRAM tidak hilang saat reset hangat PSCI, jadi
+ * penghitung bertahan antar boot.
+ *
+ * Setiap boot melewati tepat SATU checkpoint lebih jauh lalu panic()
+ * (cmdline memuat panic=15 sehingga PSCI reset berjalan).  Jumlah siklus
+ * boot di uboot_log = jumlah checkpoint yang lolos, dan boot terakhir
+ * menggantung tepat di initcall yang bermasalah.
+ *
+ * Checkpoint:
+ *   0  entry start_kernel        (tanpa panic: PSCI belum terpasang)
+ *   1  setelah setup_arch        (PSCI + memblock siap)
+ *   2  setelah mm_core_init
+ *   3  sebelum do_basic_setup
+ *   4..11  setelah tiap level initcall (early..late)
+ */
+#define VXTUX_PROBE_PHYS	0xC0000000UL
+#define VXTUX_PROBE_MAGIC	0x56585400U
+
+static void __init vxtux_probe(unsigned int cp)
+{
+	u32 *p = (u32 *)__va(VXTUX_PROBE_PHYS);
+
+	if ((*p & 0xffffff00U) != VXTUX_PROBE_MAGIC)
+		*p = VXTUX_PROBE_MAGIC + 1;	/* boot pertama */
+
+	if (cp == 2)
+		memblock_reserve(VXTUX_PROBE_PHYS, 4096);
+
+	if (cp && *p == VXTUX_PROBE_MAGIC + cp) {
+		*p = VXTUX_PROBE_MAGIC + cp + 1;
+		pr_emerg("VXTUX-PROBE-%u: checkpoint lolos, panic sengaja\n", cp);
+		panic("VXTUX-PROBE-%u", cp);
+	}
+}
+
 asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
 void start_kernel(void)
 {
 	char *command_line;
 	char *after_dashes;
+
+	vxtux_probe(0);
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
@@ -932,6 +978,7 @@ void start_kernel(void)
 	page_address_init();
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);
+	vxtux_probe(1);
 	/* Static keys and static calls are needed by LSMs */
 	jump_label_init();
 	static_call_init();
@@ -971,6 +1018,7 @@ void start_kernel(void)
 	sort_main_extable();
 	trap_init();
 	mm_core_init();
+	vxtux_probe(2);
 	maple_tree_init();
 	poking_init();
 	ftrace_init();
@@ -1361,6 +1409,7 @@ static void __init do_initcalls(void)
 		/* Parser modifies command_line, restore it each time */
 		strcpy(command_line, saved_command_line);
 		do_initcall_level(level, command_line);
+		vxtux_probe(4 + level);
 	}
 
 	kfree(command_line);
@@ -1592,6 +1641,7 @@ static noinline void __init kernel_init_freeable(void)
 	padata_init();
 	page_alloc_init_late();
 
+	vxtux_probe(3);
 	do_basic_setup();
 
 	kunit_run_all_tests();
