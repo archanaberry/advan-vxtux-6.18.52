@@ -2,6 +2,22 @@
 #
 # drivers/vxtux/debug/Kconfig — instrumen diagnostik boot
 
+config VXTUX_BEACON
+	bool "Indikator tahap boot di framebuffer LK (diagnostik)"
+	depends on PRINTK
+	help
+	  Mengecat satu kotak putih tambahan ke framebuffer LK pada setiap
+	  tahap initcall (early, core, postcore, arch, subsys, fs, device,
+	  late), sehingga kemajuan boot bisa dibaca langsung dari layar:
+	  hitung kotak putihnya. Pita merah di atas = panic.
+
+	  Ini satu-satunya kanal keluaran yang tersedia SEBELUM driver eMMC
+	  probe (UART tablet tidak diekspos sebagai COM, dan partisi cache
+	  belum bisa ditulis). Buffer framebuffer direservasi lewat
+	  early_param vxtuxfb=..., karena DT stok tidak menandainya.
+
+	  Default n; nyalakan hanya saat memburu masalah boot.
+
 config VXTUX_FLIGHTREC
 	bool "Perekam log boot ke partisi cache (diagnostik)"
 	depends on PRINTK
