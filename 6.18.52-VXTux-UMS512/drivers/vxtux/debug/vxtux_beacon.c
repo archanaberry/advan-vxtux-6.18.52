@@ -29,9 +29,13 @@
  *   lcd_name=lcd_hx83102e_qc_1200x2000, lcd_base=9e000000
  *   lcd_console: have 150/125 col/rws on scr 1200x2000
  *     -> 150*8 = 1200 dan 125*16 = 2000 (font 8x16) => layar 1200x2000
- *   fb size 0x9e4000 = align4096(1200 * 2160 * 4) => 32 bpp XRGB8888,
- *   stride 1200*4 = 4800.  (Versi awal memakai 1200x1920 / stride 1200*3,
- *   salah — barisnya bergeser dan kotak jadi noda yang tak terbaca.)
+ *   fb size 0x9e4000 = alokasi LK 4 byte/piksel, TAPI scanout DPU terbukti
+ *   RGB565 16-bit lewat uji boot artix21-24 (mk_boot_artix.py): word
+ *   0x00FF00FF tampil biru (=2 piksel 0x00FF), 0xF800F800 tampil merah,
+ *   dan 4 pita x 300.000 word (= 1,2 MB = 600 baris @ 1200 px) membagi
+ *   layar 1200x2000 persis menjadi 4 -> stride 1200*2 = 2400, 16 bpp
+ *   RGB565.  (Versi awal 32 bpp XRGB8888 dan 1200x1920/stride 1200*3
+ *   keduanya salah -- barisnya bergeser dan kotak jadi noda.)
  *
  * Kedua buffer dicat supaya benar apa pun yang sedang dipindai DISPC.
  *
@@ -54,7 +58,7 @@
 
 #define BEACON_FB_SIZE	0x9e4000U	/* sama dengan "fb size" LK */
 #define BEACON_WIDTH	1200U
-#define BEACON_STRIDE	(BEACON_WIDTH * 4)	/* 32 bpp XRGB8888 */
+#define BEACON_STRIDE	(BEACON_WIDTH * 2)	/* 16 bpp RGB565 (terbukti artix21-24) */
 #define BEACON_BOX	80U
 #define BEACON_GAP	96U
 #define BEACON_LEFT	40U
@@ -70,9 +74,19 @@ static struct beacon_area beacon_areas[BEACON_MAX_AREAS];
 static int beacon_nareas;
 static int beacon_stage;
 
+/*
+ * RGB888 -> RGB565 (format scanout DPU yang terbukti dari uji pita
+ * artix21-24) dan tulis sebagai 2 byte little-endian per piksel.
+ */
+static inline u16 beacon_rgb565(u8 r, u8 g, u8 b)
+{
+	return (u16)((r & 0xF8) << 8) | (u16)((g & 0xFC) << 3) | (u16)(b >> 3);
+}
+
 static void beacon_box(int idx, u8 r, u8 g, u8 b)
 {
 	unsigned int y, x, k;
+	u16 v = beacon_rgb565(r, g, b);
 
 	for (k = 0; k < beacon_nareas; k++) {
 		u8 __iomem *base = beacon_areas[k].va;
@@ -86,10 +100,8 @@ static void beacon_box(int idx, u8 r, u8 g, u8 b)
 			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
 
 			for (x = x0; x < x0 + BEACON_BOX; x++) {
-				writeb(b, row + x * 4 + 0);
-				writeb(g, row + x * 4 + 1);
-				writeb(r, row + x * 4 + 2);
-				writeb(0xff, row + x * 4 + 3);
+				writeb(v & 0xff, row + x * 2 + 0);
+				writeb(v >> 8,   row + x * 2 + 1);
 			}
 		}
 	}
@@ -214,9 +226,10 @@ static int beacon_panic(struct notifier_block *nb, unsigned long action,
 {
 	unsigned int y, x, k;
 
-	/* pita merah selebar layar di paling atas = panic terdeteksi */
+	/* pita merah (RGB565 0xF800) selebar layar di paling atas = panic */
 	for (k = 0; k < beacon_nareas; k++) {
 		u8 __iomem *base = beacon_areas[k].va;
+		u16 v = beacon_rgb565(0xff, 0x00, 0x00);
 
 		if (!base)
 			continue;
@@ -224,10 +237,8 @@ static int beacon_panic(struct notifier_block *nb, unsigned long action,
 			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
 
 			for (x = 0; x < BEACON_WIDTH; x++) {
-				writeb(0x00, row + x * 4 + 0);
-				writeb(0x00, row + x * 4 + 1);
-				writeb(0xff, row + x * 4 + 2);
-				writeb(0xff, row + x * 4 + 3);
+				writeb(v & 0xff, row + x * 2 + 0);
+				writeb(v >> 8,   row + x * 2 + 1);
 			}
 		}
 	}

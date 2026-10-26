@@ -28,11 +28,16 @@
  * bawah baris terakhir LK seperti
  * `INFO: LOCK FLAG IS : UNLOCK!!!`.
  *
- * Geometri diambil dari log LK sendiri:
+ * Geometri diambil dari log LK sendiri + bukti uji pita artix21-24:
  *   lcd_console: have 150/125 col/rws on scr 1200x2000  -> 150*8=1200,
  *   125*16=2000 (font 8x16) -> layar 1200x2000, bukan 1920.
  *   [LCD] Using LCD frambuffer at 0x9e000000
- *   fb size 0x9e4000 = align4096(1200*2160*4) -> 32 bpp (XRGB8888).
+ *   SCANOUT BUKAN 32 bpp: DPU membaca RGB565 16-bit (dua piksel per
+ *   word 32-bit).  Bukti: stub mk_boot_artix.py menulis 0xF800F800 ->
+ *   layar MERAH, 0x07E007E0 -> HIJAU, dan 4 pita x 300.000 word
+ *   (=1,2 MB = 600 baris @ 1200 px) membagi layar persis 4 -> stride
+ *   1200*2 = 2400.  "fb size 0x9e4000" hanya alokasi 4 B/piksel milik
+ *   LK, bukan format scanout-nya.
  *
  * Memori DIPERSENTRUMKAN lewat early_param `vxtuxfb=0x9d000000,0x9e000000`
  * di vxtux_beacon.c (memblock_reserve 0x9e4000 tiap alamat), jadi bagian
@@ -59,7 +64,7 @@
 #define LKFB_PHYS	0x9e000000UL	/* lcd_base= bootargs LK */
 #define LKFB_WIDTH	1200U
 #define LKFB_HEIGHT	2000U
-#define LKFB_BPP	32U
+#define LKFB_BPP	16U		/* RGB565 — terbukti uji pita artix21-24 */
 #define LKFB_STRIDE	(LKFB_WIDTH * (LKFB_BPP / 8))
 #define LKFB_SIZE	((size_t)LKFB_STRIDE * LKFB_HEIGHT)
 
@@ -77,14 +82,15 @@ static int lkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 	var->bits_per_pixel = LKFB_BPP;
 	var->grayscale = 0;
 
-	var->red.offset = 16;
-	var->red.length = 8;
-	var->green.offset = 8;
-	var->green.length = 8;
+	/* RGB565: [15:11]=R, [10:5]=G, [4:0]=B, tanpa alpha */
+	var->red.offset = 11;
+	var->red.length = 5;
+	var->green.offset = 5;
+	var->green.length = 6;
 	var->blue.offset = 0;
-	var->blue.length = 8;
-	var->transp.offset = 24;
-	var->transp.length = 8;
+	var->blue.length = 5;
+	var->transp.offset = 0;
+	var->transp.length = 0;
 
 	var->nonstd = 0;
 	var->activate = FB_ACTIVATE_NOW;

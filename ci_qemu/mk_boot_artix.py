@@ -123,8 +123,55 @@ def main():
     # 1200*2160*4).  0x200000 word = 8 MiB ~= 1747 baris -> masih di dalam
     # buffer, tidak menabrak apa pun.
     FB_BASE = 0x9E000000
-    FB_WORDS = 0x200000                     # 8 MiB / 4 = 2.097.152 word
-    FB_COLOR_MAGENTA = 0x00FF00FF
+    # --- UJI 4 PITA (2026-10-27, bedah foto layar BIRU artix21) -------------
+    # Foto: layar biru SOLID penuh, tanpa sisa logo, tanpa kotak beacon,
+    # tanpa strip merah panic.  Ini justru BUKTI serah-terima LK -> blob
+    # kita BERHASIL: layar berubah dari logo menjadi biru, padahal delta
+    # satu-satunya dari artix20 (logo diam) adalah stub cat fb ini.
+    #
+    # Mengapa biru, bukan magenta 0x00FF00FF?  Dalam urutan RGB/BGR/ARGB
+    # apa pun, byte {FF,00,FF,00} selalu memberi R=B=FF -> magenta; biru
+    # murni butuh R=0 DAN G=0, mustahil dari word itu.  Jadi biru BUKAN
+    # masalah urutan kanal XR24/XB24.  Dua kandidat nyata:
+    #   (a) byte paling atas 0x00 = alpha 0 -> piksel tembus pandang,
+    #       yang terlihat warna latar/lapisan dasar DISPC (biru);
+    #   (b) pipeline DPU tidak memindai buffer ini lagi (kernel/DPU
+    #       ambil alih) -> biru = warna latar DPU, bukan tulisan kita.
+    #
+    # Maka sekarang: cat SELURUH layar (4 x 600.000 word = 9,6 MB,
+    # muat di fb 0x9E4000) dengan ALPHA 0xFF dan empat pita yang kanal
+    # merah/birunya saling bertukar posisi.  Cara membaca hasilnya:
+    #   pita1 MERAH, pita3 BIRU  -> XRGB8888 (XR24); biru tadi = alpha
+    #   pita1 BIRU,  pita3 MERAH -> XBGR8888 (XB24)
+    #   biru solid lagi           -> bukan urutan kanal; DPU/pipeline
+    #                                (kemungkinan b), lanjut ke bedah DRM
+    # --- HASIL ARTIX22 + RISET WEB (2026-10-27): DPU baca RGB565! ----------
+    # Foto artix22: pita abu-abu + kuning.  Kalau tiap word 32-bit dibaca
+    # sebagai DUA piksel RGB565 (little-endian), semuanya cocok SEMPURNA:
+    #   0x00FF00FF (artix21) -> 0x00FF,0x00FF = biru padat   <- layar biru
+    #   0xFFFF0000 -> 0x0000,0xFFFF = hitam+putih = ABU-ABU <- pita 1
+    #   0xFF00FF00 -> 0xFF00,0xFF00 = KUNING                 <- pita 2
+    # Riset web memastikan DPU Unisoc (dpu_r2p0/r4p0) memang punya mode
+    # RGB565/BGR565 di samping XRGB8888; "fb size 0x9e4000" hanya bukti
+    # alokasi 4 B/piksel, BUKAN bukti format scanout (referensi:
+    # patchew.org/20211207142717.30296-5, github.com/strongtz/linux-sprd
+    # drivers/gpu/drm/sprd/dpu/).  Jadi asumsi XRGB8888 di seluruh kode
+    # (vxtux_lkfb.c, beacon) salah dasar -- MEMBERIKAN SOLUSI: semua warna
+    # ditulis dobel sebagai dua halfword identik.
+    #
+    # Pita RGB565 murni: merah 0xF800, hijau 0x07E0, biru 0x001F, putih 0xFFFF.
+    # Geometri (koreksi artix24): 1 word = 4 byte, jadi 600.000 word =
+    # 2,4 MB -- muatnya cuma 2 pita di layar RGB565 4,8 MB, itulah sebabnya
+    # artix23 hanya menampilkan MERAH+HIJAU (biru & putih keluar layar).
+    # Pita yang benar: 4 x 300.000 word = 4 x 1,2 MB = 4,8 MB =
+    # 1200*2000*2 -> pas 4 pita selebar 1/4 layar, urut penuh.
+    FB_WORDS = 0x493E0                      # 300.000 word = 1,2 MB per pita
+    FB_BANDS = (
+        0xF800F800,                        # pita 1: MERAH  (565 dobel)
+        0x07E007E0,                        # pita 2: HIJAU
+        0x001F001F,                        # pita 3: BIRU
+        0xFFFFFFFF,                        # pita 4: PUTIH
+    )
     STUB_OFF = 0x40                         # sesudah header Image (64 byte)
 
     def _movz(rd, imm16, sf):
@@ -145,12 +192,13 @@ def main():
 
     stub = []
     stub += _mov_imm(1, FB_BASE & 0xFFFFFFFF, 1)          # movz/movk x1 = fb base
-    stub += _mov_imm(2, FB_COLOR_MAGENTA, 0)              # movz/movk w2 = warna
-    stub += _mov_imm(3, FB_WORDS, 0)                      # movz/movk w3 = jumlah
-    stub.append(0xB9000022)                               # str  w2, [x1]
-    stub.append(0x91001021)                               # add  x1, x1, #4
-    stub.append(0x71000463)                               # subs w3, w3, #1
-    stub.append(0x54FFFFA1)                               # b.ne -3 (kembali ke str)
+    for band_color in FB_BANDS:
+        stub += _mov_imm(2, band_color, 0)                # movz/movk w2 = warna pita
+        stub += _mov_imm(3, FB_WORDS, 0)                  # movz/movk w3 = jumlah word
+        stub.append(0xB9000022)                           # str  w2, [x1]
+        stub.append(0x91001021)                           # add  x1, x1, #4
+        stub.append(0x71000463)                           # subs w3, w3, #1
+        stub.append(0x54FFFFA1)                           # b.ne -3 (kembali ke str)
     stub += _mov_imm(2, RELAY_AT, 1)                      # movz/movk x2 = 0x80200000
     stub.append(0xD61F0040)                               # br   x2
 
@@ -170,8 +218,9 @@ def main():
     print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_OFF:x}` (stub cat fb) di "
           f"0x{LK_LOAD:x}, lalu `br` ke 0x{RELAY_AT:x}; "
           f"Image asli di blob+0x{relay_off:x}")
-    print(f"stub: {len(stub)} instruksi, mengecat {FB_WORDS * 4 // 1024} KiB "
-          f"framebuffer 0x{FB_BASE:x} dengan 0x{FB_COLOR_MAGENTA:08x} (magenta)")
+    print(f"stub: {len(stub)} instruksi, mengecat {FB_WORDS * 4 * len(FB_BANDS) // 1024} "
+          f"KiB framebuffer 0x{FB_BASE:x} dengan {len(FB_BANDS)} pita "
+          f"(merah/hijau/biru/putih, alpha FF)")
 
     rd = b""
     if ramdisk_dir:
