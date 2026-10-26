@@ -64,10 +64,11 @@ def main():
         else:
             raise SystemExit(f"arg tak dikenal: {args[i]}")
 
-    hdr = open(os.path.join(base, "header.bin"), "rb").read()
-    if len(hdr) != 1632:
-        raise SystemExit(f"header bukan v0 ({len(hdr)} byte) -- periksa basis")
-    page = struct.unpack("<I", hdr[36:40])[0]
+    # Boot image v3/v4 (perangkat ini: header_version 4) TIDAK punya field
+    # page_size; ukuran halaman selalu 4096 dan header duduk di offset
+    # 0..1584, jadi kernel mulai di offset 4096.  LK menentukan lokasi
+    # kernel dari header_size (offset 20), bukan dari page_size.
+    page = 4096
     kern = open(kernel_path, "rb").read()
     # ARM64 Image: magic "ARM\x64" di offset 0x38
     magic = struct.unpack("<I", kern[0x38:0x3C])[0] if len(kern) > 0x3C else 0
@@ -126,38 +127,50 @@ def main():
             "ramdisk kosong -- LK akan panic parse init_boot (bootloop). "
             "Berikan --ramdisk out/artix_ramdisk")
 
-    buf = bytearray(hdr)
-    buf[8:48] = struct.pack(
-        "<10I", len(kern),
-        struct.unpack("<I", hdr[12:16])[0],
-        len(rd), struct.unpack("<I", hdr[20:24])[0],
-        0, struct.unpack("<I", hdr[28:32])[0],
-        struct.unpack("<I", hdr[32:36])[0], page,
-        struct.unpack("<I", hdr[40:44])[0],
-        struct.unpack("<I", hdr[44:48])[0])
+    # --- HEADER v4 disintesis dari nol (bedah boot_a.bin stok, 2026-10-26) --
+    # Dump backup stok (backupan-ori-advantabvxlite_t1.1/backup/boot_a.bin):
+    #   0000: 41 4e 44 52 4f 49 44 21   "ANDROID!"
+    #   0008: 00 22 45 02               kernel_size  = 38085120
+    #   000c: 88 6d 16 00               ramdisk_size = 1469832
+    #   0010: 76 01 00 1a               os_version   = 0x1a000176
+    #   0014: 30 06 00 00               header_size  = 1584   <<-- KUNCI
+    #   0018..0027: 00                  reserved[4]
+    #   0028: 04 00 00 00               header_version = 4
+    #   002c.. : 00                     cmdline[1536] KOSONG (stok memakai
+    #                                   /chosen/bootargs dari DTB)
+    #
+    # Versi lama menyalin header v0 dari out/base_boot/header.bin, sehingga
+    # offset 16/20/32/36 berisi sisa field v0 yang salah arti bagi v4:
+    #   offset 16 = 293467 (ramdisk_size disalin dua kali -> os_version sampah)
+    #   offset 20 = 0x84000000 (tags_addr lama -> jadi header_size!)
+    #   offset 32 = 0x86000000, offset 36 = 4096 (reserved menyalah)
+    # Stok punya header_size = 1584 = sizeof(boot_img_hdr_v3), sehingga LK
+    # membaca kernel dari offset 4096.  Dengan 0x84000000 LK menghitung
+    # offset kernel 2,2 GB -- di luar partisi boot_a (64 MB) -- dan yang
+    # berakhir di 0x80080000 bukan kernel kita.  Itulah sebabnya tidak ada
+    # satu instruksi pun yang pernah berjalan: layar diam di logo LK,
+    # partisi cache tak tersentuh, walau LK mencetak
+    # "boot_a kernel read OK, page size = 0x29c2000, locate to 0x80080000".
+    V4_HEADER_SIZE = 1584
+    buf = bytearray(V4_HEADER_SIZE)
+    buf[0:8] = b"ANDROID!"
+    struct.pack_into("<I", buf, 8, len(kern))          # kernel_size
+    struct.pack_into("<I", buf, 12, len(rd))           # ramdisk_size
+    struct.pack_into("<I", buf, 16, 0)                 # os_version
+    struct.pack_into("<I", buf, 20, V4_HEADER_SIZE)    # header_size -> 1584
+    struct.pack_into("<I", buf, 40, 4)                 # header_version = 4
+    buf[48:64] = b"vxtux-arasan\0\0\0\0"               # name (v0, tak dipakai v4)
+    # Cmdline ditaruh di offset 64 karena bukti uboot_log menunjukkan LK
+    # membacanya di sana, bukan di offset 44 milik v4:
+    #   "android kernel cmdline :earlycon console=tty0 console=ttyS1..."
+    # Offset 44..64 sengaja dibiarkan nol supaya bila LK memakai field
+    # cmdline v4 ia melihat string kosong -- persis seperti stok.  Kernel
+    # sendiri memakai CONFIG_CMDLINE_FORCE=y, jadi cmdline image ini hanya
+    # berpengaruh pada LK.
     buf[64:576] = CMDLINE.encode()[:511].ljust(512, b"\0")
-
-    # --- FIX header v4 (bedah dump out/logs/artix5, 2026-10-26) ------------
-    # LK Unisoc mem-parse boot image ini dengan tata letak v3/v4, BUKAN v0
-    # yang dipakai penulisan di atas.  Bukti dari uboot_log:
-    #   * stok : header_version 4, kernel 38085120, ramdisk 1297306
-    #            -> 1297306 ada di offset 12  (v4: ramdisk_size)
-    #   * kita: header_version 4, ramdisk -2146959360 = 0x80080000
-    #            -> nilainya KERNEL_ADDR kita, juga offset 12
-    # Jadi offset 12 = kernel_addr (v0) di sini tertangkap LK sebagai
-    # ramdisk_size 2.148.007.936 byte.  LK lalu "memuat" initrd fiktif
-    # 2.1 GB ke 0xa15bc362 (0xa0000000 + vendor ramdisk) dan
-    # meneruskannya ke kernel lewat linux,initrd-start/end -> kernel
-    # membuang-buang waktu meng-unpack RAM acak (log LK: "boot_a ramdisk
-    # read OK, size = -2146959360, locate to 0xa15bc362").
-    # Samakan makna offset 12 dengan versi yang diklaim: ramdisk_size.
-    # (kernel_addr di 0x80080000 terbukti TIDAK dipakai LK -- stok juga
-    #  memuat kernel ke 0x80080000 padahal offset 12 stok = 1297306.)
-    struct.pack_into("<I", buf, 12, len(rd))
+    struct.pack_into("<I", buf, 1580, 0)               # signature_size (v4)
 
     outb = bytearray(buf)
-    # Header v0 hanya 1632 byte; bootloader membaca kernel mulai offset
-    # page_size (4096). Tanpa padding ini kernel tergeser 0x9A0 byte.
     outb.extend(b"\0" * (bt.align(len(buf), page) - len(buf)))
 
     def add(blob):
