@@ -97,17 +97,81 @@ def main():
     LK_LOAD = 0x80080000
     RELAY_AT = 0x80200000
     relay_off = RELAY_AT - LK_LOAD              # 0x180000 (1.5 MiB, page-aligned)
+
+    # --- STUB CAT FRAMEBUFFER (2026-10-26, bedah out/logs/artix20) ----------
+    # Bukti dari uboot_log artix20:
+    #   [start_linux] start linux at PC:0x80080000, dt_addr:0x9df00000
+    #   lk consume time: 14324ms
+    #   -> lalu "panic type boot count 473" (watchdog) tanpa satu baris
+    #      kernel 6.18 punya di cache.bin (cache.bin hanya berisi dmesg
+    #      stok 5.4.210, ditulis pstore_blk ke /dev/mmcblk0p49 -- yang
+    #      berarti eMMC tidak pernah hidup).
+    # Artinya LK MEMANG memanggil kernel kita, lalu kernel mati senyap
+    # sebelum bisa mencetak apa pun.  Karena UART tidak dirutekan ke COM
+    # dan fbcon baru aktif jauh di kemudian hari, satu-satunya kanal
+    # AWAL yang pasti terlihat adalah framebuffer LK itu sendiri
+    # (lcd_base=0x9e000000, DISPC terus memindai dari situ).
+    #
+    # Maka: sebelum melompat ke kernel, stub perintah murni (MMU masih
+    # mati, x0 = DTB tidak disentuh) mengecat 8 MiB pertama framebuffer
+    # dengan MAGENTA.  Kalau layar berubah magenta -> serah-terima LK
+    # berhasil dan kode kita di 0x80080000 benar-benar berjalan.  Kalau
+    # layar tetap di logo -> LK tidak pernah melompat / blob tidak ada
+    # di tempat yang kita kira.
+    #
+    # Perataan: panel 1200x2000 @32bpp, stride 4800 (fb stok 0x9E4000 =
+    # 1200*2160*4).  0x200000 word = 8 MiB ~= 1747 baris -> masih di dalam
+    # buffer, tidak menabrak apa pun.
+    FB_BASE = 0x9E000000
+    FB_WORDS = 0x200000                     # 8 MiB / 4 = 2.097.152 word
+    FB_COLOR_MAGENTA = 0x00FF00FF
+    STUB_OFF = 0x40                         # sesudah header Image (64 byte)
+
+    def _movz(rd, imm16, sf):
+        return ((0xD2800000 if sf else 0x52800000) |
+                ((imm16 & 0xFFFF) << 5) | rd)
+
+    def _movk(rd, imm16, hw, sf):
+        return ((0xF2800000 if sf else 0x72800000) | (hw << 21) |
+                ((imm16 & 0xFFFF) << 5) | rd)
+
+    def _mov_imm(rd, val, sf):
+        """movz/movk untuk membangun konstanta 32-bit."""
+        insns = [_movz(rd, val & 0xFFFF, sf)]
+        hi = (val >> 16) & 0xFFFF
+        if hi:
+            insns.append(_movk(rd, hi, 1, sf))
+        return insns
+
+    stub = []
+    stub += _mov_imm(1, FB_BASE & 0xFFFFFFFF, 1)          # movz/movk x1 = fb base
+    stub += _mov_imm(2, FB_COLOR_MAGENTA, 0)              # movz/movk w2 = warna
+    stub += _mov_imm(3, FB_WORDS, 0)                      # movz/movk w3 = jumlah
+    stub.append(0xB9000022)                               # str  w2, [x1]
+    stub.append(0x91001021)                               # add  x1, x1, #4
+    stub.append(0x71000463)                               # subs w3, w3, #1
+    stub.append(0x54FFFFA1)                               # b.ne -3 (kembali ke str)
+    stub += _mov_imm(2, RELAY_AT, 1)                      # movz/movk x2 = 0x80200000
+    stub.append(0xD61F0040)                               # br   x2
+
     relay_hdr = bytearray(kern[:64])
+    # word0: b ke stub (offset 0x40 -> imm26 = 0x10); x0 (DTB) tidak disentuh.
     struct.pack_into("<I", relay_hdr, 0,
-                     0x14000000 | ((relay_off >> 2) & 0x03FFFFFF))  # b 0x80200000
-    struct.pack_into("<I", relay_hdr, 4, 0xD503201F)                  # nop
-    struct.pack_into("<Q", relay_hdr, 8, 0)                           # text_offset
-    struct.pack_into("<Q", relay_hdr, 16, relay_off + len(kern))      # image_size
-    struct.pack_into("<Q", relay_hdr, 24, 0xA)                        # flags
-    struct.pack_into("<I", relay_hdr, 56, 0x644D5241)                 # "ARM\x64"
+                     0x14000000 | ((STUB_OFF >> 2) & 0x03FFFFFF))
+    struct.pack_into("<I", relay_hdr, 4, 0xD503201F)          # nop (pengaman)
+    struct.pack_into("<Q", relay_hdr, 8, 0)                   # text_offset
+    struct.pack_into("<Q", relay_hdr, 16, relay_off + len(kern))  # image_size
+    struct.pack_into("<Q", relay_hdr, 24, 0xA)                # flags
+    struct.pack_into("<I", relay_hdr, 56, 0x644D5241)         # "ARM\x64"
+    relay_hdr += b"\0" * (STUB_OFF - len(relay_hdr))
+    relay_hdr += b"".join(struct.pack("<I", w) for w in stub)
+    assert len(relay_hdr) < relay_off
     kern = bytes(relay_hdr) + b"\0" * (relay_off - len(relay_hdr)) + kern
-    print(f"relay: blob mulai `b 0x{RELAY_AT:x}` di 0x{LK_LOAD:x}; "
-          f"Image asli di blob+0x{relay_off:x} -> 0x{RELAY_AT:x}")
+    print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_OFF:x}` (stub cat fb) di "
+          f"0x{LK_LOAD:x}, lalu `br` ke 0x{RELAY_AT:x}; "
+          f"Image asli di blob+0x{relay_off:x}")
+    print(f"stub: {len(stub)} instruksi, mengecat {FB_WORDS * 4 // 1024} KiB "
+          f"framebuffer 0x{FB_BASE:x} dengan 0x{FB_COLOR_MAGENTA:08x} (magenta)")
 
     rd = b""
     if ramdisk_dir:
