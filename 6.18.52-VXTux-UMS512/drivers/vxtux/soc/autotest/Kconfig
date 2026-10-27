@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_AUTOTEST
+	tristate "Spreadtrum autotest framework (core)"
+	depends on ARM64
+	help
+	  Char device "autotest0" dalam class "autotest" (10 minor) yang
+	  meneruskan ioctl ke handler terdaftar berdasarkan cmd.  Modul lain
+	  mendaftar lewat sprd_autotest_register_handler(); cmd duplikat
+	  ditolak dengan -EEXIST.
+
+	  Port dari blob vendor 5.4 `core.ko`.
+
+config SPRD_AUTOTEST_GPIO
+	tristate "Spreadtrum autotest GPIO handler"
+	depends on SPRD_AUTOTEST && GPIOLIB
+	help
+	  Handler cmd 0xc0044101 (_IOWR('A', 1, 4)): argumen u32 dari user
+	  berisi offset (bit 0..15), dir (bit 16), value (bit 17).  Chip
+	  dipilih dengan ngpio == 256; arah input membaca nilai line dan
+	  menulis balik bit 17.
+
+	  Port dari blob vendor 5.4 `gpio.ko`.

@@ -1,0 +1,61 @@
+name: Quick CC (satu objek)
+
+# Kompilasi satu file saja. Workflow penuh (v17-build.yml) memakan ~25-30 menit
+# karena membangun seluruh Image + 229 modul; ini hanya `prepare` + satu objek,
+# jadi bisa dipakai untuk iterasi cepat saat menulis driver.
+#
+#   gh workflow run quick-cc.yml -f target=drivers/vxtux/soc/debugstat/sprd_debugstat.o
+#
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Objek yang dikompilasi, mis. drivers/vxtux/soc/debugstat/sprd_debugstat.o'
+        required: true
+        default: 'drivers/vxtux/soc/debugstat/sprd_debugstat.o'
+      dtb:
+        description: 'Ikut build DTB (sprd/ums512-1h10-vxtux.dtb)'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  quick-cc:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu \
+            libncurses-dev flex bison bc libssl-dev libelf-dev
+
+      - name: Siapkan config (sama seperti v17-build)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          find scripts/ -type f -exec chmod +x {} +
+          cp .config .config.device
+          sed -i 's/\r$//' .config.device ../enhanced_config.cfg
+          scripts/kconfig/merge_config.sh -m -O . .config.device ../enhanced_config.cfg
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          grep -E "^CONFIG_(SPRD_DEBUGSTAT|SPRD_SIP_SVC)=" .config || true
+
+      - name: Compile target
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
+            HOSTCC=gcc HOSTCXX=g++ -j$(nproc) "${{ inputs.target }}"
+
+      - name: Build DTB (opsional)
+        if: ${{ inputs.dtb }}
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) \
+            sprd/ums512-1h10-vxtux.dtb
+          ls -l arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb

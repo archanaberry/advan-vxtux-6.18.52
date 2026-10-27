@@ -1,0 +1,311 @@
+
+sprd-cpufreq-public.ko:     file format elf64-littleaarch64
+
+
+Disassembly of section .plt:
+
+0000000000000000 <.plt>:
+	...
+
+Disassembly of section .init.plt:
+
+0000000000000000 <.init.plt>:
+	...
+
+Disassembly of section .text.ftrace_trampoline:
+
+0000000000000000 <.text.ftrace_trampoline>:
+	...
+
+Disassembly of section .text:
+
+0000000000000000 <__cfi_check_fail>:
+       0:	str	x30, [x18], #8
+       4:	stp	x29, x30, [sp, #-16]!
+       8:	mov	x29, sp
+       c:	cbz	x0, 28 <__cfi_check_fail+0x28>
+      10:	ldrb	w8, [x0]
+      14:	cmp	w8, #0x5
+      18:	b.cc	28 <__cfi_check_fail+0x28>  // b.lo, b.ul, b.last
+      1c:	ldp	x29, x30, [sp], #16
+      20:	ldr	x30, [x18, #-8]!
+      24:	ret
+      28:	mov	w0, #0x2                   	// #2
+      2c:	bl	0 <__ubsan_handle_cfi_check_fail_abort>
+			2c: R_AARCH64_CALL26	__ubsan_handle_cfi_check_fail_abort
+
+0000000000000030 <sprd_cpufreq_update_opp>:
+      30:	str	x30, [x18], #8
+      34:	stp	x29, x30, [sp, #-48]!
+      38:	stp	x28, x21, [sp, #16]
+      3c:	stp	x20, x19, [sp, #32]
+      40:	mov	x29, sp
+      44:	sub	sp, sp, #0x2d0
+      48:	adrp	x8, 0 <__stack_chk_guard>
+			48: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+      4c:	ldr	x8, [x8]
+			4c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+      50:	mov	w19, w1
+      54:	mov	w20, w0
+      58:	mov	x0, sp
+      5c:	mov	w2, #0x2c8                 	// #712
+      60:	mov	w1, wzr
+      64:	stur	x8, [x29, #-8]
+      68:	bl	0 <memset>
+			68: R_AARCH64_CALL26	memset
+      6c:	mov	x0, sp
+      70:	mov	w1, wzr
+      74:	bl	0 <cpufreq_get_policy>
+			74: R_AARCH64_CALL26	cpufreq_get_policy
+      78:	cbz	w0, b0 <sprd_cpufreq_update_opp+0x80>
+      7c:	nop
+      80:	mov	w0, wzr
+      84:	adrp	x9, 0 <__stack_chk_guard>
+			84: R_AARCH64_ADR_PREL_PG_HI21	__stack_chk_guard
+      88:	ldur	x8, [x29, #-8]
+      8c:	ldr	x9, [x9]
+			8c: R_AARCH64_LDST64_ABS_LO12_NC	__stack_chk_guard
+      90:	cmp	x9, x8
+      94:	b.ne	194 <sprd_cpufreq_update_opp+0x164>  // b.any
+      98:	add	sp, sp, #0x2d0
+      9c:	ldp	x20, x19, [sp, #32]
+      a0:	ldp	x28, x21, [sp, #16]
+      a4:	ldp	x29, x30, [sp], #48
+      a8:	ldr	x30, [x18, #-8]!
+      ac:	ret
+      b0:	bl	0 <get_cpu_device>
+			b0: R_AARCH64_CALL26	get_cpu_device
+      b4:	cbz	x0, 158 <sprd_cpufreq_update_opp+0x128>
+      b8:	ldr	x0, [x0, #768]
+      bc:	cbz	x0, 164 <sprd_cpufreq_update_opp+0x134>
+      c0:	adrp	x1, 0 <__cfi_check_fail>
+			c0: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xdc
+      c4:	add	x1, x1, #0x0
+			c4: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xdc
+      c8:	mov	w2, wzr
+      cc:	bl	0 <of_parse_phandle>
+			cc: R_AARCH64_CALL26	of_parse_phandle
+      d0:	cbz	x0, 170 <sprd_cpufreq_update_opp+0x140>
+      d4:	nop
+      d8:	ldr	x21, [x0, #16]
+      dc:	adrp	x1, 0 <__cfi_check_fail>
+			dc: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xec
+      e0:	add	x1, x1, #0x0
+			e0: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xec
+      e4:	mov	x0, x21
+      e8:	bl	0 <strcmp>
+			e8: R_AARCH64_CALL26	strcmp
+      ec:	cbz	w0, 120 <sprd_cpufreq_update_opp+0xf0>
+      f0:	adrp	x1, 0 <__cfi_check_fail>
+			f0: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x7b
+      f4:	add	x1, x1, #0x0
+			f4: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x7b
+      f8:	mov	x0, x21
+      fc:	bl	0 <strcmp>
+			fc: R_AARCH64_CALL26	strcmp
+     100:	cbnz	w0, 17c <sprd_cpufreq_update_opp+0x14c>
+     104:	ldr	x8, [sp, #648]
+     108:	cbz	x8, 84 <sprd_cpufreq_update_opp+0x54>
+     10c:	cmn	x8, #0x1, lsl #12
+     110:	b.hi	84 <sprd_cpufreq_update_opp+0x54>  // b.pmore
+     114:	ldr	x8, [x8, #400]
+     118:	cbnz	x8, 138 <sprd_cpufreq_update_opp+0x108>
+     11c:	b	80 <sprd_cpufreq_update_opp+0x50>
+     120:	ldr	x8, [sp, #648]
+     124:	cbz	x8, 84 <sprd_cpufreq_update_opp+0x54>
+     128:	cmn	x8, #0x1, lsl #12
+     12c:	b.hi	84 <sprd_cpufreq_update_opp+0x54>  // b.pmore
+     130:	ldr	x8, [x8, #232]
+     134:	cbz	x8, 80 <sprd_cpufreq_update_opp+0x50>
+     138:	adrp	x9, 0 <__cfi_check_fail>
+			138: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1040
+     13c:	add	x9, x9, #0x0
+			13c: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1040
+     140:	cmp	x8, x9
+     144:	b.ne	198 <sprd_cpufreq_update_opp+0x168>  // b.any
+     148:	mov	w0, w20
+     14c:	mov	w1, w19
+     150:	blr	x8
+     154:	b	84 <sprd_cpufreq_update_opp+0x54>
+     158:	adrp	x0, 0 <__cfi_check_fail>
+			158: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xfd
+     15c:	add	x0, x0, #0x0
+			15c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xfd
+     160:	b	184 <sprd_cpufreq_update_opp+0x154>
+     164:	adrp	x0, 0 <__cfi_check_fail>
+			164: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x11e
+     168:	add	x0, x0, #0x0
+			168: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x11e
+     16c:	b	184 <sprd_cpufreq_update_opp+0x154>
+     170:	adrp	x0, 0 <__cfi_check_fail>
+			170: R_AARCH64_ADR_PREL_PG_HI21	.rodata
+     174:	add	x0, x0, #0x0
+			174: R_AARCH64_ADD_ABS_LO12_NC	.rodata
+     178:	b	184 <sprd_cpufreq_update_opp+0x154>
+     17c:	adrp	x0, 0 <__cfi_check_fail>
+			17c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x26
+     180:	add	x0, x0, #0x0
+			180: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x26
+     184:	adrp	x1, 0 <__cfi_check_fail>
+			184: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x4c
+     188:	add	x1, x1, #0x0
+			188: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x4c
+     18c:	bl	0 <printk>
+			18c: R_AARCH64_CALL26	printk
+     190:	b	80 <sprd_cpufreq_update_opp+0x50>
+     194:	bl	0 <__stack_chk_fail>
+			194: R_AARCH64_CALL26	__stack_chk_fail
+     198:	mov	x0, #0x237e                	// #9086
+     19c:	movk	x0, #0xa505, lsl #16
+     1a0:	movk	x0, #0x9c33, lsl #32
+     1a4:	movk	x0, #0x9eab, lsl #48
+     1a8:	mov	x1, x8
+     1ac:	mov	x21, x8
+     1b0:	bl	0 <__cfi_slowpath>
+			1b0: R_AARCH64_CALL26	__cfi_slowpath
+     1b4:	mov	x8, x21
+     1b8:	b	148 <sprd_cpufreq_update_opp+0x118>
+     1bc:	adrp	x0, 0 <__cfi_check_fail>
+			1bc: R_AARCH64_ADR_PREL_PG_HI21	__verbose
+     1c0:	adrp	x1, 0 <__cfi_check_fail>
+			1c0: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x64
+     1c4:	adrp	x2, 0 <__cfi_check_fail>
+			1c4: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x4c
+     1c8:	add	x0, x0, #0x0
+			1c8: R_AARCH64_ADD_ABS_LO12_NC	__verbose
+     1cc:	add	x1, x1, #0x0
+			1cc: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x64
+     1d0:	add	x2, x2, #0x0
+			1d0: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x4c
+     1d4:	bl	0 <__dynamic_pr_debug>
+			1d4: R_AARCH64_CALL26	__dynamic_pr_debug
+     1d8:	b	80 <sprd_cpufreq_update_opp+0x50>
+     1dc:	ldr	x3, [x0, #16]
+     1e0:	adrp	x8, 0 <__cfi_check_fail>
+			1e0: R_AARCH64_ADR_PREL_PG_HI21	__verbose+0x38
+     1e4:	add	x8, x8, #0x0
+			1e4: R_AARCH64_ADD_ABS_LO12_NC	__verbose+0x38
+     1e8:	adrp	x1, 0 <__cfi_check_fail>
+			1e8: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xc3
+     1ec:	adrp	x2, 0 <__cfi_check_fail>
+			1ec: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x4c
+     1f0:	add	x1, x1, #0x0
+			1f0: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xc3
+     1f4:	add	x2, x2, #0x0
+			1f4: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x4c
+     1f8:	mov	x21, x0
+     1fc:	mov	x0, x8
+     200:	bl	0 <__dynamic_pr_debug>
+			200: R_AARCH64_CALL26	__dynamic_pr_debug
+     204:	mov	x0, x21
+     208:	b	d8 <sprd_cpufreq_update_opp+0xa8>
+
+000000000000020c <sprd_cpufreq_update_normal>:
+     20c:	sub	sp, sp, #0x20
+     210:	str	x30, [x18], #8
+     214:	stp	x29, x30, [sp, #16]
+     218:	add	x29, sp, #0x10
+     21c:	ldr	x8, [x0, #648]
+     220:	mov	w0, wzr
+     224:	cbz	x8, 25c <sprd_cpufreq_update_normal+0x50>
+     228:	cmn	x8, #0x1, lsl #12
+     22c:	b.hi	25c <sprd_cpufreq_update_normal+0x50>  // b.pmore
+     230:	ldr	x8, [x8, #232]
+     234:	cbz	x8, 258 <sprd_cpufreq_update_normal+0x4c>
+     238:	adrp	x9, 0 <__cfi_check_fail>
+			238: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1040
+     23c:	add	x9, x9, #0x0
+			23c: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1040
+     240:	cmp	x8, x9
+     244:	b.ne	26c <sprd_cpufreq_update_normal+0x60>  // b.any
+     248:	mov	w0, w1
+     24c:	mov	w1, w2
+     250:	blr	x8
+     254:	b	25c <sprd_cpufreq_update_normal+0x50>
+     258:	mov	w0, wzr
+     25c:	ldp	x29, x30, [sp, #16]
+     260:	ldr	x30, [x18, #-8]!
+     264:	add	sp, sp, #0x20
+     268:	ret
+     26c:	mov	x0, #0x237e                	// #9086
+     270:	movk	x0, #0xa505, lsl #16
+     274:	movk	x0, #0x9c33, lsl #32
+     278:	movk	x0, #0x9eab, lsl #48
+     27c:	stur	w1, [x29, #-4]
+     280:	mov	x1, x8
+     284:	str	w2, [sp, #8]
+     288:	str	x8, [sp]
+     28c:	bl	0 <__cfi_slowpath>
+			28c: R_AARCH64_CALL26	__cfi_slowpath
+     290:	ldr	x8, [sp]
+     294:	ldur	w1, [x29, #-4]
+     298:	ldr	w2, [sp, #8]
+     29c:	b	248 <sprd_cpufreq_update_normal+0x3c>
+
+00000000000002a0 <sprd_cpufreq_update_common>:
+     2a0:	sub	sp, sp, #0x20
+     2a4:	str	x30, [x18], #8
+     2a8:	stp	x29, x30, [sp, #16]
+     2ac:	add	x29, sp, #0x10
+     2b0:	ldr	x8, [x0, #648]
+     2b4:	mov	w0, wzr
+     2b8:	cbz	x8, 2f0 <sprd_cpufreq_update_common+0x50>
+     2bc:	cmn	x8, #0x1, lsl #12
+     2c0:	b.hi	2f0 <sprd_cpufreq_update_common+0x50>  // b.pmore
+     2c4:	ldr	x8, [x8, #400]
+     2c8:	cbz	x8, 2ec <sprd_cpufreq_update_common+0x4c>
+     2cc:	adrp	x9, 0 <__cfi_check_fail>
+			2cc: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1040
+     2d0:	add	x9, x9, #0x0
+			2d0: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1040
+     2d4:	cmp	x8, x9
+     2d8:	b.ne	300 <sprd_cpufreq_update_common+0x60>  // b.any
+     2dc:	mov	w0, w1
+     2e0:	mov	w1, w2
+     2e4:	blr	x8
+     2e8:	b	2f0 <sprd_cpufreq_update_common+0x50>
+     2ec:	mov	w0, wzr
+     2f0:	ldp	x29, x30, [sp, #16]
+     2f4:	ldr	x30, [x18, #-8]!
+     2f8:	add	sp, sp, #0x20
+     2fc:	ret
+     300:	mov	x0, #0x237e                	// #9086
+     304:	movk	x0, #0xa505, lsl #16
+     308:	movk	x0, #0x9c33, lsl #32
+     30c:	movk	x0, #0x9eab, lsl #48
+     310:	stur	w1, [x29, #-4]
+     314:	mov	x1, x8
+     318:	str	w2, [sp, #8]
+     31c:	str	x8, [sp]
+     320:	bl	0 <__cfi_slowpath>
+			320: R_AARCH64_CALL26	__cfi_slowpath
+     324:	ldr	x8, [sp]
+     328:	ldur	w1, [x29, #-4]
+     32c:	ldr	w2, [sp, #8]
+     330:	b	2dc <sprd_cpufreq_update_common+0x3c>
+	...
+
+0000000000001000 <__cfi_check>:
+    1000:	mov	x8, #0x237e                	// #9086
+    1004:	movk	x8, #0xa505, lsl #16
+    1008:	movk	x8, #0x9c33, lsl #32
+    100c:	movk	x8, #0x9eab, lsl #48
+    1010:	cmp	x0, x8
+    1014:	b.ne	102c <__cfi_check+0x2c>  // b.any
+    1018:	adrp	x8, 0 <__cfi_check_fail>
+			1018: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1040
+    101c:	add	x8, x8, #0x0
+			101c: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1040
+    1020:	cmp	x1, x8
+    1024:	b.ne	102c <__cfi_check+0x2c>  // b.any
+    1028:	ret
+    102c:	str	x30, [sp, #-16]!
+    1030:	mov	x0, x2
+    1034:	bl	0 <__cfi_check_fail>
+			1034: R_AARCH64_CALL26	__cfi_check_fail
+    1038:	ldr	x30, [sp], #16
+    103c:	ret
+
+0000000000001040 <__typeid__ZTSFjiiE_global_addr>:
+    1040:	b	30 <sprd_cpufreq_update_opp>
+			1040: R_AARCH64_JUMP26	sprd_cpufreq_update_opp

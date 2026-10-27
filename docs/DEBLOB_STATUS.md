@@ -1,9 +1,179 @@
-# Deblob status — 2026-10-21
+# Deblob status — 2026-10-23 (TICK12)
 
-The stock ROM ships **31 vendor .ko** in `/lib/modules`. The VXTux build
-now produces a module with the same file name for **24** of them, and
-**18** of those carry the same API (the stock blob's own functions,
-locals included).
+The stock ROM ships **31 vendor .ko** in `/lib/modules`. The TICK12 build
+(codespace, container ubuntu 22.04, `gcc-aarch64-linux-gnu` 11.4, konfig
+fragmen di-merge di atas `.config` device) produces **227 `.ko`**, and
+**29/31** stock module names now have a replacement module:
+
+```
+NAME 29/31   — yang belum berbentuk .ko: sprd-vsp-pw-domain, twofish_common
+               (keduanya BUILT-IN `=y` di config, jadi fungsi 31/31 ada)
+```
+
+Six modules that previously could not be built at all now exist:
+`sprdwl.ko` (WiFi SC2355), `sc27xx_typec.ko`, `novatek_ts_spi.ko`,
+`sensorhub.ko`, `sprd_battery_info.ko`, `sprd-systimer.ko`.
+Evidence: `docs/evidence-20261023/ko_list.txt` + `config.final`.
+
+Catatan: angka LEVEL 2 (API) dan LEVEL 3 (DEPS) di bawah berasal dari
+run 2026-10-21 dan **belum** diukur ulang untuk 227 `.ko` ini — lihat
+bagian batas jujur di README TICK12.
+
+## TICK12b — triage 33 blob "NOSRC" (2026-10-23)
+
+PORT-AUDIT menandai 33 blob `NOSRC` karena tidak menemukan pemetaan
+Makefile→modul, bukan karena sumbernya hilang. `donors/nosrc_triage.py`
+membaca blob stok (`nm`+`strings`) dan pohon 6.18.52, lalu mengklasifikasi
+ulang. Hasil lengkap: `docs/NOSRC-TRIAGE.md`.
+
+| Verdict | Jumlah | Arti |
+|---|---:|---|
+| BUILT-IN | 12 | sumber ada, simbol `=y` → kode ikut `Image` |
+| SUPERSEDED | 2 | fungsinya sudah ada di build lewat jalur lain |
+| SIAP-COBA | 6 | sumber + Makefile ada, simbol CONFIG belum menyala |
+| PERLU-PORT | 12 | sumber memang tidak ada di pohon |
+| BLOB-HILANG | 1 | `sprd_vdsp.ko` tidak ada di `vendor_boot_a` |
+
+Bukti per blob: `docs/NOSRC-TRIAGE.md` (kolom sumber, simbol, state config,
+overlap simbol EXPORT terhadap `donors/all_syms.txt`).
+
+Dua temuan yang menutup celah tanpa kode baru:
+
+- `snd-soc-sprd-card.ko` — 33/33 simbol EXPORT-nya sudah ada di build
+  (100% overlap).
+- `sha1-ce.ko` — `lib/crypto/sha1.c` meng-include `$(SRCARCH)/sha1.h`, dan
+  `lib/crypto/arm64/sha1.h` memanggil `__sha1_ce_transform` di bawah
+  `kernel_neon_begin()` saat CPU punya fitur SHA1. Shash `sha1` bawaan
+  `crypto/sha1.c` sudah memakai Crypto Extensions.
+
+Satu simbol yang tadinya mati dinyalakan di fragmen: `CONFIG_PHY_SPRD_UMS512_USB2=m`
+(padanan `phy-sprd-sharkl5Pro.ko`). Tanpa PHY ini `musb_sprd_vxtux` tidak
+akan probe, jadi stack USB tidak hidup.
+
+Yang benar-benar tersisa untuk 100%: 12 blob `PERLU-PORT`.
+
+## TICK13 — build hijau lagi, PHY masuk, 228 `.ko`
+
+Codespace kehilangan seluruh toolchain cross (bukan cuma PATH: `dpkg -l |
+grep aarch64` = 0). Dipulihkan **tanpa sudo**: tarball ARM GNU 13.2.rel1 ke
+`$HOME/tc`, `flex`/`bc`/`m4`/`libelf-dev` lewat `apt-get download` +
+`dpkg -x`, dan clone bersih (pohon `/workspaces` penuh artefak root sehingga
+`make O=` menolak). Resep lengkap: `docs/BUILD-ENV.md`.
+
+Hasil `make modules` di pohon bersih:
+
+```
+rc=0      228 .ko      sebelumnya 227
+```
+
+`CONFIG_PHY_SPRD_UMS512_USB2=m` yang baru dinyalakan **lolos `olddefconfig`**
+(dependensi `OF` + `REGULATOR` terpenuhi) dan menghasilkan
+`drivers/phy/sprd/phy-sprd-ums512.ko` = **433.584 B**. Jadi blob stok
+`phy-sprd-sharkl5Pro.ko` sekarang punya padanan yang benar-benar ter-build,
+bukan cuma simbol yang menyala di config.
+
+Bukti: `docs/evidence-20261023/ko_list_tick13.txt` (228 baris) dan
+`config_tick13.txt`.
+
+## TICK14 — bedah total undefined symbol (`symreach.py`)
+
+Pertanyaan yang dijawab: untuk **setiap** referensi `SHN_UNDEF` di 129 blob
+stok 5.4.210, apakah build 6.18.52 kita bisa memenuhinya, dan kalau tidak, apa
+yang harus dilakukan. Alat: `donors/symreach.py`; keluaran:
+`docs/UNDEF-REACHABILITY.md`, `docs/evidence-20261023/symreach.json`,
+dan daftar alat di `docs/TOOLING-SYMBOLS.md`.
+
+Sumber kebenaran yang dipakai (bukan tebakan):
+
+| Bukti | Isi |
+|---|---|
+| `donors/symvers_tick14.txt` | 15.242 ekspor: vmlinux + 163 modul (sebelumnya 15.215) |
+| `donors/vmlinux_o_syms.txt` | `nm --defined-only vmlinux.o`, 140.469 nama + tipe |
+| `stock_vendor_modules_all/*.ko` | 129 blob, `.symtab` + `__versions` |
+
+Kelengkapan daftar vmlinux diuji: **14.290 dari 14.291** ekspor vmlinux di
+`Module.symvers` ada di `vmlinux.o`. Satu yang tidak ada adalah `jiffies` —
+simbol linker-script yang dipakai `EXPORT_SYMBOL` tanpa entri di `vmlinux.o`,
+bukan celah data.
+
+| Kelas | Sebelum | **Sesudah** | Arti |
+|---|---:|---:|---|
+| `ok` | 4.434 (79,6%) | **4.750 (85,2%)** | diekspor build kita |
+| `ekspor` | 23 | **0** | global, ada di vmlinux.o, tinggal `EXPORT_SYMBOL` |
+| `rename` | 219 | 219 | padanan 6.18 terverifikasi (mekanis + `REMAP`) |
+| `makro` | 476 | **330** | definisi ada di pohon: inline/makro/config mati |
+| `port` | 24 | 24 | hanya disediakan blob stok lain |
+| `instr` | 298 | **169** | `__cfi_*`/`__ubsan_*` runtime Clang stok |
+| `hilang` | 98 | **80** | tidak ada di mana pun |
+| **total** | **5.572** | 5.572 | 1.488 simbol unik |
+| **blob tanpa port** | 82/129 | **91/129** | naik 9 blob |
+
+Tiga perubahan yang menghasilkan angka di atas (semua build rc=0, 228 `.ko`):
+
+1. `CONFIG_VXTUX_VENDOR_ABI=y` di `enhanced_config.cfg`. Penyedianya sudah
+   ada di `drivers/vxtux/vendor_abi/` (bukan salinan mati di
+   `drivers/misc/sprd/vendor_abi/` — itu tidak punya jalur Kconfig/Makefile).
+   Dampak: 146 referensi `cpu_hwcaps`/`cpu_hwcap_keys`/`arm64_const_caps_ready`/
+   `kimage_vaddr`/`cpu_number` + 129 referensi `__ubsan_handle_cfi_*` resolve.
+2. `vendor_abi_exports.c` — 19 simbol global yang ada di `vmlinux.o` tetapi
+   tidak diekspor (`irq_to_desc`, `cma_alloc/release/for_each_area/get_name`,
+   `dma_direct_map_sg/unmap_sg/sync_sg_for_cpu`, `blk_alloc_queue`,
+   `__alloc_disk_node`, helper audio AGCP + MCDT). Kelas `ekspor` 23 → 0.
+   Percobaan pertama file ini **gagal compile** karena memakai
+   `extern void nama(void)`; prototipe asli wajib (`irq_to_desc(unsigned int)`),
+   dan sekarang semuanya diambil dari header pohon ini.
+3. `vendor_abi_compat54.c` — `init_timer_key` (5.4) di atas `timer_setup`
+   (6.18). 18 referensi tertutup, 9 blob tambahan lolos menjadi "tanpa port".
+
+Empat temuan yang mengubah prioritas:
+
+1. **`CONFIG_VXTUX_VENDOR_ABI` mati** di `config_tick13`. Padahal penyedia
+   5 simbol terbesar (`cpu_hwcaps` ×35, `cpu_hwcap_keys` ×47,
+   `arm64_const_caps_ready` ×47, `kimage_vaddr` ×11, `cpu_number` ×6 —
+   total **146 referensi**) sudah ada di
+   `drivers/misc/sprd/vendor_abi/vendor_abi_arm64.c`. Jadi sebagian besar
+   kelas `makro` bukan "API hilang", tapi satu config yang belum menyala.
+2. **19 simbol global ada di vmlinux.o tapi tidak diekspor** — mis.
+   `irq_to_desc`, `cma_alloc`/`cma_release`, `blk_alloc_queue`,
+   `__alloc_disk_node`. Untuk ini "perbaikan"-nya satu baris
+   `EXPORT_SYMBOL[_GPL]`, bukan port driver.
+3. **`sprd_sip_svc.ko` sudah 100% terklasifikasi** tanpa port apa pun:
+   2 `ok` (`__arm_smccc_smc`, `__stack_chk_fail`), 1 `rename`
+   (`printk` → `_printk`), 2 `instr`. Artinya leverage-nya (membuka 3
+   referensi `sprd-cpufreq-v2`/`sprd_pdbg`/`sprd_power_stat`) bisa dipakai
+   tanpa menambah simbol kernel baru.
+4. **CRC modversion beda 3.223 dari 4.434** referensi `ok`. Nama simbol
+   cocok, tapi genksyms 5.4 vs 6.18 menghasilkan CRC berbeda — indikasi
+   drift ABI, bukan vonis per simbol (lihat batas jujur di dokumen alat).
+
+Dampak ke hitungan port: **82 dari 129 blob** tidak lagi menunggu modul
+stok lain dan tidak punya simbol `hilang`. Sisa `hilang` yang benar-benar
+perlu kode cuma 62 simbol unik, dipimpin `init_timer_key` (18 blob),
+`kmalloc_order_trace` (6), `__ioremap` (5), `fpsimd_context_busy` (4).
+
+## TICK12c — dossier RE + node DT yang hilang
+
+`donors/port_dossier.py` menghasilkan `docs/RE-PORT-DOSSIER.md` untuk ke-12
+blob itu: EXPORT, UNDEFINED (penentu subsistem), penanda antarmuka, dan
+graf dependensi. Tiga hal yang langsung terlihat:
+
+1. **Klaster dependensi** — `sprd-cpufreq-v2`, `sprd_pdbg`, dan
+   `sprd_power_stat` semuanya `depends: sprd_sip_svc`. Blob `sprd_sip_svc`
+   sendiri kecil (5 simbol tak terdefinisi, 1 EXPORT `sprd_sip_svc_get_handle`),
+   jadi ia harus di-port lebih dulu; tiga modul lain mengikuti.
+2. **Node DT-nya ikut hilang.** `compatible` milik blob-blob ini (mis.
+   `sprd,cpufreq-v2`, `sprd,debugstat`, `unisoc,sc2730-audio-codec`)
+   semuanya **ada di DTB stok** tetapi **tidak ada** di DTS vxtux. Artinya
+   port kode saja tidak akan pernah probe — node DT-nya juga harus di-port.
+   Ini mengubah definisi "selesai" untuk 12 blob itu: kode + DT.
+3. **Kontrak EXPORT** yang wajib dipertahankan: `mmc_swcq_*`,
+   `stat_info_register/unregister`, `sprd_pdbg_msg_print`,
+   `sprd_cpufreq_update_opp`, `sprd_sip_svc_get_handle`.
+
+## Riwayat 2026-10-21
+
+Previously: same-name replacement for **24** of them, and **18** of those
+carry the same API (the stock blob's own functions, locals included).
 
 The measurement is `donors/verify_deblob2.py`; it writes
 `docs/DEBLOB_VERIFICATION.md`.
@@ -408,3 +578,98 @@ ponytail: if the stock tracepoint symbol names ever matter, drop
 CONFIG_HAVE_ARCH_PREL32_RELOCATIONS from arch/arm64/Kconfig and re-measure;
 the cost is a slower tracepoint dereference and different init_call and PCI
 relocation handling.
+
+## TICK16 — CI hijau, `sprd_sip_svc` ter-build
+
+Untuk pertama kalinya sejak guard config ditambahkan, workflow `v17-build.yml`
+lolos sampai akhir (run `39946023755`, commit `a0f2e70ce`): guard config,
+build DTB, build modules, tar `.ko` — semuanya sukses, rc=0, **229 `.ko`**
+(sebelumnya 228). Artefak: `v17-built-kos` + `v17-dtb`.
+
+Yang diperbaiki di jalan:
+
+1. **Guard config tidak pernah lolos.** Ia membandingkan seluruh
+   `enhanced_config.cfg` dengan `.config` hasil `olddefconfig`. Fragmen itu
+   mewarisi config vendor 5.4 utuh, jadi 412 entri menunjuk driver yang belum
+   di-port atau subsistem yang dipangkas dari tree. Sekarang guard hanya
+   mewajibkan simbol yang Kconfig-nya ADA dan tidak terdaftar di
+   [CI-KNOWN-DROPPED.txt](CI-KNOWN-DROPPED.txt) (124 entri, berkelompok
+   dengan alasannya).
+2. **`sprd_sip_svc` masuk pohon yang salah.** Modul pertama ditaruh di
+   `drivers/soc/sprd/`, yang Kconfig-nya masih di-source `drivers/Kconfig`
+   tetapi Makefile-nya tidak pernah dimasuki — simbol `=m` tanpa `.ko`.
+   Modul SoC Unisoc yang hidup ada di `drivers/vxtux/soc/`; setelah dipindah
+   ke sana, `sprd_sip_svc.ko` benar-benar dibangun:
+   `drivers/vxtux/soc/sip_svc/sprd_sip_svc.ko`, vermagic cocok, undefined
+   hanya `__arm_smccc_smc`, `_printk`, `memset`, `__stack_chk_fail`.
+3. **Audit tidak lagi menebak dari nama.** `gpio.ko` dulu dipetakan ke
+   `CONFIG_MTD_NAND_GPIO` dan `core.ko` ke kandidat acak; keduanya kini
+   terbaca sebagai `NOSRC` dengan bukti dari metadata blob (`sprd autotest
+   gpio/core driver`). Nama modul generik dengan banyak kandidat CONFIG_
+   dilaporkan `AMBIGUOUS`, bukan dipilih yang pertama ditemukan.
+4. **Config efektif kini benar-benar ter-upload.** `upload-artifact` v4
+   membuang hidden file, jadi `.config` selama ini tidak pernah ada di
+   artefak; disalin dulu ke `effective.config`.
+
+Skor: **119/129** (KO 58, Y 47, BUILT-IN 12, SUPERSEDED 2, BELUM 10). Rincian
+sepuluh yang tersisa, lengkap dengan bukti dan blokirnya:
+[PORT-REMAINING.md](PORT-REMAINING.md).
+
+## TICK17 — 10 blob terakhir ditutup, boot QEMU LULUS, fbcon diuji (2026-10-24)
+
+Skor akhir: **129/129 ✅, 0 BELUM** (regenerasi otomatis terhadap bukti
+build V17: [STATUS-129.md](STATUS-129.md), [COVERAGE-129.md](COVERAGE-129.md),
+[PORT-AUDIT.md](PORT-AUDIT.md) — KO 68 / Y 47 / NOSRC 14-builtin).
+
+**Sepuluh blob yang menutup skor** (semua `=m` di `enhanced_config.cfg` dan
+terbukti ada di artefak `v17-built-kos`, run `40097613453`, 239 `.ko`):
+
+| blob | modul hasil | commit |
+|---|---|---|
+| `core.ko` / `gpio.ko` | `sprd_autotest_core.ko` / `sprd_autotest_gpio.ko` | `b1d692f09` |
+| `sprd_7sreset.ko` | `sprd_7sreset.ko` | `b1d692f09` |
+| `sprd_manufacturer_model.ko` | `sprd_manufacturer_model.ko` | `b1d692f09` |
+| `sprd_pdbg.ko` | `sprd_pdbg.ko` | `cb5e91d35` |
+| `sprd_power_stat.ko` | `sprd_debugstat.ko` | `8bf97026b` |
+| `sprd_iq.ko` | `sprd_iq.ko` | `9953413ba` |
+| `sprd-cpufreq-v2.ko` | `sprd-cpufreq-v2.ko` | `91e7838b2` |
+| `sprd-cpufreq-public.ko` | `sprd-cpufreq-public.ko` | `91e7838b2` |
+| `mmc_swcq.ko` | `mmc_swcq.ko` | `91e7838b2` |
+
+**Alat regenerasi diperbaiki saat regenerasi:**
+
+1. `port_audit.py::vendor_list()` dibatasi tabel §2 crosscheck — sebelumnya
+   ikut membaca tabel §4 (11 driver) dan §5 (13 compile-verified yang
+   berisi nama `.ko` port), sehingga daftar vendor melebar 129 → 153.
+2. `UNRESOLVED` (hardcode NOSRC untuk `core.ko`/`gpio.ko`) dikosongkan —
+   framework `SPRD_AUTOTEST` kini ada di pohon dan kedua `.ko` terbangun;
+   logika AMBIGUOUS untuk nama generik tetap aktif.
+3. `coverage_129.py` dialihkan ke bukti segar:
+   `evidence-20261024/ko_list_v17.txt` (239 `.ko`) +
+   `evidence-20261024/config_v17.txt` (8.010 baris, efektif V17); tiga
+   RENAMES ditambahkan (core/gpio/power_stat → nama penggantinya).
+
+**Boot test QEMU — LULUS** (run `40100295454`): DTB kustom
+`qemu-ums512-t1030.dtb` tembus userspace ~4 detik tanpa panic pada kedua
+boot (stok `-M virt` dan kustom), gate `marker: stock=1 custom=1`. Tiga akar
+masalah "boot 0 byte" diperbaiki dengan bukti kode QEMU 6.2 `hw/arm/virt.c`:
+GICR `0x08010000` → `0x080A0000` (area `VIRT_GIC_CPU` tak dipetakan mode
+gicv3), PSCI `smc` → `hvc` (properti `virtualization` default OFF), dan
+penambahan node `pcie@10000000` + `its@8080000` (tanpa PCIe, `-device
+virtio-serial-pci` tak terenumerasi dan `hvc0` mustahil ada). Initramfs
+berganti total ke init C statis `-march=armv8-a` (busybox x86 → ENOEXEC;
+busybox arm64 ports → undefined instruction di cortex-a72). Rincian:
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md).
+
+**fbcon/DRM-KMS — TERBUKTI BISA PRINT CLI** (run `40105064859` hijau,
+gate `marker: stock=1 custom=1 fb=1 px=1`): `CONFIG_FB=n` lama +
+`FRAMEBUFFER_CONSOLE` tak terdefinisi + QEMU tanpa driver GPU dinyalakan
+lewat fragmen (`DRM_VIRTIO_GPU=y`, `DRM_FBDEV_EMULATION=y`,
+`FRAMEBUFFER_CONSOLE=y`, `VT_CONSOLE=y`); boot ketiga memakai
+`-device virtio-gpu-pci` + VNC headless + HMP screendump → `fbcon.png`.
+Bukti probe: `[drm] Initialized virtio_gpu`, `Console: switching to
+colour frame buffer device 128x48`, `fb0: virtio_gpudrmfb`, dan init
+menulis 176 byte banner ke `/dev/tty1`; 2.842 piksel tak-hitam di
+1024×768 memperlihatkan banner `VXTux 6.18.52 - fbcon CLI test` + prompt
+`>` ([PNG](evidence-20261024/fbcon.png)). Rincian:
+[QEMU-BOOT-VALIDATION.md](QEMU-BOOT-VALIDATION.md) §5.

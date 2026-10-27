@@ -150,13 +150,16 @@ boot → display → touch → WiFi/BT → camera → battery/charge → modem �
 Tujuan akhir: masukkan 40 driver ini ke `main` branch di
 `archanaberry/advan-vxtux-6.18.52` lewat PR yang traceable. Strategi:
 
-1. `test1` branch (saat ini) sudah punya TICK8 (vdsp + de-bloat) + TICK9
-   (102/102 DEBLOBBED) commits.
+1. `test1` branch (saat ini) sudah punya TICK8 (vdsp + de-bloat), TICK9
+   (102/102 DEBLOBBED), TICK11–TICK12 (10 port terakhir, skor 129/129,
+   boot QEMU LULUS) commits.
 2. Bestie review test1 di
    https://github.com/archanaberry/advan-vxtux-6.18.52/tree/test1
 3. Setelah OK, PR `test1 → main` lewat GitHub UI.
-4. Tag release `v0.9-TICK9` dengan changelog: 13 modul compile-verified,
-   102/102 DEBLOBBED, Image 50,5 MB, System.map segar.
+4. Tag release `v0.9-TICK12` dengan changelog: **129/129 blob vendor
+   tertangani**, build V17 hijau (239 `.ko`), **boot QEMU LULUS**
+   (DTB kustom tembus userspace tanpa panic), 102/102 DEBLOBBED,
+   Image 50,5 MB, System.map segar.
 
 Bestie tinggal bilang "merge" dan gw bantu handle.
 

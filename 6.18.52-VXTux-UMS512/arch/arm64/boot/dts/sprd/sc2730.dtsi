@@ -95,6 +95,46 @@
 			adc_small_scale: calib@26 {
 				reg = <0x26 0x2>;
 			};
+
+			/* TICK11: sisa 8 dari 13 sel kalibrasi PMIC eFuse di FDT stok
+			 * (/soc/aon/spi@32100000/pmic@0/efuse@300, RE donors/fdt_dump.py
+			 * atas donors/stock_initramfs/stock.dtb). Lima sel lain sudah ada
+			 * di atas (fgu_calib=calib@6, typec_cc1/2_cal=calib@d1/d2,
+			 * adc_big/small_scale=calib@0/reg 0x24 dan calib@1/reg 0x26).
+			 * reg di bawah 1:1 dengan stok — node tanpa konsumen di tree
+			 * sekarang disimpan sebagai inventaris siap-pakai untuk port
+			 * berikutnya (charger/vibra/hw-reset trim). */
+			calib@2 {
+				reg = <0x2 0x2>;
+			};
+
+			calib@3 {
+				reg = <0x6 0x2>;
+			};
+
+			calib@14 {
+				reg = <0x28 0x2>;
+			};
+
+			calib@16 {
+				reg = <0x2c 0x2>;
+			};
+
+			calib@1e {
+				reg = <0x1e 0x2>;
+			};
+
+			calib@20 {
+				reg = <0x20 0x2>;
+			};
+
+			calib@22 {
+				reg = <0x22 0x2>;
+			};
+
+			calib@2e {
+				reg = <0x2e 0x2>;
+			};
 		};
 
 		pmic_eic: gpio@280 {

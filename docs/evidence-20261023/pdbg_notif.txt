@@ -1,0 +1,1290 @@
+; sprd_pdbg_pm_notifier @ 0x930 (372 B)
+       930:  sub      sp, sp, #0x50
+       934:  str      x30, [x18], #8
+       938:  stp      x29, x30, [sp, #0x20]
+       93c:  str      x21, [sp, #0x30]
+       940:  stp      x20, x19, [sp, #0x40]
+       944:  add      x29, sp, #0x20
+       948:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       94c:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       950:  adrp     x21, #0  ; -> sym#86+0x8
+       954:  mov      x20, x1
+       958:  stur     x8, [x29, #-8]
+       95c:  ldr      x19, [x21]  ; sym#86+0x8
+       960:  cbnz     x19, #0x984
+       964:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       968:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       96c:  mov      w1, #0xdc0
+       970:  mov      w2, #0x538
+       974:  bl       #0x974  ; -> kmem_cache_alloc_trace+0x0
+       978:  mov      x19, x0
+       97c:  str      x0, [x21]  ; sym#86+0x8
+       980:  cbz      x0, #0xa58
+       984:  cmp      x20, #3
+       988:  b.eq     #0xa44  ; -> $d.42+0x94
+       98c:  cmp      x20, #4
+       990:  b.ne     #0xa58  ; -> $d.42+0xa8
+       994:  strb     wzr, [x19, #0x1b0]
+       998:  bl       #0x998  ; -> ktime_get+0x0
+       99c:  str      x0, [x19, #0x198]
+       9a0:  mov      w0, #1
+       9a4:  bl       #0x9a4  ; -> ktime_get_with_offset+0x0
+       9a8:  ldr      x8, [x19, #0x1a0]
+       9ac:  str      x0, [x19, #0x1a8]
+       9b0:  sub      x0, x0, x8
+       9b4:  bl       #0x9b4  ; -> ns_to_timespec64+0x0
+       9b8:  ldp      x9, x8, [x19, #0x190]
+       9bc:  mov      x20, x0
+       9c0:  mov      x21, x1
+       9c4:  sub      x0, x8, x9
+       9c8:  bl       #0x9c8  ; -> ns_to_timespec64+0x0
+       9cc:  sub      x8, x20, x0
+       9d0:  sub      x2, x21, x1
+       9d4:  add      x0, sp, #8
+       9d8:  mov      x1, x8
+       9dc:  stp      xzr, xzr, [sp, #8]
+       9e0:  bl       #0x9e0  ; -> set_normalized_timespec64+0x0
+       9e4:  ldp      x8, x9, [sp, #8]
+       9e8:  mov      x11, #0x34db
+       9ec:  mov      w10, #0xca00
+       9f0:  movk     x11, #0xd7b6, lsl #16
+       9f4:  mov      x12, #0x7d03
+       9f8:  movk     w10, #0x3b9a, lsl #16
+       9fc:  movk     x11, #0xde82, lsl #32
+       a00:  movk     x12, #0x25c1, lsl #16
+       a04:  movk     x11, #0x431b, lsl #48
+       a08:  movk     x12, #2, lsl #32
+       a0c:  adrp     x13, #0  ; -> sym#86+0x0
+       a10:  madd     x9, x8, x10, x9
+       a14:  ldr      w13, [x13]  ; sym#86+0x0
+       a18:  cmp      x8, x12
+       a1c:  umulh    x8, x9, x11
+       a20:  mov      x9, #0x5af6
+       a24:  movk     x9, #0x7bd0, lsl #16
+       a28:  lsr      x8, x8, #0x12
+       a2c:  movk     x9, #0x863, lsl #32
+       a30:  csel     x2, x9, x8, hi
+       a34:  cbnz     w13, #0xa88
+       a38:  adrp     x0, #0  ; -> sym#88+0x1c5
+       a3c:  add      x0, x0, #0  ; -> $x.4+0xa5
+       a40:  b        #0xa90  ; -> $d.42+0xe0
+       a44:  bl       #0xa44  ; -> ktime_get+0x0
+       a48:  str      x0, [x19, #0x190]
+       a4c:  mov      w0, #1
+       a50:  bl       #0xa50  ; -> ktime_get_with_offset+0x0
+       a54:  str      x0, [x19, #0x1a0]
+       a58:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       a5c:  ldur     x8, [x29, #-8]
+       a60:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       a64:  cmp      x9, x8
+       a68:  b.ne     #0xaa0  ; -> $d.42+0xf0
+       a6c:  ldp      x29, x30, [sp, #0x20]
+       a70:  ldp      x20, x19, [sp, #0x40]
+       a74:  ldr      x21, [sp, #0x30]
+       a78:  ldr      x30, [x18, #-8]!
+       a7c:  mov      w0, wzr
+       a80:  add      sp, sp, #0x50
+       a84:  ret      
+       a88:  adrp     x0, #0  ; -> sym#88+0x183
+       a8c:  add      x0, x0, #0  ; -> $x.4+0x63
+       a90:  adrp     x1, #0  ; -> sym#88+0x555
+       a94:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       a98:  bl       #0xa98  ; -> printk+0x0
+       a9c:  b        #0xa58  ; -> $d.42+0xa8
+       aa0:  bl       #0xaa0  ; -> __stack_chk_fail+0x0
+       aa4:  sub      sp, sp, #0xa0
+       aa8:  str      x30, [x18], #8
+       aac:  stp      x29, x30, [sp, #0x40]
+       ab0:  stp      x28, x27, [sp, #0x50]
+       ab4:  stp      x26, x25, [sp, #0x60]
+       ab8:  stp      x24, x23, [sp, #0x70]
+       abc:  stp      x22, x21, [sp, #0x80]
+       ac0:  stp      x20, x19, [sp, #0x90]
+       ac4:  add      x29, sp, #0x40
+       ac8:  adrp     x8, #0  ; -> sym#86+0x8
+       acc:  ldr      x0, [x8]  ; sym#86+0x8
+       ad0:  cbnz     x0, #0xaf0
+       ad4:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       ad8:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       adc:  mov      w1, #0xdc0
+       ae0:  mov      w2, #0x538
+       ae4:  bl       #0xae4  ; -> kmem_cache_alloc_trace+0x0
+       ae8:  adrp     x8, #0  ; -> sym#86+0x8
+       aec:  str      x0, [x8]  ; sym#86+0x8
+       af0:  mov      w21, wzr
+       af4:  mov      w20, wzr
+       af8:  add      x8, x0, #0x148
+       afc:  add      x26, x0, #0x150
+       b00:  add      x28, x0, #0x158
+       b04:  add      x27, x0, #0x160
+       b08:  add      x19, x0, #0x168
+       b0c:  add      x23, x0, #0x170
+       b10:  add      x24, x0, #0x178
+       b14:  add      x22, x0, #0x180
+       b18:  stur     x8, [x29, #-8]
+       b1c:  str      x0, [sp, #8]
+       b20:  stur     x22, [x29, #-0x10]
+       b24:  str      x26, [sp, #0x10]
+       b28:  stur     x19, [x29, #-0x18]
+       b2c:  stp      x28, x27, [sp, #0x18]
+       b30:  b        #0xb60  ; -> $d.41+0x90
+       b34:  ldr      x0, [x22]
+       b38:  cbz      x0, #0xc7c
+       b3c:  ldr      x8, [x25, #0x48]
+       b40:  ldr      x21, [x8, #8]
+       b44:  mov      x1, x21
+       b48:  bl       #0xb48  ; -> strcmp+0x0
+       b4c:  cbz      w0, #0xce0
+       b50:  mov      w21, wzr
+       b54:  add      w20, w20, #1
+       b58:  cmp      w20, #0x200
+       b5c:  b.eq     #0xe50  ; -> $d.41+0x380
+       b60:  mov      w0, w20
+       b64:  bl       #0xb64  ; -> irq_to_desc+0x0
+       b68:  cbz      x0, #0xb54
+       b6c:  ldur     x8, [x29, #-8]
+       b70:  mov      x25, x0
+       b74:  ldr      x0, [x8]
+       b78:  cbz      x0, #0xc00
+       b7c:  ldr      x8, [x25, #0x48]
+       b80:  ldr      x1, [x8, #8]
+       b84:  bl       #0xb84  ; -> strcmp+0x0
+       b88:  mov      w8, wzr
+       b8c:  cbz      w0, #0xc8c
+       b90:  ldr      x0, [x26]
+       b94:  cbz      x0, #0xc0c
+       b98:  ldr      x8, [x25, #0x48]
+       b9c:  ldr      x1, [x8, #8]
+       ba0:  bl       #0xba0  ; -> strcmp+0x0
+       ba4:  cbz      w0, #0xc98
+       ba8:  mov      w8, wzr
+       bac:  ldr      x0, [x28]
+       bb0:  cbnz     x0, #0xc14
+       bb4:  ldr      x0, [x27]
+       bb8:  cbz      x0, #0xc30
+       bbc:  ldr      x8, [x25, #0x48]
+       bc0:  ldr      x1, [x8, #8]
+       bc4:  bl       #0xbc4  ; -> strcmp+0x0
+       bc8:  cbz      w0, #0xcb0
+       bcc:  mov      w8, wzr
+       bd0:  ldr      x0, [x19]
+       bd4:  cbnz     x0, #0xc38
+       bd8:  ldr      x0, [x23]
+       bdc:  cbz      x0, #0xc54
+       be0:  ldr      x8, [x25, #0x48]
+       be4:  ldr      x1, [x8, #8]
+       be8:  bl       #0xbe8  ; -> strcmp+0x0
+       bec:  cbz      w0, #0xcc8
+       bf0:  mov      w8, wzr
+       bf4:  ldr      x0, [x24]
+       bf8:  cbnz     x0, #0xc5c
+       bfc:  b        #0xb34  ; -> $d.41+0x64
+       c00:  mov      w8, #1
+       c04:  ldr      x0, [x26]
+       c08:  cbnz     x0, #0xb98
+       c0c:  ldr      x0, [x28]
+       c10:  cbz      x0, #0xbb4
+       c14:  ldr      x8, [x25, #0x48]
+       c18:  ldr      x1, [x8, #8]
+       c1c:  bl       #0xc1c  ; -> strcmp+0x0
+       c20:  cbz      w0, #0xca4
+       c24:  mov      w8, wzr
+       c28:  ldr      x0, [x27]
+       c2c:  cbnz     x0, #0xbbc
+       c30:  ldr      x0, [x19]
+       c34:  cbz      x0, #0xbd8
+       c38:  ldr      x8, [x25, #0x48]
+       c3c:  ldr      x1, [x8, #8]
+       c40:  bl       #0xc40  ; -> strcmp+0x0
+       c44:  cbz      w0, #0xcbc
+       c48:  mov      w8, wzr
+       c4c:  ldr      x0, [x23]
+       c50:  cbnz     x0, #0xbe0
+       c54:  ldr      x0, [x24]
+       c58:  cbz      x0, #0xb34
+       c5c:  ldr      x8, [x25, #0x48]
+       c60:  ldr      x21, [x8, #8]
+       c64:  mov      x1, x21
+       c68:  bl       #0xc68  ; -> strcmp+0x0
+       c6c:  cbz      w0, #0xcd4
+       c70:  ldr      x0, [x22]
+       c74:  cbnz     x0, #0xb44
+       c78:  b        #0xb50  ; -> $d.41+0x80
+       c7c:  cmp      w8, #0
+       c80:  cset     w21, ne
+       c84:  cbz      w8, #0xb54
+       c88:  b        #0xe50  ; -> $d.41+0x380
+       c8c:  ldur     x22, [x29, #-8]
+       c90:  mov      w26, wzr
+       c94:  b        #0xce4  ; -> $d.41+0x214
+       c98:  mov      x22, x26
+       c9c:  mov      w26, #1
+       ca0:  b        #0xce4  ; -> $d.41+0x214
+       ca4:  mov      w26, #2
+       ca8:  mov      x22, x28
+       cac:  b        #0xce4  ; -> $d.41+0x214
+       cb0:  mov      w26, #3
+       cb4:  mov      x22, x27
+       cb8:  b        #0xce4  ; -> $d.41+0x214
+       cbc:  mov      w26, #4
+       cc0:  mov      x22, x19
+       cc4:  b        #0xce4  ; -> $d.41+0x214
+       cc8:  mov      w26, #5
+       ccc:  mov      x22, x23
+       cd0:  b        #0xce4  ; -> $d.41+0x214
+       cd4:  mov      w26, #6
+       cd8:  mov      x22, x24
+       cdc:  b        #0xce4  ; -> $d.41+0x214
+       ce0:  mov      w26, #7
+       ce4:  adrp     x8, #0  ; -> sym#86+0x8
+       ce8:  mov      x19, x23
+       cec:  mov      x23, x24
+       cf0:  ldr      x27, [x8]  ; sym#86+0x8
+       cf4:  ldr      x24, [x25, #0x50]
+       cf8:  cbnz     x27, #0xd1c
+       cfc:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       d00:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       d04:  mov      w1, #0xdc0
+       d08:  mov      w2, #0x538
+       d0c:  bl       #0xd0c  ; -> kmem_cache_alloc_trace+0x0
+       d10:  mov      x27, x0
+       d14:  adrp     x8, #0  ; -> sym#86+0x8
+       d18:  str      x0, [x8]  ; sym#86+0x8
+       d1c:  add      x25, x27, #0xe0
+       d20:  mov      x0, x25
+       d24:  bl       #0xd24  ; -> _raw_read_lock+0x0
+       d28:  add      x28, x27, #0x48
+       d2c:  mov      x8, x28
+       d30:  ldr      x8, [x8]
+; sprd_pdbg_cpu_pm_notifier @ 0x568 (968 B)
+       568:  str      x30, [x18], #8
+       56c:  stp      x29, x30, [sp, #-0x60]!
+       570:  str      x27, [sp, #0x10]
+       574:  stp      x26, x25, [sp, #0x20]
+       578:  stp      x24, x23, [sp, #0x30]
+       57c:  stp      x22, x21, [sp, #0x40]
+       580:  stp      x20, x19, [sp, #0x50]
+       584:  mov      x29, sp
+       588:  adrp     x24, #0  ; -> sym#86+0x8
+       58c:  ldr      x19, [x24]  ; sym#86+0x8
+       590:  mov      x20, x1
+       594:  cbnz     x19, #0x5b8
+       598:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       59c:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       5a0:  mov      w1, #0xdc0
+       5a4:  mov      w2, #0x538
+       5a8:  bl       #0x5a8  ; -> kmem_cache_alloc_trace+0x0
+       5ac:  mov      x19, x0
+       5b0:  str      x0, [x24]  ; sym#86+0x8
+       5b4:  cbz      x0, #0x5cc
+       5b8:  cmp      x20, #5
+       5bc:  b.eq     #0x5ec  ; -> $x.8+0x84
+       5c0:  cmp      x20, #3
+       5c4:  b.eq     #0x68c  ; -> $x.8+0x124
+       5c8:  mov      w0, #1
+       5cc:  ldp      x20, x19, [sp, #0x50]
+       5d0:  ldp      x22, x21, [sp, #0x40]
+       5d4:  ldp      x24, x23, [sp, #0x30]
+       5d8:  ldp      x26, x25, [sp, #0x20]
+       5dc:  ldr      x27, [sp, #0x10]
+       5e0:  ldp      x29, x30, [sp], #0x60
+       5e4:  ldr      x30, [x18, #-8]!
+       5e8:  ret      
+       5ec:  adrp     x26, #0  ; -> sym#86+0x0
+       5f0:  ldr      w8, [x26]  ; sym#86+0x0
+       5f4:  adrp     x9, #0  ; -> sym#88+0x4ba
+       5f8:  adrp     x10, #0  ; -> sym#88+0x6ea
+       5fc:  add      x9, x9, #0  ; -> $x.6+0x62
+       600:  add      x10, x10, #0  ; -> $x.8+0x182
+       604:  cmp      w8, #0
+       608:  adrp     x1, #0  ; -> sym#88+0x555
+       60c:  csel     x0, x10, x9, eq
+       610:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       614:  bl       #0x614  ; -> printk+0x0
+       618:  ldr      x8, [x19, #0x10]
+       61c:  mov      x0, #0x1136
+       620:  movk     x0, #0xfaa0, lsl #16
+       624:  movk     x0, #0xbc12, lsl #32
+       628:  ldr      x21, [x8, #0x10]
+       62c:  movk     x0, #0x1d0c, lsl #48
+       630:  mov      x1, x21
+       634:  bl       #0x634  ; -> __cfi_slowpath+0x0
+       638:  add      x20, x19, #0xf8
+       63c:  add      x3, x19, #0x100
+       640:  add      x4, x19, #0x108
+       644:  add      x5, x19, #0x110
+       648:  mov      w0, #6
+       64c:  mov      w1, wzr
+       650:  mov      x2, x20
+       654:  blr      x21
+       658:  mov      x8, #0x4433
+       65c:  movk     x8, #0x6655, lsl #16
+       660:  movk     x8, #0x8877, lsl #32
+       664:  movk     x8, #0xaa99, lsl #48
+       668:  cmp      x0, x8
+       66c:  b.ne     #0x6e4  ; -> $x.8+0x17c
+       670:  adrp     x0, #0  ; -> sym#88+0x5f1
+       674:  adrp     x1, #0  ; -> sym#88+0x555
+       678:  add      x0, x0, #0  ; -> $x.8+0x89
+       67c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       680:  mov      w2, #6
+       684:  bl       #0x684  ; -> printk+0x0
+       688:  b        #0x868  ; -> $d.40+0x48
+       68c:  adrp     x20, #0  ; -> sym#86+0x0
+       690:  ldr      w8, [x20]  ; sym#86+0x0
+       694:  adrp     x9, #0  ; -> sym#88+0x7aa
+       698:  adrp     x10, #0  ; -> sym#88+0x2dc
+       69c:  add      x9, x9, #0  ; -> $x.8+0x242
+       6a0:  add      x10, x10, #0  ; -> $x.4+0x1bc
+       6a4:  cmp      w8, #0
+       6a8:  adrp     x1, #0  ; -> sym#88+0x555
+       6ac:  csel     x0, x10, x9, eq
+       6b0:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6b4:  bl       #0x6b4  ; -> printk+0x0
+       6b8:  add      x1, x19, #0x1b2
+       6bc:  mov      w2, #1
+       6c0:  mov      x0, x19
+       6c4:  mov      w21, #1
+       6c8:  bl       #0x6c8  ; -> sym#89+0x112c
+       6cc:  strb     w21, [x19, #0x1b0]
+       6d0:  ldr      w8, [x20]  ; sym#86+0x0
+       6d4:  cbnz     w8, #0x704
+       6d8:  adrp     x0, #0  ; -> sym#88+0x732
+       6dc:  add      x0, x0, #0  ; -> $x.8+0x1ca
+       6e0:  b        #0x884  ; -> $d.40+0x64
+       6e4:  ldr      x8, [x20]
+       6e8:  cbnz     x8, #0x710
+       6ec:  adrp     x0, #0  ; -> sym#88+0x4ee
+       6f0:  adrp     x1, #0  ; -> sym#88+0x555
+       6f4:  add      x0, x0, #0  ; -> $x.6+0x96
+       6f8:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6fc:  bl       #0x6fc  ; -> printk+0x0
+       700:  b        #0x868  ; -> $d.40+0x48
+       704:  adrp     x0, #0  ; -> sym#88+0x1e3
+       708:  add      x0, x0, #0  ; -> $x.4+0xc3
+       70c:  b        #0x884  ; -> $d.40+0x64
+       710:  ldr      x23, [x19, #0x108]
+       714:  ldr      w21, [x19, #0x100]
+       718:  add      x20, x19, #0x1b2
+       71c:  adrp     x2, #0  ; -> sym#88+0x7ff
+       720:  ubfx     x3, x8, #0x10, #0x10
+       724:  and      w4, w8, #0xffff
+       728:  add      x2, x2, #0  ; -> $x.8+0x297  '[%d:%d:%d:%d]'
+       72c:  mov      w1, #0x380
+       730:  mov      x0, x20
+       734:  mov      w5, w21
+       738:  mov      w6, w23
+       73c:  bl       #0x73c  ; -> scnprintf+0x0
+       740:  cmn      w23, #1
+       744:  b.eq     #0x83c  ; -> $d.40+0x1c
+       748:  cmn      w21, #1
+       74c:  b.eq     #0x83c  ; -> $d.40+0x1c
+       750:  ldr      x25, [x24]  ; sym#86+0x8
+       754:  mov      w22, w0
+       758:  and      x23, x23, #0xffffffff
+       75c:  cbnz     x25, #0x77c
+       760:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       764:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       768:  mov      w1, #0xdc0
+       76c:  mov      w2, #0x538
+       770:  bl       #0x770  ; -> kmem_cache_alloc_trace+0x0
+       774:  mov      x25, x0
+       778:  str      x0, [x24]  ; sym#86+0x8
+       77c:  add      x24, x25, #0xe0
+       780:  mov      x0, x24
+       784:  bl       #0x784  ; -> _raw_read_lock+0x0
+       788:  add      x8, x25, #0x48
+       78c:  mov      x25, x8
+       790:  ldr      x25, [x25]
+       794:  cmp      x8, x25
+       798:  b.eq     #0x81c  ; -> $x.8+0x2b4
+       79c:  ldur     w9, [x25, #-0x10]
+       7a0:  cmp      w9, w21
+       7a4:  b.ne     #0x790  ; -> $x.8+0x228
+       7a8:  mov      x0, x24
+       7ac:  sub      x27, x25, #0x10
+       7b0:  bl       #0x7b0  ; -> _raw_read_unlock+0x0
+       7b4:  cbz      x27, #0x824
+       7b8:  ldur     x0, [x25, #-8]
+       7bc:  mov      x1, x23
+       7c0:  bl       #0x7c0  ; -> irq_find_mapping+0x0
+       7c4:  mov      w23, w0
+       7c8:  bl       #0x7c8  ; -> irq_to_desc+0x0
+       7cc:  add      x8, x19, w22, sxtw
+       7d0:  mov      w24, #0x380
+       7d4:  mov      x21, x0
+       7d8:  add      x0, x8, #0x1b2
+       7dc:  sub      w8, w24, w22
+       7e0:  adrp     x2, #0  ; -> sym#88+0x215
+       7e4:  sxtw     x1, w8
+       7e8:  add      x2, x2, #0  ; -> $x.4+0xf5  ' | [%d]'
+       7ec:  mov      w3, w23
+       7f0:  bl       #0x7f0  ; -> scnprintf+0x0
+       7f4:  add      w22, w0, w22
+       7f8:  cbnz     x21, #0x894
+       7fc:  add      x8, x19, w22, sxtw
+       800:  sub      w9, w24, w22
+       804:  adrp     x2, #0  ; -> sym#88+0x4ae
+       808:  add      x0, x8, #0x1b2
+       80c:  sxtw     x1, w9
+       810:  add      x2, x2, #0  ; -> $x.6+0x56  '| stray irq'
+       814:  bl       #0x814  ; -> scnprintf+0x0
+       818:  b        #0x83c  ; -> $d.40+0x1c
+       81c:  mov      x0, x24
+       820:  bl       #0x820  ; -> _raw_read_unlock+0x0
+       824:  adrp     x0, #0  ; -> sym#88+0x48
+       828:  adrp     x1, #0  ; -> sym#88+0x555
+       82c:  add      x0, x0, #0  ; -> $d.38+0xb
+       830:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       834:  mov      w2, w21
+       838:  bl       #0x838  ; -> printk+0x0
+       83c:  ldr      w8, [x26]  ; sym#86+0x0
+       840:  cbnz     w8, #0x850
+       844:  adrp     x0, #0  ; -> sym#88+0xcf
+       848:  add      x0, x0, #0  ; -> __UNIQUE_ID_depends128+0x3
+       84c:  b        #0x858  ; -> $d.40+0x38
+       850:  adrp     x0, #0  ; -> sym#88+0x51f
+       854:  add      x0, x0, #0  ; -> $x.6+0xc7
+       858:  adrp     x1, #0  ; -> sym#88+0x555
+       85c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       860:  mov      x2, x20
+       864:  bl       #0x864  ; -> printk+0x0
+       868:  ldr      w8, [x26]  ; sym#86+0x0
+       86c:  cbnz     w8, #0x87c
+       870:  adrp     x0, #0  ; -> sym#88+0x6e
+       874:  add      x0, x0, #0  ; -> $d.38+0x31
+       878:  b        #0x884  ; -> $d.40+0x64
+       87c:  adrp     x0, #0  ; -> sym#88+0x40c
+       880:  add      x0, x0, #0  ; -> $x.5
+       884:  adrp     x1, #0  ; -> sym#88+0x555
+       888:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       88c:  bl       #0x88c  ; -> printk+0x0
+       890:  b        #0x5c8  ; -> $x.8+0x60
+       894:  ldr      x8, [x21, #0x78]
+       898:  cbz      x8, #0x83c
+       89c:  ldr      x3, [x8, #0x50]
+       8a0:  cbz      x3, #0x8d0
+       8a4:  add      x8, x19, w22, sxtw
+       8a8:  mov      w9, #0x380
+       8ac:  add      x0, x8, #0x1b2
+       8b0:  sub      w8, w9, w22
+       8b4:  adrp     x2, #0  ; -> sym#88+0x80d
+       8b8:  sxtw     x1, w8
+       8bc:  add      x2, x2, #0  ; -> $x.8+0x2a5  ' | action: %s'
+       8c0:  bl       #0x8c0  ; -> scnprintf+0x0
+       8c4:  ldr      x8, [x21, #0x78]
+       8c8:  cbz      x8, #0x83c
+       8cc:  add      w22, w0, w22
+       8d0:  ldr      x3, [x8]
+       8d4:  cbz      x3, #0x904
+       8d8:  add      x8, x19, w22, sxtw
+       8dc:  mov      w9, #0x380
+       8e0:  add      x0, x8, #0x1b2
+       8e4:  sub      w8, w9, w22
+       8e8:  adrp     x2, #0  ; -> sym#88+0x7dc
+       8ec:  sxtw     x1, w8
+       8f0:  add      x2, x2, #0  ; -> $x.8+0x274  ' | handler: %ps'
+       8f4:  bl       #0x8f4  ; -> scnprintf+0x0
+       8f8:  ldr      x8, [x21, #0x78]
+       8fc:  cbz      x8, #0x83c
+       900:  add      w22, w0, w22
+       904:  ldr      x3, [x8, #0x20]
+       908:  cbz      x3, #0x83c
+       90c:  add      x8, x19, w22, sxtw
+       910:  mov      w9, #0x380
+       914:  add      x0, x8, #0x1b2
+       918:  sub      w8, w9, w22
+       91c:  adrp     x2, #0  ; -> sym#88+0x362
+       920:  sxtw     x1, w8
+       924:  add      x2, x2, #0  ; -> $x.4+0x242  ' | thread_fn: %ps'
+       928:  bl       #0x928  ; -> scnprintf+0x0
+       92c:  b        #0x83c  ; -> $d.40+0x1c
+       930:  sub      sp, sp, #0x50
+       934:  str      x30, [x18], #8
+       938:  stp      x29, x30, [sp, #0x20]
+       93c:  str      x21, [sp, #0x30]
+       940:  stp      x20, x19, [sp, #0x40]
+       944:  add      x29, sp, #0x20
+       948:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       94c:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       950:  adrp     x21, #0  ; -> sym#86+0x8
+       954:  mov      x20, x1
+       958:  stur     x8, [x29, #-8]
+       95c:  ldr      x19, [x21]  ; sym#86+0x8
+       960:  cbnz     x19, #0x984
+       964:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       968:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+; sprd_pdbg_release @ 0x458 (244 B)
+       458:  str      x30, [x18], #8
+       45c:  stp      x29, x30, [sp, #-0x50]!
+       460:  str      x25, [sp, #0x10]
+       464:  stp      x24, x23, [sp, #0x20]
+       468:  stp      x22, x21, [sp, #0x30]
+       46c:  stp      x20, x19, [sp, #0x40]
+       470:  mov      x29, sp
+       474:  mov      x19, x0
+       478:  add      x0, x0, #0x58
+       47c:  bl       #0x47c  ; -> cancel_delayed_work_sync+0x0
+       480:  add      x20, x19, #0xe0
+       484:  mov      x0, x20
+       488:  bl       #0x488  ; -> _raw_write_lock+0x0
+       48c:  mov      x23, x19
+       490:  ldr      x21, [x23, #0x48]!
+       494:  cmp      x23, x21
+       498:  b.eq     #0x4e8  ; -> $x.6+0x90
+       49c:  mov      x24, #0x100
+       4a0:  movk     x24, #0xdead, lsl #48
+       4a4:  b        #0x4c4  ; -> $x.6+0x6c
+       4a8:  add      x8, x24, #0x22
+       4ac:  mov      x0, x22
+       4b0:  stp      x24, x8, [x21]
+       4b4:  bl       #0x4b4  ; -> kfree+0x0
+       4b8:  cmp      x23, x25
+       4bc:  mov      x21, x25
+       4c0:  b.eq     #0x4e8  ; -> $x.6+0x90
+       4c4:  mov      x22, x21
+       4c8:  ldr      x25, [x22], #0xfffffffffffffff0
+       4cc:  mov      x0, x21
+       4d0:  bl       #0x4d0  ; -> __list_del_entry_valid+0x0
+       4d4:  tbz      w0, #0, #0x4a8
+       4d8:  ldp      x9, x8, [x21]
+       4dc:  str      x8, [x9, #8]
+       4e0:  str      x9, [x8]
+       4e4:  b        #0x4a8  ; -> $x.6+0x50
+       4e8:  mov      x0, x20
+       4ec:  bl       #0x4ec  ; -> _raw_write_unlock+0x0
+       4f0:  adrp     x0, #0  ; -> sym#88+0x5e7
+       4f4:  add      x0, x0, #0  ; -> $x.8+0x7f  'sprd-pdbg'
+       4f8:  mov      x1, xzr
+       4fc:  bl       #0x4fc  ; -> remove_proc_entry+0x0
+       500:  cbz      x19, #0x528
+       504:  ldr      x0, [x19]
+       508:  cbz      x0, #0x528
+       50c:  bl       #0x50c  ; -> kthread_stop+0x0
+       510:  mov      x20, x19
+       514:  add      x0, x19, #0x30
+       518:  str      xzr, [x20], #0x18
+       51c:  bl       #0x51c  ; -> cpu_pm_unregister_notifier+0x0
+       520:  mov      x0, x20
+       524:  bl       #0x524  ; -> unregister_pm_notifier+0x0
+       528:  mov      x0, x19
+       52c:  bl       #0x52c  ; -> kfree+0x0
+       530:  ldp      x20, x19, [sp, #0x40]
+       534:  ldp      x22, x21, [sp, #0x30]
+       538:  ldp      x24, x23, [sp, #0x20]
+       53c:  ldr      x25, [sp, #0x10]
+       540:  ldp      x29, x30, [sp], #0x50
+       544:  ldr      x30, [x18, #-8]!
+       548:  ret      
+       54c:  str      x30, [x18], #8
+       550:  stp      x29, x30, [sp, #-0x10]!
+       554:  mov      x29, sp
+       558:  bl       #0x558  ; -> sym#89+0x458
+       55c:  ldp      x29, x30, [sp], #0x10
+       560:  ldr      x30, [x18, #-8]!
+       564:  ret      
+       568:  str      x30, [x18], #8
+       56c:  stp      x29, x30, [sp, #-0x60]!
+       570:  str      x27, [sp, #0x10]
+       574:  stp      x26, x25, [sp, #0x20]
+       578:  stp      x24, x23, [sp, #0x30]
+       57c:  stp      x22, x21, [sp, #0x40]
+       580:  stp      x20, x19, [sp, #0x50]
+       584:  mov      x29, sp
+       588:  adrp     x24, #0  ; -> sym#86+0x8
+       58c:  ldr      x19, [x24]  ; sym#86+0x8
+       590:  mov      x20, x1
+       594:  cbnz     x19, #0x5b8
+       598:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       59c:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       5a0:  mov      w1, #0xdc0
+       5a4:  mov      w2, #0x538
+       5a8:  bl       #0x5a8  ; -> kmem_cache_alloc_trace+0x0
+       5ac:  mov      x19, x0
+       5b0:  str      x0, [x24]  ; sym#86+0x8
+       5b4:  cbz      x0, #0x5cc
+       5b8:  cmp      x20, #5
+       5bc:  b.eq     #0x5ec  ; -> $x.8+0x84
+       5c0:  cmp      x20, #3
+       5c4:  b.eq     #0x68c  ; -> $x.8+0x124
+       5c8:  mov      w0, #1
+       5cc:  ldp      x20, x19, [sp, #0x50]
+       5d0:  ldp      x22, x21, [sp, #0x40]
+       5d4:  ldp      x24, x23, [sp, #0x30]
+       5d8:  ldp      x26, x25, [sp, #0x20]
+       5dc:  ldr      x27, [sp, #0x10]
+       5e0:  ldp      x29, x30, [sp], #0x60
+       5e4:  ldr      x30, [x18, #-8]!
+       5e8:  ret      
+       5ec:  adrp     x26, #0  ; -> sym#86+0x0
+       5f0:  ldr      w8, [x26]  ; sym#86+0x0
+       5f4:  adrp     x9, #0  ; -> sym#88+0x4ba
+       5f8:  adrp     x10, #0  ; -> sym#88+0x6ea
+       5fc:  add      x9, x9, #0  ; -> $x.6+0x62
+       600:  add      x10, x10, #0  ; -> $x.8+0x182
+       604:  cmp      w8, #0
+       608:  adrp     x1, #0  ; -> sym#88+0x555
+       60c:  csel     x0, x10, x9, eq
+       610:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       614:  bl       #0x614  ; -> printk+0x0
+       618:  ldr      x8, [x19, #0x10]
+       61c:  mov      x0, #0x1136
+       620:  movk     x0, #0xfaa0, lsl #16
+       624:  movk     x0, #0xbc12, lsl #32
+       628:  ldr      x21, [x8, #0x10]
+       62c:  movk     x0, #0x1d0c, lsl #48
+       630:  mov      x1, x21
+       634:  bl       #0x634  ; -> __cfi_slowpath+0x0
+       638:  add      x20, x19, #0xf8
+       63c:  add      x3, x19, #0x100
+       640:  add      x4, x19, #0x108
+       644:  add      x5, x19, #0x110
+       648:  mov      w0, #6
+       64c:  mov      w1, wzr
+       650:  mov      x2, x20
+       654:  blr      x21
+       658:  mov      x8, #0x4433
+       65c:  movk     x8, #0x6655, lsl #16
+       660:  movk     x8, #0x8877, lsl #32
+       664:  movk     x8, #0xaa99, lsl #48
+       668:  cmp      x0, x8
+       66c:  b.ne     #0x6e4  ; -> $x.8+0x17c
+       670:  adrp     x0, #0  ; -> sym#88+0x5f1
+       674:  adrp     x1, #0  ; -> sym#88+0x555
+       678:  add      x0, x0, #0  ; -> $x.8+0x89
+       67c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       680:  mov      w2, #6
+       684:  bl       #0x684  ; -> printk+0x0
+       688:  b        #0x868  ; -> $d.40+0x48
+       68c:  adrp     x20, #0  ; -> sym#86+0x0
+       690:  ldr      w8, [x20]  ; sym#86+0x0
+       694:  adrp     x9, #0  ; -> sym#88+0x7aa
+       698:  adrp     x10, #0  ; -> sym#88+0x2dc
+       69c:  add      x9, x9, #0  ; -> $x.8+0x242
+       6a0:  add      x10, x10, #0  ; -> $x.4+0x1bc
+       6a4:  cmp      w8, #0
+       6a8:  adrp     x1, #0  ; -> sym#88+0x555
+       6ac:  csel     x0, x10, x9, eq
+       6b0:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6b4:  bl       #0x6b4  ; -> printk+0x0
+       6b8:  add      x1, x19, #0x1b2
+       6bc:  mov      w2, #1
+       6c0:  mov      x0, x19
+       6c4:  mov      w21, #1
+       6c8:  bl       #0x6c8  ; -> sym#89+0x112c
+       6cc:  strb     w21, [x19, #0x1b0]
+       6d0:  ldr      w8, [x20]  ; sym#86+0x0
+       6d4:  cbnz     w8, #0x704
+       6d8:  adrp     x0, #0  ; -> sym#88+0x732
+       6dc:  add      x0, x0, #0  ; -> $x.8+0x1ca
+       6e0:  b        #0x884  ; -> $d.40+0x64
+       6e4:  ldr      x8, [x20]
+       6e8:  cbnz     x8, #0x710
+       6ec:  adrp     x0, #0  ; -> sym#88+0x4ee
+       6f0:  adrp     x1, #0  ; -> sym#88+0x555
+       6f4:  add      x0, x0, #0  ; -> $x.6+0x96
+       6f8:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6fc:  bl       #0x6fc  ; -> printk+0x0
+       700:  b        #0x868  ; -> $d.40+0x48
+       704:  adrp     x0, #0  ; -> sym#88+0x1e3
+       708:  add      x0, x0, #0  ; -> $x.4+0xc3
+       70c:  b        #0x884  ; -> $d.40+0x64
+       710:  ldr      x23, [x19, #0x108]
+       714:  ldr      w21, [x19, #0x100]
+       718:  add      x20, x19, #0x1b2
+       71c:  adrp     x2, #0  ; -> sym#88+0x7ff
+       720:  ubfx     x3, x8, #0x10, #0x10
+       724:  and      w4, w8, #0xffff
+       728:  add      x2, x2, #0  ; -> $x.8+0x297  '[%d:%d:%d:%d]'
+       72c:  mov      w1, #0x380
+       730:  mov      x0, x20
+       734:  mov      w5, w21
+       738:  mov      w6, w23
+       73c:  bl       #0x73c  ; -> scnprintf+0x0
+       740:  cmn      w23, #1
+       744:  b.eq     #0x83c  ; -> $d.40+0x1c
+       748:  cmn      w21, #1
+       74c:  b.eq     #0x83c  ; -> $d.40+0x1c
+       750:  ldr      x25, [x24]  ; sym#86+0x8
+       754:  mov      w22, w0
+       758:  and      x23, x23, #0xffffffff
+       75c:  cbnz     x25, #0x77c
+       760:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       764:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       768:  mov      w1, #0xdc0
+       76c:  mov      w2, #0x538
+       770:  bl       #0x770  ; -> kmem_cache_alloc_trace+0x0
+       774:  mov      x25, x0
+       778:  str      x0, [x24]  ; sym#86+0x8
+       77c:  add      x24, x25, #0xe0
+       780:  mov      x0, x24
+       784:  bl       #0x784  ; -> _raw_read_lock+0x0
+       788:  add      x8, x25, #0x48
+       78c:  mov      x25, x8
+       790:  ldr      x25, [x25]
+       794:  cmp      x8, x25
+       798:  b.eq     #0x81c  ; -> $x.8+0x2b4
+       79c:  ldur     w9, [x25, #-0x10]
+       7a0:  cmp      w9, w21
+       7a4:  b.ne     #0x790  ; -> $x.8+0x228
+       7a8:  mov      x0, x24
+       7ac:  sub      x27, x25, #0x10
+       7b0:  bl       #0x7b0  ; -> _raw_read_unlock+0x0
+       7b4:  cbz      x27, #0x824
+       7b8:  ldur     x0, [x25, #-8]
+       7bc:  mov      x1, x23
+       7c0:  bl       #0x7c0  ; -> irq_find_mapping+0x0
+       7c4:  mov      w23, w0
+       7c8:  bl       #0x7c8  ; -> irq_to_desc+0x0
+       7cc:  add      x8, x19, w22, sxtw
+       7d0:  mov      w24, #0x380
+       7d4:  mov      x21, x0
+       7d8:  add      x0, x8, #0x1b2
+       7dc:  sub      w8, w24, w22
+       7e0:  adrp     x2, #0  ; -> sym#88+0x215
+       7e4:  sxtw     x1, w8
+       7e8:  add      x2, x2, #0  ; -> $x.4+0xf5  ' | [%d]'
+       7ec:  mov      w3, w23
+       7f0:  bl       #0x7f0  ; -> scnprintf+0x0
+       7f4:  add      w22, w0, w22
+       7f8:  cbnz     x21, #0x894
+       7fc:  add      x8, x19, w22, sxtw
+       800:  sub      w9, w24, w22
+       804:  adrp     x2, #0  ; -> sym#88+0x4ae
+       808:  add      x0, x8, #0x1b2
+       80c:  sxtw     x1, w9
+       810:  add      x2, x2, #0  ; -> $x.6+0x56  '| stray irq'
+       814:  bl       #0x814  ; -> scnprintf+0x0
+       818:  b        #0x83c  ; -> $d.40+0x1c
+       81c:  mov      x0, x24
+       820:  bl       #0x820  ; -> _raw_read_unlock+0x0
+       824:  adrp     x0, #0  ; -> sym#88+0x48
+       828:  adrp     x1, #0  ; -> sym#88+0x555
+       82c:  add      x0, x0, #0  ; -> $d.38+0xb
+       830:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       834:  mov      w2, w21
+       838:  bl       #0x838  ; -> printk+0x0
+       83c:  ldr      w8, [x26]  ; sym#86+0x0
+       840:  cbnz     w8, #0x850
+       844:  adrp     x0, #0  ; -> sym#88+0xcf
+       848:  add      x0, x0, #0  ; -> __UNIQUE_ID_depends128+0x3
+       84c:  b        #0x858  ; -> $d.40+0x38
+       850:  adrp     x0, #0  ; -> sym#88+0x51f
+       854:  add      x0, x0, #0  ; -> $x.6+0xc7
+       858:  adrp     x1, #0  ; -> sym#88+0x555
+; sprd_pdbg_remove @ 0x40c (76 B)
+       40c:  str      x30, [x18], #8
+       410:  stp      x29, x30, [sp, #-0x20]!
+       414:  str      x19, [sp, #0x10]
+       418:  mov      x29, sp
+       41c:  adrp     x19, #0  ; -> sym#86+0x8
+       420:  ldr      x0, [x19]  ; sym#86+0x8
+       424:  cbnz     x0, #0x440
+       428:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       42c:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       430:  mov      w1, #0xdc0
+       434:  mov      w2, #0x538
+       438:  bl       #0x438  ; -> kmem_cache_alloc_trace+0x0
+       43c:  str      x0, [x19]  ; sym#86+0x8
+       440:  bl       #0x440  ; -> sym#89+0x458
+       444:  ldr      x19, [sp, #0x10]
+       448:  mov      w0, wzr
+       44c:  ldp      x29, x30, [sp], #0x20
+       450:  ldr      x30, [x18, #-8]!
+       454:  ret      
+       458:  str      x30, [x18], #8
+       45c:  stp      x29, x30, [sp, #-0x50]!
+       460:  str      x25, [sp, #0x10]
+       464:  stp      x24, x23, [sp, #0x20]
+       468:  stp      x22, x21, [sp, #0x30]
+       46c:  stp      x20, x19, [sp, #0x40]
+       470:  mov      x29, sp
+       474:  mov      x19, x0
+       478:  add      x0, x0, #0x58
+       47c:  bl       #0x47c  ; -> cancel_delayed_work_sync+0x0
+       480:  add      x20, x19, #0xe0
+       484:  mov      x0, x20
+       488:  bl       #0x488  ; -> _raw_write_lock+0x0
+       48c:  mov      x23, x19
+       490:  ldr      x21, [x23, #0x48]!
+       494:  cmp      x23, x21
+       498:  b.eq     #0x4e8  ; -> $x.6+0x90
+       49c:  mov      x24, #0x100
+       4a0:  movk     x24, #0xdead, lsl #48
+       4a4:  b        #0x4c4  ; -> $x.6+0x6c
+       4a8:  add      x8, x24, #0x22
+       4ac:  mov      x0, x22
+       4b0:  stp      x24, x8, [x21]
+       4b4:  bl       #0x4b4  ; -> kfree+0x0
+       4b8:  cmp      x23, x25
+       4bc:  mov      x21, x25
+       4c0:  b.eq     #0x4e8  ; -> $x.6+0x90
+       4c4:  mov      x22, x21
+       4c8:  ldr      x25, [x22], #0xfffffffffffffff0
+       4cc:  mov      x0, x21
+       4d0:  bl       #0x4d0  ; -> __list_del_entry_valid+0x0
+       4d4:  tbz      w0, #0, #0x4a8
+       4d8:  ldp      x9, x8, [x21]
+       4dc:  str      x8, [x9, #8]
+       4e0:  str      x9, [x8]
+       4e4:  b        #0x4a8  ; -> $x.6+0x50
+       4e8:  mov      x0, x20
+       4ec:  bl       #0x4ec  ; -> _raw_write_unlock+0x0
+       4f0:  adrp     x0, #0  ; -> sym#88+0x5e7
+       4f4:  add      x0, x0, #0  ; -> $x.8+0x7f  'sprd-pdbg'
+       4f8:  mov      x1, xzr
+       4fc:  bl       #0x4fc  ; -> remove_proc_entry+0x0
+       500:  cbz      x19, #0x528
+       504:  ldr      x0, [x19]
+       508:  cbz      x0, #0x528
+       50c:  bl       #0x50c  ; -> kthread_stop+0x0
+       510:  mov      x20, x19
+       514:  add      x0, x19, #0x30
+       518:  str      xzr, [x20], #0x18
+       51c:  bl       #0x51c  ; -> cpu_pm_unregister_notifier+0x0
+       520:  mov      x0, x20
+       524:  bl       #0x524  ; -> unregister_pm_notifier+0x0
+       528:  mov      x0, x19
+       52c:  bl       #0x52c  ; -> kfree+0x0
+       530:  ldp      x20, x19, [sp, #0x40]
+       534:  ldp      x22, x21, [sp, #0x30]
+       538:  ldp      x24, x23, [sp, #0x20]
+       53c:  ldr      x25, [sp, #0x10]
+       540:  ldp      x29, x30, [sp], #0x50
+       544:  ldr      x30, [x18, #-8]!
+       548:  ret      
+       54c:  str      x30, [x18], #8
+       550:  stp      x29, x30, [sp, #-0x10]!
+       554:  mov      x29, sp
+       558:  bl       #0x558  ; -> sym#89+0x458
+       55c:  ldp      x29, x30, [sp], #0x10
+       560:  ldr      x30, [x18, #-8]!
+       564:  ret      
+       568:  str      x30, [x18], #8
+       56c:  stp      x29, x30, [sp, #-0x60]!
+       570:  str      x27, [sp, #0x10]
+       574:  stp      x26, x25, [sp, #0x20]
+       578:  stp      x24, x23, [sp, #0x30]
+       57c:  stp      x22, x21, [sp, #0x40]
+       580:  stp      x20, x19, [sp, #0x50]
+       584:  mov      x29, sp
+       588:  adrp     x24, #0  ; -> sym#86+0x8
+       58c:  ldr      x19, [x24]  ; sym#86+0x8
+       590:  mov      x20, x1
+       594:  cbnz     x19, #0x5b8
+       598:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       59c:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       5a0:  mov      w1, #0xdc0
+       5a4:  mov      w2, #0x538
+       5a8:  bl       #0x5a8  ; -> kmem_cache_alloc_trace+0x0
+       5ac:  mov      x19, x0
+       5b0:  str      x0, [x24]  ; sym#86+0x8
+       5b4:  cbz      x0, #0x5cc
+       5b8:  cmp      x20, #5
+       5bc:  b.eq     #0x5ec  ; -> $x.8+0x84
+       5c0:  cmp      x20, #3
+       5c4:  b.eq     #0x68c  ; -> $x.8+0x124
+       5c8:  mov      w0, #1
+       5cc:  ldp      x20, x19, [sp, #0x50]
+       5d0:  ldp      x22, x21, [sp, #0x40]
+       5d4:  ldp      x24, x23, [sp, #0x30]
+       5d8:  ldp      x26, x25, [sp, #0x20]
+       5dc:  ldr      x27, [sp, #0x10]
+       5e0:  ldp      x29, x30, [sp], #0x60
+       5e4:  ldr      x30, [x18, #-8]!
+       5e8:  ret      
+       5ec:  adrp     x26, #0  ; -> sym#86+0x0
+       5f0:  ldr      w8, [x26]  ; sym#86+0x0
+       5f4:  adrp     x9, #0  ; -> sym#88+0x4ba
+       5f8:  adrp     x10, #0  ; -> sym#88+0x6ea
+       5fc:  add      x9, x9, #0  ; -> $x.6+0x62
+       600:  add      x10, x10, #0  ; -> $x.8+0x182
+       604:  cmp      w8, #0
+       608:  adrp     x1, #0  ; -> sym#88+0x555
+       60c:  csel     x0, x10, x9, eq
+       610:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       614:  bl       #0x614  ; -> printk+0x0
+       618:  ldr      x8, [x19, #0x10]
+       61c:  mov      x0, #0x1136
+       620:  movk     x0, #0xfaa0, lsl #16
+       624:  movk     x0, #0xbc12, lsl #32
+       628:  ldr      x21, [x8, #0x10]
+       62c:  movk     x0, #0x1d0c, lsl #48
+       630:  mov      x1, x21
+       634:  bl       #0x634  ; -> __cfi_slowpath+0x0
+       638:  add      x20, x19, #0xf8
+       63c:  add      x3, x19, #0x100
+       640:  add      x4, x19, #0x108
+       644:  add      x5, x19, #0x110
+       648:  mov      w0, #6
+       64c:  mov      w1, wzr
+       650:  mov      x2, x20
+       654:  blr      x21
+       658:  mov      x8, #0x4433
+       65c:  movk     x8, #0x6655, lsl #16
+       660:  movk     x8, #0x8877, lsl #32
+       664:  movk     x8, #0xaa99, lsl #48
+       668:  cmp      x0, x8
+       66c:  b.ne     #0x6e4  ; -> $x.8+0x17c
+       670:  adrp     x0, #0  ; -> sym#88+0x5f1
+       674:  adrp     x1, #0  ; -> sym#88+0x555
+       678:  add      x0, x0, #0  ; -> $x.8+0x89
+       67c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       680:  mov      w2, #6
+       684:  bl       #0x684  ; -> printk+0x0
+       688:  b        #0x868  ; -> $d.40+0x48
+       68c:  adrp     x20, #0  ; -> sym#86+0x0
+       690:  ldr      w8, [x20]  ; sym#86+0x0
+       694:  adrp     x9, #0  ; -> sym#88+0x7aa
+       698:  adrp     x10, #0  ; -> sym#88+0x2dc
+       69c:  add      x9, x9, #0  ; -> $x.8+0x242
+       6a0:  add      x10, x10, #0  ; -> $x.4+0x1bc
+       6a4:  cmp      w8, #0
+       6a8:  adrp     x1, #0  ; -> sym#88+0x555
+       6ac:  csel     x0, x10, x9, eq
+       6b0:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6b4:  bl       #0x6b4  ; -> printk+0x0
+       6b8:  add      x1, x19, #0x1b2
+       6bc:  mov      w2, #1
+       6c0:  mov      x0, x19
+       6c4:  mov      w21, #1
+       6c8:  bl       #0x6c8  ; -> sym#89+0x112c
+       6cc:  strb     w21, [x19, #0x1b0]
+       6d0:  ldr      w8, [x20]  ; sym#86+0x0
+       6d4:  cbnz     w8, #0x704
+       6d8:  adrp     x0, #0  ; -> sym#88+0x732
+       6dc:  add      x0, x0, #0  ; -> $x.8+0x1ca
+       6e0:  b        #0x884  ; -> $d.40+0x64
+       6e4:  ldr      x8, [x20]
+       6e8:  cbnz     x8, #0x710
+       6ec:  adrp     x0, #0  ; -> sym#88+0x4ee
+       6f0:  adrp     x1, #0  ; -> sym#88+0x555
+       6f4:  add      x0, x0, #0  ; -> $x.6+0x96
+       6f8:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6fc:  bl       #0x6fc  ; -> printk+0x0
+       700:  b        #0x868  ; -> $d.40+0x48
+       704:  adrp     x0, #0  ; -> sym#88+0x1e3
+       708:  add      x0, x0, #0  ; -> $x.4+0xc3
+       70c:  b        #0x884  ; -> $d.40+0x64
+       710:  ldr      x23, [x19, #0x108]
+       714:  ldr      w21, [x19, #0x100]
+       718:  add      x20, x19, #0x1b2
+       71c:  adrp     x2, #0  ; -> sym#88+0x7ff
+       720:  ubfx     x3, x8, #0x10, #0x10
+       724:  and      w4, w8, #0xffff
+       728:  add      x2, x2, #0  ; -> $x.8+0x297  '[%d:%d:%d:%d]'
+       72c:  mov      w1, #0x380
+       730:  mov      x0, x20
+       734:  mov      w5, w21
+       738:  mov      w6, w23
+       73c:  bl       #0x73c  ; -> scnprintf+0x0
+       740:  cmn      w23, #1
+       744:  b.eq     #0x83c  ; -> $d.40+0x1c
+       748:  cmn      w21, #1
+       74c:  b.eq     #0x83c  ; -> $d.40+0x1c
+       750:  ldr      x25, [x24]  ; sym#86+0x8
+       754:  mov      w22, w0
+       758:  and      x23, x23, #0xffffffff
+       75c:  cbnz     x25, #0x77c
+       760:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       764:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       768:  mov      w1, #0xdc0
+       76c:  mov      w2, #0x538
+       770:  bl       #0x770  ; -> kmem_cache_alloc_trace+0x0
+       774:  mov      x25, x0
+       778:  str      x0, [x24]  ; sym#86+0x8
+       77c:  add      x24, x25, #0xe0
+       780:  mov      x0, x24
+       784:  bl       #0x784  ; -> _raw_read_lock+0x0
+       788:  add      x8, x25, #0x48
+       78c:  mov      x25, x8
+       790:  ldr      x25, [x25]
+       794:  cmp      x8, x25
+       798:  b.eq     #0x81c  ; -> $x.8+0x2b4
+       79c:  ldur     w9, [x25, #-0x10]
+       7a0:  cmp      w9, w21
+       7a4:  b.ne     #0x790  ; -> $x.8+0x228
+       7a8:  mov      x0, x24
+       7ac:  sub      x27, x25, #0x10
+       7b0:  bl       #0x7b0  ; -> _raw_read_unlock+0x0
+       7b4:  cbz      x27, #0x824
+       7b8:  ldur     x0, [x25, #-8]
+       7bc:  mov      x1, x23
+       7c0:  bl       #0x7c0  ; -> irq_find_mapping+0x0
+       7c4:  mov      w23, w0
+       7c8:  bl       #0x7c8  ; -> irq_to_desc+0x0
+       7cc:  add      x8, x19, w22, sxtw
+       7d0:  mov      w24, #0x380
+       7d4:  mov      x21, x0
+       7d8:  add      x0, x8, #0x1b2
+       7dc:  sub      w8, w24, w22
+       7e0:  adrp     x2, #0  ; -> sym#88+0x215
+       7e4:  sxtw     x1, w8
+       7e8:  add      x2, x2, #0  ; -> $x.4+0xf5  ' | [%d]'
+       7ec:  mov      w3, w23
+       7f0:  bl       #0x7f0  ; -> scnprintf+0x0
+       7f4:  add      w22, w0, w22
+       7f8:  cbnz     x21, #0x894
+       7fc:  add      x8, x19, w22, sxtw
+       800:  sub      w9, w24, w22
+       804:  adrp     x2, #0  ; -> sym#88+0x4ae
+       808:  add      x0, x8, #0x1b2
+       80c:  sxtw     x1, w9
+; sprd_pdbg_devm_action @ 0x54c (28 B)
+       54c:  str      x30, [x18], #8
+       550:  stp      x29, x30, [sp, #-0x10]!
+       554:  mov      x29, sp
+       558:  bl       #0x558  ; -> sym#89+0x458
+       55c:  ldp      x29, x30, [sp], #0x10
+       560:  ldr      x30, [x18, #-8]!
+       564:  ret      
+       568:  str      x30, [x18], #8
+       56c:  stp      x29, x30, [sp, #-0x60]!
+       570:  str      x27, [sp, #0x10]
+       574:  stp      x26, x25, [sp, #0x20]
+       578:  stp      x24, x23, [sp, #0x30]
+       57c:  stp      x22, x21, [sp, #0x40]
+       580:  stp      x20, x19, [sp, #0x50]
+       584:  mov      x29, sp
+       588:  adrp     x24, #0  ; -> sym#86+0x8
+       58c:  ldr      x19, [x24]  ; sym#86+0x8
+       590:  mov      x20, x1
+       594:  cbnz     x19, #0x5b8
+       598:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       59c:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       5a0:  mov      w1, #0xdc0
+       5a4:  mov      w2, #0x538
+       5a8:  bl       #0x5a8  ; -> kmem_cache_alloc_trace+0x0
+       5ac:  mov      x19, x0
+       5b0:  str      x0, [x24]  ; sym#86+0x8
+       5b4:  cbz      x0, #0x5cc
+       5b8:  cmp      x20, #5
+       5bc:  b.eq     #0x5ec  ; -> $x.8+0x84
+       5c0:  cmp      x20, #3
+       5c4:  b.eq     #0x68c  ; -> $x.8+0x124
+       5c8:  mov      w0, #1
+       5cc:  ldp      x20, x19, [sp, #0x50]
+       5d0:  ldp      x22, x21, [sp, #0x40]
+       5d4:  ldp      x24, x23, [sp, #0x30]
+       5d8:  ldp      x26, x25, [sp, #0x20]
+       5dc:  ldr      x27, [sp, #0x10]
+       5e0:  ldp      x29, x30, [sp], #0x60
+       5e4:  ldr      x30, [x18, #-8]!
+       5e8:  ret      
+       5ec:  adrp     x26, #0  ; -> sym#86+0x0
+       5f0:  ldr      w8, [x26]  ; sym#86+0x0
+       5f4:  adrp     x9, #0  ; -> sym#88+0x4ba
+       5f8:  adrp     x10, #0  ; -> sym#88+0x6ea
+       5fc:  add      x9, x9, #0  ; -> $x.6+0x62
+       600:  add      x10, x10, #0  ; -> $x.8+0x182
+       604:  cmp      w8, #0
+       608:  adrp     x1, #0  ; -> sym#88+0x555
+       60c:  csel     x0, x10, x9, eq
+       610:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       614:  bl       #0x614  ; -> printk+0x0
+       618:  ldr      x8, [x19, #0x10]
+       61c:  mov      x0, #0x1136
+       620:  movk     x0, #0xfaa0, lsl #16
+       624:  movk     x0, #0xbc12, lsl #32
+       628:  ldr      x21, [x8, #0x10]
+       62c:  movk     x0, #0x1d0c, lsl #48
+       630:  mov      x1, x21
+       634:  bl       #0x634  ; -> __cfi_slowpath+0x0
+       638:  add      x20, x19, #0xf8
+       63c:  add      x3, x19, #0x100
+       640:  add      x4, x19, #0x108
+       644:  add      x5, x19, #0x110
+       648:  mov      w0, #6
+       64c:  mov      w1, wzr
+       650:  mov      x2, x20
+       654:  blr      x21
+       658:  mov      x8, #0x4433
+       65c:  movk     x8, #0x6655, lsl #16
+       660:  movk     x8, #0x8877, lsl #32
+       664:  movk     x8, #0xaa99, lsl #48
+       668:  cmp      x0, x8
+       66c:  b.ne     #0x6e4  ; -> $x.8+0x17c
+       670:  adrp     x0, #0  ; -> sym#88+0x5f1
+       674:  adrp     x1, #0  ; -> sym#88+0x555
+       678:  add      x0, x0, #0  ; -> $x.8+0x89
+       67c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       680:  mov      w2, #6
+       684:  bl       #0x684  ; -> printk+0x0
+       688:  b        #0x868  ; -> $d.40+0x48
+       68c:  adrp     x20, #0  ; -> sym#86+0x0
+       690:  ldr      w8, [x20]  ; sym#86+0x0
+       694:  adrp     x9, #0  ; -> sym#88+0x7aa
+       698:  adrp     x10, #0  ; -> sym#88+0x2dc
+       69c:  add      x9, x9, #0  ; -> $x.8+0x242
+       6a0:  add      x10, x10, #0  ; -> $x.4+0x1bc
+       6a4:  cmp      w8, #0
+       6a8:  adrp     x1, #0  ; -> sym#88+0x555
+       6ac:  csel     x0, x10, x9, eq
+       6b0:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6b4:  bl       #0x6b4  ; -> printk+0x0
+       6b8:  add      x1, x19, #0x1b2
+       6bc:  mov      w2, #1
+       6c0:  mov      x0, x19
+       6c4:  mov      w21, #1
+       6c8:  bl       #0x6c8  ; -> sym#89+0x112c
+       6cc:  strb     w21, [x19, #0x1b0]
+       6d0:  ldr      w8, [x20]  ; sym#86+0x0
+       6d4:  cbnz     w8, #0x704
+       6d8:  adrp     x0, #0  ; -> sym#88+0x732
+       6dc:  add      x0, x0, #0  ; -> $x.8+0x1ca
+       6e0:  b        #0x884  ; -> $d.40+0x64
+       6e4:  ldr      x8, [x20]
+       6e8:  cbnz     x8, #0x710
+       6ec:  adrp     x0, #0  ; -> sym#88+0x4ee
+       6f0:  adrp     x1, #0  ; -> sym#88+0x555
+       6f4:  add      x0, x0, #0  ; -> $x.6+0x96
+       6f8:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       6fc:  bl       #0x6fc  ; -> printk+0x0
+       700:  b        #0x868  ; -> $d.40+0x48
+       704:  adrp     x0, #0  ; -> sym#88+0x1e3
+       708:  add      x0, x0, #0  ; -> $x.4+0xc3
+       70c:  b        #0x884  ; -> $d.40+0x64
+       710:  ldr      x23, [x19, #0x108]
+       714:  ldr      w21, [x19, #0x100]
+       718:  add      x20, x19, #0x1b2
+       71c:  adrp     x2, #0  ; -> sym#88+0x7ff
+       720:  ubfx     x3, x8, #0x10, #0x10
+       724:  and      w4, w8, #0xffff
+       728:  add      x2, x2, #0  ; -> $x.8+0x297  '[%d:%d:%d:%d]'
+       72c:  mov      w1, #0x380
+       730:  mov      x0, x20
+       734:  mov      w5, w21
+       738:  mov      w6, w23
+       73c:  bl       #0x73c  ; -> scnprintf+0x0
+       740:  cmn      w23, #1
+       744:  b.eq     #0x83c  ; -> $d.40+0x1c
+       748:  cmn      w21, #1
+       74c:  b.eq     #0x83c  ; -> $d.40+0x1c
+       750:  ldr      x25, [x24]  ; sym#86+0x8
+       754:  mov      w22, w0
+       758:  and      x23, x23, #0xffffffff
+       75c:  cbnz     x25, #0x77c
+       760:  adrp     x8, #0  ; -> kmalloc_caches+0x58
+       764:  ldr      x0, [x8]  ; kmalloc_caches+0x58
+       768:  mov      w1, #0xdc0
+       76c:  mov      w2, #0x538
+       770:  bl       #0x770  ; -> kmem_cache_alloc_trace+0x0
+       774:  mov      x25, x0
+       778:  str      x0, [x24]  ; sym#86+0x8
+       77c:  add      x24, x25, #0xe0
+       780:  mov      x0, x24
+       784:  bl       #0x784  ; -> _raw_read_lock+0x0
+       788:  add      x8, x25, #0x48
+       78c:  mov      x25, x8
+       790:  ldr      x25, [x25]
+       794:  cmp      x8, x25
+       798:  b.eq     #0x81c  ; -> $x.8+0x2b4
+       79c:  ldur     w9, [x25, #-0x10]
+       7a0:  cmp      w9, w21
+       7a4:  b.ne     #0x790  ; -> $x.8+0x228
+       7a8:  mov      x0, x24
+       7ac:  sub      x27, x25, #0x10
+       7b0:  bl       #0x7b0  ; -> _raw_read_unlock+0x0
+       7b4:  cbz      x27, #0x824
+       7b8:  ldur     x0, [x25, #-8]
+       7bc:  mov      x1, x23
+       7c0:  bl       #0x7c0  ; -> irq_find_mapping+0x0
+       7c4:  mov      w23, w0
+       7c8:  bl       #0x7c8  ; -> irq_to_desc+0x0
+       7cc:  add      x8, x19, w22, sxtw
+       7d0:  mov      w24, #0x380
+       7d4:  mov      x21, x0
+       7d8:  add      x0, x8, #0x1b2
+       7dc:  sub      w8, w24, w22
+       7e0:  adrp     x2, #0  ; -> sym#88+0x215
+       7e4:  sxtw     x1, w8
+       7e8:  add      x2, x2, #0  ; -> $x.4+0xf5  ' | [%d]'
+       7ec:  mov      w3, w23
+       7f0:  bl       #0x7f0  ; -> scnprintf+0x0
+       7f4:  add      w22, w0, w22
+       7f8:  cbnz     x21, #0x894
+       7fc:  add      x8, x19, w22, sxtw
+       800:  sub      w9, w24, w22
+       804:  adrp     x2, #0  ; -> sym#88+0x4ae
+       808:  add      x0, x8, #0x1b2
+       80c:  sxtw     x1, w9
+       810:  add      x2, x2, #0  ; -> $x.6+0x56  '| stray irq'
+       814:  bl       #0x814  ; -> scnprintf+0x0
+       818:  b        #0x83c  ; -> $d.40+0x1c
+       81c:  mov      x0, x24
+       820:  bl       #0x820  ; -> _raw_read_unlock+0x0
+       824:  adrp     x0, #0  ; -> sym#88+0x48
+       828:  adrp     x1, #0  ; -> sym#88+0x555
+       82c:  add      x0, x0, #0  ; -> $d.38+0xb
+       830:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       834:  mov      w2, w21
+       838:  bl       #0x838  ; -> printk+0x0
+       83c:  ldr      w8, [x26]  ; sym#86+0x0
+       840:  cbnz     w8, #0x850
+       844:  adrp     x0, #0  ; -> sym#88+0xcf
+       848:  add      x0, x0, #0  ; -> __UNIQUE_ID_depends128+0x3
+       84c:  b        #0x858  ; -> $d.40+0x38
+       850:  adrp     x0, #0  ; -> sym#88+0x51f
+       854:  add      x0, x0, #0  ; -> $x.6+0xc7
+       858:  adrp     x1, #0  ; -> sym#88+0x555
+       85c:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       860:  mov      x2, x20
+       864:  bl       #0x864  ; -> printk+0x0
+       868:  ldr      w8, [x26]  ; sym#86+0x0
+       86c:  cbnz     w8, #0x87c
+       870:  adrp     x0, #0  ; -> sym#88+0x6e
+       874:  add      x0, x0, #0  ; -> $d.38+0x31
+       878:  b        #0x884  ; -> $d.40+0x64
+       87c:  adrp     x0, #0  ; -> sym#88+0x40c
+       880:  add      x0, x0, #0  ; -> $x.5
+       884:  adrp     x1, #0  ; -> sym#88+0x555
+       888:  add      x1, x1, #0  ; -> $x.7+0x9  'SPRD_PDBG'
+       88c:  bl       #0x88c  ; -> printk+0x0
+       890:  b        #0x5c8  ; -> $x.8+0x60
+       894:  ldr      x8, [x21, #0x78]
+       898:  cbz      x8, #0x83c
+       89c:  ldr      x3, [x8, #0x50]
+       8a0:  cbz      x3, #0x8d0
+       8a4:  add      x8, x19, w22, sxtw
+       8a8:  mov      w9, #0x380
+       8ac:  add      x0, x8, #0x1b2
+       8b0:  sub      w8, w9, w22
+       8b4:  adrp     x2, #0  ; -> sym#88+0x80d
+       8b8:  sxtw     x1, w8
+       8bc:  add      x2, x2, #0  ; -> $x.8+0x2a5  ' | action: %s'
+       8c0:  bl       #0x8c0  ; -> scnprintf+0x0
+       8c4:  ldr      x8, [x21, #0x78]
+       8c8:  cbz      x8, #0x83c
+       8cc:  add      w22, w0, w22
+       8d0:  ldr      x3, [x8]
+       8d4:  cbz      x3, #0x904
+       8d8:  add      x8, x19, w22, sxtw
+       8dc:  mov      w9, #0x380
+       8e0:  add      x0, x8, #0x1b2
+       8e4:  sub      w8, w9, w22
+       8e8:  adrp     x2, #0  ; -> sym#88+0x7dc
+       8ec:  sxtw     x1, w8
+       8f0:  add      x2, x2, #0  ; -> $x.8+0x274  ' | handler: %ps'
+       8f4:  bl       #0x8f4  ; -> scnprintf+0x0
+       8f8:  ldr      x8, [x21, #0x78]
+       8fc:  cbz      x8, #0x83c
+       900:  add      w22, w0, w22
+       904:  ldr      x3, [x8, #0x20]
+       908:  cbz      x3, #0x83c
+       90c:  add      x8, x19, w22, sxtw
+       910:  mov      w9, #0x380
+       914:  add      x0, x8, #0x1b2
+       918:  sub      w8, w9, w22
+       91c:  adrp     x2, #0  ; -> sym#88+0x362
+       920:  sxtw     x1, w8
+       924:  add      x2, x2, #0  ; -> $x.4+0x242  ' | thread_fn: %ps'
+       928:  bl       #0x928  ; -> scnprintf+0x0
+       92c:  b        #0x83c  ; -> $d.40+0x1c
+       930:  sub      sp, sp, #0x50
+       934:  str      x30, [x18], #8
+       938:  stp      x29, x30, [sp, #0x20]
+       93c:  str      x21, [sp, #0x30]
+       940:  stp      x20, x19, [sp, #0x40]
+       944:  add      x29, sp, #0x20
+       948:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       94c:  ldr      x8, [x8]  ; __stack_chk_guard+0x0

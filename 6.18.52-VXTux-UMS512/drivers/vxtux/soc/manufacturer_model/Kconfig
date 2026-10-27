@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_MANUFACTURER_MODEL
+	tristate "Spreadtrum SoC model / manufacturer strings"
+	depends on OF
+	help
+	  Reads the "soc-module" (SoC model) and "soc-manufacturer"
+	  properties from the device tree root node and exposes them as
+	  the soc_model / soc_manufacturer sysfs attributes of a private
+	  device, e.g. "soc_model: UMS512".
+
+	  Port of the vendor 5.4 `sprd_manufacturer_model.ko`.  The blob
+	  initialises a static struct device but never registers it, so
+	  the sysfs group is not reachable; the strings are still read
+	  from the device tree and printed by the driver at init time.

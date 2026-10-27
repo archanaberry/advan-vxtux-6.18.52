@@ -62,7 +62,11 @@ obj-$(CONFIG_SPRD_LEGACY_WCN_PCIE)	+= pcie/
 # lagi rujukan menggantung. CONFIG_WCN_WLAN tetap TETAP =n di fragment
 # sampai ada build device yang membuktikan link -- lihat
 # wlan/MISSING_SOURCES.tsv untuk sisa yang sengaja tidak didaftarkan.
-obj-$(CONFIG_SPRD_LEGACY_WCN_WLAN)	+= wlan/
+# TICK12: simbol yang benar adalah CONFIG_WCN_WLAN — yang dideklarasikan di
+# wlan/Kconfig. CONFIG_SPRD_LEGACY_WCN_WLAN adalah simbol HANTU (tidak ada di
+# Kconfig mana pun), jadi selama ini nilai apa pun untuknya dibuang kconfig
+# tanpa peringatan dan sprdwl.ko tidak pernah ter-build.
+obj-$(CONFIG_WCN_WLAN)	+= wlan/
 
 # Vendor header include paths (NOT upstream).
 # The sprdwcn port kept the vendor drivers/vxtux layout: headers live in

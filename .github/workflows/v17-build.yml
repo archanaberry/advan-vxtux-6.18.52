@@ -11,26 +11,145 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: test1
+          ref: ${{ github.ref_name }}
           fetch-depth: 1
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu libncurses-dev flex bison bc libssl-dev libelf-dev
-      - name: Fix permissions and apply config
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu libncurses-dev flex bison bc libssl-dev libelf-dev cpio
+      - name: Fix permissions
         run: |
           cd 6.18.52-VXTux-UMS512
           find scripts/ -type f -exec chmod +x {} +
-          cp .config .config.original
-          cp ../enhanced_config.cfg .config
-      - name: olddefconfig
+          cp .config .config.device
+          # Kedua file disimpan CRLF di repo; kconfig/merge_config lebih aman LF.
+          sed -i 's/\r$//' .config.device ../enhanced_config.cfg
+      # PENTING: fragmen di-MERGE di atas .config device, bukan menggantikannya.
+      # Dulu `cp ../enhanced_config.cfg .config` membuang ~6000 baris config
+      # device, sehingga build CI hanya menghasilkan 222 .ko sementara build
+      # device sesungguhnya 1.424 .ko — verifikasi CI jadi tidak mewakili device.
+      - name: Merge enhanced_config.cfg di atas .config device
         run: |
           cd 6.18.52-VXTux-UMS512
+          scripts/kconfig/merge_config.sh -m -O . .config.device ../enhanced_config.cfg
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+      # Guard: setiap simbol di fragmen harus SELAMAT setelah olddefconfig.
+      # Simbol yang dependensinya kurang dibuang tanpa peringatan (kelas bug
+      # SC27XX_TSENSOR_THERMAL) — lebih baik gagal cepat di sini daripada
+      # menemukan .ko hilang di akhir build.
+      - name: Guard — simbol fragmen yang memang ada di Kconfig harus selamat
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          # Fragmen ini mewarisi config vendor 5.4 utuh: ratusan entri menunjuk
+          # driver yang belum di-port (SPRD_7SRESET, SPRD_IQ, ...) atau subsistem
+          # yang memang dipangkas dari tree ini (VHOST, UNIX_SCM). Simbol yang
+          # tidak didefinisikan Kconfig mana pun BUKAN bug config — itu pekerjaan
+          # port, dan dilacak di docs/PORT-AUDIT.md.
+          #
+          # Yang dicek ketat: simbol yang Kconfig-nya ADA tapi tetap hilang setelah
+          # olddefconfig. Itu berarti dependensinya kurang (kelas bug
+          # SC27XX_TSENSOR_THERMAL), dan modulnya akan hilang tanpa suara.
+          git ls-files '*Kconfig*' > /tmp/kconfigs.txt
+          # Daftar simbol yang Kconfig-nya ada di tree ini (sekali, lalu dicari).
+          xargs -a /tmp/kconfigs.txt grep -hE '^(menu)?config[[:space:]]+' \
+            | awk '{print $2}' | sort -u > /tmp/kconfig_syms.txt
+          # Pengecualian yang sudah ditelusuri (lihat docs/CI-KNOWN-DROPPED.txt).
+          grep -v '^#' ../docs/CI-KNOWN-DROPPED.txt | grep '^CONFIG_' | sort -u > /tmp/known_dropped.txt
+          echo "Kconfig mendefinisikan $(wc -l < /tmp/kconfig_syms.txt) simbol"
+          rc=0; absent=0; coerce=0; known=0
+          while IFS= read -r line; do
+            line=${line%$'\r'}
+            case "$line" in
+              CONFIG_*=*) sym=${line%%=*}; val=${line#*=} ;;
+              *) continue ;;
+            esac
+            grep -qx "$sym=$val" .config && continue
+            got=$(grep -m1 "^$sym=" .config || true)
+            name=${sym#CONFIG_}
+            if ! grep -qx "$name" /tmp/kconfig_syms.txt; then
+              absent=$((absent+1))
+              continue
+            fi
+            if grep -qx "$sym" /tmp/known_dropped.txt; then
+              known=$((known+1))
+              continue
+            fi
+            if [ "$val" = m ] && [ "${got#*=}" = y ]; then
+              # bool yang diminta =m: Kconfig menaikkan ke =y, bukan bug.
+              coerce=$((coerce+1))
+              continue
+            fi
+            [ -z "$got" ] && got="$sym is not set"
+            echo "::error::DROPPED $sym=$val -> ${got#*=} (Kconfig ada, dependensi kurang)"
+            rc=1
+          done < ../enhanced_config.cfg
+          echo "Simbol fragmen yang belum punya Kconfig di tree ini: $absent (bukan kegagalan guard)"
+          echo "Simbol yang diminta =m lalu jadi =y: $coerce"
+          echo "Pengecualian terdaftar (docs/CI-KNOWN-DROPPED.txt): $known"
+          exit $rc
+      # Initramfs diagnostik: init statis yang (a) menulis SELURUH dmesg +
+      # daftar partisi ke partisi `cache`, (b) mencetaknya ke /dev/console
+      # (fbcon -> panel), lalu (c) mount rootfs ext4 dan chroot ke /sbin/init.
+      # DitANAM di dalam Image (CONFIG_INITRAMFS_SOURCE) supaya tidak
+      # bergantung pada cara LK memperlakukan ramdisk di boot.img.
+      - name: Initramfs diagnostik (init C statis arm64) + tanam ke Image
+        run: |
+          set -e
+          mkdir -p /tmp/ir/vxtux /tmp/ir/dev /tmp/ir/proc /tmp/ir/sys \
+                   /tmp/ir/newroot /tmp/ir/tmp
+          aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
+            -o /tmp/ir/vxtux/init ci_qemu/initramfs/init.c
+          file /tmp/ir/vxtux/init
+          ls -l /tmp/ir/vxtux/init
+          ( cd /tmp/ir && find . | cpio -o -H newc --owner root:root | gzip -9 ) \
+            > /tmp/vxtux-initramfs.cpio.gz
+          ls -lh /tmp/vxtux-initramfs.cpio.gz
+          gzip -t /tmp/vxtux-initramfs.cpio.gz
+          cd 6.18.52-VXTux-UMS512
+          scripts/config --file .config \
+            --set-str INITRAMFS_SOURCE "/tmp/vxtux-initramfs.cpio.gz"
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          grep -E '^CONFIG_(INITRAMFS_SOURCE|CMDLINE|CMDLINE_FORCE)' .config
+      - name: Simpan config efektif
+        if: always()
+        run: |
+          # upload-artifact v4 membuang hidden file secara default, jadi `.config`
+          # tidak pernah ter-upload dan audit tidak punya config acuan.
+          cp 6.18.52-VXTux-UMS512/.config effective.config || true
+          wc -l effective.config
+      - name: Upload effective .config
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v17-config
+          path: effective.config
+          if-no-files-found: warn
+      - name: Build DTB (verifikasi DTS thermal/efuse chain)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- sprd/ums512-1h10-vxtux.dtb -j$(nproc)
+          ls -l arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb
       - name: Build modules
         run: |
           cd 6.18.52-VXTux-UMS512
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules -j$(nproc)
+      # Image (kernel biner) dibutuhkan untuk meracik boot.img Artix di
+      # ci_qemu/mk_boot_artix.py.  `make modules` membangun vmlinux, bukan
+      # boot Image-nya, jadi targetnya diminta eksplisit di sini.
+      - name: Build Image (untuk boot.img partisi boot_a)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image -j$(nproc)
+          ls -lh arch/arm64/boot/Image System.map
+          strings arch/arm64/boot/Image | grep -m1 'Linux version' || true
+      - name: Upload kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: v17-Image
+          path: |
+            6.18.52-VXTux-UMS512/arch/arm64/boot/Image
+            6.18.52-VXTux-UMS512/System.map
+          if-no-files-found: error
       - name: Tar .ko tree
         run: |
           cd 6.18.52-VXTux-UMS512
@@ -41,4 +160,10 @@ jobs:
         with:
           name: v17-built-kos
           path: /tmp/built_kos.tar.gz
+          if-no-files-found: error
+      - name: Upload DTB
+        uses: actions/upload-artifact@v4
+        with:
+          name: v17-dtb
+          path: 6.18.52-VXTux-UMS512/arch/arm64/boot/dts/sprd/ums512-1h10-vxtux.dtb
           if-no-files-found: error

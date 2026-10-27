@@ -513,9 +513,14 @@ config SPRD_TIMER
 	help
 	  Enables support for the Spreadtrum timer driver.
 	
+# Depends: tadinya `CLOCK_HRTIMER` — simbol itu TIDAK ADA di pohon ini
+# (hanya dirujuk di baris ini), jadi SPRD_SYSTIMER mustahil di-enable dan
+# sprd-systimer.ko tidak pernah ter-build (temuan docs/PORT-AUDIT.md).
+# Driver memang memakai hrtimer (include <linux/hrtimer.h>, hrtimer_setup),
+# jadi simbol yang benar adalah HIGH_RES_TIMERS.
 config SPRD_SYSTIMER
 	tristate "Unisoc systimer and sysfrt counter"
-	depends on OF && HAS_IOMEM && CLOCK_HRTIMER
+	depends on OF && HAS_IOMEM && HIGH_RES_TIMERS
 	default n
 	help
 	  The always-on domain of the SoC has two free running counters: a

@@ -32,3 +32,49 @@ CONFIG_USB_GADGET=y
 CONFIG_USB_CONFIGFS=y
 CONFIG_USB_CONFIGFS_F_FS=y
 CONFIG_USB_CONFIGFS_ACM=y
+
+# --- 4) konsol QEMU via virtio-console (2026-10-24) ------------------------
+#  Tree V17 tidak punya driver AMBA PL011 (docs/CI-KNOWN-DROPPED.txt), jadi
+#  PL011 milik -M virt mustahil dipakai. Console tamu memakai hvc0 di atas
+#  -device virtio-serial-pci + -device virtconsole (console=hvc0).
+#  Dependensi sudah terpenuhi: VIRTIO=y, PCI=y, PCI_MSI=y, TTY=y;
+#  VIRTIO_CONSOLE otomatis select HVC_DRIVER.
+CONFIG_VIRTIO_PCI=y
+CONFIG_VIRTIO_CONSOLE=y
+
+# --- 5) keyboard virtio untuk sesi CLI fbcon (2026-10-25) -------------------
+#  Input core sudah =y di enhanced_config (CONFIG_INPUT, INPUT_EVDEV,
+#  INPUT_KEYBOARD). Tanpa driver keyboard di guest, perintah HMP `sendkey`
+#  QEMU tidak pernah sampai ke VT/tty1 sehingga sesi shell interaktif di
+#  fbcon tidak bisa digerakkan dari CI. virtio-keyboard-pci dienumerasi
+#  lewat node PCIe + ITS yang sama dengan virtio-gpu (tanpa perubahan DTS).
+CONFIG_VIRTIO_INPUT=y
+
+# --- 5) host PCIe generik (2026-10-24) ------------------------------------
+#  DTB kustom qemu-ums512-t1030.dts kini memuat node pcie@10000000 (ECAM,
+#  alamat persis QEMU -M virt base_memmap) + ITS GICv3 @0x8080000. Tanpa
+#  host driver generik ini, -device virtio-serial-pci tidak terenumerasi
+#  sehingga hvc0 (konsol tamu) tidak pernah ada pada boot DTB kustom.
+CONFIG_PCI_HOST_GENERIC=y
+
+# --- 6) fbcon / KMS via virtio-gpu (2026-10-24) -----------------------------
+#  Check: "fbcon & DRM/KMS sudah bisa print CLI?" — sebelumnya TIDAK mungkin
+#  di manapun: CONFIG_FB=n (enhanced_config baris 594), tak ada driver GPU
+#  di QEMU (DRM_VIRTIO_GPU/BOCHS not set), FRAMEBUFFER_CONSOLE tak terdefinisi
+#  (depends FB_CORE yang tak pernah ter-select). Rantai yang dinyalakan:
+#  DRM_VIRTIO_GPU=y -> select DRM_CLIENT_SELECTION -> DRM_FBDEV_EMULATION=y
+#  -> select FB_CORE (oleh DRM) -> FRAMEBUFFER_CONSOLE=y (default FBDEV).
+#  VT_CONSOLE=y supaya printk boot ikut dirender fbcon (gaya Arch: teks
+#  scrolling di layar) di samping hvc0. FONT sudah y dari basis.
+CONFIG_DRM_VIRTIO_GPU=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_FRAMEBUFFER_CONSOLE=y
+CONFIG_VT_CONSOLE=y
+
+#  CMDLINE device-only: enhanced_config memaksa CONFIG_CMDLINE + CMDLINE_FORCE
+#  (root=PARTLABEL=super hanya ada di eMMC device). Di QEMU cmdline datang dari
+#  -append, jadi kosongkan -> pilihan CMDLINE_FORCE ikut mati karena
+#  depends on CMDLINE != "". Merge urutan .config.device -> enhanced -> file ini,
+#  jadi baris ini yang menang.
+# CONFIG_CMDLINE_FORCE is not set
+CONFIG_CMDLINE=""

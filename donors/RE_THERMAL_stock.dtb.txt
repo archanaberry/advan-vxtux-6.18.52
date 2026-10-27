@@ -1,0 +1,120 @@
+== thermal@32200000 (ap_thm0) ==
+thermal@32200000 {
+  compatible = "sprd,ums512-thermal";
+  reg = <0x0 0x32200000 0x0 0x10000>;
+  #address-cells = <0x1>;
+  #size-cells = <0x0>;
+  clock-names = "enable";
+  clocks = <0x11 0x20>;
+  #thermal-sensor-cells = <0x1>;
+  nvmem-cells = <0x3e 0x3f>;
+  nvmem-cell-names = 74686d5f7369676e5f63616c0074686d5f726174696f5f63616c00;
+  phandle = <0xc0>;
+  sensor@0 {
+    reg = <0x0>;
+    nvmem-cells = <0x40>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@1 {
+    reg = <0x1>;
+    nvmem-cells = <0x41>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@2 {
+    reg = <0x2>;
+    nvmem-cells = <0x42>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@3 {
+    reg = <0x3>;
+    nvmem-cells = <0x43>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@4 {
+    reg = <0x4>;
+    nvmem-cells = <0x44>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+
+== thermal@32210000 (ap_thm1) ==
+thermal@32210000 {
+  compatible = "sprd,ums512-thermal";
+  reg = <0x0 0x32210000 0x0 0x10000>;
+  #address-cells = <0x1>;
+  #size-cells = <0x0>;
+  clock-names = "enable";
+  clocks = <0x11 0x21>;
+  #thermal-sensor-cells = <0x1>;
+  nvmem-cells = <0x45 0x46>;
+  nvmem-cell-names = 74686d5f7369676e5f63616c0074686d5f726174696f5f63616c00;
+  phandle = <0xc1>;
+  sensor@0 {
+    reg = <0x0>;
+    nvmem-cells = <0x47>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@1 {
+    reg = <0x1>;
+    nvmem-cells = <0x48>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@2 {
+    reg = <0x2>;
+    nvmem-cells = <0x49>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@3 {
+    reg = <0x3>;
+    nvmem-cells = <0x4a>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@4 {
+    reg = <0x4>;
+    nvmem-cells = <0x4b>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+  sensor@5 {
+    reg = <0x5>;
+    nvmem-cells = <0x4c>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+
+== thermal@32220000 (ap_thm2) ==
+thermal@32220000 {
+  compatible = "sprd,ums512-thermal";
+  reg = <0x0 0x32220000 0x0 0x10000>;
+  #address-cells = <0x1>;
+  #size-cells = <0x0>;
+  clock-names = "enable";
+  clocks = <0x11 0x22>;
+  #thermal-sensor-cells = <0x1>;
+  nvmem-cells = <0x4d 0x4e>;
+  nvmem-cell-names = 74686d5f7369676e5f63616c0074686d5f726174696f5f63616c00;
+  phandle = <0xc2>;
+  sensor@0 {
+    reg = <0x0>;
+    nvmem-cells = <0x4f>;
+    nvmem-cell-names = "sen_delta_cal";
+};
+
+== virtual-sensor@0 ==
+virtual-sensor@0 {
+  compatible = "virtual-thermal";
+  #thermal-sensor-cells = <0x1>;
+  thmzone-cells = <0xc4 0xc5 0xc6 0xc7 0xc8 0xc9 0xca 0xcb 0xcc 0xcd>;
+  phandle = <0xbb>;
+
+== efuse@32240000 ==
+efuse@32240000 {
+  compatible = <0x73707264 0x2c756d73 0x3331322d 0x65667573 0x65007370 0x72642c75 0x6d733531 0x322d6566 0x75736500>;
+  reg = <0x0 0x32240000 0x0 0x10000>;
+  clock-names = "enable";
+  hwlocks = <0x2d 0x8>;
+  clocks = <0x11 0x10>;
+  phandle = <0x131>;
+
+== chosen ==
+chosen {
+  stdout-path = "serial1:115200n8";
+  bootargs = "earlycon console=ttyS1,115200n8 loop.max_part=7 loglevel=1 init=/init root=/dev/ram0 rw printk.devkmsg=on androidboot.boot_devices=soc/soc:ap-apb/71400000.sdio dummy_hcd.num=0 swiotlb=1 initcall_debug=1 androidboot.init_fatal_panic=true";
+  phandle = <0x18e>;

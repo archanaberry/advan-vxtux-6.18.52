@@ -52,6 +52,10 @@
 			reg = <0x0 0x0>;
 			enable-method = "psci";
 			cpu-idle-states = <&CORE_PD>;
+			/* TICK11: FDT stok memberi #cooling-cells hanya di pemimpin
+			 * cluster (cpu@0 dan cpu@600) supaya cooling-map soc-thmzone
+			 * bisa merujuk cpu sebagai cooling-device cpufreq. */
+			#cooling-cells = <2>;
 		};
 
 		CPU1: cpu@100 {
@@ -100,6 +104,7 @@
 			reg = <0x0 0x600>;
 			enable-method = "psci";
 			cpu-idle-states = <&CORE_PD>;
+			#cooling-cells = <2>; /* TICK11: pemimpin cluster1, sama seperti stok */
 		};
 
 		CPU7: cpu@700 {
@@ -866,6 +871,13 @@
 				clock-names = "sdio", "enable";
 				assigned-clocks = <&ap_clk CLK_EMMC_2X>;
 				assigned-clock-parents = <&pll1 CLK_RPLL>;
+				/*
+				 * eMMC.  The sdhci-sprd probe turns non-removable controllers
+				 * into MMC_CAP2_NO_SD|MMC_CAP2_NO_SDIO, which is the stock
+				 * blob's test for attaching the Unisoc SW-CQ (CONFIG_MMC_SWCQ)
+				 * instead of the software HSQ.
+				 */
+				non-removable;
 				status = "disabled";
 			};
 		};

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0
+config SPRD_SIP_SVC
+	tristate "Spreadtrum SIP secure monitor service client"
+	depends on ARM64
+	help
+	  Client for the Spreadtrum SIP services implemented by the
+	  secure monitor (PERF, STORAGE, PWR, DVFS, NPU, DBG). Consumers
+	  such as cpufreq and pdbg call the SMC wrappers through the
+	  handle exported by this module.
+
+	  Port of the vendor 5.4 `sprd_sip_svc.ko`.

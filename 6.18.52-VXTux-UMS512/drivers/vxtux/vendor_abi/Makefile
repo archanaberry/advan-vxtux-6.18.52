@@ -10,4 +10,6 @@
 # (relink2 device 00:04; CFG80211=m di r9 maupun r10-qemu.)
 obj-$(CONFIG_VXTUX_VENDOR_ABI)		+= vendor_abi_arm64.o
 obj-$(CONFIG_VXTUX_VENDOR_ABI)		+= vendor_abi_ubsan.o
+obj-$(CONFIG_VXTUX_VENDOR_ABI)		+= vendor_abi_exports.o
+obj-$(CONFIG_VXTUX_VENDOR_ABI)		+= vendor_abi_compat54.o
 obj-$(CONFIG_VXTUX_VENDOR_ABI_CFG80211)	+= vendor_abi_cfg80211.o

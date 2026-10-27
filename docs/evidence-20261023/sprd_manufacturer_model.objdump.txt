@@ -1,0 +1,228 @@
+
+sprd_manufacturer_model.ko:     file format elf64-littleaarch64
+
+
+Disassembly of section .plt:
+
+0000000000000000 <.plt>:
+	...
+
+Disassembly of section .init.plt:
+
+0000000000000000 <.init.plt>:
+	...
+
+Disassembly of section .text.ftrace_trampoline:
+
+0000000000000000 <.text.ftrace_trampoline>:
+	...
+
+Disassembly of section .text:
+
+0000000000000000 <__cfi_check_fail>:
+       0:	str	x30, [x18], #8
+       4:	stp	x29, x30, [sp, #-16]!
+       8:	mov	x29, sp
+       c:	cbz	x0, 28 <__cfi_check_fail+0x28>
+      10:	ldrb	w8, [x0]
+      14:	cmp	w8, #0x5
+      18:	b.cc	28 <__cfi_check_fail+0x28>  // b.lo, b.ul, b.last
+      1c:	ldp	x29, x30, [sp], #16
+      20:	ldr	x30, [x18, #-8]!
+      24:	ret
+      28:	mov	w0, #0x2                   	// #2
+      2c:	bl	0 <__ubsan_handle_cfi_check_fail_abort>
+			2c: R_AARCH64_CALL26	__ubsan_handle_cfi_check_fail_abort
+
+0000000000000030 <soc_manufacturer_show>:
+      30:	str	x30, [x18], #8
+      34:	stp	x29, x30, [sp, #-16]!
+      38:	mov	x29, sp
+      3c:	adrp	x8, 0 <__cfi_check_fail>
+			3c: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x8
+      40:	ldr	x8, [x8]
+			40: R_AARCH64_LDST64_ABS_LO12_NC	.bss+0x8
+      44:	adrp	x1, 0 <__cfi_check_fail>
+			44: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x36
+      48:	mov	x0, x2
+      4c:	add	x1, x1, #0x0
+			4c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x36
+      50:	mov	x2, x8
+      54:	bl	0 <sprintf>
+			54: R_AARCH64_CALL26	sprintf
+      58:	sxtw	x0, w0
+      5c:	ldp	x29, x30, [sp], #16
+      60:	ldr	x30, [x18, #-8]!
+      64:	ret
+
+0000000000000068 <soc_model_show>:
+      68:	str	x30, [x18], #8
+      6c:	stp	x29, x30, [sp, #-16]!
+      70:	mov	x29, sp
+      74:	adrp	x8, 0 <__cfi_check_fail>
+			74: R_AARCH64_ADR_PREL_PG_HI21	.bss
+      78:	ldr	x8, [x8]
+			78: R_AARCH64_LDST64_ABS_LO12_NC	.bss
+      7c:	adrp	x1, 0 <__cfi_check_fail>
+			7c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x36
+      80:	mov	x0, x2
+      84:	add	x1, x1, #0x0
+			84: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x36
+      88:	mov	x2, x8
+      8c:	bl	0 <sprintf>
+			8c: R_AARCH64_CALL26	sprintf
+      90:	sxtw	x0, w0
+      94:	ldp	x29, x30, [sp], #16
+      98:	ldr	x30, [x18, #-8]!
+      9c:	ret
+	...
+
+0000000000001000 <__cfi_check>:
+    1000:	mov	x8, #0x3e18                	// #15896
+    1004:	movk	x8, #0xd946, lsl #16
+    1008:	movk	x8, #0x7478, lsl #32
+    100c:	movk	x8, #0xf138, lsl #48
+    1010:	cmp	x0, x8
+    1014:	b.eq	1054 <__cfi_check+0x54>  // b.none
+    1018:	mov	x8, #0x2445                	// #9285
+    101c:	movk	x8, #0x2924, lsl #16
+    1020:	movk	x8, #0xa43e, lsl #32
+    1024:	movk	x8, #0x2b3, lsl #48
+    1028:	cmp	x0, x8
+    102c:	b.eq	1080 <__cfi_check+0x80>  // b.none
+    1030:	mov	x8, #0xbcd5                	// #48341
+    1034:	movk	x8, #0x7ad8, lsl #16
+    1038:	movk	x8, #0xa0fb, lsl #32
+    103c:	movk	x8, #0x7e04, lsl #48
+    1040:	cmp	x0, x8
+    1044:	b.ne	106c <__cfi_check+0x6c>  // b.any
+    1048:	adrp	x8, 0 <__cfi_check_fail>
+			1048: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10a0
+    104c:	add	x8, x8, #0x0
+			104c: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10a0
+    1050:	b	1088 <__cfi_check+0x88>
+    1054:	adrp	x8, 0 <__cfi_check_fail>
+			1054: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1098
+    1058:	add	x8, x8, #0x0
+			1058: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1098
+    105c:	sub	x8, x1, x8
+    1060:	ror	x8, x8, #2
+    1064:	cmp	x8, #0x2
+    1068:	b.cc	1090 <__cfi_check+0x90>  // b.lo, b.ul, b.last
+    106c:	str	x30, [sp, #-16]!
+    1070:	mov	x0, x2
+    1074:	bl	0 <__cfi_check_fail>
+			1074: R_AARCH64_CALL26	__cfi_check_fail
+    1078:	ldr	x30, [sp], #16
+    107c:	ret
+    1080:	adrp	x8, 0 <__cfi_check_fail>
+			1080: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1094
+    1084:	add	x8, x8, #0x0
+			1084: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1094
+    1088:	cmp	x1, x8
+    108c:	b.ne	106c <__cfi_check+0x6c>  // b.any
+    1090:	ret
+    1094:	b	0 <__cfi_check_fail>
+			1094: R_AARCH64_JUMP26	init_module
+    1098:	b	0 <__cfi_check_fail>
+			1098: R_AARCH64_JUMP26	.text+0x30
+    109c:	b	0 <__cfi_check_fail>
+			109c: R_AARCH64_JUMP26	.text+0x68
+    10a0:	b	0 <__cfi_check_fail>
+			10a0: R_AARCH64_JUMP26	cleanup_module
+
+Disassembly of section .init.text:
+
+0000000000000000 <init_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-32]!
+   8:	str	x19, [sp, #16]
+   c:	mov	x29, sp
+  10:	adrp	x0, 0 <init_module>
+			10: R_AARCH64_ADR_PREL_PG_HI21	.rodata
+  14:	add	x0, x0, #0x0
+			14: R_AARCH64_ADD_ABS_LO12_NC	.rodata
+  18:	mov	x1, xzr
+  1c:	bl	0 <of_find_node_opts_by_path>
+			1c: R_AARCH64_CALL26	of_find_node_opts_by_path
+  20:	cbz	x0, 6c <init_module+0x6c>
+  24:	adrp	x1, 0 <init_module>
+			24: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x2
+  28:	adrp	x2, 0 <init_module>
+			28: R_AARCH64_ADR_PREL_PG_HI21	.bss
+  2c:	add	x1, x1, #0x0
+			2c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x2
+  30:	add	x2, x2, #0x0
+			30: R_AARCH64_ADD_ABS_LO12_NC	.bss
+  34:	mov	x19, x0
+  38:	bl	0 <of_property_read_string>
+			38: R_AARCH64_CALL26	of_property_read_string
+  3c:	cbz	w0, 48 <init_module+0x48>
+  40:	adrp	x8, 0 <init_module>
+			40: R_AARCH64_ADR_PREL_PG_HI21	.bss
+  44:	str	xzr, [x8]
+			44: R_AARCH64_LDST64_ABS_LO12_NC	.bss
+  48:	adrp	x1, 0 <init_module>
+			48: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xba
+  4c:	adrp	x2, 0 <init_module>
+			4c: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x8
+  50:	add	x1, x1, #0x0
+			50: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xba
+  54:	add	x2, x2, #0x0
+			54: R_AARCH64_ADD_ABS_LO12_NC	.bss+0x8
+  58:	mov	x0, x19
+  5c:	bl	0 <of_property_read_string>
+			5c: R_AARCH64_CALL26	of_property_read_string
+  60:	cbz	w0, 6c <init_module+0x6c>
+  64:	adrp	x8, 0 <init_module>
+			64: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x8
+  68:	str	xzr, [x8]
+			68: R_AARCH64_LDST64_ABS_LO12_NC	.bss+0x8
+  6c:	adrp	x19, 0 <init_module>
+			6c: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x10
+  70:	add	x19, x19, #0x0
+			70: R_AARCH64_ADD_ABS_LO12_NC	.bss+0x10
+  74:	mov	x0, x19
+  78:	bl	0 <device_initialize>
+			78: R_AARCH64_CALL26	device_initialize
+  7c:	ldr	x8, [x19, #32]
+  80:	adrp	x1, 0 <init_module>
+			80: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xd0
+  84:	add	x1, x1, #0x0
+			84: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xd0
+  88:	add	x0, x8, #0x18
+  8c:	bl	0 <sysfs_create_group>
+			8c: R_AARCH64_CALL26	sysfs_create_group
+  90:	adrp	x8, 0 <init_module>
+			90: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xd
+  94:	adrp	x9, 0 <init_module>
+			94: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x57
+  98:	add	x8, x8, #0x0
+			98: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xd
+  9c:	add	x9, x9, #0x0
+			9c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x57
+  a0:	cmp	w0, #0x0
+  a4:	csel	x0, x9, x8, eq	// eq = none
+  a8:	bl	0 <printk>
+			a8: R_AARCH64_CALL26	printk
+  ac:	ldr	x19, [sp, #16]
+  b0:	mov	w0, wzr
+  b4:	ldp	x29, x30, [sp], #32
+  b8:	ldr	x30, [x18, #-8]!
+  bc:	ret
+
+Disassembly of section .exit.text:
+
+0000000000000000 <cleanup_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-16]!
+   8:	mov	x29, sp
+   c:	adrp	x0, 0 <cleanup_module>
+			c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x95
+  10:	add	x0, x0, #0x0
+			10: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x95
+  14:	bl	0 <printk>
+			14: R_AARCH64_CALL26	printk
+  18:	ldp	x29, x30, [sp], #16
+  1c:	ldr	x30, [x18, #-8]!
+  20:	ret
