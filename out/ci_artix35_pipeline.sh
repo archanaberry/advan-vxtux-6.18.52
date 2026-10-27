@@ -87,7 +87,6 @@ echo "[cek] string di Image:"
 for s in "vxtux-fbmem" "vxtux-lkfb" "vxtuxfb=" "vxtux-fr" "readback after write" \
          "write channel recovered" \
          "sprd,ums512-apapb-gate" "sprd,ums512-ap-clk" \
-         "waiting for eMMC" "storage ready after" \
          "disk mmcblk0 not registered" "registered disk["; do
   n=$(grep -c -a -F "$s" out/6.18.52-VXTux-UMS512/Image || true)
   echo  "  ada      : $s -> $n"
@@ -101,10 +100,9 @@ if ! grep -q -a -F "sprd,ums512-apapb-gate" out/6.18.52-VXTux-UMS512/Image; then
   echo "FAILED=clock UMS512 tidak builtin di Image (sprd,ums512-apapb-gate tidak ada)"
   exit 1
 fi
-if ! grep -q -a -F "waiting for eMMC" out/6.18.52-VXTux-UMS512/Image; then
-  echo "FAILED=initramfs tanpa wait_for_storage artix35"
-  exit 1
-fi
+# gate untuk initramfs ("waiting for eMMC" dsb.) ada di langkah 1 setelah
+# gzip cpio di Image dibuka -- string userspace TIDAK terlihat dari grep
+# Image mentah karena initramfs terkompresi.
 # teks layar harus Inggris: tidak boleh ada kata Indonesia di string yang dicetak
 bad=$(grep -c -a -E "gagal|terdaftar|direservasi|tidak |dengan |untuk " out/6.18.52-VXTux-UMS512/Image || true)
 echo "  kata Indonesia di Image -> $bad (harus 0)"
