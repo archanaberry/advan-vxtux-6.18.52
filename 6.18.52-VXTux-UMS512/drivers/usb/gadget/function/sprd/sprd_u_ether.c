@@ -284,7 +284,7 @@ void gether_enable_sg(struct gether *port, bool on)
 	struct vxtux_sprd_sg_state *st = vxtux_sprd_sg_find(port, true);
 
 	if (!st) {
-		pr_warn_once("%s: tabel SG penuh (%d slot) - enable_sg(port=%px) diabaikan\n",
+		pr_warn_once("%s: SG table full (%d slot) - enable_sg(port=%px) ignored\n",
 			     __func__, VXTUX_SPRD_SG_SLOTS, port);
 		return;
 	}

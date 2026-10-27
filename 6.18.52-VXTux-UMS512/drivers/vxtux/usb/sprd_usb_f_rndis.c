@@ -236,7 +236,7 @@ void sprd_rndis_set_max_pkt_xfer(struct rndis_params *params, u8 max_pkt_xfer)
 	struct vxtux_sprd_rndis_state *st = vxtux_sprd_rndis_find(params, true);
 
 	if (!st) {
-		pr_warn_once("%s: tabel max_pkt_xfer penuh (%d slot) — params=%px\n",
+		pr_warn_once("%s: max_pkt_xfer table full (%d slot) - params=%px\n",
 			     __func__, VXTUX_SPRD_RNDIS_SLOTS, params);
 		return;
 	}

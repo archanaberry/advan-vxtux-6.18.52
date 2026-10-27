@@ -205,7 +205,7 @@ static int sprd_hsphy_init(struct usb_phy *phy)
 		}
 	} else {
 		dev_warn(hsphy->dev,
-			 "rail vdd tidak ada (PMIC belum siap) — lanjut tanpa set tegangan\n");
+			 "no vdd rail (PMIC not ready yet) - continuing without setting the voltage\n");
 	}
 
 	/* +0x44: AON EB1.OTG_UTMI_EB = 1 */
@@ -441,13 +441,13 @@ static int sprd_hsphy_probe(struct platform_device *pdev)
 							 "sprd,syscon-enable");
 	if (IS_ERR(hsphy->aon_apb))
 		return dev_err_probe(dev, PTR_ERR(hsphy->aon_apb),
-				     "gagal mengambil regmap AON APB\n");
+				     "cannot get the AON APB regmap\n");
 
 	hsphy->anag2 = syscon_regmap_lookup_by_phandle(np,
 						       "sprd,syscon-anag2");
 	if (IS_ERR(hsphy->anag2))
 		return dev_err_probe(dev, PTR_ERR(hsphy->anag2),
-				     "gagal mengambil regmap ANLG PHY G2\n");
+				     "cannot get the ANLG PHY G2 regmap\n");
 
 	/*
 	 * Device PMIC untuk charger detect. Blob MEWAJIBKAN ini (probe gagal

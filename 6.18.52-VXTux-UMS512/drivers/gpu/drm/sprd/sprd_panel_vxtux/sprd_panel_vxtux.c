@@ -167,7 +167,7 @@ static int vxtux_panel_probe(struct mipi_dsi_device *dsi)
 						  GPIOD_OUT_LOW);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
-				     "gagal ambil reset-gpios\n");
+				     "cannot get reset-gpios\n");
 
 	ctx->vcc = devm_regulator_get_optional(dev, "vcc");
 	if (IS_ERR(ctx->vcc)) {

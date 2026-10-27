@@ -163,7 +163,7 @@ static int sprd_usbpinmux_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	dev_info(dev, "USBMux terbuka: vdd=%umV, pin UART->USB dipilih\n", vdd_vol);
+	dev_info(dev, "USBMux open: vdd=%umV, UART->USB pins selected\n", vdd_vol);
 	return 0;
 }
 

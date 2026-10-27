@@ -46,12 +46,11 @@ int wcn_firmware_sec_verify(u32 wcn_or_gnss_bin,
 	if (!warned) {
 		warned = true;
 		pr_warn(WCN_SEC_TAG
-			"verifikasi TEE (trusty-ipc) tidak tersedia di 6.18; "
-			"citra %s diturunkan TANPA cek tanda tangan "
-			"(addr=%pa len=%u). Header/magic/size tetap diperiksa "
-			"oleh pemanggil.\n",
+			"TEE verification (trusty-ipc) is not available in 6.18; "
+			"image %s is brought up WITHOUT signature checking "
+			"(addr=%pa len=%u). The caller still checks header/magic/size.\n",
 			(wcn_or_gnss_bin == 1) ? "BTWF" :
-			(wcn_or_gnss_bin == 2) ? "GNSS" : "tidak-dikenal",
+			(wcn_or_gnss_bin == 2) ? "GNSS" : "unknown",
 			&bin_base_addr, bin_length);
 	}
 
@@ -69,8 +68,8 @@ int wcn_firmware_sec_verify(u32 wcn_or_gnss_bin,
 			    phys_addr_t bin_base_addr, u32 bin_length)
 {
 	pr_err(WCN_SEC_TAG
-	       "tanpa trusty dan tanpa stub: citra %u (addr=%pa len=%u) "
-	       "tidak bisa diverifikasi -> ditolak.\n",
+	       "no trusty and no stub: image %u (addr=%pa len=%u) "
+	       "cannot be verified -> rejected.\n",
 	       wcn_or_gnss_bin, &bin_base_addr, bin_length);
 	return -EOPNOTSUPP;
 }

@@ -52,7 +52,7 @@
 /* ---- debounce int-space dihapus di 6.18 ---- */
 #define gpio_set_debounce(gpio, t) \
 	do { \
-		pr_debug("%s: debounce %u us (gpio %d) pindah ke DTS/gpiod\n", \
+		pr_debug("%s: debounce %u us (gpio %d) moved to DTS/gpiod\n", \
 			 __func__, (unsigned)(t), (int)(gpio)); \
 	} while (0)
 
