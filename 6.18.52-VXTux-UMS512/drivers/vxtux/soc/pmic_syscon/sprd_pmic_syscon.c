@@ -138,7 +138,7 @@ static int sprd_pmic_glb_probe(struct platform_device *pdev)
 		dev_warn(dev, "failed to create pmic_syscon attributes\n");
 
 	dev_set_drvdata(dev, sc27xx_glb);
-	dev_info(dev, "pmic syscon siap (base=0x%x)\n", sc27xx_glb->base);
+	dev_info(dev, "pmic syscon ready (base=0x%x)\n", sc27xx_glb->base);
 
 	return 0;
 }

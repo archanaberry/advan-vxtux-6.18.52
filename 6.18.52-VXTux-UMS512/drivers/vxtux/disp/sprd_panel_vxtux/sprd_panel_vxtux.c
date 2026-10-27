@@ -70,7 +70,7 @@ static int vxtux_panel_prepare(struct drm_panel *panel)
 	if (ctx->vcc) {
 		ret = regulator_enable(ctx->vcc);
 		if (ret) {
-			dev_err(ctx->dev, "gagal nyalakan vcc: %d\n", ret);
+			dev_err(ctx->dev, "cannot enable vcc: %d\n", ret);
 			return ret;
 		}
 	}
@@ -78,7 +78,7 @@ static int vxtux_panel_prepare(struct drm_panel *panel)
 	if (ctx->iovcc) {
 		ret = regulator_enable(ctx->iovcc);
 		if (ret) {
-			dev_err(ctx->dev, "gagal nyalakan iovcc: %d\n", ret);
+			dev_err(ctx->dev, "cannot enable iovcc: %d\n", ret);
 			goto err_vcc;
 		}
 	}
@@ -95,7 +95,7 @@ static int vxtux_panel_prepare(struct drm_panel *panel)
 	}
 
 	ctx->prepared = true;
-	dev_info(ctx->dev, "panel siap (mode default %ux%u)\n",
+	dev_info(ctx->dev, "panel ready (default mode %ux%u)\n",
 		 vxtux_default_mode.hdisplay, vxtux_default_mode.vdisplay);
 
 	return 0;
@@ -203,7 +203,7 @@ static int vxtux_panel_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, ret, "mipi_dsi_attach\n");
 	}
 
-	dev_info(dev, "panel VXTux terdaftar: %ux%u, %u lane, RGB888\n",
+	dev_info(dev, "panel VXTux registered: %ux%u, %u lanes, RGB888\n",
 		 vxtux_default_mode.hdisplay, vxtux_default_mode.vdisplay,
 		 dsi->lanes);
 	return 0;

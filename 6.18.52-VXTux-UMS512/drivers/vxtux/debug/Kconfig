@@ -1,64 +1,75 @@
 # SPDX-License-Identifier: GPL-2.0
 #
-# drivers/vxtux/debug/Kconfig — instrumen diagnostik boot
+# drivers/vxtux/debug/Kconfig - boot diagnostics for UMS512 (VXTux)
+#
+# Note: kernel messages themselves are English only.  Any text these
+# options put on the panel must stay English too, so that a boot log from
+# this device reads like a boot log from any other Linux machine.
 
 config VXTUX_LKFB
-	bool "Framebuffer LK sebagai fbdev (teks console di layar)"
+	bool "Register the bootloader framebuffer as an fbdev (console on panel)"
 	depends on VXTUX_DRIVERS
 	depends on FB
 	depends on FRAMEBUFFER_CONSOLE
 	select FB_CFB_FILLRECT
 	select FB_CFB_COPYAREA
 	select FB_CFB_IMAGEBLIT
-	# fb_io_read/fb_io_write/fb_io_mmap dari FB_DEFAULT_IOMEM_OPS
-	# dibangun hanya oleh fb_io_fops.o; tanpa ini link vmlinux gagal
-	# dengan "undefined reference to fb_io_read" (CI 40322990302).
+	# fb_io_read/fb_io_write/fb_io_mmap come from FB_DEFAULT_IOMEM_OPS,
+	# which is only built by fb_io_fops.o; without this the vmlinux link
+	# fails with "undefined reference to fb_io_read" (CI 40322990302).
 	select FB_IOMEM_FOPS
 	help
-	  Mendaftarkan framebuffer yang sudah dipindai DISPC
-	  (lcd_base=0x9e000000, 1200x2000 XRGB8888) sebagai perangkat
-	  fbdev, sehingga fbcon mengikat diri dan seluruh pesan
-	  `console=tty0` tercetak di panel — di bawah output terakhir LK
-	  ("INFO: LOCK FLAG IS : UNLOCK!!!").
+	  Register the framebuffer the display controller already scans out
+	  (lcd_base=0x9e000000, 1200x2000, RGB565) as an fbdev device, so
+	  fbcon attaches to it and every console=tty0 message lands on the
+	  panel.
 
-	  Tanpa ini console=tty0 hanya menulis ke konsol maya: tree tidak
-	  punya CONFIG_FB_SIMPLE (stok tak menaruh node simple-framebuffer
-	  di DTB buatan LK) dan DRM SPRD DPU tidak pernah probe, jadi layar
-	  tetap diam di logo LK walau kernel sudah boot jauh.
+	  Without this, console=tty0 writes to a virtual console with no
+	  display: the tree has no CONFIG_FB_SIMPLE (the stock device tree
+	  has no simple-framebuffer node, and LK builds its own DTB) and the
+	  SPRD DRM DPU never probes, so the panel would sit on the LK splash
+	  image even after the kernel has booted far.
 
-	  Memori fb-nya direservasi lewat early_param vxtuxfb=...
-	  (vxtux_beacon.c).  Default n; nyalakan saat memburu boot.
+	  The driver wipes the panel and then replays the last 200 dmesg
+	  lines, so the console starts clean and shows what happened before
+	  fbcon was available.
+
+	  The framebuffer memory is reserved by the early_param
+	  vxtuxfb=<phys>,... in vxtux_beacon.c.  Default n; enable it when
+	  chasing boot problems.
 
 config VXTUX_BEACON
-	bool "Indikator tahap boot di framebuffer LK (diagnostik)"
+	bool "Keep the bootloader framebuffer memory out of the buddy allocator"
 	depends on PRINTK
 	help
-	  Mengecat satu kotak putih tambahan ke framebuffer LK pada setiap
-	  tahap initcall (early, core, postcore, arch, subsys, fs, device,
-	  late), sehingga kemajuan boot bisa dibaca langsung dari layar:
-	  hitung kotak putihnya. Pita merah di atas = panic.
+	  LK leaves the panel scanning out of two buffers (0x9d000000 and
+	  0x9e000000) that the stock device tree does not reserve.  This
+	  option claims them in an early_param (vxtuxfb=...), while memblock
+	  can still be edited, so the buddy allocator can never hand those
+	  pages to anyone else and scribble over the console.
 
-	  Ini satu-satunya kanal keluaran yang tersedia SEBELUM driver eMMC
-	  probe (UART tablet tidak diekspos sebagai COM, dan partisi cache
-	  belum bisa ditulis). Buffer framebuffer direservasi lewat
-	  early_param vxtuxfb=..., karena DT stok tidak menandainya.
+	  This file used to also draw a debug beacon - one white box per
+	  initcall level, plus a red bar on panic.  That drawing path is
+	  gone: the framebuffer console and its dmesg replay replaced it, and
+	  the boxes made the handover from LK to the kernel look dirty.
 
-	  Default n; nyalakan hanya saat memburu masalah boot.
+	  Default n; required whenever VXTUX_LKFB is enabled.
 
 config VXTUX_FLIGHTREC
-	bool "Perekam log boot ke partisi cache (diagnostik)"
+	bool "Record the boot log to the cache partition"
 	depends on PRINTK
 	depends on BLOCK
 	help
-	  Menyalin isi log buffer kernel (dmesg) ke partisi `cache`
-	  (mmcblk0p49, offset 8 MiB) setiap ~3 detik dari sebuah kthread,
-	  dan sekali lagi saat panic.
+	  Copy the kernel log buffer (dmesg) to the cache partition
+	  (mmcblk0p49, offset 8 MiB) every ~3 seconds from a kthread, and
+	  once more on panic.
 
-	  Gunanya: boot yang menggantung sebelum userspace tidak
-	  meninggalkan jejak apa pun — layar tetap di logo LK, tidak ada
-	  panic, partisi cache kosong. Dengan perekam ini, initcall
-	  terakhir yang sempat berjalan tetap terekam (cmdline memuat
-	  initcall_debug=1) dan bisa dibaca lewat dump partisi cache.
+	  Why: a boot that hangs before userspace leaves no trace at all -
+	  the panel sits on the LK splash, there is no panic, and the cache
+	  partition stays empty.  With this recorder the last initcall that
+	  ran is still on disk (the command line sets initcall_debug=1) and
+	  can be read by dumping the cache partition.
 
-	  Hasilnya ditandai magic "VXTUXFR1". Default n; nyalakan hanya
-	  saat memburu masalah boot karena menulis ke eMMC terus-menerus.
+	  Records are marked with the magic "VXTUXFR1".  Default n; enable it
+	  only when chasing boot problems, since it writes to eMMC
+	  continuously.

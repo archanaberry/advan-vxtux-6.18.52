@@ -39,7 +39,7 @@ struct subsys_private *class_to_subsys(const struct class *class);
 		struct subsys_private *_sp = class_to_subsys((cls));	\
 		struct kobject *_k = _sp ? &_sp->subsys.kobj : NULL;	\
 		if (!_k)							\
-			pr_err("%s: kobject kelas tidak ditemukan\n",	\
+			pr_err("%s: class kobject not found\n",	\
 			       __func__);					\
 		_k;							\
 	})

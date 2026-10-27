@@ -276,14 +276,14 @@ static int __init vendor_abi_init(void)
 			__set_bit(abi_caps54[i].bit, &seen);
 		if (!test_bit(22, &seen) || bitmap_weight(&seen, ARM64_NCAPS_54) !=
 		    ARM64_NCAPS_54 - 1)
-			pr_warn("tabel [T] tidak konsisten (bit tertutup=%u)\n",
+			pr_warn("table [T] inconsistent (missing bits=%u)\n",
 				bitmap_weight(&seen, ARM64_NCAPS_54));
 	}
 
 	vendor_abi_fill_hwcaps();
 
-	pr_info("penyedia ABI arm64 5.4 aktif: kimage_vaddr=%#llx, "\
-		"const_caps_ready=mati (blob memakai jalur bitmap)\n",
+	pr_info("arm64 5.4 ABI provider active: kimage_vaddr=%#llx, "\
+		"const_caps_ready=none (blob uses the bitmap path)\n",
 		(unsigned long long)kimage_vaddr);
 	return 0;
 }
