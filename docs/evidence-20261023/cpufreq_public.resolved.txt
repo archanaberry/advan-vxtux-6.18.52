@@ -1,0 +1,233 @@
+; __cfi_check_fail @ 0x0 (48 B)
+  0x0000: str      x30, [x18], #8
+  0x0004: stp      x29, x30, [sp, #-0x10]!
+  0x0008: mov      x29, sp
+  0x000c: cbz      x0, #0x28
+  0x0010: ldrb     w8, [x0]
+  0x0014: cmp      w8, #5
+  0x0018: b.lo     #0x28
+  0x001c: ldp      x29, x30, [sp], #0x10
+  0x0020: ldr      x30, [x18, #-8]!
+  0x0024: ret      
+  0x0028: mov      w0, #2
+  0x002c: bl       #0x2c   ; -> __ubsan_handle_cfi_check_fail_abort
+
+; sprd_cpufreq_update_opp @ 0x30 (476 B)
+  0x0030: str      x30, [x18], #8
+  0x0034: stp      x29, x30, [sp, #-0x30]!
+  0x0038: stp      x28, x21, [sp, #0x10]
+  0x003c: stp      x20, x19, [sp, #0x20]
+  0x0040: mov      x29, sp
+  0x0044: sub      sp, sp, #0x2d0
+  0x0048: adrp     x8, #0   ; SHN_UNDEF page +0x0
+  0x004c: ldr      x8, [x8]   ; -> undef+0x0
+  0x0050: mov      w19, w1
+  0x0054: mov      w20, w0
+  0x0058: mov      x0, sp
+  0x005c: mov      w2, #0x2c8
+  0x0060: mov      w1, wzr
+  0x0064: stur     x8, [x29, #-8]
+  0x0068: bl       #0x68   ; -> memset
+  0x006c: mov      x0, sp
+  0x0070: mov      w1, wzr
+  0x0074: bl       #0x74   ; -> cpufreq_get_policy
+  0x0078: cbz      w0, #0xb0
+  0x007c: nop      
+  0x0080: mov      w0, wzr
+  0x0084: adrp     x9, #0   ; SHN_UNDEF page +0x0
+  0x0088: ldur     x8, [x29, #-8]
+  0x008c: ldr      x9, [x9]   ; -> undef+0x0
+  0x0090: cmp      x9, x8
+  0x0094: b.ne     #0x194
+  0x0098: add      sp, sp, #0x2d0
+  0x009c: ldp      x20, x19, [sp, #0x20]
+  0x00a0: ldp      x28, x21, [sp, #0x10]
+  0x00a4: ldp      x29, x30, [sp], #0x30
+  0x00a8: ldr      x30, [x18, #-8]!
+  0x00ac: ret      
+  0x00b0: bl       #0xb0   ; -> get_cpu_device
+  0x00b4: cbz      x0, #0x158
+  0x00b8: ldr      x0, [x0, #0x300]
+  0x00bc: cbz      x0, #0x164
+  0x00c0: adrp     x1, #0   ; .rodata page +0xdc
+  0x00c4: add      x1, x1, #0   ; -> $d.15+0x78
+  0x00c8: mov      w2, wzr
+  0x00cc: bl       #0xcc   ; -> of_parse_phandle
+  0x00d0: cbz      x0, #0x170
+  0x00d4: nop      
+  0x00d8: ldr      x21, [x0, #0x10]
+  0x00dc: adrp     x1, #0   ; .rodata page +0xec
+  0x00e0: add      x1, x1, #0   ; -> $d.15+0x88
+  0x00e4: mov      x0, x21
+  0x00e8: bl       #0xe8   ; -> strcmp
+  0x00ec: cbz      w0, #0x120
+  0x00f0: adrp     x1, #0   ; .rodata page +0x7b
+  0x00f4: add      x1, x1, #0   ; -> $d.15+0x17
+  0x00f8: mov      x0, x21
+  0x00fc: bl       #0xfc   ; -> strcmp
+  0x0100: cbnz     w0, #0x17c
+  0x0104: ldr      x8, [sp, #0x288]
+  0x0108: cbz      x8, #0x84
+  0x010c: cmn      x8, #1, lsl #12
+  0x0110: b.hi     #0x84
+  0x0114: ldr      x8, [x8, #0x190]
+  0x0118: cbnz     x8, #0x138
+  0x011c: b        #0x80
+  0x0120: ldr      x8, [sp, #0x288]
+  0x0124: cbz      x8, #0x84
+  0x0128: cmn      x8, #1, lsl #12
+  0x012c: b.hi     #0x84
+  0x0130: ldr      x8, [x8, #0xe8]
+  0x0134: cbz      x8, #0x80
+  0x0138: adrp     x9, #0   ; .text page +0x40
+  0x013c: add      x9, x9, #0   ; -> $x.1+0x1040
+  0x0140: cmp      x8, x9
+  0x0144: b.ne     #0x198
+  0x0148: mov      w0, w20
+  0x014c: mov      w1, w19
+  0x0150: blr      x8
+  0x0154: b        #0x84
+  0x0158: adrp     x0, #0   ; .rodata page +0xfd
+  0x015c: add      x0, x0, #0   ; -> $d.15+0x99
+  0x0160: b        #0x184
+  0x0164: adrp     x0, #0   ; .rodata page +0x11e
+  0x0168: add      x0, x0, #0   ; -> $d.15+0xba
+  0x016c: b        #0x184
+  0x0170: adrp     x0, #0   ; .rodata page +0x0
+  0x0174: add      x0, x0, #0   ; -> .rodata+0x0
+  0x0178: b        #0x184
+  0x017c: adrp     x0, #0   ; .rodata page +0x26
+  0x0180: add      x0, x0, #0   ; -> .rodata+0x26
+  0x0184: adrp     x1, #0   ; .rodata page +0x4c
+  0x0188: add      x1, x1, #0   ; -> .rodata+0x4c
+  0x018c: bl       #0x18c   ; -> printk
+  0x0190: b        #0x80
+  0x0194: bl       #0x194   ; -> __stack_chk_fail
+  0x0198: mov      x0, #0x237e
+  0x019c: movk     x0, #0xa505, lsl #16
+  0x01a0: movk     x0, #0x9c33, lsl #32
+  0x01a4: movk     x0, #0x9eab, lsl #48
+  0x01a8: mov      x1, x8
+  0x01ac: mov      x21, x8
+  0x01b0: bl       #0x1b0   ; -> __cfi_slowpath
+  0x01b4: mov      x8, x21
+  0x01b8: b        #0x148
+  0x01bc: adrp     x0, #0   ; __verbose page +0x0
+  0x01c0: adrp     x1, #0   ; .rodata page +0x64
+  0x01c4: adrp     x2, #0   ; .rodata page +0x4c
+  0x01c8: add      x0, x0, #0   ; -> $d.14
+  0x01cc: add      x1, x1, #0   ; -> $d.15
+  0x01d0: add      x2, x2, #0   ; -> .rodata+0x4c
+  0x01d4: bl       #0x1d4   ; -> __dynamic_pr_debug
+  0x01d8: b        #0x80
+  0x01dc: ldr      x3, [x0, #0x10]
+  0x01e0: adrp     x8, #0   ; __verbose page +0x38
+  0x01e4: add      x8, x8, #0   ; -> $d.14+0x38
+  0x01e8: adrp     x1, #0   ; .rodata page +0xc3
+  0x01ec: adrp     x2, #0   ; .rodata page +0x4c
+  0x01f0: add      x1, x1, #0   ; -> $d.15+0x5f
+  0x01f4: add      x2, x2, #0   ; -> .rodata+0x4c
+  0x01f8: mov      x21, x0
+  0x01fc: mov      x0, x8
+  0x0200: bl       #0x200   ; -> __dynamic_pr_debug
+  0x0204: mov      x0, x21
+  0x0208: b        #0xd8
+
+; sprd_cpufreq_update_normal @ 0x20c (148 B)
+  0x020c: sub      sp, sp, #0x20
+  0x0210: str      x30, [x18], #8
+  0x0214: stp      x29, x30, [sp, #0x10]
+  0x0218: add      x29, sp, #0x10
+  0x021c: ldr      x8, [x0, #0x288]
+  0x0220: mov      w0, wzr
+  0x0224: cbz      x8, #0x25c
+  0x0228: cmn      x8, #1, lsl #12
+  0x022c: b.hi     #0x25c
+  0x0230: ldr      x8, [x8, #0xe8]
+  0x0234: cbz      x8, #0x258
+  0x0238: adrp     x9, #0   ; .text page +0x40
+  0x023c: add      x9, x9, #0   ; -> $x.1+0x1040
+  0x0240: cmp      x8, x9
+  0x0244: b.ne     #0x26c
+  0x0248: mov      w0, w1
+  0x024c: mov      w1, w2
+  0x0250: blr      x8
+  0x0254: b        #0x25c
+  0x0258: mov      w0, wzr
+  0x025c: ldp      x29, x30, [sp, #0x10]
+  0x0260: ldr      x30, [x18, #-8]!
+  0x0264: add      sp, sp, #0x20
+  0x0268: ret      
+  0x026c: mov      x0, #0x237e
+  0x0270: movk     x0, #0xa505, lsl #16
+  0x0274: movk     x0, #0x9c33, lsl #32
+  0x0278: movk     x0, #0x9eab, lsl #48
+  0x027c: stur     w1, [x29, #-4]
+  0x0280: mov      x1, x8
+  0x0284: str      w2, [sp, #8]
+  0x0288: str      x8, [sp]
+  0x028c: bl       #0x28c   ; -> __cfi_slowpath
+  0x0290: ldr      x8, [sp]
+  0x0294: ldur     w1, [x29, #-4]
+  0x0298: ldr      w2, [sp, #8]
+  0x029c: b        #0x248
+
+; sprd_cpufreq_update_common @ 0x2a0 (148 B)
+  0x02a0: sub      sp, sp, #0x20
+  0x02a4: str      x30, [x18], #8
+  0x02a8: stp      x29, x30, [sp, #0x10]
+  0x02ac: add      x29, sp, #0x10
+  0x02b0: ldr      x8, [x0, #0x288]
+  0x02b4: mov      w0, wzr
+  0x02b8: cbz      x8, #0x2f0
+  0x02bc: cmn      x8, #1, lsl #12
+  0x02c0: b.hi     #0x2f0
+  0x02c4: ldr      x8, [x8, #0x190]
+  0x02c8: cbz      x8, #0x2ec
+  0x02cc: adrp     x9, #0   ; .text page +0x40
+  0x02d0: add      x9, x9, #0   ; -> $x.1+0x1040
+  0x02d4: cmp      x8, x9
+  0x02d8: b.ne     #0x300
+  0x02dc: mov      w0, w1
+  0x02e0: mov      w1, w2
+  0x02e4: blr      x8
+  0x02e8: b        #0x2f0
+  0x02ec: mov      w0, wzr
+  0x02f0: ldp      x29, x30, [sp, #0x10]
+  0x02f4: ldr      x30, [x18, #-8]!
+  0x02f8: add      sp, sp, #0x20
+  0x02fc: ret      
+  0x0300: mov      x0, #0x237e
+  0x0304: movk     x0, #0xa505, lsl #16
+  0x0308: movk     x0, #0x9c33, lsl #32
+  0x030c: movk     x0, #0x9eab, lsl #48
+  0x0310: stur     w1, [x29, #-4]
+  0x0314: mov      x1, x8
+  0x0318: str      w2, [sp, #8]
+  0x031c: str      x8, [sp]
+  0x0320: bl       #0x320   ; -> __cfi_slowpath
+  0x0324: ldr      x8, [sp]
+  0x0328: ldur     w1, [x29, #-4]
+  0x032c: ldr      w2, [sp, #8]
+  0x0330: b        #0x2dc
+
+; __cfi_check @ 0x1000 (64 B)
+  0x1000: mov      x8, #0x237e
+  0x1004: movk     x8, #0xa505, lsl #16
+  0x1008: movk     x8, #0x9c33, lsl #32
+  0x100c: movk     x8, #0x9eab, lsl #48
+  0x1010: cmp      x0, x8
+  0x1014: b.ne     #0x102c
+  0x1018: adrp     x8, #0x1000   ; .text page +0x40
+  0x101c: add      x8, x8, #0   ; -> $x.1+0x1040
+  0x1020: cmp      x1, x8
+  0x1024: b.ne     #0x102c
+  0x1028: ret      
+  0x102c: str      x30, [sp, #-0x10]!
+  0x1030: mov      x0, x2
+  0x1034: bl       #0x1034   ; -> __cfi_check_fail
+  0x1038: ldr      x30, [sp], #0x10
+  0x103c: ret      
+
+; __typeid__ZTSFjiiE_global_addr @ 0x1040 (1 B)
+

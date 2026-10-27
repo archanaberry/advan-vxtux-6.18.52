@@ -1,0 +1,545 @@
+
+core.ko:     file format elf64-littleaarch64
+
+
+Disassembly of section .plt:
+
+0000000000000000 <.plt>:
+	...
+
+Disassembly of section .init.plt:
+
+0000000000000000 <.init.plt>:
+	...
+
+Disassembly of section .text.ftrace_trampoline:
+
+0000000000000000 <.text.ftrace_trampoline>:
+	...
+
+Disassembly of section .text:
+
+0000000000000000 <__cfi_check_fail>:
+       0:	str	x30, [x18], #8
+       4:	stp	x29, x30, [sp, #-16]!
+       8:	mov	x29, sp
+       c:	cbz	x0, 28 <__cfi_check_fail+0x28>
+      10:	ldrb	w8, [x0]
+      14:	cmp	w8, #0x5
+      18:	b.cc	28 <__cfi_check_fail+0x28>  // b.lo, b.ul, b.last
+      1c:	ldp	x29, x30, [sp], #16
+      20:	ldr	x30, [x18, #-8]!
+      24:	ret
+      28:	mov	w0, #0x2                   	// #2
+      2c:	bl	0 <__ubsan_handle_cfi_check_fail_abort>
+			2c: R_AARCH64_CALL26	__ubsan_handle_cfi_check_fail_abort
+
+0000000000000030 <sprd_autotest_unregister_handler>:
+      30:	cbz	x0, c8 <sprd_autotest_unregister_handler+0x98>
+      34:	str	x30, [x18], #8
+      38:	stp	x29, x30, [sp, #-32]!
+      3c:	stp	x20, x19, [sp, #16]
+      40:	mov	x29, sp
+      44:	ldr	x20, [x0, #48]
+      48:	mov	x19, x0
+      4c:	cbz	x20, 74 <sprd_autotest_unregister_handler+0x44>
+      50:	mov	x0, #0x8f3a                	// #36666
+      54:	movk	x0, #0x6e7b, lsl #16
+      58:	movk	x0, #0x3aed, lsl #32
+      5c:	movk	x0, #0xb3af, lsl #48
+      60:	mov	x1, x20
+      64:	bl	0 <__cfi_slowpath>
+			64: R_AARCH64_CALL26	__cfi_slowpath
+      68:	ldr	x1, [x19, #56]
+      6c:	mov	x0, x19
+      70:	blr	x20
+      74:	adrp	x20, 0 <__cfi_check_fail>
+			74: R_AARCH64_ADR_PREL_PG_HI21	autotest
+      78:	ldr	x8, [x20]
+			78: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+      7c:	add	x0, x8, #0x440
+      80:	bl	0 <mutex_lock>
+			80: R_AARCH64_CALL26	mutex_lock
+      84:	add	x0, x19, #0x10
+      88:	bl	0 <__list_del_entry_valid>
+			88: R_AARCH64_CALL26	__list_del_entry_valid
+      8c:	tbz	w0, #0, 9c <sprd_autotest_unregister_handler+0x6c>
+      90:	ldp	x9, x8, [x19, #16]
+      94:	str	x8, [x9, #8]
+      98:	str	x9, [x8]
+      9c:	mov	x8, #0x100                 	// #256
+      a0:	movk	x8, #0xdead, lsl #48
+      a4:	mov	w9, #0x22                  	// #34
+      a8:	orr	x9, x8, x9
+      ac:	stp	x8, x9, [x19, #16]
+      b0:	ldr	x8, [x20]
+			b0: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+      b4:	add	x0, x8, #0x440
+      b8:	bl	0 <mutex_unlock>
+			b8: R_AARCH64_CALL26	mutex_unlock
+      bc:	ldp	x20, x19, [sp, #16]
+      c0:	ldp	x29, x30, [sp], #32
+      c4:	ldr	x30, [x18, #-8]!
+      c8:	ret
+
+00000000000000cc <sprd_autotest_register_handler>:
+      cc:	str	x30, [x18], #8
+      d0:	stp	x29, x30, [sp, #-64]!
+      d4:	stp	x24, x23, [sp, #16]
+      d8:	stp	x22, x21, [sp, #32]
+      dc:	stp	x20, x19, [sp, #48]
+      e0:	mov	x29, sp
+      e4:	cbz	x0, 140 <sprd_autotest_register_handler+0x74>
+      e8:	ldr	x8, [x0, #40]
+      ec:	mov	x19, x0
+      f0:	cbz	x8, 140 <sprd_autotest_register_handler+0x74>
+      f4:	adrp	x23, 0 <__cfi_check_fail>
+			f4: R_AARCH64_ADR_PREL_PG_HI21	autotest
+      f8:	ldr	x8, [x23]
+			f8: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+      fc:	ldr	w20, [x19, #8]
+     100:	add	x0, x8, #0x440
+     104:	bl	0 <mutex_lock>
+			104: R_AARCH64_CALL26	mutex_lock
+     108:	ldr	x8, [x23]
+			108: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     10c:	ldr	x21, [x8, #1072]
+     110:	add	x9, x8, #0x430
+     114:	cmp	x9, x21
+     118:	b.eq	134 <sprd_autotest_register_handler+0x68>  // b.none
+     11c:	ldur	w10, [x21, #-8]
+     120:	cmp	w10, w20
+     124:	b.eq	148 <sprd_autotest_register_handler+0x7c>  // b.none
+     128:	ldr	x21, [x21]
+     12c:	cmp	x9, x21
+     130:	b.ne	11c <sprd_autotest_register_handler+0x50>  // b.any
+     134:	add	x0, x8, #0x440
+     138:	bl	0 <mutex_unlock>
+			138: R_AARCH64_CALL26	mutex_unlock
+     13c:	b	158 <sprd_autotest_register_handler+0x8c>
+     140:	mov	w0, #0xffffffea            	// #-22
+     144:	b	1dc <sprd_autotest_register_handler+0x110>
+     148:	add	x0, x8, #0x440
+     14c:	bl	0 <mutex_unlock>
+			14c: R_AARCH64_CALL26	mutex_unlock
+     150:	cmp	x21, #0x10
+     154:	b.ne	1f4 <sprd_autotest_register_handler+0x128>  // b.any
+     158:	ldr	x20, [x19, #32]
+     15c:	cbz	x20, 188 <sprd_autotest_register_handler+0xbc>
+     160:	mov	x0, #0x8f3a                	// #36666
+     164:	movk	x0, #0x6e7b, lsl #16
+     168:	movk	x0, #0x3aed, lsl #32
+     16c:	movk	x0, #0xb3af, lsl #48
+     170:	mov	x1, x20
+     174:	bl	0 <__cfi_slowpath>
+			174: R_AARCH64_CALL26	__cfi_slowpath
+     178:	ldr	x1, [x19, #56]
+     17c:	mov	x0, x19
+     180:	blr	x20
+     184:	cbnz	w0, 1dc <sprd_autotest_register_handler+0x110>
+     188:	add	x20, x19, #0x10
+     18c:	str	x20, [x19, #16]
+     190:	str	x20, [x19, #24]
+     194:	ldr	x8, [x23]
+			194: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     198:	add	x0, x8, #0x440
+     19c:	bl	0 <mutex_lock>
+			19c: R_AARCH64_CALL26	mutex_lock
+     1a0:	ldr	x24, [x23]
+			1a0: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     1a4:	mov	x0, x20
+     1a8:	ldr	x21, [x24, #1080]
+     1ac:	add	x22, x24, #0x430
+     1b0:	mov	x2, x22
+     1b4:	mov	x1, x21
+     1b8:	bl	0 <__list_add_valid>
+			1b8: R_AARCH64_CALL26	__list_add_valid
+     1bc:	tbz	w0, #0, 1cc <sprd_autotest_register_handler+0x100>
+     1c0:	str	x20, [x24, #1080]
+     1c4:	stp	x22, x21, [x19, #16]
+     1c8:	str	x20, [x21]
+     1cc:	ldr	x8, [x23]
+			1cc: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     1d0:	add	x0, x8, #0x440
+     1d4:	bl	0 <mutex_unlock>
+			1d4: R_AARCH64_CALL26	mutex_unlock
+     1d8:	mov	w0, wzr
+     1dc:	ldp	x20, x19, [sp, #48]
+     1e0:	ldp	x22, x21, [sp, #32]
+     1e4:	ldp	x24, x23, [sp, #16]
+     1e8:	ldp	x29, x30, [sp], #64
+     1ec:	ldr	x30, [x18, #-8]!
+     1f0:	ret
+     1f4:	adrp	x0, 0 <__cfi_check_fail>
+			1f4: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x6e
+     1f8:	add	x0, x0, #0x0
+			1f8: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x6e
+     1fc:	bl	0 <printk>
+			1fc: R_AARCH64_CALL26	printk
+     200:	mov	w0, #0xffffffef            	// #-17
+     204:	b	1dc <sprd_autotest_register_handler+0x110>
+
+0000000000000208 <sprd_autotest_ioctl>:
+     208:	str	x30, [x18], #8
+     20c:	stp	x29, x30, [sp, #-48]!
+     210:	str	x21, [sp, #16]
+     214:	stp	x20, x19, [sp, #32]
+     218:	mov	x29, sp
+     21c:	adrp	x0, 0 <__cfi_check_fail>
+			21c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x98
+     220:	add	x0, x0, #0x0
+			220: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x98
+     224:	mov	x19, x2
+     228:	mov	w20, w1
+     22c:	bl	0 <printk>
+			22c: R_AARCH64_CALL26	printk
+     230:	adrp	x21, 0 <__cfi_check_fail>
+			230: R_AARCH64_ADR_PREL_PG_HI21	autotest
+     234:	ldr	x8, [x21]
+			234: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     238:	add	x0, x8, #0x440
+     23c:	bl	0 <mutex_lock>
+			23c: R_AARCH64_CALL26	mutex_lock
+     240:	ldr	x8, [x21]
+			240: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+     244:	ldr	x21, [x8, #1072]
+     248:	add	x9, x8, #0x430
+     24c:	cmp	x9, x21
+     250:	b.eq	26c <sprd_autotest_ioctl+0x64>  // b.none
+     254:	ldur	w10, [x21, #-8]
+     258:	cmp	w10, w20
+     25c:	b.eq	27c <sprd_autotest_ioctl+0x74>  // b.none
+     260:	ldr	x21, [x21]
+     264:	cmp	x9, x21
+     268:	b.ne	254 <sprd_autotest_ioctl+0x4c>  // b.any
+     26c:	add	x0, x8, #0x440
+     270:	bl	0 <mutex_unlock>
+			270: R_AARCH64_CALL26	mutex_unlock
+     274:	mov	x0, #0xffffffffffffffea    	// #-22
+     278:	b	2b8 <sprd_autotest_ioctl+0xb0>
+     27c:	add	x0, x8, #0x440
+     280:	sub	x20, x21, #0x10
+     284:	bl	0 <mutex_unlock>
+			284: R_AARCH64_CALL26	mutex_unlock
+     288:	cbz	x20, 274 <sprd_autotest_ioctl+0x6c>
+     28c:	ldr	x21, [x21, #24]
+     290:	mov	x0, #0x8f3a                	// #36666
+     294:	movk	x0, #0x6e7b, lsl #16
+     298:	movk	x0, #0x3aed, lsl #32
+     29c:	movk	x0, #0xb3af, lsl #48
+     2a0:	mov	x1, x21
+     2a4:	bl	0 <__cfi_slowpath>
+			2a4: R_AARCH64_CALL26	__cfi_slowpath
+     2a8:	mov	x0, x20
+     2ac:	mov	x1, x19
+     2b0:	blr	x21
+     2b4:	sxtw	x0, w0
+     2b8:	ldp	x20, x19, [sp, #32]
+     2bc:	ldr	x21, [sp, #16]
+     2c0:	ldp	x29, x30, [sp], #48
+     2c4:	ldr	x30, [x18, #-8]!
+     2c8:	ret
+
+00000000000002cc <sprd_autotest_open>:
+     2cc:	mov	w0, wzr
+     2d0:	ret
+
+00000000000002d4 <sprd_autotest_release>:
+     2d4:	mov	w0, wzr
+     2d8:	ret
+	...
+
+0000000000001000 <__cfi_check>:
+    1000:	mov	x8, #0x2444                	// #9284
+    1004:	movk	x8, #0x2924, lsl #16
+    1008:	movk	x8, #0xa43e, lsl #32
+    100c:	movk	x8, #0x2b3, lsl #48
+    1010:	cmp	x0, x8
+    1014:	b.gt	106c <__cfi_check+0x6c>
+    1018:	mov	x8, #0x2447                	// #9287
+    101c:	movk	x8, #0x7d98, lsl #16
+    1020:	movk	x8, #0xe379, lsl #32
+    1024:	movk	x8, #0xa296, lsl #48
+    1028:	cmp	x0, x8
+    102c:	b.eq	10c0 <__cfi_check+0xc0>  // b.none
+    1030:	mov	x8, #0x5ac8                	// #23240
+    1034:	movk	x8, #0xfc53, lsl #16
+    1038:	movk	x8, #0x7fe6, lsl #32
+    103c:	movk	x8, #0xf723, lsl #48
+    1040:	cmp	x0, x8
+    1044:	b.eq	10cc <__cfi_check+0xcc>  // b.none
+    1048:	mov	x8, #0xb5ad                	// #46509
+    104c:	movk	x8, #0x78e5, lsl #16
+    1050:	movk	x8, #0xf8bc, lsl #32
+    1054:	movk	x8, #0xff76, lsl #48
+    1058:	cmp	x0, x8
+    105c:	b.ne	10e4 <__cfi_check+0xe4>  // b.any
+    1060:	adrp	x8, 0 <__cfi_check_fail>
+			1060: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1124
+    1064:	add	x8, x8, #0x0
+			1064: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1124
+    1068:	b	110c <__cfi_check+0x10c>
+    106c:	mov	x8, #0x2445                	// #9285
+    1070:	movk	x8, #0x2924, lsl #16
+    1074:	movk	x8, #0xa43e, lsl #32
+    1078:	movk	x8, #0x2b3, lsl #48
+    107c:	cmp	x0, x8
+    1080:	b.eq	10f8 <__cfi_check+0xf8>  // b.none
+    1084:	mov	x8, #0xe51                 	// #3665
+    1088:	movk	x8, #0x219c, lsl #16
+    108c:	movk	x8, #0xc801, lsl #32
+    1090:	movk	x8, #0x42e2, lsl #48
+    1094:	cmp	x0, x8
+    1098:	b.eq	1104 <__cfi_check+0x104>  // b.none
+    109c:	mov	x8, #0xbcd5                	// #48341
+    10a0:	movk	x8, #0x7ad8, lsl #16
+    10a4:	movk	x8, #0xa0fb, lsl #32
+    10a8:	movk	x8, #0x7e04, lsl #48
+    10ac:	cmp	x0, x8
+    10b0:	b.ne	10e4 <__cfi_check+0xe4>  // b.any
+    10b4:	adrp	x8, 0 <__cfi_check_fail>
+			10b4: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1130
+    10b8:	add	x8, x8, #0x0
+			10b8: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1130
+    10bc:	b	110c <__cfi_check+0x10c>
+    10c0:	adrp	x8, 0 <__cfi_check_fail>
+			10c0: R_AARCH64_ADR_PREL_PG_HI21	.text+0x111c
+    10c4:	add	x8, x8, #0x0
+			10c4: R_AARCH64_ADD_ABS_LO12_NC	.text+0x111c
+    10c8:	b	110c <__cfi_check+0x10c>
+    10cc:	adrp	x8, 0 <__cfi_check_fail>
+			10cc: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1128
+    10d0:	add	x8, x8, #0x0
+			10d0: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1128
+    10d4:	sub	x8, x1, x8
+    10d8:	ror	x8, x8, #2
+    10dc:	cmp	x8, #0x2
+    10e0:	b.cc	1114 <__cfi_check+0x114>  // b.lo, b.ul, b.last
+    10e4:	str	x30, [sp, #-16]!
+    10e8:	mov	x0, x2
+    10ec:	bl	0 <__cfi_check_fail>
+			10ec: R_AARCH64_CALL26	__cfi_check_fail
+    10f0:	ldr	x30, [sp], #16
+    10f4:	ret
+    10f8:	adrp	x8, 0 <__cfi_check_fail>
+			10f8: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1120
+    10fc:	add	x8, x8, #0x0
+			10fc: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1120
+    1100:	b	110c <__cfi_check+0x10c>
+    1104:	adrp	x8, 0 <__cfi_check_fail>
+			1104: R_AARCH64_ADR_PREL_PG_HI21	.text+0x1118
+    1108:	add	x8, x8, #0x0
+			1108: R_AARCH64_ADD_ABS_LO12_NC	.text+0x1118
+    110c:	cmp	x1, x8
+    1110:	b.ne	10e4 <__cfi_check+0xe4>  // b.any
+    1114:	ret
+    1118:	b	30 <sprd_autotest_unregister_handler>
+			1118: R_AARCH64_JUMP26	sprd_autotest_unregister_handler
+    111c:	b	cc <sprd_autotest_register_handler>
+			111c: R_AARCH64_JUMP26	sprd_autotest_register_handler
+    1120:	b	0 <__cfi_check_fail>
+			1120: R_AARCH64_JUMP26	init_module
+    1124:	b	0 <__cfi_check_fail>
+			1124: R_AARCH64_JUMP26	.text+0x208
+    1128:	b	0 <__cfi_check_fail>
+			1128: R_AARCH64_JUMP26	.text+0x2cc
+    112c:	b	0 <__cfi_check_fail>
+			112c: R_AARCH64_JUMP26	.text+0x2d4
+    1130:	b	0 <__cfi_check_fail>
+			1130: R_AARCH64_JUMP26	cleanup_module
+
+Disassembly of section .init.text:
+
+0000000000000000 <init_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-64]!
+   8:	str	x23, [sp, #16]
+   c:	stp	x22, x21, [sp, #32]
+  10:	stp	x20, x19, [sp, #48]
+  14:	mov	x29, sp
+  18:	adrp	x8, 0 <kmalloc_caches>
+			18: R_AARCH64_ADR_PREL_PG_HI21	kmalloc_caches+0x58
+  1c:	ldr	x0, [x8]
+			1c: R_AARCH64_LDST64_ABS_LO12_NC	kmalloc_caches+0x58
+  20:	mov	w1, #0xdc0                 	// #3520
+  24:	mov	w2, #0x460                 	// #1120
+  28:	bl	0 <kmem_cache_alloc_trace>
+			28: R_AARCH64_CALL26	kmem_cache_alloc_trace
+  2c:	adrp	x21, 0 <init_module>
+			2c: R_AARCH64_ADR_PREL_PG_HI21	autotest
+  30:	str	x0, [x21]
+			30: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  34:	cbz	x0, 138 <init_module+0x138>
+  38:	adrp	x19, 0 <init_module>
+			38: R_AARCH64_ADR_PREL_PG_HI21	__this_module
+  3c:	add	x19, x19, #0x0
+			3c: R_AARCH64_ADD_ABS_LO12_NC	__this_module
+  40:	adrp	x1, 0 <init_module>
+			40: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x65
+  44:	adrp	x2, 0 <init_module>
+			44: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x8
+  48:	add	x1, x1, #0x0
+			48: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x65
+  4c:	add	x2, x2, #0x0
+			4c: R_AARCH64_ADD_ABS_LO12_NC	.bss+0x8
+  50:	mov	x0, x19
+  54:	bl	0 <__class_create>
+			54: R_AARCH64_CALL26	__class_create
+  58:	adrp	x22, 8 <init_module+0x8>
+			58: R_AARCH64_ADR_PREL_PG_HI21	autotest_class
+  5c:	cmn	x0, #0xfff
+  60:	str	x0, [x22]
+			60: R_AARCH64_LDST64_ABS_LO12_NC	autotest_class
+  64:	b.cs	140 <init_module+0x140>  // b.hs, b.nlast
+  68:	adrp	x0, 0 <init_module>
+			68: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x10
+  6c:	adrp	x3, 0 <init_module>
+			6c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x65
+  70:	add	x0, x0, #0x0
+			70: R_AARCH64_ADD_ABS_LO12_NC	.bss+0x10
+  74:	add	x3, x3, #0x0
+			74: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x65
+  78:	mov	w2, #0xa                   	// #10
+  7c:	mov	w1, wzr
+  80:	bl	0 <alloc_chrdev_region>
+			80: R_AARCH64_CALL26	alloc_chrdev_region
+  84:	tbnz	w0, #31, 154 <init_module+0x154>
+  88:	ldr	x8, [x21]
+			88: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  8c:	adrp	x1, 0 <init_module>
+			8c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xb
+  90:	adrp	x2, 0 <init_module>
+			90: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x14
+  94:	add	x1, x1, #0x0
+			94: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xb
+  98:	add	x0, x8, #0x440
+  9c:	add	x2, x2, #0x0
+			9c: R_AARCH64_ADD_ABS_LO12_NC	.bss+0x14
+  a0:	bl	0 <__mutex_init>
+			a0: R_AARCH64_CALL26	__mutex_init
+  a4:	ldr	x8, [x21]
+			a4: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  a8:	adrp	x1, 0 <init_module>
+			a8: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xd0
+  ac:	add	x1, x1, #0x0
+			ac: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xd0
+  b0:	add	x9, x8, #0x430
+  b4:	add	x0, x8, #0x3a8
+  b8:	str	x9, [x8, #1072]
+  bc:	str	x9, [x8, #1080]
+  c0:	bl	0 <cdev_init>
+			c0: R_AARCH64_CALL26	cdev_init
+  c4:	ldr	x0, [x21]
+			c4: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  c8:	adrp	x23, 0 <init_module>
+			c8: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x10
+  cc:	adrp	x1, 0 <init_module>
+			cc: R_AARCH64_ADR_PREL_PG_HI21	.rodata
+  d0:	add	x1, x1, #0x0
+			d0: R_AARCH64_ADD_ABS_LO12_NC	.rodata
+  d4:	str	x19, [x0, #1032]
+  d8:	ldr	w8, [x23]
+			d8: R_AARCH64_LDST32_ABS_LO12_NC	.bss+0x10
+  dc:	mov	w2, wzr
+  e0:	and	w8, w8, #0xfff00000
+  e4:	str	w8, [x0, #784]
+  e8:	ldr	x8, [x22]
+			e8: R_AARCH64_LDST64_ABS_LO12_NC	autotest_class
+  ec:	str	x8, [x0, #816]
+  f0:	bl	0 <dev_set_name>
+			f0: R_AARCH64_CALL26	dev_set_name
+  f4:	ldr	x0, [x21]
+			f4: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  f8:	bl	0 <device_initialize>
+			f8: R_AARCH64_CALL26	device_initialize
+  fc:	ldr	x1, [x21]
+			fc: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+ 100:	add	x0, x1, #0x3a8
+ 104:	str	x1, [x1, #152]
+ 108:	bl	0 <cdev_device_add>
+			108: R_AARCH64_CALL26	cdev_device_add
+ 10c:	mov	w20, wzr
+ 110:	cbz	w0, 174 <init_module+0x174>
+ 114:	mov	w19, w0
+ 118:	adrp	x0, 0 <init_module>
+			118: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0xad
+ 11c:	add	x0, x0, #0x0
+			11c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0xad
+ 120:	bl	0 <printk>
+			120: R_AARCH64_CALL26	printk
+ 124:	ldr	w0, [x23]
+			124: R_AARCH64_LDST32_ABS_LO12_NC	.bss+0x10
+ 128:	mov	w1, #0xa                   	// #10
+ 12c:	bl	0 <unregister_chrdev_region>
+			12c: R_AARCH64_CALL26	unregister_chrdev_region
+ 130:	mov	w20, w19
+ 134:	b	164 <init_module+0x164>
+ 138:	mov	w20, #0xfffffff4            	// #-12
+ 13c:	b	174 <init_module+0x174>
+ 140:	adrp	x0, 0 <init_module>
+			140: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x1b
+ 144:	add	x0, x0, #0x0
+			144: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x1b
+ 148:	bl	0 <printk>
+			148: R_AARCH64_CALL26	printk
+ 14c:	ldr	w20, [x22]
+			14c: R_AARCH64_LDST32_ABS_LO12_NC	autotest_class
+ 150:	b	16c <init_module+0x16c>
+ 154:	mov	w20, w0
+ 158:	adrp	x0, 0 <init_module>
+			158: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x3f
+ 15c:	add	x0, x0, #0x0
+			15c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x3f
+ 160:	bl	0 <printk>
+			160: R_AARCH64_CALL26	printk
+ 164:	ldr	x0, [x22]
+			164: R_AARCH64_LDST64_ABS_LO12_NC	autotest_class
+ 168:	bl	0 <class_destroy>
+			168: R_AARCH64_CALL26	class_destroy
+ 16c:	ldr	x0, [x21]
+			16c: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+ 170:	bl	0 <kfree>
+			170: R_AARCH64_CALL26	kfree
+ 174:	mov	w0, w20
+ 178:	ldp	x20, x19, [sp, #48]
+ 17c:	ldp	x22, x21, [sp, #32]
+ 180:	ldr	x23, [sp, #16]
+ 184:	ldp	x29, x30, [sp], #64
+ 188:	ldr	x30, [x18, #-8]!
+ 18c:	ret
+
+Disassembly of section .exit.text:
+
+0000000000000000 <cleanup_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-32]!
+   8:	str	x19, [sp, #16]
+   c:	mov	x29, sp
+  10:	adrp	x19, 0 <cleanup_module>
+			10: R_AARCH64_ADR_PREL_PG_HI21	autotest
+  14:	ldr	x1, [x19]
+			14: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  18:	add	x0, x1, #0x3a8
+  1c:	bl	0 <cdev_device_del>
+			1c: R_AARCH64_CALL26	cdev_device_del
+  20:	adrp	x8, 0 <cleanup_module>
+			20: R_AARCH64_ADR_PREL_PG_HI21	.bss+0x10
+  24:	ldr	w0, [x8]
+			24: R_AARCH64_LDST32_ABS_LO12_NC	.bss+0x10
+  28:	mov	w1, #0xa                   	// #10
+  2c:	bl	0 <unregister_chrdev_region>
+			2c: R_AARCH64_CALL26	unregister_chrdev_region
+  30:	adrp	x8, 8 <cleanup_module+0x8>
+			30: R_AARCH64_ADR_PREL_PG_HI21	autotest_class
+  34:	ldr	x0, [x8]
+			34: R_AARCH64_LDST64_ABS_LO12_NC	autotest_class
+  38:	bl	0 <class_destroy>
+			38: R_AARCH64_CALL26	class_destroy
+  3c:	ldr	x0, [x19]
+			3c: R_AARCH64_LDST64_ABS_LO12_NC	autotest
+  40:	bl	0 <kfree>
+			40: R_AARCH64_CALL26	kfree
+  44:	ldr	x19, [sp, #16]
+  48:	ldp	x29, x30, [sp], #32
+  4c:	ldr	x30, [x18, #-8]!
+  50:	ret

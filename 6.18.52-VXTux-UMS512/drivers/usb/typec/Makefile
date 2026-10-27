@@ -12,3 +12,7 @@ obj-$(CONFIG_TYPEC_STUSB160X) 	+= stusb160x.o
 obj-$(CONFIG_TYPEC_RT1719)	+= rt1719.o
 obj-$(CONFIG_TYPEC_WUSB3801)	+= wusb3801.o
 obj-$(CONFIG_TYPEC)		+= mux/
+# Unisoc SC27xx Type-C (vendor). Sebelum ini direktori sprd/ TIDAK pernah
+# di-descend dari sini, jadi sc27xx_typec.ko mustahil ter-build walau
+# CONFIG_TYPEC_SPRD=m dan sumbernya ada (temuan docs/PORT-AUDIT.md).
+obj-$(CONFIG_TYPEC_SPRD)		+= sprd/

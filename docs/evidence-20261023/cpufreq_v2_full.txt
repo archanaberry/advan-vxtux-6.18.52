@@ -1,0 +1,2243 @@
+; sprd_cpufreq_update_opp_v2 @ 0x30 (688 B)
+        30:  sub      sp, sp, #0x50
+        34:  str      x30, [x18], #8
+        38:  stp      x29, x30, [sp, #0x10]
+        3c:  str      x23, [sp, #0x20]
+        40:  stp      x22, x21, [sp, #0x30]
+        44:  stp      x20, x19, [sp, #0x40]
+        48:  add      x29, sp, #0x10
+        4c:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+        50:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+        54:  mov      w21, w1
+        58:  mov      w20, w0
+        5c:  str      x8, [sp, #8]
+        60:  str      xzr, [sp]
+        64:  bl       #0x64  ; -> cpufreq_cpu_get+0x0
+        68:  cbz      x0, #0x214
+        6c:  ldr      x22, [x0, #0x288]
+        70:  mov      x19, x0
+        74:  cbz      x22, #0x1e8
+        78:  ldr      x8, [x22, #0xe0]
+        7c:  cbz      x8, #0x1e8
+        80:  mov      w8, #0x4dd3
+        84:  movk     w8, #0x1062, lsl #16
+        88:  smull    x8, w21, w8
+        8c:  add      x20, x22, #8
+        90:  lsr      x9, x8, #0x3f
+        94:  asr      x8, x8, #0x26
+        98:  mov      x0, x20
+        9c:  add      w21, w8, w9
+        a0:  bl       #0xa0  ; -> mutex_lock+0x0
+        a4:  add      w8, w21, #0x112
+        a8:  cmp      w8, #0x224
+        ac:  b.hs     #0x238  ; -> $d.45+0x148
+        b0:  add      x9, x22, #0xb8
+        b4:  ldr      x10, [x9]
+        b8:  cmp      x9, x10
+        bc:  sub      x8, x10, #0x10
+        c0:  b.eq     #0xe0  ; -> $d.59+0x43
+        c4:  ldr      w11, [x8]
+        c8:  ldr      x10, [x10]
+        cc:  cmp      w11, w21
+        d0:  b.gt     #0xb8  ; -> $d.59+0x1b
+        d4:  ldur     w11, [x10, #-0x10]
+        d8:  cmp      w11, w21
+        dc:  b.le     #0xb8  ; -> $d.59+0x1b
+        e0:  cbz      x8, #0x258
+        e4:  ldr      x9, [x22, #0xa8]
+        e8:  ldr      w10, [x8]
+        ec:  ldr      w11, [x9]
+        f0:  cmp      w10, w11
+        f4:  b.le     #0x1c0  ; -> $d.45+0xd0
+        f8:  mov      w11, #4
+        fc:  mov      x10, x22
+       100:  str      w11, [x10, #0xa4]!
+       104:  stur     x8, [x10, #0xc]
+       108:  cmp      x8, x9
+       10c:  str      wzr, [x10]
+       110:  b.eq     #0x264  ; -> $d.45+0x174
+       114:  adrp     x23, #0  ; -> sym#96+0x0
+       118:  ldr      w3, [x22]
+       11c:  ldr      x0, [x23]  ; sym#96+0x0
+       120:  ldr      w5, [x8]
+       124:  adrp     x1, #0  ; -> sym#106+0x8e5
+       128:  adrp     x2, #0  ; -> sym#106+0x5c9
+       12c:  add      x1, x1, #0  ; -> $x.9+0x19
+       130:  add      x2, x2, #0  ; -> $x.6+0x1d  'sprd_cpufreq_update_opp_v2'
+       134:  mov      w4, w21
+       138:  bl       #0x138  ; -> _dev_info+0x0
+       13c:  ldr      x1, [x22, #0xb0]
+       140:  mov      x0, x19
+       144:  bl       #0x144  ; -> sym#98+0x2e0
+       148:  cbnz     w0, #0x2a8
+       14c:  ldr      x21, [x22, #0xe0]
+       150:  ldr      x8, [x22, #0xb0]
+       154:  mov      x0, #0xaf81
+       158:  movk     x0, #0x90f5, lsl #16
+       15c:  movk     x0, #0xcd8c, lsl #32
+       160:  movk     x0, #0x33fb, lsl #48
+       164:  mov      x1, x21
+       168:  str      x8, [x22, #0xa8]
+       16c:  bl       #0x16c  ; -> __cfi_slowpath+0x0
+       170:  ldr      w8, [x22, #0x9c]
+       174:  ldr      w0, [x22]
+       178:  mov      x2, sp
+       17c:  mov      x3, xzr
+       180:  sub      w1, w8, #1
+       184:  blr      x21
+       188:  cbnz     w0, #0x2bc
+       18c:  mov      x0, x19
+       190:  bl       #0x190  ; -> cpufreq_cpu_put+0x0
+       194:  mov      x0, x20
+       198:  bl       #0x198  ; -> mutex_unlock+0x0
+       19c:  ldr      x8, [sp]
+       1a0:  mov      x9, #0xf7cf
+       1a4:  movk     x9, #0xe353, lsl #16
+       1a8:  movk     x9, #0x9ba5, lsl #32
+       1ac:  lsr      x8, x8, #3
+       1b0:  movk     x9, #0x20c4, lsl #48
+       1b4:  umulh    x8, x8, x9
+       1b8:  lsr      x0, x8, #4
+       1bc:  b        #0x278  ; -> $d.45+0x188
+       1c0:  ldr      x10, [x22, #0xb0]
+       1c4:  cmp      x8, x10
+       1c8:  b.ne     #0x25c  ; -> $d.45+0x16c
+       1cc:  mov      x10, x22
+       1d0:  ldr      w11, [x10, #0xa4]!
+       1d4:  add      w11, w11, #1
+       1d8:  cmp      w11, #3
+       1dc:  str      w11, [x10]
+       1e0:  b.hs     #0x108  ; -> $d.45+0x18
+       1e4:  b        #0x264  ; -> $d.45+0x174
+       1e8:  adrp     x8, #0  ; -> sym#96+0x0
+       1ec:  ldr      x0, [x8]  ; sym#96+0x0
+       1f0:  adrp     x1, #0  ; -> sym#106+0x470
+       1f4:  adrp     x2, #0  ; -> sym#106+0x5c9
+       1f8:  add      x1, x1, #0  ; -> $x.4+0x58
+       1fc:  add      x2, x2, #0  ; -> $x.6+0x1d  'sprd_cpufreq_update_opp_v2'
+       200:  mov      w3, w20
+       204:  bl       #0x204  ; -> _dev_err+0x0
+       208:  mov      x0, x19
+       20c:  bl       #0x20c  ; -> cpufreq_cpu_put+0x0
+       210:  b        #0x274  ; -> $d.45+0x184
+       214:  adrp     x8, #0  ; -> sym#96+0x0
+       218:  ldr      x0, [x8]  ; sym#96+0x0
+       21c:  adrp     x1, #0  ; -> sym#106+0x312
+       220:  adrp     x2, #0  ; -> sym#106+0x5c9
+       224:  add      x1, x1, #0  ; -> $d.39
+       228:  add      x2, x2, #0  ; -> $x.6+0x1d  'sprd_cpufreq_update_opp_v2'
+       22c:  mov      w3, w20
+       230:  bl       #0x230  ; -> _dev_err+0x0
+       234:  b        #0x274  ; -> $d.45+0x184
+       238:  adrp     x8, #0  ; -> sym#96+0x0
+       23c:  ldr      x0, [x8]  ; sym#96+0x0
+       240:  adrp     x1, #0  ; -> sym#106+0x637
+       244:  adrp     x2, #0  ; -> sym#106+0x1ba
+       248:  add      x1, x1, #0  ; -> $x.6+0x8b
+       24c:  add      x2, x2, #0  ; -> $d.45+0xca  'sprd_temp_list_find'
+       250:  mov      w3, w21
+       254:  bl       #0x254  ; -> _dev_err+0x0
+       258:  ldr      x8, [x22, #0xa8]
+       25c:  str      x8, [x22, #0xb0]
+       260:  str      wzr, [x22, #0xa4]
+       264:  mov      x0, x19
+       268:  bl       #0x268  ; -> cpufreq_cpu_put+0x0
+       26c:  mov      x0, x20
+       270:  bl       #0x270  ; -> mutex_unlock+0x0
+       274:  mov      w0, wzr
+       278:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       27c:  ldr      x8, [sp, #8]
+       280:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       284:  cmp      x9, x8
+       288:  b.ne     #0x2dc  ; -> $d.45+0x1ec
+       28c:  ldp      x29, x30, [sp, #0x10]
+       290:  ldp      x20, x19, [sp, #0x40]
+       294:  ldp      x22, x21, [sp, #0x30]
+       298:  ldr      x23, [sp, #0x20]
+       29c:  ldr      x30, [x18, #-8]!
+       2a0:  add      sp, sp, #0x50
+       2a4:  ret      
+       2a8:  ldr      x0, [x23]  ; sym#96+0x0
+       2ac:  ldr      w3, [x22]
+       2b0:  adrp     x1, #0  ; -> sym#106+0xacf
+       2b4:  add      x1, x1, #0  ; -> $x.9+0x203
+       2b8:  b        #0x2cc  ; -> $d.45+0x1dc
+       2bc:  ldr      x0, [x23]  ; sym#96+0x0
+       2c0:  ldr      w3, [x22]
+       2c4:  adrp     x1, #0  ; -> sym#106+0x86
+       2c8:  add      x1, x1, #0  ; -> __UNIQUE_ID_vermagic125+0x12
+       2cc:  adrp     x2, #0  ; -> sym#106+0x5c9
+       2d0:  add      x2, x2, #0  ; -> $x.6+0x1d  'sprd_cpufreq_update_opp_v2'
+       2d4:  bl       #0x2d4  ; -> _dev_err+0x0
+       2d8:  b        #0x264  ; -> $d.45+0x174
+       2dc:  bl       #0x2dc  ; -> __stack_chk_fail+0x0
+       2e0:  sub      sp, sp, #0x80
+; sprd_policy_table_update @ 0x2e0 (716 B)
+       2e0:  sub      sp, sp, #0x80
+       2e4:  str      x30, [x18], #8
+       2e8:  stp      x29, x30, [sp, #0x20]
+       2ec:  stp      x28, x27, [sp, #0x30]
+       2f0:  stp      x26, x25, [sp, #0x40]
+       2f4:  stp      x24, x23, [sp, #0x50]
+       2f8:  stp      x22, x21, [sp, #0x60]
+       2fc:  stp      x20, x19, [sp, #0x70]
+       300:  add      x29, sp, #0x20
+       304:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       308:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       30c:  mov      x19, x0
+       310:  mov      x20, x1
+       314:  stur     x8, [x29, #-8]
+       318:  stp      xzr, xzr, [sp, #8]
+       31c:  str      xzr, [sp]
+       320:  ldr      w0, [x0, #0x1c]
+       324:  bl       #0x324  ; -> get_cpu_device+0x0
+       328:  cbnz     x0, #0x344
+       32c:  adrp     x8, #0  ; -> sym#96+0x0
+       330:  ldr      x0, [x8]  ; sym#96+0x0
+       334:  ldr      w3, [x19, #0x1c]
+       338:  adrp     x1, #0  ; -> sym#106+0x583
+       33c:  add      x1, x1, #0  ; -> $x.4+0x16b
+       340:  b        #0x370  ; -> $d.39+0x5e
+       344:  ldr      x27, [x19, #0x288]
+       348:  cbz      x27, #0x35c
+       34c:  ldr      x8, [x27, #0xc8]
+       350:  cbz      x8, #0x35c
+       354:  ldr      x8, [x27, #0xe0]
+       358:  cbnz     x8, #0x3b8
+       35c:  adrp     x8, #0  ; -> sym#96+0x0
+       360:  ldr      x0, [x8]  ; sym#96+0x0
+       364:  ldr      w3, [x19, #0x1c]
+       368:  adrp     x1, #0  ; -> sym#106+0x6d8
+       36c:  add      x1, x1, #0  ; -> $x.6+0x12c
+       370:  adrp     x2, #0  ; -> sym#106+0x997
+       374:  add      x2, x2, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       378:  bl       #0x378  ; -> _dev_err+0x0
+       37c:  mov      w0, #-0x16
+       380:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       384:  ldur     x8, [x29, #-8]
+       388:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       38c:  cmp      x9, x8
+       390:  b.ne     #0x574  ; -> $x.4+0x15c
+       394:  ldp      x29, x30, [sp, #0x20]
+       398:  ldp      x20, x19, [sp, #0x70]
+       39c:  ldp      x22, x21, [sp, #0x60]
+       3a0:  ldp      x24, x23, [sp, #0x50]
+       3a4:  ldp      x26, x25, [sp, #0x40]
+       3a8:  ldp      x28, x27, [sp, #0x30]
+       3ac:  ldr      x30, [x18, #-8]!
+       3b0:  add      sp, sp, #0x80
+       3b4:  ret      
+       3b8:  adrp     x28, #0  ; -> sym#96+0x0
+       3bc:  mov      x21, x0
+       3c0:  ldr      w3, [x27]
+       3c4:  ldr      x0, [x28]  ; sym#96+0x0
+       3c8:  ldr      w4, [x20]
+       3cc:  adrp     x1, #0  ; -> sym#106+0x1ce
+       3d0:  adrp     x2, #0  ; -> sym#106+0x997
+       3d4:  add      x1, x1, #0  ; -> $d.45+0xde
+       3d8:  add      x2, x2, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       3dc:  bl       #0x3dc  ; -> _dev_info+0x0
+       3e0:  ldr      x23, [x27, #0xc8]
+       3e4:  mov      x0, #0x70cd
+       3e8:  movk     x0, #0x725d, lsl #16
+       3ec:  movk     x0, #0xfcb1, lsl #32
+       3f0:  movk     x0, #0x9dd8, lsl #48
+       3f4:  mov      x1, x23
+       3f8:  bl       #0x3f8  ; -> __cfi_slowpath+0x0
+       3fc:  ldr      w0, [x27]
+       400:  ldr      w1, [x20]
+       404:  add      x22, x27, #0x9c
+       408:  mov      x2, x22
+       40c:  blr      x23
+       410:  cbnz     w0, #0x4f4
+       414:  nop      
+       418:  ldr      w8, [x22]
+       41c:  cbz      w8, #0x4b4
+       420:  adrp     x24, #0  ; -> sym#106+0x818
+       424:  adrp     x25, #0  ; -> sym#106+0x997
+       428:  mov      w23, wzr
+       42c:  add      x24, x24, #0  ; -> $x.6+0x26c
+       430:  add      x25, x25, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       434:  ldr      x26, [x27, #0xe0]
+       438:  mov      x0, #0xaf81
+       43c:  movk     x0, #0x90f5, lsl #16
+       440:  movk     x0, #0xcd8c, lsl #32
+       444:  movk     x0, #0x33fb, lsl #48
+       448:  mov      x1, x26
+       44c:  bl       #0x44c  ; -> __cfi_slowpath+0x0
+       450:  ldr      w0, [x27]
+       454:  add      x2, sp, #8
+       458:  mov      x3, sp
+       45c:  mov      w1, w23
+       460:  blr      x26
+       464:  ldr      x8, [x28]  ; sym#96+0x0
+       468:  cbnz     w0, #0x50c
+       46c:  ldp      x4, x3, [sp]
+       470:  mov      x0, x8
+       474:  mov      x1, x24
+       478:  mov      x2, x25
+       47c:  bl       #0x47c  ; -> _dev_info+0x0
+       480:  ldr      x8, [x19, #0x170]
+       484:  cbz      x8, #0x494
+       488:  ldr      x1, [sp, #8]
+       48c:  mov      x0, x21
+       490:  bl       #0x490  ; -> dev_pm_opp_remove+0x0
+       494:  ldp      x2, x1, [sp]
+       498:  mov      x0, x21
+       49c:  bl       #0x49c  ; -> dev_pm_opp_add+0x0
+       4a0:  cbnz     w0, #0x550
+       4a4:  ldr      w8, [x22]
+       4a8:  add      w23, w23, #1
+       4ac:  cmp      w23, w8
+       4b0:  b.lo     #0x434  ; -> $x.4+0x1c
+       4b4:  ldr      x8, [x20, #8]
+       4b8:  cbz      x8, #0x4c4
+       4bc:  str      x8, [x19, #0x170]
+       4c0:  b        #0x4e4  ; -> $x.4+0xcc
+       4c4:  add      x1, sp, #0x10
+       4c8:  mov      x0, x21
+       4cc:  bl       #0x4cc  ; -> dev_pm_opp_init_cpufreq_table+0x0
+       4d0:  cbnz     w0, #0x52c
+       4d4:  ldr      x8, [sp, #0x10]
+       4d8:  str      x8, [x19, #0x170]
+       4dc:  str      x8, [x20, #8]
+       4e0:  ldr      x8, [x19, #0x170]
+       4e4:  ldr      w8, [x8, #8]
+       4e8:  mov      w0, wzr
+       4ec:  str      w8, [x19, #0x44]
+       4f0:  b        #0x380  ; -> $d.39+0x6e
+       4f4:  ldr      x0, [x28]  ; sym#96+0x0
+       4f8:  ldr      w3, [x27]
+       4fc:  ldr      w4, [x20]
+       500:  adrp     x1, #0  ; -> sym#106+0x5e4
+       504:  add      x1, x1, #0  ; -> $x.6+0x38
+       508:  b        #0x540  ; -> $x.4+0x128
+       50c:  ldr      w3, [x27]
+       510:  adrp     x1, #0  ; -> sym#106+0xdb1
+       514:  adrp     x2, #0  ; -> sym#106+0x997
+       518:  add      x1, x1, #0  ; -> $x.9+0x4e5
+       51c:  add      x2, x2, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       520:  mov      x0, x8
+       524:  mov      w4, w23
+       528:  b        #0x548  ; -> $x.4+0x130
+       52c:  mov      w4, w0
+       530:  ldr      x0, [x28]  ; sym#96+0x0
+       534:  ldr      w3, [x27]
+       538:  adrp     x1, #0  ; -> sym#106+0x3fa
+       53c:  add      x1, x1, #0  ; -> $d.39+0xe8
+       540:  adrp     x2, #0  ; -> sym#106+0x997
+       544:  add      x2, x2, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       548:  bl       #0x548  ; -> _dev_err+0x0
+       54c:  b        #0x37c  ; -> $d.39+0x6a
+       550:  mov      w5, w0
+       554:  ldr      x0, [x28]  ; sym#96+0x0
+       558:  ldp      x4, x3, [sp]
+       55c:  adrp     x1, #0  ; -> sym#106+0xb5f
+       560:  adrp     x2, #0  ; -> sym#106+0x997
+       564:  add      x1, x1, #0  ; -> $x.9+0x293
+       568:  add      x2, x2, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       56c:  bl       #0x56c  ; -> _dev_err+0x0
+       570:  b        #0x37c  ; -> $d.39+0x6a
+       574:  bl       #0x574  ; -> __stack_chk_fail+0x0
+       578:  ldr      x1, [x28]  ; sym#96+0x0
+       57c:  ldr      w4, [x27]
+       580:  ldr      w5, [x27, #0x9c]
+       584:  adrp     x0, #0  ; -> sym#101+0x0
+       588:  adrp     x2, #0  ; -> sym#106+0xcb6
+       58c:  adrp     x3, #0  ; -> sym#106+0x997
+       590:  add      x0, x0, #0  ; -> $d.3
+       594:  add      x2, x2, #0  ; -> $x.9+0x3ea
+       598:  add      x3, x3, #0  ; -> $x.9+0xcb  'sprd_policy_table_update'
+       59c:  bl       #0x59c  ; -> __dynamic_dev_dbg+0x0
+       5a0:  ldr      w8, [x22]
+       5a4:  cbnz     w8, #0x420
+       5a8:  b        #0x4b4  ; -> $x.4+0x9c
+       5ac:  sub      sp, sp, #0x50
+; sprd_cpufreq_probe @ 0x5ac (656 B)
+       5ac:  sub      sp, sp, #0x50
+       5b0:  str      x30, [x18], #8
+       5b4:  stp      x29, x30, [sp, #0x20]
+       5b8:  stp      x22, x21, [sp, #0x30]
+       5bc:  stp      x20, x19, [sp, #0x40]
+       5c0:  add      x29, sp, #0x20
+       5c4:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       5c8:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       5cc:  adrp     x9, #0  ; -> jiffies+0x0
+       5d0:  mov      w10, #0x3a98
+       5d4:  adrp     x1, #0  ; -> sym#106+0x48f
+       5d8:  stur     x8, [x29, #-8]
+       5dc:  ldr      x8, [x9]  ; jiffies+0x0
+       5e0:  adrp     x2, #0  ; -> sym#106+0x799
+       5e4:  adrp     x9, #0  ; -> sym#96+0x8
+       5e8:  add      x0, x0, #0x10
+       5ec:  adrp     x21, #0  ; -> sym#96+0x0
+       5f0:  add      x8, x8, x10
+       5f4:  add      x1, x1, #0  ; -> $x.4+0x77
+       5f8:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       5fc:  str      x8, [x9]  ; sym#96+0x8
+       600:  str      x0, [x21]  ; sym#96+0x0
+       604:  bl       #0x604  ; -> _dev_info+0x0
+       608:  adrp     x0, #0  ; -> sym#106+0x9b0
+       60c:  add      x0, x0, #0  ; -> $x.9+0xe4  '/chosen'
+       610:  mov      x1, xzr
+       614:  str      xzr, [sp, #0x10]
+       618:  str      wzr, [sp, #0xc]
+       61c:  bl       #0x61c  ; -> of_find_node_opts_by_path+0x0
+       620:  adrp     x1, #0  ; -> sym#106+0x67
+       624:  add      x1, x1, #0  ; -> __UNIQUE_ID_name126+0x8  'bootargs'
+       628:  add      x2, sp, #0x10
+       62c:  bl       #0x62c  ; -> of_property_read_string+0x0
+       630:  cbnz     w0, #0x654
+       634:  ldr      x0, [sp, #0x10]
+       638:  adrp     x1, #0  ; -> sym#106+0x120
+       63c:  add      x1, x1, #0  ; -> $d.45+0x30  'androidboot.dvfs_set=0x'
+       640:  bl       #0x640  ; -> strstr+0x0
+       644:  cbnz     x0, #0x750
+       648:  adrp     x0, #0  ; -> sym#106+0x725
+       64c:  add      x0, x0, #0  ; -> $x.6+0x179
+       650:  b        #0x65c  ; -> $x.6+0xb0
+       654:  adrp     x0, #0  ; -> sym#106+0x91c
+       658:  add      x0, x0, #0  ; -> $x.9+0x50
+       65c:  bl       #0x65c  ; -> printk+0x0
+       660:  mov      w19, wzr
+       664:  adrp     x8, #0  ; -> __cpu_possible_mask+0x0
+       668:  ldr      w0, [x8]  ; __cpu_possible_mask+0x0
+       66c:  ldr      x20, [x21]  ; sym#96+0x0
+       670:  bl       #0x670  ; -> __sw_hweight64+0x0
+       674:  sub      w8, w0, #1
+       678:  cmp      w8, #0x20
+       67c:  b.hs     #0x830  ; -> $x.6+0x284
+       680:  adrp     x9, #0  ; -> cpu_topology+0x0
+       684:  add      x9, x9, #0  ; -> $d.3
+       688:  mov      w10, #0x28
+       68c:  umaddl   x8, w8, w10, x9
+       690:  ldr      w8, [x8, #8]
+       694:  mov      w9, #0xf0
+       698:  mov      w2, #0xdc0
+       69c:  mov      x0, x20
+       6a0:  add      w8, w8, #1
+       6a4:  umull    x1, w8, w9
+       6a8:  bl       #0x6a8  ; -> devm_kmalloc+0x0
+       6ac:  adrp     x22, #0  ; -> sym#96+0x10
+       6b0:  str      x0, [x22]  ; sym#96+0x10
+       6b4:  cbnz     x0, #0x6d8
+       6b8:  ldr      x0, [x21]  ; sym#96+0x0
+       6bc:  adrp     x1, #0  ; -> sym#106+0x3b1
+       6c0:  adrp     x2, #0  ; -> sym#106+0x799
+       6c4:  add      x1, x1, #0  ; -> $d.39+0x9f
+       6c8:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       6cc:  bl       #0x6cc  ; -> _dev_err+0x0
+       6d0:  mov      w20, #-0xc
+       6d4:  b        #0x7e4  ; -> $x.6+0x238
+       6d8:  bl       #0x6d8  ; -> sym#98+0x83c
+       6dc:  cbnz     w0, #0x790
+       6e0:  ldr      x8, [x22]  ; sym#96+0x10
+       6e4:  mov      x0, #0xadbd
+       6e8:  movk     x0, #0x8d51, lsl #16
+       6ec:  movk     x0, #0x7859, lsl #32
+       6f0:  ldr      x20, [x8, #0x30]
+       6f4:  movk     x0, #0xac37, lsl #48
+       6f8:  mov      x1, x20
+       6fc:  bl       #0x6fc  ; -> __cfi_slowpath+0x0
+       700:  mov      w0, w19
+       704:  blr      x20
+       708:  ldr      x8, [x21]  ; sym#96+0x0
+       70c:  cbnz     w0, #0x7b0
+       710:  mov      x0, x8
+       714:  bl       #0x714  ; -> sprd_debug_init+0x0
+       718:  cbnz     w0, #0x7c8
+       71c:  adrp     x0, #0  ; -> sym#97+0xf0
+       720:  add      x0, x0, #0  ; -> $d.45  'names'
+       724:  bl       #0x724  ; -> cpufreq_register_driver+0x0
+       728:  ldr      x8, [x21]  ; sym#96+0x0
+       72c:  mov      w20, w0
+       730:  cbnz     w0, #0x814
+       734:  adrp     x1, #0  ; -> sym#106+0x0
+       738:  adrp     x2, #0  ; -> sym#106+0x799
+       73c:  add      x1, x1, #0  ; -> $d.3
+       740:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       744:  mov      x0, x8
+       748:  bl       #0x748  ; -> _dev_info+0x0
+       74c:  b        #0x7e4  ; -> $x.6+0x238
+       750:  adrp     x1, #0  ; -> sym#106+0x654
+       754:  add      x1, x1, #0  ; -> $x.6+0xa8  'androidboot.dvfs_set=0x%x'
+       758:  add      x2, sp, #0xc
+       75c:  bl       #0x75c  ; -> sscanf+0x0
+       760:  ldr      w19, [sp, #0xc]
+       764:  and      w8, w19, #0xff
+       768:  cmp      w8, #0x5a
+       76c:  b.ne     #0x664  ; -> $x.6+0xb8
+       770:  ldr      x0, [x21]  ; sym#96+0x0
+       774:  adrp     x1, #0  ; -> sym#106+0xaf2
+       778:  adrp     x2, #0  ; -> sym#106+0x799
+       77c:  add      x1, x1, #0  ; -> $x.9+0x226
+       780:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       784:  bl       #0x784  ; -> _dev_info+0x0
+       788:  mov      w20, wzr
+       78c:  b        #0x7e4  ; -> $x.6+0x238
+       790:  mov      w20, w0
+       794:  ldr      x0, [x21]  ; sym#96+0x0
+       798:  adrp     x1, #0  ; -> sym#106+0x836
+       79c:  adrp     x2, #0  ; -> sym#106+0x799
+       7a0:  add      x1, x1, #0  ; -> $x.6+0x28a
+       7a4:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       7a8:  bl       #0x7a8  ; -> _dev_err+0x0
+       7ac:  b        #0x7e4  ; -> $x.6+0x238
+       7b0:  adrp     x1, #0  ; -> sym#106+0x66e
+       7b4:  adrp     x2, #0  ; -> sym#106+0x799
+       7b8:  add      x1, x1, #0  ; -> $x.6+0xc2
+       7bc:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       7c0:  mov      x0, x8
+       7c4:  b        #0x7dc  ; -> $x.6+0x230
+       7c8:  ldr      x0, [x21]  ; sym#96+0x0
+       7cc:  adrp     x1, #0  ; -> sym#106+0xe02
+       7d0:  adrp     x2, #0  ; -> sym#106+0x799
+       7d4:  add      x1, x1, #0  ; -> $x.9+0x536
+       7d8:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       7dc:  bl       #0x7dc  ; -> _dev_err+0x0
+       7e0:  mov      w20, #-0x16
+       7e4:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       7e8:  ldur     x8, [x29, #-8]
+       7ec:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       7f0:  cmp      x9, x8
+       7f4:  b.ne     #0x838  ; -> $x.6+0x28c
+       7f8:  ldp      x29, x30, [sp, #0x20]
+       7fc:  mov      w0, w20
+       800:  ldp      x20, x19, [sp, #0x40]
+       804:  ldp      x22, x21, [sp, #0x30]
+       808:  ldr      x30, [x18, #-8]!
+       80c:  add      sp, sp, #0x50
+       810:  ret      
+       814:  adrp     x1, #0  ; -> sym#106+0x1f8
+       818:  adrp     x2, #0  ; -> sym#106+0x799
+       81c:  add      x1, x1, #0  ; -> $d.45+0x108
+       820:  add      x2, x2, #0  ; -> $x.6+0x1ed  'sprd_cpufreq_probe'
+       824:  mov      x0, x8
+       828:  bl       #0x828  ; -> _dev_err+0x0
+       82c:  b        #0x7e4  ; -> $x.6+0x238
+       830:  mov      w0, #0x12
+       834:  bl       #0x834  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+       838:  bl       #0x838  ; -> __stack_chk_fail+0x0
+       83c:  sub      sp, sp, #0xc0
+; sprd_cluster_info_init @ 0x83c (2976 B)
+       83c:  sub      sp, sp, #0xc0
+       840:  str      x30, [x18], #8
+       844:  stp      x29, x30, [sp, #0x60]
+       848:  stp      x28, x27, [sp, #0x70]
+       84c:  stp      x26, x25, [sp, #0x80]
+       850:  stp      x24, x23, [sp, #0x90]
+       854:  stp      x22, x21, [sp, #0xa0]
+       858:  stp      x20, x19, [sp, #0xb0]
+       85c:  add      x29, sp, #0x60
+       860:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       864:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       868:  adrp     x1, #0  ; -> __cpu_possible_mask+0x0
+       86c:  mov      x23, x0
+       870:  add      x1, x1, #0  ; -> $d.3
+       874:  mov      w0, #-1
+       878:  stur     x8, [x29, #-8]
+       87c:  bl       #0x87c  ; -> cpumask_next+0x0
+       880:  adrp     x8, #0  ; -> nr_cpu_ids+0x0
+       884:  ldr      w8, [x8]  ; nr_cpu_ids+0x0
+       888:  cmp      w0, w8
+       88c:  b.hs     #0x1174  ; -> $d.49+0x164
+       890:  adrp     x20, #0  ; -> cpu_topology+0x0
+       894:  mov      w21, w0
+       898:  add      x20, x20, #0  ; -> $d.3
+       89c:  mov      w22, #0x28
+       8a0:  mov      w26, #0xf0
+       8a4:  str      x23, [sp, #0x20]
+       8a8:  cmp      w21, #0x20
+       8ac:  b.hs     #0x13cc  ; -> $d.49+0x3bc
+       8b0:  umaddl   x19, w21, w22, x20
+       8b4:  ldrsw    x9, [x19, #8]!
+       8b8:  madd     x25, x9, x26, x23
+       8bc:  mov      x24, x25
+       8c0:  ldr      x8, [x24, #0x28]!
+       8c4:  cbz      x8, #0x8f4
+       8c8:  nop      
+       8cc:  adrp     x1, #0  ; -> __cpu_possible_mask+0x0
+       8d0:  mov      w0, w21
+       8d4:  add      x1, x1, #0  ; -> $d.3
+       8d8:  bl       #0x8d8  ; -> cpumask_next+0x0
+       8dc:  adrp     x8, #0  ; -> nr_cpu_ids+0x0
+       8e0:  ldr      w8, [x8]  ; nr_cpu_ids+0x0
+       8e4:  mov      w21, w0
+       8e8:  cmp      w0, w8
+       8ec:  b.lo     #0x8a8  ; -> $x.7+0x6c
+       8f0:  b        #0x1174  ; -> $d.49+0x164
+       8f4:  mov      w0, w21
+       8f8:  str      x9, [sp, #0x18]
+       8fc:  bl       #0x8fc  ; -> get_cpu_device+0x0
+       900:  cbz      x0, #0x11b4
+       904:  ldr      x0, [x0, #0x300]
+       908:  adrp     x1, #0  ; -> sym#106+0x7ac
+       90c:  add      x1, x1, #0  ; -> $x.6+0x200  'cpufreq-data-v1'
+       910:  mov      w2, wzr
+       914:  bl       #0x914  ; -> of_parse_phandle+0x0
+       918:  str      x0, [x24]
+       91c:  cbz      x0, #0x11b8
+       920:  ldr      w8, [x19]
+       924:  ldr      x19, [sp, #0x18]
+       928:  adrp     x1, #0  ; -> sym#106+0xcf6
+       92c:  adrp     x2, #0  ; -> sym#96+0x18
+       930:  add      x1, x1, #0  ; -> $x.9+0x42a  '&cluster->mutex'
+       934:  madd     x9, x19, x26, x23
+       938:  add      x0, x9, #8
+       93c:  add      x2, x2, #0  ; -> $d.47
+       940:  str      w8, [x25]
+       944:  bl       #0x944  ; -> __mutex_init+0x0
+       948:  bl       #0x948  ; -> sprd_sip_svc_get_handle+0x0
+       94c:  cbz      x0, #0x11f4
+       950:  ldr      x8, [x0, #0x70]
+       954:  madd     x27, x19, x26, x23
+       958:  mov      x9, x27
+       95c:  mov      x19, x27
+       960:  str      x8, [x27, #0x40]
+       964:  ldr      x8, [x0, #0x78]
+       968:  mov      x20, x27
+       96c:  mov      x28, x27
+       970:  mov      x11, x27
+       974:  str      x8, [x27, #0xc8]
+       978:  ldr      x8, [x0, #0x80]
+       97c:  adrp     x26, #0  ; -> sym#106+0xbd3
+       980:  add      x26, x26, #0  ; -> $x.9+0x307  'sprd,voltage-step'
+       984:  mov      w3, #1
+       988:  str      x8, [x9, #0x50]!
+       98c:  ldr      x10, [x0, #0x88]
+       990:  cmp      x9, #0
+       994:  mov      x1, x26
+       998:  mov      x4, xzr
+       99c:  str      x10, [x19, #0x60]!
+       9a0:  ldr      x10, [x0, #0x90]
+       9a4:  csel     x23, xzr, x8, eq
+       9a8:  str      x10, [x27, #0xd0]
+       9ac:  ldr      x10, [x0, #0x98]
+       9b0:  str      x10, [x27, #0xd8]
+       9b4:  ldr      x10, [x0, #0xa0]
+       9b8:  str      x10, [x27, #0xe0]
+       9bc:  ldr      x10, [x0, #0xa8]
+       9c0:  str      x10, [x20, #0x70]!
+       9c4:  ldr      x10, [x0, #0xb0]
+       9c8:  str      x10, [x28, #0x80]!
+       9cc:  ldr      x10, [x0, #0xb8]
+       9d0:  str      x10, [x11, #0x90]!
+       9d4:  ldr      x10, [x0, #0xc0]
+       9d8:  str      x11, [sp, #8]
+       9dc:  adrp     x11, #0  ; -> sym#106+0xff0
+       9e0:  add      x11, x11, #0  ; -> $d.46  'sprd,pmic-type'
+       9e4:  str      x10, [x27, #0x30]
+       9e8:  ldr      x10, [x0, #0xc8]
+       9ec:  ldr      x11, [x11]
+       9f0:  str      x10, [x27, #0x38]!
+       9f4:  mov      x10, #0x2d63
+       9f8:  movk     x10, #0x7974, lsl #16
+       9fc:  movk     x10, #0x6570, lsl #32
+       a00:  stp      xzr, xzr, [x29, #-0x18]
+       a04:  stp      x11, x10, [x29, #-0x28]
+       a08:  ldr      x0, [x24]
+       a0c:  add      x22, x27, #0x10
+       a10:  mov      x2, x22
+       a14:  bl       #0xa14  ; -> of_property_read_variable_u32_array+0x0
+       a18:  str      x25, [sp, #0x10]
+       a1c:  tbnz     w0, #0x1f, #0xa58
+       a20:  cbz      x23, #0xa4c
+       a24:  mov      x0, #0x503d
+       a28:  movk     x0, #0x4f12, lsl #16
+       a2c:  movk     x0, #0x1f8c, lsl #32
+       a30:  movk     x0, #0xcea3, lsl #48
+       a34:  mov      x1, x23
+       a38:  bl       #0xa38  ; -> __cfi_slowpath+0x0
+       a3c:  ldr      w0, [x25]
+       a40:  ldr      w1, [x22]
+       a44:  blr      x23
+       a48:  cbnz     w0, #0x1298
+       a4c:  cbnz     x19, #0xa84
+       a50:  mov      x22, xzr
+       a54:  b        #0xa88  ; -> $x.9+0x1bc
+       a58:  adrp     x8, #0  ; -> sym#96+0x0
+       a5c:  ldr      x0, [x8]  ; sym#96+0x0
+       a60:  ldr      w3, [x25]
+       a64:  adrp     x1, #0  ; -> sym#106+0xd06
+       a68:  adrp     x2, #0  ; -> sym#106+0x25
+       a6c:  add      x1, x1, #0  ; -> $x.9+0x43a
+       a70:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+       a74:  mov      x4, x26
+       a78:  bl       #0xa78  ; -> _dev_warn+0x0
+       a7c:  str      wzr, [x22]
+       a80:  cbz      x19, #0xa50
+       a84:  ldr      x22, [x19]
+       a88:  ldr      x0, [x24]
+       a8c:  adrp     x19, #0  ; -> sym#106+0x424
+       a90:  add      x19, x19, #0  ; -> $x.4+0xc  'sprd,voltage-margin'
+       a94:  add      x25, x27, #0x20
+       a98:  adrp     x23, #0  ; -> sym#106+0x8b8
+       a9c:  mov      w3, #1
+       aa0:  mov      x1, x19
+       aa4:  mov      x2, x25
+       aa8:  mov      x4, xzr
+       aac:  mov      w26, #0xf0
+       ab0:  add      x23, x23, #0  ; -> $x.7+0x7c  'dvfs_bin'
+       ab4:  bl       #0xab4  ; -> of_property_read_variable_u32_array+0x0
+       ab8:  tbnz     w0, #0x1f, #0xaf0
+       abc:  cbz      x22, #0xb1c
+       ac0:  mov      x0, #0x503d
+       ac4:  movk     x0, #0x4f12, lsl #16
+       ac8:  movk     x0, #0x1f8c, lsl #32
+       acc:  movk     x0, #0xcea3, lsl #48
+       ad0:  mov      x1, x22
+       ad4:  bl       #0xad4  ; -> __cfi_slowpath+0x0
+       ad8:  ldr      x8, [sp, #0x10]
+       adc:  ldr      w1, [x25]
+       ae0:  ldr      w0, [x8]
+       ae4:  blr      x22
+       ae8:  cbz      w0, #0xb1c
+       aec:  b        #0x12a4  ; -> $d.49+0x294
+       af0:  adrp     x8, #0  ; -> sym#96+0x0
+       af4:  ldr      x0, [x8]  ; sym#96+0x0
+       af8:  ldr      x8, [sp, #0x10]
+       afc:  adrp     x1, #0  ; -> sym#106+0xd06
+       b00:  adrp     x2, #0  ; -> sym#106+0x25
+       b04:  add      x1, x1, #0  ; -> $x.9+0x43a
+       b08:  ldr      w3, [x8]
+       b0c:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+       b10:  mov      x4, x19
+       b14:  bl       #0xb14  ; -> _dev_warn+0x0
+       b18:  str      wzr, [x25]
+       b1c:  ldr      x0, [x24]
+       b20:  add      x22, x27, #0x60
+       b24:  adrp     x1, #0  ; -> sym#106+0x59d
+       b28:  mov      w3, #1
+       b2c:  add      x1, x1, #0  ; -> $x.4+0x185  'sprd,transition-delay'
+       b30:  mov      x2, x22
+       b34:  mov      x4, xzr
+       b38:  bl       #0xb38  ; -> of_property_read_variable_u32_array+0x0
+       b3c:  ldr      x19, [sp, #0x10]
+       b40:  tbz      w0, #0x1f, #0xb70
+       b44:  adrp     x8, #0  ; -> sym#96+0x0
+       b48:  ldr      x0, [x8]  ; sym#96+0x0
+       b4c:  ldr      w3, [x19]
+       b50:  adrp     x1, #0  ; -> sym#106+0xd06
+       b54:  adrp     x2, #0  ; -> sym#106+0x25
+       b58:  adrp     x4, #0  ; -> sym#106+0x59d
+       b5c:  add      x1, x1, #0  ; -> $x.9+0x43a
+       b60:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+       b64:  add      x4, x4, #0  ; -> $x.4+0x185  'sprd,transition-delay'
+       b68:  bl       #0xb68  ; -> _dev_warn+0x0
+       b6c:  str      wzr, [x22]
+       b70:  ldr      x0, [x24]
+       b74:  adrp     x1, #0  ; -> sym#106+0xa9b
+       b78:  add      x1, x1, #0  ; -> $x.9+0x1cf  'sprd,multi-supply'
+       b7c:  mov      x2, xzr
+       b80:  bl       #0xb80  ; -> of_find_property+0x0
+       b84:  cbz      x0, #0xbe4
+       b88:  adrp     x0, #0  ; -> sym#106+0x9b0
+       b8c:  mov      w8, #-1
+       b90:  add      x0, x0, #0  ; -> $x.9+0xe4  '/chosen'
+       b94:  mov      x1, xzr
+       b98:  str      xzr, [sp, #0x30]
+       b9c:  str      w8, [sp, #0x2c]
+       ba0:  bl       #0xba0  ; -> of_find_node_opts_by_path+0x0
+       ba4:  adrp     x1, #0  ; -> sym#106+0x67
+       ba8:  add      x2, sp, #0x30
+       bac:  add      x1, x1, #0  ; -> __UNIQUE_ID_name126+0x8  'bootargs'
+       bb0:  bl       #0xbb0  ; -> of_property_read_string+0x0
+       bb4:  cbnz     w0, #0xbd8
+       bb8:  ldr      x0, [sp, #0x30]
+       bbc:  adrp     x1, #0  ; -> sym#106+0x624
+       bc0:  add      x1, x1, #0  ; -> $x.6+0x78  'power.from.extern='
+       bc4:  bl       #0xbc4  ; -> strstr+0x0
+       bc8:  cbnz     x0, #0x1044
+       bcc:  adrp     x0, #0  ; -> sym#106+0xa17
+       bd0:  add      x0, x0, #0  ; -> $x.9+0x14b
+       bd4:  b        #0xbe0  ; -> $x.9+0x314
+       bd8:  adrp     x0, #0  ; -> sym#106+0x91c
+       bdc:  add      x0, x0, #0  ; -> $x.9+0x50
+       be0:  bl       #0xbe0  ; -> printk+0x0
+       be4:  adrp     x8, #0  ; -> sym#96+0x0
+       be8:  ldr      x0, [x8]  ; sym#96+0x0
+       bec:  ldr      w3, [x19]
+       bf0:  adrp     x1, #0  ; -> sym#106+0x438
+       bf4:  adrp     x2, #0  ; -> sym#106+0x25
+       bf8:  sub      x4, x29, #0x28
+       bfc:  add      x1, x1, #0  ; -> $x.4+0x20
+       c00:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+       c04:  bl       #0xc04  ; -> _dev_info+0x0
+       c08:  ldp      x9, x8, [sp, #0x18]
+       c0c:  ldr      x0, [x24]
+       c10:  sub      x1, x29, #0x28
+       c14:  mov      w3, #1
+       c18:  madd     x8, x9, x26, x8
+       c1c:  add      x22, x8, #0x68
+       c20:  mov      x2, x22
+       c24:  mov      x4, xzr
+       c28:  bl       #0xc28  ; -> of_property_read_variable_u32_array+0x0
+       c2c:  tbnz     w0, #0x1f, #0xc5c
+       c30:  ldr      x20, [x20]
+       c34:  mov      x0, #0x503d
+       c38:  movk     x0, #0x4f12, lsl #16
+       c3c:  movk     x0, #0x1f8c, lsl #32
+       c40:  movk     x0, #0xcea3, lsl #48
+       c44:  mov      x1, x20
+       c48:  bl       #0xc48  ; -> __cfi_slowpath+0x0
+       c4c:  ldr      w0, [x19]
+       c50:  ldr      w1, [x22]
+       c54:  blr      x20
+       c58:  cbnz     w0, #0x1350
+       c5c:  ldr      w8, [x19]
+       c60:  cbnz     w8, #0xc80
+       c64:  ldr      x20, [x27]
+       c68:  adrp     x8, #0  ; -> sym#98+0x28ac
+       c6c:  add      x8, x8, #0  ; -> $x.28
+       c70:  cmp      x20, x8
+       c74:  b.ne     #0x1124  ; -> $d.49+0x114
+       c78:  blr      x20
+       c7c:  cbnz     w0, #0x13b8
+       c80:  ldr      x0, [x24]
+       c84:  adrp     x1, #0  ; -> sym#106+0xe5
+       c88:  add      x1, x1, #0  ; -> $d.59+0x48  'nvmem-cell-names'
+       c8c:  mov      x2, x23
+       c90:  bl       #0xc90  ; -> of_property_match_string+0x0
+       c94:  cmn      w0, #0x16
+       c98:  b.eq     #0x1090  ; -> $d.49+0x80
+       c9c:  ldp      x9, x8, [sp, #0x18]
+       ca0:  ldr      x0, [x24]
+       ca4:  mov      x1, x23
+       ca8:  str      xzr, [sp, #0x30]
+       cac:  madd     x8, x9, x26, x8
+       cb0:  add      x25, x8, #0x78
+       cb4:  bl       #0xcb4  ; -> of_nvmem_cell_get+0x0
+       cb8:  mov      x27, x0
+       cbc:  cmn      x0, #0xfff
+       cc0:  b.hs     #0x10e0  ; -> $d.49+0xd0
+       cc4:  add      x1, sp, #0x30
+       cc8:  mov      x0, x27
+       ccc:  bl       #0xccc  ; -> nvmem_cell_read+0x0
+       cd0:  mov      x22, x0
+       cd4:  cmn      x0, #0xfff
+       cd8:  b.lo     #0xcf0  ; -> $x.9+0x424
+       cdc:  mov      x0, x27
+       ce0:  bl       #0xce0  ; -> nvmem_cell_put+0x0
+       ce4:  mov      w27, w22
+       ce8:  cbz      w27, #0xd24
+       cec:  b        #0x132c  ; -> $d.49+0x31c
+       cf0:  ldr      x2, [sp, #0x30]
+       cf4:  cmp      x2, #5
+       cf8:  b.lo     #0xd08  ; -> $x.9+0x43c
+       cfc:  mov      w8, #4
+       d00:  mov      w2, #4
+       d04:  str      x8, [sp, #0x30]
+       d08:  mov      x0, x25
+       d0c:  mov      x1, x22
+       d10:  bl       #0xd10  ; -> memcpy+0x0
+       d14:  mov      x0, x22
+       d18:  bl       #0xd18  ; -> kfree+0x0
+       d1c:  mov      x0, x27
+       d20:  bl       #0xd20  ; -> nvmem_cell_put+0x0
+       d24:  ldr      x20, [x28]
+       d28:  mov      x0, #0x503d
+       d2c:  movk     x0, #0x4f12, lsl #16
+       d30:  movk     x0, #0x1f8c, lsl #32
+       d34:  movk     x0, #0xcea3, lsl #48
+       d38:  mov      x1, x20
+       d3c:  bl       #0xd3c  ; -> __cfi_slowpath+0x0
+       d40:  ldr      x8, [sp, #0x10]
+       d44:  ldr      w1, [x25]
+       d48:  ldr      w0, [x8]
+       d4c:  blr      x20
+       d50:  ldr      x23, [sp, #0x20]
+       d54:  cbnz     w0, #0x1304
+       d58:  ldr      x0, [x24]
+       d5c:  adrp     x1, #0  ; -> sym#106+0x53f
+       d60:  add      x1, x1, #0  ; -> $x.4+0x127  'sprd,multi-version'
+       d64:  mov      x2, xzr
+       d68:  bl       #0xd68  ; -> of_find_property+0x0
+       d6c:  cbz      x0, #0xde4
+       d70:  adrp     x0, #0  ; -> sym#106+0x8c1
+       d74:  add      x0, x0, #0  ; -> $x.7+0x85  '/hwfeature/auto'
+       d78:  mov      x1, xzr
+       d7c:  bl       #0xd7c  ; -> of_find_node_opts_by_path+0x0
+       d80:  mov      x25, x0
+       d84:  cbz      x0, #0x10fc
+       d88:  cmn      x25, #1, lsl #12
+       d8c:  b.hi     #0x10fc  ; -> $d.49+0xec
+       d90:  adrp     x1, #0  ; -> sym#106+0x70
+       d94:  mov      x0, x25
+       d98:  add      x1, x1, #0  ; -> __UNIQUE_ID_name126+0x11  'efuse'
+       d9c:  mov      x2, xzr
+       da0:  bl       #0xda0  ; -> of_get_property+0x0
+       da4:  ldr      x8, [sp, #0x18]
+       da8:  madd     x19, x8, x26, x23
+       dac:  ldr      x8, [sp, #8]
+       db0:  str      x0, [x19, #0x88]
+       db4:  mov      x0, #0x516c
+       db8:  movk     x0, #0x8b9d, lsl #16
+       dbc:  ldr      x20, [x8]
+       dc0:  movk     x0, #0xd5bf, lsl #32
+       dc4:  movk     x0, #0xa0fd, lsl #48
+       dc8:  mov      x1, x20
+       dcc:  bl       #0xdcc  ; -> __cfi_slowpath+0x0
+       dd0:  ldr      x8, [sp, #0x10]
+       dd4:  ldr      x1, [x19, #0x88]
+       dd8:  ldr      w0, [x8]
+       ddc:  blr      x20
+       de0:  cbnz     w0, #0x1368
+       de4:  ldr      x0, [x24]
+       de8:  adrp     x1, #0  ; -> sym#106+0x297
+       dec:  add      x1, x1, #0  ; -> $d.45+0x1a7  'sprd,cpufreq-boost'
+       df0:  mov      x2, xzr
+       df4:  bl       #0xdf4  ; -> of_find_property+0x0
+       df8:  ldr      x10, [sp, #0x18]
+       dfc:  cbz      x0, #0xe0c
+       e00:  madd     x8, x10, x26, x23
+       e04:  mov      w9, #1
+       e08:  strb     w9, [x8, #0xa0]
+       e0c:  madd     x19, x10, x26, x23
+       e10:  add      x26, x19, #0xb8
+       e14:  stur     wzr, [x29, #-0x28]
+       e18:  str      wzr, [sp, #0x30]
+       e1c:  str      x26, [x19, #0xb8]
+       e20:  str      x26, [x19, #0xc0]!
+       e24:  adrp     x8, #0  ; -> sym#96+0x0
+       e28:  ldr      x0, [x8]  ; sym#96+0x0
+       e2c:  mov      w1, #0x20
+       e30:  mov      w2, #0xdc0
+       e34:  mov      w27, #0xf0
+       e38:  bl       #0xe38  ; -> devm_kmalloc+0x0
+       e3c:  cbz      x0, #0x12d0
+       e40:  mov      x25, x0
+       e44:  mov      w8, #0x112
+       e48:  str      w8, [x25], #0x10
+       e4c:  ldr      x20, [x26]
+       e50:  mov      x22, x0
+       e54:  mov      x0, x25
+       e58:  mov      x1, x26
+       e5c:  mov      x2, x20
+       e60:  bl       #0xe60  ; -> __list_add_valid+0x0
+       e64:  tbz      w0, #0, #0xe74
+       e68:  str      x25, [x20, #8]
+       e6c:  stp      x20, x26, [x22, #0x10]
+       e70:  str      x25, [x26]
+       e74:  adrp     x8, #0  ; -> sym#96+0x0
+       e78:  ldr      x0, [x8]  ; sym#96+0x0
+       e7c:  mov      w1, #0x20
+       e80:  mov      w2, #0xdc0
+       e84:  bl       #0xe84  ; -> devm_kmalloc+0x0
+       e88:  cbz      x0, #0x12dc
+       e8c:  mov      x22, x0
+       e90:  mov      w8, #-0x112
+       e94:  str      w8, [x22], #0x10
+       e98:  ldr      x20, [x26]
+       e9c:  mov      x25, x0
+       ea0:  mov      x0, x22
+       ea4:  mov      x1, x26
+       ea8:  mov      x2, x20
+       eac:  bl       #0xeac  ; -> __list_add_valid+0x0
+       eb0:  tbz      w0, #0, #0xec4
+       eb4:  str      x22, [x20, #8]
+       eb8:  stp      x20, x26, [x25, #0x10]
+       ebc:  str      x22, [x26]
+       ec0:  b        #0xec8  ; -> $d.42+0x68
+       ec4:  ldr      x22, [x26]
+       ec8:  ldp      x20, x10, [sp, #0x10]
+       ecc:  cmp      x26, x22
+       ed0:  sub      x8, x22, #0x10
+       ed4:  b.ne     #0xee8  ; -> $d.42+0x88
+       ed8:  b        #0xf04  ; -> $d.42+0xa4
+       edc:  cmp      x26, x22
+       ee0:  sub      x8, x22, #0x10
+       ee4:  b.eq     #0xf04  ; -> $d.42+0xa4
+       ee8:  ldr      w9, [x8]
+       eec:  ldr      x22, [x22]
+       ef0:  cmn      w9, #0x112
+       ef4:  b.gt     #0xedc  ; -> $d.42+0x7c
+       ef8:  ldur     w9, [x22, #-0x10]
+       efc:  cmn      w9, #0x112
+       f00:  b.le     #0xedc  ; -> $d.42+0x7c
+       f04:  madd     x9, x10, x27, x23
+       f08:  stp      x8, x8, [x9, #0xa8]
+       f0c:  str      wzr, [x9, #0xa4]
+       f10:  ldr      x0, [x24]
+       f14:  adrp     x1, #0  ; -> sym#106+0xc8b
+       f18:  sub      x2, x29, #0x28
+       f1c:  add      x1, x1, #0  ; -> $x.9+0x3bf  'sprd,temp-threshold'
+       f20:  bl       #0xf20  ; -> of_find_property+0x0
+       f24:  cbz      x0, #0x10bc
+       f28:  ldur     w8, [x29, #-0x28]
+       f2c:  cbz      w8, #0x10bc
+       f30:  cmp      w8, #4
+       f34:  b.hs     #0xf64  ; -> $d.42+0x104
+       f38:  ldr      x9, [sp, #0x18]
+       f3c:  mov      w8, #0xf0
+       f40:  adrp     x20, #0  ; -> cpu_topology+0x0
+       f44:  mov      w26, #0xf0
+       f48:  madd     x8, x9, x8, x23
+       f4c:  adrp     x9, #0  ; -> sym#98+0x28a8
+       f50:  add      x9, x9, #0  ; -> $x.27
+       f54:  str      x9, [x8, #0xe8]
+       f58:  add      x20, x20, #0  ; -> $d.3
+       f5c:  mov      w22, #0x28
+       f60:  b        #0x8cc  ; -> $x.9
+       f64:  mov      w25, wzr
+       f68:  b        #0xf84  ; -> $d.42+0x124
+       f6c:  ldur     w8, [x29, #-0x28]
+       f70:  ldr      x23, [sp, #0x20]
+       f74:  add      w25, w25, #1
+       f78:  sxtw     x9, w25
+       f7c:  cmp      x9, x8, lsr #2
+       f80:  b.hs     #0xf38  ; -> $d.42+0xd8
+       f84:  ldr      x0, [x24]
+       f88:  adrp     x1, #0  ; -> sym#106+0xc8b
+       f8c:  add      x3, sp, #0x30
+       f90:  add      x1, x1, #0  ; -> $x.9+0x3bf  'sprd,temp-threshold'
+       f94:  mov      w2, w25
+       f98:  bl       #0xf98  ; -> of_property_read_u32_index+0x0
+       f9c:  cbnz     w0, #0x1224
+       fa0:  ldr      w22, [sp, #0x30]
+       fa4:  add      w8, w22, #0x112
+       fa8:  cmp      w8, #0x223
+       fac:  b.hi     #0x11d0  ; -> $d.49+0x1c0
+       fb0:  ldr      x27, [x26]
+       fb4:  cmp      x27, x26
+       fb8:  b.eq     #0xfe0  ; -> $d.42+0x180
+       fbc:  ldur     w8, [x27, #-0x10]
+       fc0:  cmp      w8, w22
+       fc4:  b.eq     #0xf6c  ; -> $d.42+0x10c
+       fc8:  b.gt     #0xff4  ; -> $d.46+0x4
+       fcc:  ldr      x27, [x27]
+       fd0:  cmp      x26, x27
+       fd4:  b.ne     #0xfbc  ; -> $d.42+0x15c
+       fd8:  mov      x23, x26
+       fdc:  b        #0xff8  ; -> $d.46+0x8
+       fe0:  ldr      x8, [x19]
+       fe4:  mov      x23, x26
+       fe8:  cmp      x26, x8
+       fec:  b.ne     #0xff8  ; -> $d.46+0x8
+       ff0:  b        #0x11d0  ; -> $d.49+0x1c0
+       ff4:  mov      x23, x27
+       ff8:  adrp     x8, #0  ; -> sym#96+0x0
+       ffc:  ldr      x0, [x8]  ; sym#96+0x0
+      1000:  mov      w1, #0x20
+      1004:  mov      w2, #0xdc0
+      1008:  bl       #0x1008  ; -> devm_kmalloc+0x0
+      100c:  cbz      x0, #0x1238
+      1010:  mov      x20, x0
+      1014:  str      w22, [x20], #0x10
+      1018:  ldr      x22, [x27, #8]
+      101c:  mov      x28, x0
+      1020:  mov      x0, x20
+      1024:  mov      x2, x23
+      1028:  mov      x1, x22
+      102c:  bl       #0x102c  ; -> __list_add_valid+0x0
+      1030:  tbz      w0, #0, #0xf6c
+      1034:  str      x20, [x27, #8]
+      1038:  stp      x27, x22, [x28, #0x10]
+      103c:  str      x20, [x22]
+      1040:  b        #0xf6c  ; -> $d.42+0x10c
+      1044:  adrp     x1, #0x1000  ; -> sym#106+0x7bc
+      1048:  add      x2, sp, #0x2c
+      104c:  add      x1, x1, #0  ; -> $x.6+0x210  'power.from.extern=%d'
+      1050:  bl       #0x1050  ; -> sscanf+0x0
+      1054:  ldr      w8, [sp, #0x2c]
+      1058:  cbnz     w8, #0xbe4
+      105c:  sub      x0, x29, #0x28
+      1060:  bl       #0x1060  ; -> strlen+0x0
+      1064:  cmp      x0, #0x20
+      1068:  b.hi     #0x13d8  ; -> $d.49+0x3c8
+      106c:  mov      w8, #0x20
+      1070:  sub      x8, x8, x0
+      1074:  cmp      x8, #4
+      1078:  b.lo     #0x13d8  ; -> $d.49+0x3c8
+      107c:  mov      w9, #0x762d
+      1080:  sub      x8, x29, #0x28
+      1084:  movk     w9, #0x32, lsl #16
+      1088:  str      w9, [x8, x0]
+      108c:  b        #0xbe4  ; -> $x.9+0x318
+      1090:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1094:  ldr      x0, [x8]  ; sym#96+0x0
+      1098:  adrp     x1, #0x1000  ; -> sym#106+0xc05
+      109c:  adrp     x2, #0x1000  ; -> sym#106+0x25
+      10a0:  add      x1, x1, #0  ; -> $x.9+0x339
+      10a4:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+      10a8:  bl       #0x10a8  ; -> _dev_warn+0x0
+      10ac:  ldp      x8, x23, [sp, #0x18]
+      10b0:  madd     x8, x8, x26, x23
+      10b4:  str      wzr, [x8, #0x78]
+      10b8:  b        #0xd58  ; -> $x.9+0x48c
+      10bc:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      10c0:  ldr      x0, [x8]  ; sym#96+0x0
+      10c4:  ldr      w3, [x20]
+      10c8:  adrp     x1, #0x1000  ; -> sym#106+0xd88
+      10cc:  adrp     x2, #0x1000  ; -> sym#106+0xc9f
+      10d0:  add      x1, x1, #0  ; -> $x.9+0x4bc
+      10d4:  add      x2, x2, #0  ; -> $x.9+0x3d3  'sprd_cluster_temp_init'
+      10d8:  bl       #0x10d8  ; -> _dev_warn+0x0
+      10dc:  b        #0xf38  ; -> $d.42+0xd8
+      10e0:  cmn      w27, #0x205
+      10e4:  b.eq     #0x131c  ; -> $d.49+0x30c
+      10e8:  adrp     x0, #0x1000  ; -> sym#106+0x149
+      10ec:  add      x0, x0, #0  ; -> $d.45+0x59
+      10f0:  bl       #0x10f0  ; -> printk+0x0
+      10f4:  cbz      w27, #0xd24
+      10f8:  b        #0x132c  ; -> $d.49+0x31c
+      10fc:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1100:  ldr      x0, [x8]  ; sym#96+0x0
+      1104:  adrp     x1, #0x1000  ; -> sym#106+0x36a
+      1108:  adrp     x2, #0x1000  ; -> sym#106+0x25
+      110c:  add      x1, x1, #0  ; -> $d.39+0x58
+      1110:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+      1114:  bl       #0x1114  ; -> _dev_err+0x0
+      1118:  ldr      x10, [sp, #0x18]
+      111c:  cbz      w25, #0xe0c
+      1120:  b        #0x1390  ; -> $d.49+0x380
+      1124:  mov      x0, #0x2445
+      1128:  movk     x0, #0x2924, lsl #16
+      112c:  movk     x0, #0xa43e, lsl #32
+      1130:  movk     x0, #0x2b3, lsl #48
+      1134:  mov      x1, x20
+      1138:  bl       #0x1138  ; -> __cfi_slowpath+0x0
+      113c:  blr      x20
+      1140:  cbz      w0, #0xc80
+      1144:  b        #0x13b8  ; -> $d.49+0x3a8
+      1148:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      114c:  ldr      x1, [x8]  ; sym#96+0x0
+      1150:  ldr      w4, [x25]
+      1154:  adrp     x0, #0x1000  ; -> sym#101+0x38
+      1158:  adrp     x2, #0x1000  ; -> sym#106+0x9d0
+      115c:  adrp     x3, #0x1000  ; -> sym#106+0x6fb
+      1160:  add      x0, x0, #0  ; -> sprd_cluster_info_init.__UNIQUE_ID_ddebug154  'init'
+      1164:  add      x2, x2, #0  ; -> $x.9+0x104
+      1168:  add      x3, x3, #0  ; -> $x.6+0x14f  'sprd_cluster_info_init'
+      116c:  bl       #0x116c  ; -> __dynamic_dev_dbg+0x0
+      1170:  b        #0x8cc  ; -> $x.9
+      1174:  mov      w25, wzr
+      1178:  adrp     x9, #0x1000  ; -> __stack_chk_guard+0x0
+      117c:  ldur     x8, [x29, #-8]
+      1180:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+      1184:  cmp      x9, x8
+      1188:  b.ne     #0x13d4  ; -> $d.49+0x3c4
+      118c:  ldp      x29, x30, [sp, #0x60]
+      1190:  mov      w0, w25
+      1194:  ldp      x20, x19, [sp, #0xb0]
+      1198:  ldp      x22, x21, [sp, #0xa0]
+      119c:  ldp      x24, x23, [sp, #0x90]
+      11a0:  ldp      x26, x25, [sp, #0x80]
+      11a4:  ldp      x28, x27, [sp, #0x70]
+      11a8:  ldr      x30, [x18, #-8]!
+      11ac:  add      sp, sp, #0xc0
+      11b0:  ret      
+      11b4:  str      xzr, [x24]
+      11b8:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      11bc:  ldr      x0, [x8]  ; sym#96+0x0
+      11c0:  ldr      w3, [x25]
+      11c4:  adrp     x1, #0x1000  ; -> sym#106+0xbe5
+      11c8:  add      x1, x1, #0  ; -> $x.9+0x319
+      11cc:  b        #0x1284  ; -> $d.49+0x274
+      11d0:  adrp     x19, #0x1000  ; -> sym#96+0x0
+      11d4:  ldr      x0, [x19]  ; sym#96+0x0
+      11d8:  adrp     x1, #0x1000  ; -> sym#106+0x6ba
+      11dc:  adrp     x2, #0x1000  ; -> sym#106+0xd75
+      11e0:  add      x1, x1, #0  ; -> $x.6+0x10e
+      11e4:  add      x2, x2, #0  ; -> $x.9+0x4a9  'sprd_temp_list_add'
+      11e8:  mov      w3, w22
+      11ec:  bl       #0x11ec  ; -> _dev_err+0x0
+      11f0:  b        #0x1254  ; -> $d.49+0x244
+      11f4:  adrp     x19, #0x1000  ; -> sym#96+0x0
+      11f8:  ldr      x0, [x19]  ; sym#96+0x0
+      11fc:  adrp     x1, #0x1000  ; -> sym#106+0x712
+      1200:  adrp     x2, #0x1000  ; -> sym#106+0xa85
+      1204:  add      x1, x1, #0  ; -> $x.6+0x166
+      1208:  add      x2, x2, #0  ; -> $x.9+0x1b9  'sprd_cluster_ops_init'
+      120c:  bl       #0x120c  ; -> _dev_err+0x0
+      1210:  ldr      x0, [x19]  ; sym#96+0x0
+      1214:  ldr      w3, [x25]
+      1218:  adrp     x1, #0x1000  ; -> sym#106+0x278
+      121c:  add      x1, x1, #0  ; -> $d.45+0x188
+      1220:  b        #0x1284  ; -> $d.49+0x274
+      1224:  ldr      x20, [sp, #0x10]
+      1228:  adrp     x1, #0x1000  ; -> sym#106+0x957
+      122c:  adrp     x19, #0x1000  ; -> sym#96+0x0
+      1230:  add      x1, x1, #0  ; -> $x.9+0x8b
+      1234:  b        #0x1260  ; -> $d.49+0x250
+      1238:  adrp     x19, #0x1000  ; -> sym#96+0x0
+      123c:  ldr      x0, [x19]  ; sym#96+0x0
+      1240:  adrp     x1, #0x1000  ; -> sym#106+0x17c
+      1244:  adrp     x2, #0x1000  ; -> sym#106+0xd75
+      1248:  add      x1, x1, #0  ; -> $d.45+0x8c
+      124c:  add      x2, x2, #0  ; -> $x.9+0x4a9  'sprd_temp_list_add'
+      1250:  bl       #0x1250  ; -> _dev_err+0x0
+      1254:  adrp     x1, #0x1000  ; -> sym#106+0x19b
+      1258:  add      x1, x1, #0  ; -> $d.45+0xab
+      125c:  ldr      x20, [sp, #0x10]
+      1260:  ldr      x0, [x19]  ; sym#96+0x0
+      1264:  ldr      w3, [x20]
+      1268:  adrp     x2, #0x1000  ; -> sym#106+0xc9f
+      126c:  add      x2, x2, #0  ; -> $x.9+0x3d3  'sprd_cluster_temp_init'
+      1270:  bl       #0x1270  ; -> _dev_err+0x0
+      1274:  ldr      x0, [x19]  ; sym#96+0x0
+      1278:  ldr      w3, [x20]
+      127c:  adrp     x1, #0x1000  ; -> sym#106+0xf6
+      1280:  add      x1, x1, #0  ; -> $d.45+0x6
+      1284:  adrp     x2, #0x1000  ; -> sym#106+0x6fb
+      1288:  add      x2, x2, #0  ; -> $x.6+0x14f  'sprd_cluster_info_init'
+      128c:  bl       #0x128c  ; -> _dev_err+0x0
+      1290:  mov      w25, #-0x16
+      1294:  b        #0x1178  ; -> $d.49+0x168
+      1298:  adrp     x4, #0x1000  ; -> sym#106+0xbd3
+      129c:  add      x4, x4, #0  ; -> $x.9+0x307  'sprd,voltage-step'
+      12a0:  b        #0x12ac  ; -> $d.49+0x29c
+      12a4:  ldr      x25, [sp, #0x10]
+      12a8:  mov      x4, x19
+      12ac:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      12b0:  ldr      x0, [x8]  ; sym#96+0x0
+      12b4:  ldr      w3, [x25]
+      12b8:  adrp     x1, #0x1000  ; -> sym#106+0x9f2
+      12bc:  adrp     x2, #0x1000  ; -> sym#106+0x25
+      12c0:  add      x1, x1, #0  ; -> $x.9+0x126
+      12c4:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+      12c8:  bl       #0x12c8  ; -> _dev_err+0x0
+      12cc:  b        #0x138c  ; -> $d.49+0x37c
+      12d0:  adrp     x1, #0x1000  ; -> sym#106+0xd50
+      12d4:  add      x1, x1, #0  ; -> $x.9+0x484
+      12d8:  b        #0x12e4  ; -> $d.49+0x2d4
+      12dc:  adrp     x1, #0x1000  ; -> sym#106+0xb15
+      12e0:  add      x1, x1, #0  ; -> $x.9+0x249
+      12e4:  adrp     x19, #0x1000  ; -> sym#96+0x0
+      12e8:  ldr      x0, [x19]  ; sym#96+0x0
+      12ec:  adrp     x2, #0x1000  ; -> sym#106+0x8d1
+      12f0:  add      x2, x2, #0  ; -> $x.9+0x5  'sprd_temp_list_init'
+      12f4:  bl       #0x12f4  ; -> _dev_err+0x0
+      12f8:  adrp     x1, #0x1000  ; -> sym#106+0x7f2
+      12fc:  add      x1, x1, #0  ; -> $x.6+0x246
+      1300:  b        #0x125c  ; -> $d.49+0x24c
+      1304:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1308:  ldr      x0, [x8]  ; sym#96+0x0
+      130c:  ldr      x8, [sp, #0x10]
+      1310:  adrp     x1, #0x1000  ; -> sym#106+0xc61
+      1314:  add      x1, x1, #0  ; -> $x.9+0x395
+      1318:  b        #0x137c  ; -> $d.49+0x36c
+      131c:  adrp     x0, #0x1000  ; -> sym#106+0xc2b
+      1320:  add      x0, x0, #0  ; -> $x.9+0x35f
+      1324:  bl       #0x1324  ; -> printk+0x0
+      1328:  mov      w27, #-0x205
+      132c:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1330:  ldr      x0, [x8]  ; sym#96+0x0
+      1334:  adrp     x1, #0x1000  ; -> sym#106+0xd2b
+      1338:  adrp     x2, #0x1000  ; -> sym#106+0x25
+      133c:  add      x1, x1, #0  ; -> $x.9+0x45f
+      1340:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+      1344:  bl       #0x1344  ; -> _dev_err+0x0
+      1348:  mov      w25, w27
+      134c:  b        #0x1390  ; -> $d.49+0x380
+      1350:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1354:  ldr      x0, [x8]  ; sym#96+0x0
+      1358:  ldr      w3, [x19]
+      135c:  adrp     x1, #0x1000  ; -> sym#106+0x21b
+      1360:  add      x1, x1, #0  ; -> $d.45+0x12b
+      1364:  b        #0x1380  ; -> $d.49+0x370
+      1368:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      136c:  ldr      x0, [x8]  ; sym#96+0x0
+      1370:  ldr      x8, [sp, #0x10]
+      1374:  adrp     x1, #0x1000  ; -> sym#106+0x3d
+      1378:  add      x1, x1, #0  ; -> sprd_cluster_info_init.__UNIQUE_ID_ddebug154+0x5
+      137c:  ldr      w3, [x8]
+      1380:  adrp     x2, #0x1000  ; -> sym#106+0x25
+      1384:  add      x2, x2, #0  ; -> __UNIQUE_ID_license156+0x2  'sprd_cluster_props_init'
+      1388:  bl       #0x1388  ; -> _dev_err+0x0
+      138c:  mov      w25, #-0x16
+      1390:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1394:  ldr      x0, [x8]  ; sym#96+0x0
+      1398:  ldr      x8, [sp, #0x10]
+      139c:  adrp     x1, #0x1000  ; -> sym#106+0x7d1
+      13a0:  adrp     x2, #0x1000  ; -> sym#106+0x6fb
+      13a4:  add      x1, x1, #0  ; -> $x.6+0x225
+      13a8:  ldr      w3, [x8]
+      13ac:  add      x2, x2, #0  ; -> $x.6+0x14f  'sprd_cluster_info_init'
+      13b0:  bl       #0x13b0  ; -> _dev_err+0x0
+      13b4:  b        #0x1178  ; -> $d.49+0x168
+      13b8:  mov      w25, w0
+      13bc:  adrp     x0, #0x1000  ; -> sym#106+0x50b
+      13c0:  add      x0, x0, #0  ; -> $x.4+0xf3
+      13c4:  bl       #0x13c4  ; -> printk+0x0
+      13c8:  b        #0x1390  ; -> $d.49+0x380
+      13cc:  mov      w0, #0x12
+      13d0:  bl       #0x13d0  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+      13d4:  bl       #0x13d4  ; -> __stack_chk_fail+0x0
+      13d8:  brk      #1
+      13dc:  sub      sp, sp, #0x70
+; sprd_cpufreq_init @ 0x13dc (676 B)
+      13dc:  sub      sp, sp, #0x70
+      13e0:  str      x30, [x18], #8
+      13e4:  stp      x29, x30, [sp, #0x20]
+      13e8:  stp      x26, x25, [sp, #0x30]
+      13ec:  stp      x24, x23, [sp, #0x40]
+      13f0:  stp      x22, x21, [sp, #0x50]
+      13f4:  stp      x20, x19, [sp, #0x60]
+      13f8:  add      x29, sp, #0x20
+      13fc:  adrp     x8, #0x1000  ; -> __stack_chk_guard+0x0
+      1400:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+      1404:  stur     x8, [x29, #-8]
+      1408:  stur     wzr, [x29, #-0xc]
+      140c:  str      xzr, [sp, #8]
+      1410:  adrp     x8, #0x1000  ; -> sym#96+0x10
+      1414:  ldr      x21, [x8]  ; sym#96+0x10
+      1418:  ldr      w3, [x0, #0x1c]
+      141c:  cbz      x21, #0x158c
+      1420:  adrp     x8, #0x1000  ; -> nr_cpu_ids+0x0
+      1424:  ldr      w8, [x8]  ; nr_cpu_ids+0x0
+      1428:  cmp      w8, w3
+      142c:  b.ls     #0x158c  ; -> $x.10+0x1b0
+      1430:  cmp      w3, #0x20
+      1434:  b.hs     #0x1674  ; -> $x.10+0x298
+      1438:  adrp     x9, #0x1000  ; -> cpu_topology+0x0
+      143c:  mov      w8, #0x28
+      1440:  add      x9, x9, #0  ; -> $d.3
+      1444:  madd     x8, x3, x8, x9
+      1448:  ldr      w25, [x8, #8]
+      144c:  mov      w8, #0xf0
+      1450:  madd     x22, x25, x8, x21
+      1454:  cbz      x22, #0x158c
+      1458:  mov      w8, #0xf0
+      145c:  madd     x24, x25, x8, x21
+      1460:  ldr      x8, [x24, #0xd8]!
+      1464:  cbz      x8, #0x158c
+      1468:  mov      w8, #0xf0
+      146c:  madd     x23, x25, x8, x21
+      1470:  ldr      x8, [x23, #0x40]!
+      1474:  cbz      x8, #0x158c
+      1478:  mov      w8, #0xf0
+      147c:  madd     x26, x25, x8, x21
+      1480:  add      x19, x26, #8
+      1484:  mov      x20, x0
+      1488:  mov      x0, x19
+      148c:  bl       #0x148c  ; -> mutex_lock+0x0
+      1490:  ldr      x0, [x26, #0x28]
+      1494:  adrp     x1, #0x1000  ; -> sym#106+0xce1
+      1498:  add      x1, x1, #0  ; -> $x.9+0x415  'sprd,cluster-cpumask'
+      149c:  sub      x2, x29, #0xc
+      14a0:  mov      w3, #1
+      14a4:  mov      x4, xzr
+      14a8:  mov      w26, #1
+      14ac:  bl       #0x14ac  ; -> of_property_read_variable_u32_array+0x0
+      14b0:  tbnz     w0, #0x1f, #0x15ac
+      14b4:  ldur     w8, [x29, #-0xc]
+      14b8:  ldr      x9, [x20]
+      14bc:  mov      w10, #0xf0
+      14c0:  strb     w26, [x20, #0x248]
+      14c4:  madd     x10, x25, x10, x21
+      14c8:  orr      x8, x9, x8
+      14cc:  str      x8, [x20]
+      14d0:  ldr      w8, [x10, #0x98]
+      14d4:  str      x22, [x20, #0x288]
+      14d8:  mov      x0, x20
+      14dc:  str      w8, [x20, #0x244]
+      14e0:  ldr      x1, [x10, #0xa8]
+      14e4:  bl       #0x14e4  ; -> sym#98+0x2e0
+      14e8:  cbnz     w0, #0x15cc
+      14ec:  ldr      x21, [x24]
+      14f0:  mov      x0, #0x516c
+      14f4:  movk     x0, #0x8b9d, lsl #16
+      14f8:  movk     x0, #0xd5bf, lsl #32
+      14fc:  movk     x0, #0xa0fd, lsl #48
+      1500:  mov      x1, x21
+      1504:  bl       #0x1504  ; -> __cfi_slowpath+0x0
+      1508:  ldr      w0, [x22]
+      150c:  add      x1, sp, #8
+      1510:  blr      x21
+      1514:  cbnz     w0, #0x15e4
+      1518:  ldr      x8, [sp, #8]
+      151c:  mov      x9, #0xf7cf
+      1520:  movk     x9, #0xe353, lsl #16
+      1524:  movk     x9, #0x9ba5, lsl #32
+      1528:  movk     x9, #0x20c4, lsl #48
+      152c:  lsr      x8, x8, #3
+      1530:  umulh    x8, x8, x9
+      1534:  lsr      x8, x8, #4
+      1538:  mov      x0, x20
+      153c:  str      x8, [sp, #8]
+      1540:  str      w8, [x20, #0x3c]
+      1544:  bl       #0x1544  ; -> dev_pm_opp_of_register_em+0x0
+      1548:  ldr      x21, [x23]
+      154c:  mov      x0, #0xadbd
+      1550:  movk     x0, #0x8d51, lsl #16
+      1554:  movk     x0, #0x7859, lsl #32
+      1558:  movk     x0, #0xac37, lsl #48
+      155c:  mov      x1, x21
+      1560:  bl       #0x1560  ; -> __cfi_slowpath+0x0
+      1564:  ldr      w0, [x22]
+      1568:  blr      x21
+      156c:  cbnz     w0, #0x15fc
+      1570:  mov      x0, x20
+      1574:  bl       #0x1574  ; -> sprd_debug_cluster_init+0x0
+      1578:  cbnz     w0, #0x1614
+      157c:  mov      x0, x19
+      1580:  bl       #0x1580  ; -> mutex_unlock+0x0
+      1584:  mov      w0, wzr
+      1588:  b        #0x1640  ; -> $x.10+0x264
+      158c:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1590:  ldr      x0, [x8]  ; sym#96+0x0
+      1594:  adrp     x1, #0x1000  ; -> sym#106+0x6d8
+      1598:  adrp     x2, #0x1000  ; -> sym#106+0x75d
+      159c:  add      x1, x1, #0  ; -> $x.6+0x12c
+      15a0:  add      x2, x2, #0  ; -> $x.6+0x1b1  'sprd_cpufreq_init'
+      15a4:  bl       #0x15a4  ; -> _dev_err+0x0
+      15a8:  b        #0x163c  ; -> $x.10+0x260
+      15ac:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      15b0:  ldr      x0, [x8]  ; sym#96+0x0
+      15b4:  adrp     x1, #0x1000  ; -> sym#106+0xbad
+      15b8:  adrp     x2, #0x1000  ; -> sym#106+0x75d
+      15bc:  add      x1, x1, #0  ; -> $x.9+0x2e1  '%s: cpufreq cluster cpumask read fail'
+      15c0:  add      x2, x2, #0  ; -> $x.6+0x1b1  'sprd_cpufreq_init'
+      15c4:  bl       #0x15c4  ; -> _dev_err+0x0
+      15c8:  b        #0x1634  ; -> $x.10+0x258
+      15cc:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      15d0:  ldr      x0, [x8]  ; sym#96+0x0
+      15d4:  ldr      w3, [x22]
+      15d8:  adrp     x1, #0x1000  ; -> sym#106+0xacf
+      15dc:  add      x1, x1, #0  ; -> $x.9+0x203
+      15e0:  b        #0x1628  ; -> $x.10+0x24c
+      15e4:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      15e8:  ldr      x0, [x8]  ; sym#96+0x0
+      15ec:  ldr      w3, [x22]
+      15f0:  adrp     x1, #0x1000  ; -> sym#106+0x343
+      15f4:  add      x1, x1, #0  ; -> $d.39+0x31
+      15f8:  b        #0x1628  ; -> $x.10+0x24c
+      15fc:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1600:  ldr      x0, [x8]  ; sym#96+0x0
+      1604:  ldr      w3, [x22]
+      1608:  adrp     x1, #0x1000  ; -> sym#106+0x896
+      160c:  add      x1, x1, #0  ; -> $x.7+0x5a
+      1610:  b        #0x1628  ; -> $x.10+0x24c
+      1614:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1618:  ldr      x0, [x8]  ; sym#96+0x0
+      161c:  ldr      w3, [x22]
+      1620:  adrp     x1, #0x1000  ; -> sym#106+0x4ea
+      1624:  add      x1, x1, #0  ; -> $x.4+0xd2
+      1628:  adrp     x2, #0x1000  ; -> sym#106+0x75d
+      162c:  add      x2, x2, #0  ; -> $x.6+0x1b1  'sprd_cpufreq_init'
+      1630:  bl       #0x1630  ; -> _dev_err+0x0
+      1634:  mov      x0, x19
+      1638:  bl       #0x1638  ; -> mutex_unlock+0x0
+      163c:  mov      w0, #-0x16
+      1640:  adrp     x9, #0x1000  ; -> __stack_chk_guard+0x0
+      1644:  ldur     x8, [x29, #-8]
+      1648:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+      164c:  cmp      x9, x8
+      1650:  b.ne     #0x167c  ; -> $x.10+0x2a0
+      1654:  ldp      x29, x30, [sp, #0x20]
+      1658:  ldp      x20, x19, [sp, #0x60]
+      165c:  ldp      x22, x21, [sp, #0x50]
+      1660:  ldp      x24, x23, [sp, #0x40]
+      1664:  ldp      x26, x25, [sp, #0x30]
+      1668:  ldr      x30, [x18, #-8]!
+      166c:  add      sp, sp, #0x70
+      1670:  ret      
+      1674:  mov      w0, #0x12
+      1678:  bl       #0x1678  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+      167c:  bl       #0x167c  ; -> __stack_chk_fail+0x0
+      1680:  str      x30, [x18], #8
+; sprd_cpufreq_table_verify @ 0x1680 (28 B)
+      1680:  str      x30, [x18], #8
+      1684:  stp      x29, x30, [sp, #-0x10]!
+      1688:  mov      x29, sp
+      168c:  bl       #0x168c  ; -> cpufreq_generic_frequency_table_verify+0x0
+      1690:  ldp      x29, x30, [sp], #0x10
+      1694:  ldr      x30, [x18, #-8]!
+      1698:  ret      
+      169c:  str      x30, [x18], #8
+; sprd_cpufreq_set_target_index @ 0x169c (416 B)
+      169c:  str      x30, [x18], #8
+      16a0:  stp      x29, x30, [sp, #-0x40]!
+      16a4:  str      x23, [sp, #0x10]
+      16a8:  stp      x22, x21, [sp, #0x20]
+      16ac:  stp      x20, x19, [sp, #0x30]
+      16b0:  mov      x29, sp
+      16b4:  ldr      x23, [x0, #0x288]
+      16b8:  cbz      x23, #0x1718
+      16bc:  ldr      x8, [x23, #0xd0]
+      16c0:  cbz      x8, #0x1718
+      16c4:  ldrb     w8, [x23, #0xa0]
+      16c8:  mov      x20, x0
+      16cc:  mov      w19, w1
+      16d0:  cbz      w8, #0x1758
+      16d4:  adrp     x8, #0x1000  ; -> sym#96+0x8
+      16d8:  adrp     x9, #0x1000  ; -> jiffies+0x0
+      16dc:  ldr      x8, [x8]  ; sym#96+0x8
+      16e0:  ldr      x9, [x9]  ; jiffies+0x0
+      16e4:  cmp      x8, x9
+      16e8:  b.mi     #0x173c  ; -> $x.12+0xa0
+      16ec:  ldr      w8, [x20, #0x38]
+      16f0:  ldr      w9, [x20, #0x28]
+      16f4:  cmp      w8, w9
+      16f8:  b.hs     #0x17c0  ; -> $x.12+0x124
+      16fc:  strb     wzr, [x23, #0xa0]
+      1700:  ldr      w1, [x20, #0x38]
+      1704:  ldr      w2, [x20, #0x28]
+      1708:  adrp     x0, #0x1000  ; -> sym#106+0xa9
+      170c:  add      x0, x0, #0  ; -> $d.59+0xc
+      1710:  bl       #0x1710  ; -> printk+0x0
+      1714:  b        #0x1758  ; -> $x.12+0xbc
+      1718:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      171c:  ldr      x0, [x8]  ; sym#96+0x0
+      1720:  adrp     x1, #0x1000  ; -> sym#106+0x9b8
+      1724:  adrp     x2, #0x1000  ; -> sym#106+0x69c
+      1728:  add      x1, x1, #0  ; -> $x.9+0xec
+      172c:  add      x2, x2, #0  ; -> $x.6+0xf0  'sprd_cpufreq_set_target_index'
+      1730:  bl       #0x1730  ; -> _dev_err+0x0
+      1734:  mov      w0, #-0x16
+      1738:  b        #0x17c4  ; -> $x.12+0x128
+      173c:  adrp     x0, #0x1000  ; -> sym#106+0x853
+      1740:  add      x0, x0, #0  ; -> $x.7+0x17
+      1744:  mov      w1, #0x3c
+      1748:  strb     wzr, [x23, #0xa0]
+      174c:  bl       #0x174c  ; -> printk+0x0
+      1750:  ldrb     w8, [x23, #0xa0]
+      1754:  cbnz     w8, #0x16ec
+      1758:  add      x21, x23, #8
+      175c:  mov      x0, x21
+      1760:  bl       #0x1760  ; -> mutex_lock+0x0
+      1764:  ldr      w8, [x23, #0x9c]
+      1768:  cmp      w8, w19
+      176c:  b.ls     #0x17dc  ; -> $x.12+0x140
+      1770:  ldr      x22, [x23, #0xd0]
+      1774:  mov      x0, #0x503d
+      1778:  movk     x0, #0x4f12, lsl #16
+      177c:  movk     x0, #0x1f8c, lsl #32
+      1780:  movk     x0, #0xcea3, lsl #48
+      1784:  mov      x1, x22
+      1788:  bl       #0x1788  ; -> __cfi_slowpath+0x0
+      178c:  ldr      w0, [x23]
+      1790:  mov      w1, w19
+      1794:  blr      x22
+      1798:  cbnz     w0, #0x1804
+      179c:  ldr      x8, [x20, #0x170]
+      17a0:  mov      w9, #0xc
+      17a4:  ldr      w2, [x20, #0x28]
+      17a8:  add      x0, x20, #8
+      17ac:  umaddl   x8, w19, w9, x8
+      17b0:  ldr      w1, [x8, #8]
+      17b4:  bl       #0x17b4  ; -> arch_set_freq_scale+0x0
+      17b8:  mov      x0, x21
+      17bc:  bl       #0x17bc  ; -> mutex_unlock+0x0
+      17c0:  mov      w0, wzr
+      17c4:  ldp      x20, x19, [sp, #0x30]
+      17c8:  ldp      x22, x21, [sp, #0x20]
+      17cc:  ldr      x23, [sp, #0x10]
+      17d0:  ldp      x29, x30, [sp], #0x40
+      17d4:  ldr      x30, [x18, #-8]!
+      17d8:  ret      
+      17dc:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      17e0:  ldr      x0, [x8]  ; sym#96+0x0
+      17e4:  ldr      w3, [x23]
+      17e8:  adrp     x1, #0x1000  ; -> sym#106+0x4c8
+      17ec:  adrp     x2, #0x1000  ; -> sym#106+0x69c
+      17f0:  add      x1, x1, #0  ; -> $x.4+0xb0
+      17f4:  add      x2, x2, #0  ; -> $x.6+0xf0  'sprd_cpufreq_set_target_index'
+      17f8:  mov      w4, w19
+      17fc:  bl       #0x17fc  ; -> _dev_err+0x0
+      1800:  b        #0x182c  ; -> $x.12+0x190
+      1804:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1808:  mov      w5, w0
+      180c:  ldr      x0, [x8]  ; sym#96+0x0
+      1810:  ldr      w3, [x23]
+      1814:  adrp     x1, #0x1000  ; -> sym#106+0x251
+      1818:  adrp     x2, #0x1000  ; -> sym#106+0x69c
+      181c:  add      x1, x1, #0  ; -> $d.45+0x161
+      1820:  add      x2, x2, #0  ; -> $x.6+0xf0  'sprd_cpufreq_set_target_index'
+      1824:  mov      w4, w19
+      1828:  bl       #0x1828  ; -> _dev_err+0x0
+      182c:  mov      x0, x21
+      1830:  bl       #0x1830  ; -> mutex_unlock+0x0
+      1834:  mov      w0, #-0x16
+      1838:  b        #0x17c4  ; -> $x.12+0x128
+      183c:  sub      sp, sp, #0x40
+; sprd_cpufreq_get @ 0x183c (372 B)
+      183c:  sub      sp, sp, #0x40
+      1840:  str      x30, [x18], #8
+      1844:  stp      x29, x30, [sp, #0x10]
+      1848:  str      x21, [sp, #0x20]
+      184c:  stp      x20, x19, [sp, #0x30]
+      1850:  add      x29, sp, #0x10
+      1854:  adrp     x8, #0x1000  ; -> __stack_chk_guard+0x0
+      1858:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+      185c:  mov      w3, w0
+      1860:  str      x8, [sp, #8]
+      1864:  adrp     x8, #0x1000  ; -> sym#96+0x10
+      1868:  ldr      x8, [x8]  ; sym#96+0x10
+      186c:  str      xzr, [sp]
+      1870:  cbz      x8, #0x1950
+      1874:  adrp     x9, #0x1000  ; -> nr_cpu_ids+0x0
+      1878:  ldr      w9, [x9]  ; nr_cpu_ids+0x0
+      187c:  cmp      w9, w3
+      1880:  b.ls     #0x1950  ; -> $x.13+0x114
+      1884:  cmp      w3, #0x20
+      1888:  b.hs     #0x19a4  ; -> $x.13+0x168
+      188c:  adrp     x9, #0x1000  ; -> cpu_topology+0x0
+      1890:  add      x9, x9, #0  ; -> $d.3
+      1894:  mov      w10, #0x28
+      1898:  umaddl   x9, w3, w10, x9
+      189c:  ldr      w9, [x9, #8]
+      18a0:  mov      w10, #0xf0
+      18a4:  madd     x21, x9, x10, x8
+      18a8:  cbz      x21, #0x1950
+      18ac:  mov      w10, #0xf0
+      18b0:  madd     x20, x9, x10, x8
+      18b4:  ldr      x10, [x20, #0xd8]!
+      18b8:  cbz      x10, #0x1950
+      18bc:  mov      w10, #0xf0
+      18c0:  madd     x8, x9, x10, x8
+      18c4:  add      x19, x8, #8
+      18c8:  mov      x0, x19
+      18cc:  bl       #0x18cc  ; -> mutex_lock+0x0
+      18d0:  ldr      x20, [x20]
+      18d4:  mov      x0, #0x516c
+      18d8:  movk     x0, #0x8b9d, lsl #16
+      18dc:  movk     x0, #0xd5bf, lsl #32
+      18e0:  movk     x0, #0xa0fd, lsl #48
+      18e4:  mov      x1, x20
+      18e8:  bl       #0x18e8  ; -> __cfi_slowpath+0x0
+      18ec:  ldr      w0, [x21]
+      18f0:  mov      x1, sp
+      18f4:  blr      x20
+      18f8:  cbnz     w0, #0x1974
+      18fc:  mov      x0, x19
+      1900:  bl       #0x1900  ; -> mutex_unlock+0x0
+      1904:  ldr      x8, [sp]
+      1908:  mov      x9, #0xf7cf
+      190c:  movk     x9, #0xe353, lsl #16
+      1910:  movk     x9, #0x9ba5, lsl #32
+      1914:  lsr      x8, x8, #3
+      1918:  movk     x9, #0x20c4, lsl #48
+      191c:  umulh    x8, x8, x9
+      1920:  lsr      x0, x8, #4
+      1924:  adrp     x9, #0x1000  ; -> __stack_chk_guard+0x0
+      1928:  ldr      x8, [sp, #8]
+      192c:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+      1930:  cmp      x9, x8
+      1934:  b.ne     #0x19ac  ; -> $x.13+0x170
+      1938:  ldp      x29, x30, [sp, #0x10]
+      193c:  ldp      x20, x19, [sp, #0x30]
+      1940:  ldr      x21, [sp, #0x20]
+      1944:  ldr      x30, [x18, #-8]!
+      1948:  add      sp, sp, #0x40
+      194c:  ret      
+      1950:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1954:  ldr      x0, [x8]  ; sym#96+0x0
+      1958:  adrp     x1, #0x1000  ; -> sym#106+0x6d8
+      195c:  adrp     x2, #0x1000  ; -> sym#106+0x138
+      1960:  add      x1, x1, #0  ; -> $x.6+0x12c
+      1964:  add      x2, x2, #0  ; -> $d.45+0x48  'sprd_cpufreq_get'
+      1968:  bl       #0x1968  ; -> _dev_err+0x0
+      196c:  mov      w0, wzr
+      1970:  b        #0x1924  ; -> $x.13+0xe8
+      1974:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1978:  ldr      x0, [x8]  ; sym#96+0x0
+      197c:  ldr      w3, [x21]
+      1980:  adrp     x1, #0x1000  ; -> sym#106+0x343
+      1984:  adrp     x2, #0x1000  ; -> sym#106+0x138
+      1988:  add      x1, x1, #0  ; -> $d.39+0x31
+      198c:  add      x2, x2, #0  ; -> $d.45+0x48  'sprd_cpufreq_get'
+      1990:  bl       #0x1990  ; -> _dev_err+0x0
+      1994:  mov      x0, x19
+      1998:  bl       #0x1998  ; -> mutex_unlock+0x0
+      199c:  mov      w0, wzr
+      19a0:  b        #0x1924  ; -> $x.13+0xe8
+      19a4:  mov      w0, #0x12
+      19a8:  bl       #0x19a8  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+      19ac:  bl       #0x19ac  ; -> __stack_chk_fail+0x0
+      19b0:  mov      w0, wzr
+; sprd_cpufreq_exit @ 0x19c0 (328 B)
+      19c0:  str      x30, [x18], #8
+      19c4:  stp      x29, x30, [sp, #-0x40]!
+      19c8:  str      x23, [sp, #0x10]
+      19cc:  stp      x22, x21, [sp, #0x20]
+      19d0:  stp      x20, x19, [sp, #0x30]
+      19d4:  mov      x29, sp
+      19d8:  ldr      x22, [x0, #0x288]
+      19dc:  cbz      x22, #0x1a84
+      19e0:  mov      x19, x0
+      19e4:  ldr      w0, [x0, #0x1c]
+      19e8:  bl       #0x19e8  ; -> get_cpu_device+0x0
+      19ec:  cbz      x0, #0x1aa8
+      19f0:  add      x20, x22, #8
+      19f4:  mov      x21, x0
+      19f8:  mov      x0, x20
+      19fc:  bl       #0x19fc  ; -> mutex_lock+0x0
+      1a00:  add      x1, x19, #0x170
+      1a04:  mov      x0, x21
+      1a08:  bl       #0x1a08  ; -> dev_pm_opp_free_cpufreq_table+0x0
+      1a0c:  mov      x0, x21
+      1a10:  bl       #0x1a10  ; -> dev_pm_opp_of_remove_table+0x0
+      1a14:  cbz      x19, #0x1ae4
+      1a18:  adrp     x21, #0x1000  ; -> sym#96+0x18
+      1a1c:  ldr      x0, [x21]  ; sym#96+0x18
+      1a20:  cbz      x0, #0x1ae4
+      1a24:  ldr      x8, [x19, #0x288]
+      1a28:  cbz      x8, #0x1ad0
+      1a2c:  adrp     x9, #0x1000  ; -> sym#96+0x20
+      1a30:  ldr      x9, [x9]  ; sym#96+0x20
+      1a34:  ldr      w8, [x8]
+      1a38:  add      x22, x9, x8, lsl #4
+      1a3c:  ldr      x23, [x22, #8]
+      1a40:  ldr      x0, [x23]
+      1a44:  bl       #0x1a44  ; -> debugfs_remove+0x0
+      1a48:  str      xzr, [x23]
+      1a4c:  ldr      x0, [x21]  ; sym#96+0x18
+      1a50:  ldr      x1, [x22, #8]
+      1a54:  bl       #0x1a54  ; -> devm_kfree+0x0
+      1a58:  str      xzr, [x22, #8]
+      1a5c:  mov      x0, x20
+      1a60:  str      xzr, [x19, #0x288]
+      1a64:  bl       #0x1a64  ; -> mutex_unlock+0x0
+      1a68:  mov      w0, wzr
+      1a6c:  ldp      x20, x19, [sp, #0x30]
+      1a70:  ldp      x22, x21, [sp, #0x20]
+      1a74:  ldr      x23, [sp, #0x10]
+      1a78:  ldp      x29, x30, [sp], #0x40
+      1a7c:  ldr      x30, [x18, #-8]!
+      1a80:  ret      
+      1a84:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1a88:  ldr      x0, [x8]  ; sym#96+0x0
+      1a8c:  adrp     x1, #0x1000  ; -> sym#106+0x9b8
+      1a90:  adrp     x2, #0x1000  ; -> sym#106+0x68a
+      1a94:  add      x1, x1, #0  ; -> $x.9+0xec
+      1a98:  add      x2, x2, #0  ; -> $x.6+0xde  'sprd_cpufreq_exit'
+      1a9c:  bl       #0x1a9c  ; -> _dev_err+0x0
+      1aa0:  mov      w0, #-0x16
+      1aa4:  b        #0x1a6c  ; -> $x.16+0xac
+      1aa8:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1aac:  ldr      x0, [x8]  ; sym#96+0x0
+      1ab0:  ldr      w3, [x19, #0x1c]
+      1ab4:  adrp     x1, #0x1000  ; -> sym#106+0x2f5
+      1ab8:  adrp     x2, #0x1000  ; -> sym#106+0x68a
+      1abc:  add      x1, x1, #0  ; -> $x.2+0x15
+      1ac0:  add      x2, x2, #0  ; -> $x.6+0xde  'sprd_cpufreq_exit'
+      1ac4:  bl       #0x1ac4  ; -> _dev_err+0x0
+      1ac8:  mov      w0, #-0x16
+      1acc:  b        #0x1a6c  ; -> $x.16+0xac
+      1ad0:  adrp     x1, #0x1000  ; -> sym#106+0x2d2
+      1ad4:  adrp     x2, #0x1000  ; -> sym#106+0xe26
+      1ad8:  add      x1, x1, #0  ; -> $d.45+0x1e2
+      1adc:  add      x2, x2, #0  ; -> $x.9+0x55a  'sprd_debug_cluster_exit'
+      1ae0:  bl       #0x1ae0  ; -> _dev_err+0x0
+      1ae4:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1ae8:  ldr      x0, [x8]  ; sym#96+0x0
+      1aec:  ldr      w3, [x22]
+      1af0:  adrp     x1, #0x1000  ; -> sym#106+0xb8c
+      1af4:  adrp     x2, #0x1000  ; -> sym#106+0x68a
+      1af8:  add      x1, x1, #0  ; -> $x.9+0x2c0
+      1afc:  add      x2, x2, #0  ; -> $x.6+0xde  'sprd_cpufreq_exit'
+      1b00:  bl       #0x1b00  ; -> _dev_warn+0x0
+      1b04:  b        #0x1a5c  ; -> $x.16+0x9c
+      1b08:  str      x30, [x18], #8
+; sprd_cpufreq_suspend @ 0x1b08 (136 B)
+      1b08:  str      x30, [x18], #8
+      1b0c:  stp      x29, x30, [sp, #-0x20]!
+      1b10:  stp      x20, x19, [sp, #0x10]
+      1b14:  mov      x29, sp
+      1b18:  ldr      x20, [x0, #0x50]
+      1b1c:  adrp     x1, #0x1000  ; -> sym#106+0x535
+      1b20:  mov      x19, x0
+      1b24:  add      x1, x1, #0  ; -> $x.4+0x11d  'userspace'
+      1b28:  mov      x0, x20
+      1b2c:  bl       #0x1b2c  ; -> strcmp+0x0
+      1b30:  cbz      w0, #0x1b68
+      1b34:  ldr      x8, [x19, #0x288]
+      1b38:  ldrb     w9, [x8, #0xa0]
+      1b3c:  cbz      w9, #0x1b50
+      1b40:  mov      x0, x19
+      1b44:  mov      w1, wzr
+      1b48:  strb     wzr, [x8, #0xa0]
+      1b4c:  bl       #0x1b4c  ; -> sym#98+0x169c
+      1b50:  mov      x0, x19
+      1b54:  bl       #0x1b54  ; -> cpufreq_generic_suspend+0x0
+      1b58:  ldp      x20, x19, [sp, #0x10]
+      1b5c:  ldp      x29, x30, [sp], #0x20
+      1b60:  ldr      x30, [x18, #-8]!
+      1b64:  ret      
+      1b68:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1b6c:  ldr      x0, [x8]  ; sym#96+0x0
+      1b70:  adrp     x1, #0x1000  ; -> sym#106+0x3da
+      1b74:  adrp     x2, #0x1000  ; -> sym#106+0x60f
+      1b78:  add      x1, x1, #0  ; -> $d.39+0xc8
+      1b7c:  add      x2, x2, #0  ; -> $x.6+0x63  'sprd_cpufreq_suspend'
+      1b80:  mov      x3, x20
+      1b84:  bl       #0x1b84  ; -> _dev_info+0x0
+      1b88:  mov      w0, wzr
+      1b8c:  b        #0x1b58  ; -> $x.17+0x50
+      1b90:  str      x30, [x18], #8
+; sprd_cpufreq_resume @ 0x1b90 (108 B)
+      1b90:  str      x30, [x18], #8
+      1b94:  stp      x29, x30, [sp, #-0x20]!
+      1b98:  stp      x20, x19, [sp, #0x10]
+      1b9c:  mov      x29, sp
+      1ba0:  ldr      x19, [x0, #0x50]
+      1ba4:  adrp     x1, #0x1000  ; -> sym#106+0x535
+      1ba8:  mov      x20, x0
+      1bac:  add      x1, x1, #0  ; -> $x.4+0x11d  'userspace'
+      1bb0:  mov      x0, x19
+      1bb4:  bl       #0x1bb4  ; -> strcmp+0x0
+      1bb8:  cbz      w0, #0x1bd4
+      1bbc:  mov      x0, x20
+      1bc0:  bl       #0x1bc0  ; -> cpufreq_generic_suspend+0x0
+      1bc4:  ldp      x20, x19, [sp, #0x10]
+      1bc8:  ldp      x29, x30, [sp], #0x20
+      1bcc:  ldr      x30, [x18, #-8]!
+      1bd0:  ret      
+      1bd4:  adrp     x8, #0x1000  ; -> sym#96+0x0
+      1bd8:  ldr      x0, [x8]  ; sym#96+0x0
+      1bdc:  adrp     x1, #0x1000  ; -> sym#106+0x3da
+      1be0:  adrp     x2, #0x1000  ; -> sym#106+0x32f
+      1be4:  add      x1, x1, #0  ; -> $d.39+0xc8
+      1be8:  add      x2, x2, #0  ; -> $d.39+0x1d  'sprd_cpufreq_resume'
+      1bec:  mov      x3, x19
+      1bf0:  bl       #0x1bf0  ; -> _dev_info+0x0
+      1bf4:  mov      w0, wzr
+      1bf8:  b        #0x1bc4  ; -> $x.18+0x34
+      1bfc:  udf      #0
+; sprd_debug_cluster_init @ 0x21e8 (280 B)
+      21e8:  str      x30, [x18], #8
+      21ec:  stp      x29, x30, [sp, #-0x40]!
+      21f0:  stp      x24, x23, [sp, #0x10]
+      21f4:  stp      x22, x21, [sp, #0x20]
+      21f8:  stp      x20, x19, [sp, #0x30]
+      21fc:  mov      x29, sp
+      2200:  mov      x19, x0
+      2204:  mov      w0, #-0x16
+      2208:  cbz      x19, #0x227c
+      220c:  adrp     x21, #0x2000  ; -> sym#96+0x18
+      2210:  ldr      x8, [x21]  ; sym#96+0x18
+      2214:  cbz      x8, #0x227c
+      2218:  ldr      x22, [x19, #0x288]
+      221c:  cbz      x22, #0x2294
+      2220:  adrp     x9, #0x2000  ; -> sym#96+0x20
+      2224:  ldr      x23, [x9]  ; sym#96+0x20
+      2228:  ldr      w24, [x22]
+      222c:  mov      w1, #8
+      2230:  mov      w2, #0xdc0
+      2234:  mov      x0, x8
+      2238:  bl       #0x2238  ; -> devm_kmalloc+0x0
+      223c:  add      x8, x23, x24, lsl #4
+      2240:  str      x0, [x8, #8]
+      2244:  cbz      x0, #0x22b0
+      2248:  lsl      x8, x24, #4
+      224c:  ldr      x2, [x23, x8]
+      2250:  mov      x20, x0
+      2254:  adrp     x0, #0x2000  ; -> sym#106+0xa6a
+      2258:  adrp     x4, #0x2000  ; -> sym#106+0x1010
+      225c:  add      x0, x0, #0  ; -> $x.9+0x19e  'dvfs_table'
+      2260:  add      x4, x4, #0  ; -> $d.49
+      2264:  mov      w1, #0x124
+      2268:  mov      x3, x19
+      226c:  bl       #0x226c  ; -> debugfs_create_file+0x0
+      2270:  str      x0, [x20]
+      2274:  cbz      x0, #0x22d4
+      2278:  mov      w0, wzr
+      227c:  ldp      x20, x19, [sp, #0x30]
+      2280:  ldp      x22, x21, [sp, #0x20]
+      2284:  ldp      x24, x23, [sp, #0x10]
+      2288:  ldp      x29, x30, [sp], #0x40
+      228c:  ldr      x30, [x18, #-8]!
+      2290:  ret      
+      2294:  adrp     x1, #0x2000  ; -> sym#106+0x2aa
+      2298:  adrp     x2, #0x2000  ; -> sym#106+0x458
+      229c:  add      x1, x1, #0  ; -> $d.45+0x1ba
+      22a0:  add      x2, x2, #0  ; -> $x.4+0x40  'sprd_debug_cluster_init'
+      22a4:  mov      x0, x8
+      22a8:  bl       #0x22a8  ; -> _dev_err+0x0
+      22ac:  b        #0x22f8  ; -> $x.20+0x110
+      22b0:  ldr      x0, [x21]  ; sym#96+0x18
+      22b4:  ldr      w3, [x22]
+      22b8:  adrp     x1, #0x2000  ; -> sym#106+0x76f
+      22bc:  adrp     x2, #0x2000  ; -> sym#106+0x458
+      22c0:  add      x1, x1, #0  ; -> $x.6+0x1c3
+      22c4:  add      x2, x2, #0  ; -> $x.4+0x40  'sprd_debug_cluster_init'
+      22c8:  bl       #0x22c8  ; -> _dev_err+0x0
+      22cc:  mov      w0, #-0xc
+      22d0:  b        #0x227c  ; -> $x.20+0x94
+      22d4:  ldr      x0, [x21]  ; sym#96+0x18
+      22d8:  ldr      w3, [x22]
+      22dc:  adrp     x1, #0x2000  ; -> sym#106+0x38c
+      22e0:  adrp     x2, #0x2000  ; -> sym#106+0x458
+      22e4:  adrp     x4, #0x2000  ; -> sym#106+0xa6a
+      22e8:  add      x1, x1, #0  ; -> $d.39+0x7a
+      22ec:  add      x2, x2, #0  ; -> $x.4+0x40  'sprd_debug_cluster_init'
+      22f0:  add      x4, x4, #0  ; -> $x.9+0x19e  'dvfs_table'
+      22f4:  bl       #0x22f4  ; -> _dev_err+0x0
+      22f8:  mov      w0, #-0x16
+      22fc:  b        #0x227c  ; -> $x.20+0x94
+      2300:  str      x30, [x18], #8
+; sprd_debug_table_read @ 0x2300 (548 B)
+      2300:  str      x30, [x18], #8
+      2304:  stp      x29, x30, [sp, #-0x60]!
+      2308:  stp      x28, x27, [sp, #0x10]
+      230c:  stp      x26, x25, [sp, #0x20]
+      2310:  stp      x24, x23, [sp, #0x30]
+      2314:  stp      x22, x21, [sp, #0x40]
+      2318:  stp      x20, x19, [sp, #0x50]
+      231c:  mov      x29, sp
+      2320:  sub      sp, sp, #0x230
+      2324:  adrp     x8, #0x2000  ; -> __stack_chk_guard+0x0
+      2328:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+      232c:  mov      x25, x2
+      2330:  mov      x26, x1
+      2334:  mov      w2, #0x200
+      2338:  stur     x8, [x29, #-0x10]
+      233c:  ldr      x20, [x0, #0xc8]
+      2340:  add      x0, sp, #0x20
+      2344:  mov      w1, wzr
+      2348:  mov      x21, x3
+      234c:  bl       #0x234c  ; -> memset+0x0
+      2350:  ldr      x19, [x20, #0x288]
+      2354:  str      xzr, [sp, #0x18]
+      2358:  add      x22, x19, #8
+      235c:  mov      x0, x22
+      2360:  bl       #0x2360  ; -> mutex_lock+0x0
+      2364:  ldr      w0, [x20, #0x1c]
+      2368:  bl       #0x2368  ; -> get_cpu_device+0x0
+      236c:  cbz      x0, #0x2490
+      2370:  mov      x24, x0
+      2374:  bl       #0x2374  ; -> dev_pm_opp_get_opp_count+0x0
+      2378:  mov      w23, w0
+      237c:  tbnz     w0, #0x1f, #0x24b0
+      2380:  ldr      x8, [x19, #0xb0]
+      2384:  adrp     x2, #0x2000  ; -> sym#106+0xb38
+      2388:  add      x2, x2, #0  ; -> $x.9+0x26c
+      238c:  add      x0, sp, #0x20
+      2390:  ldr      w3, [x8]
+      2394:  mov      w1, #0x200
+      2398:  stp      x26, x25, [sp]
+      239c:  str      x21, [sp, #0x10]
+      23a0:  add      x20, sp, #0x20
+      23a4:  bl       #0x23a4  ; -> scnprintf+0x0
+      23a8:  mov      w25, w0
+      23ac:  str      xzr, [sp, #0x18]
+      23b0:  cbz      w23, #0x2430
+      23b4:  adrp     x26, #0x2000  ; -> sym#106+0xe1d
+      23b8:  mov      w21, #0x200
+      23bc:  add      x26, x26, #0  ; -> $x.9+0x551
+      23c0:  add      x1, sp, #0x18
+      23c4:  mov      x0, x24
+      23c8:  bl       #0x23c8  ; -> dev_pm_opp_find_freq_ceil+0x0
+      23cc:  cmn      x0, #0xfff
+      23d0:  b.hs     #0x24e0  ; -> $x.21+0x1e0
+      23d4:  mov      x27, x0
+      23d8:  bl       #0x23d8  ; -> dev_pm_opp_get_freq+0x0
+      23dc:  mov      x28, x0
+      23e0:  mov      x0, x27
+      23e4:  bl       #0x23e4  ; -> dev_pm_opp_get_voltage+0x0
+      23e8:  mov      x19, x0
+      23ec:  mov      x0, x27
+      23f0:  bl       #0x23f0  ; -> dev_pm_opp_put+0x0
+      23f4:  sxtw     x8, w25
+      23f8:  add      x0, x20, x8
+      23fc:  sub      x1, x21, x8
+      2400:  mov      x2, x26
+      2404:  mov      x3, x28
+      2408:  mov      x4, x19
+      240c:  bl       #0x240c  ; -> scnprintf+0x0
+      2410:  add      w25, w0, w25
+      2414:  cmp      w25, #0x200
+      2418:  b.hs     #0x24f4  ; -> $x.21+0x1f4
+      241c:  ldr      x8, [sp, #0x18]
+      2420:  subs     w23, w23, #1
+      2424:  add      x8, x8, #1
+      2428:  str      x8, [sp, #0x18]
+      242c:  b.ne     #0x23c0  ; -> $x.21+0xc0
+      2430:  mov      x0, x22
+      2434:  bl       #0x2434  ; -> mutex_unlock+0x0
+      2438:  sxtw     x4, w25
+      243c:  ldp      x25, x21, [sp, #8]
+      2440:  ldr      x26, [sp]
+      2444:  add      x3, sp, #0x20
+      2448:  mov      x0, x26
+      244c:  mov      x1, x25
+      2450:  mov      x2, x21
+      2454:  bl       #0x2454  ; -> simple_read_from_buffer+0x0
+      2458:  adrp     x9, #0x2000  ; -> __stack_chk_guard+0x0
+      245c:  ldur     x8, [x29, #-0x10]
+      2460:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+      2464:  cmp      x9, x8
+      2468:  b.ne     #0x2520  ; -> $x.21+0x220
+      246c:  add      sp, sp, #0x230
+      2470:  ldp      x20, x19, [sp, #0x50]
+      2474:  ldp      x22, x21, [sp, #0x40]
+      2478:  ldp      x24, x23, [sp, #0x30]
+      247c:  ldp      x26, x25, [sp, #0x20]
+      2480:  ldp      x28, x27, [sp, #0x10]
+      2484:  ldp      x29, x30, [sp], #0x60
+      2488:  ldr      x30, [x18, #-8]!
+      248c:  ret      
+      2490:  adrp     x8, #0x2000  ; -> sym#96+0x18
+      2494:  ldr      x0, [x8]  ; sym#96+0x18
+      2498:  adrp     x1, #0x2000  ; -> sym#106+0xa4f
+      249c:  adrp     x2, #0x2000  ; -> sym#106+0x247
+      24a0:  add      x1, x1, #0  ; -> $x.9+0x183
+      24a4:  add      x2, x2, #0  ; -> $d.45+0x157  'table_cat'
+      24a8:  bl       #0x24a8  ; -> _dev_err+0x0
+      24ac:  b        #0x24d0  ; -> $x.21+0x1d0
+      24b0:  adrp     x8, #0x2000  ; -> sym#96+0x18
+      24b4:  ldr      x0, [x8]  ; sym#96+0x18
+      24b8:  adrp     x1, #0x2000  ; -> sym#106+0xaad
+      24bc:  adrp     x2, #0x2000  ; -> sym#106+0x247
+      24c0:  add      x1, x1, #0  ; -> $x.9+0x1e1
+      24c4:  add      x2, x2, #0  ; -> $d.45+0x157  'table_cat'
+      24c8:  mov      w3, w23
+      24cc:  bl       #0x24cc  ; -> _dev_err+0x0
+      24d0:  mov      x0, x22
+      24d4:  bl       #0x24d4  ; -> mutex_unlock+0x0
+      24d8:  mov      x4, xzr
+      24dc:  b        #0x2444  ; -> $x.21+0x144
+      24e0:  adrp     x8, #0x2000  ; -> sym#96+0x18
+      24e4:  ldr      x0, [x8]  ; sym#96+0x18
+      24e8:  adrp     x1, #0x2000  ; -> sym#106+0x4b1
+      24ec:  add      x1, x1, #0  ; -> $x.4+0x99
+      24f0:  b        #0x2504  ; -> $x.21+0x204
+      24f4:  adrp     x8, #0x2000  ; -> sym#96+0x18
+      24f8:  ldr      x0, [x8]  ; sym#96+0x18
+      24fc:  adrp     x1, #0x2000  ; -> sym#106+0x5b3
+      2500:  add      x1, x1, #0  ; -> $x.6+0x7
+      2504:  adrp     x2, #0x2000  ; -> sym#106+0x247
+      2508:  add      x2, x2, #0  ; -> $d.45+0x157  'table_cat'
+      250c:  bl       #0x250c  ; -> _dev_err+0x0
+      2510:  mov      x0, x22
+      2514:  bl       #0x2514  ; -> mutex_unlock+0x0
+      2518:  mov      x4, xzr
+      251c:  b        #0x243c  ; -> $x.21+0x13c
+      2520:  bl       #0x2520  ; -> __stack_chk_fail+0x0
+      2524:  str      x30, [x18], #8
+; sprd_debug_table_open @ 0x2524 (36 B)
+      2524:  str      x30, [x18], #8
+      2528:  stp      x29, x30, [sp, #-0x10]!
+      252c:  mov      x29, sp
+      2530:  ldr      x8, [x0, #0x280]
+      2534:  str      x8, [x1, #0xc8]
+      2538:  bl       #0x2538  ; -> nonseekable_open+0x0
+      253c:  ldp      x29, x30, [sp], #0x10
+      2540:  ldr      x30, [x18, #-8]!
+      2544:  ret      
+      2548:  mov      w0, wzr
+; sprd_debug_table_release @ 0x2548 (8 B)
+      2548:  mov      w0, wzr
+      254c:  ret      
+      2550:  str      x30, [x18], #8
+; sprd_debug_cluster_exit @ 0x2550 (156 B)
+      2550:  str      x30, [x18], #8
+      2554:  stp      x29, x30, [sp, #-0x30]!
+      2558:  str      x21, [sp, #0x10]
+      255c:  stp      x20, x19, [sp, #0x20]
+      2560:  mov      x29, sp
+      2564:  mov      x9, x0
+      2568:  mov      w0, #-0x16
+      256c:  cbz      x9, #0x25b8
+      2570:  adrp     x19, #0x2000  ; -> sym#96+0x18
+      2574:  ldr      x8, [x19]  ; sym#96+0x18
+      2578:  cbz      x8, #0x25b8
+      257c:  ldr      x9, [x9, #0x288]
+      2580:  cbz      x9, #0x25cc
+      2584:  adrp     x8, #0x2000  ; -> sym#96+0x20
+      2588:  ldr      x8, [x8]  ; sym#96+0x20
+      258c:  ldr      w9, [x9]
+      2590:  add      x20, x8, x9, lsl #4
+      2594:  ldr      x21, [x20, #8]
+      2598:  ldr      x0, [x21]
+      259c:  bl       #0x259c  ; -> debugfs_remove+0x0
+      25a0:  str      xzr, [x21]
+      25a4:  ldr      x0, [x19]  ; sym#96+0x18
+      25a8:  ldr      x1, [x20, #8]
+      25ac:  bl       #0x25ac  ; -> devm_kfree+0x0
+      25b0:  mov      w0, wzr
+      25b4:  str      xzr, [x20, #8]
+      25b8:  ldp      x20, x19, [sp, #0x20]
+      25bc:  ldr      x21, [sp, #0x10]
+      25c0:  ldp      x29, x30, [sp], #0x30
+      25c4:  ldr      x30, [x18, #-8]!
+      25c8:  ret      
+      25cc:  adrp     x1, #0x2000  ; -> sym#106+0x2d2
+      25d0:  adrp     x2, #0x2000  ; -> sym#106+0xe26
+      25d4:  add      x1, x1, #0  ; -> $d.45+0x1e2
+      25d8:  add      x2, x2, #0  ; -> $x.9+0x55a  'sprd_debug_cluster_exit'
+      25dc:  mov      x0, x8
+      25e0:  bl       #0x25e0  ; -> _dev_err+0x0
+      25e4:  mov      w0, #-0x16
+      25e8:  b        #0x25b8  ; -> $x.24+0x68
+      25ec:  sub      sp, sp, #0x80
+; sprd_debug_init @ 0x25ec (484 B)
+      25ec:  sub      sp, sp, #0x80
+      25f0:  str      x30, [x18], #8
+      25f4:  stp      x29, x30, [sp, #0x30]
+      25f8:  stp      x26, x25, [sp, #0x40]
+      25fc:  stp      x24, x23, [sp, #0x50]
+      2600:  stp      x22, x21, [sp, #0x60]
+      2604:  stp      x20, x19, [sp, #0x70]
+      2608:  add      x29, sp, #0x30
+      260c:  adrp     x8, #0x2000  ; -> __stack_chk_guard+0x0
+      2610:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+      2614:  mov      x19, x0
+      2618:  mov      w0, #-0x16
+      261c:  stur     x8, [x29, #-8]
+      2620:  stp      xzr, xzr, [sp, #0x18]
+      2624:  stp      xzr, xzr, [sp, #8]
+      2628:  cbz      x19, #0x2750
+      262c:  adrp     x8, #0x2000  ; -> sym#96+0x18
+      2630:  ldr      x9, [x8]  ; sym#96+0x18
+      2634:  cbnz     x9, #0x2750
+      2638:  adrp     x0, #0x2000  ; -> sym#106+0x552
+      263c:  add      x0, x0, #0  ; -> $x.4+0x13a  'sprd-cpufreq-v2'
+      2640:  mov      x1, xzr
+      2644:  str      x19, [x8]  ; sym#96+0x18
+      2648:  bl       #0x2648  ; -> debugfs_create_dir+0x0
+      264c:  adrp     x22, #0x2000  ; -> sym#96+0x28
+      2650:  str      x0, [x22]  ; sym#96+0x28
+      2654:  cbz      x0, #0x2784
+      2658:  adrp     x8, #0x2000  ; -> __cpu_possible_mask+0x0
+      265c:  ldr      w0, [x8]  ; __cpu_possible_mask+0x0
+      2660:  bl       #0x2660  ; -> __sw_hweight64+0x0
+      2664:  sub      w8, w0, #1
+      2668:  cmp      w8, #0x20
+      266c:  b.hs     #0x27c8  ; -> $x.25+0x1dc
+      2670:  adrp     x9, #0x2000  ; -> cpu_topology+0x0
+      2674:  add      x9, x9, #0  ; -> $d.3
+      2678:  mov      w10, #0x28
+      267c:  umaddl   x8, w8, w10, x9
+      2680:  ldr      w8, [x8, #8]
+      2684:  mov      w2, #0xdc0
+      2688:  mov      x0, x19
+      268c:  add      w21, w8, #1
+      2690:  sbfiz    x1, x21, #4, #0x20
+      2694:  bl       #0x2694  ; -> devm_kmalloc+0x0
+      2698:  adrp     x23, #0x2000  ; -> sym#96+0x20
+      269c:  str      x0, [x23]  ; sym#96+0x20
+      26a0:  cbz      x0, #0x27a4
+      26a4:  cmp      w21, #1
+      26a8:  b.lt     #0x274c  ; -> $x.25+0x160
+      26ac:  adrp     x1, #0x2000  ; -> sym#106+0x116
+      26b0:  mov      x20, x0
+      26b4:  add      x1, x1, #0  ; -> $d.45+0x26  'cluster%d'
+      26b8:  add      x0, sp, #8
+      26bc:  mov      w2, wzr
+      26c0:  bl       #0x26c0  ; -> sprintf+0x0
+      26c4:  ldr      x1, [x22]  ; sym#96+0x28
+      26c8:  add      x0, sp, #8
+      26cc:  bl       #0x26cc  ; -> debugfs_create_dir+0x0
+      26d0:  str      x0, [x20]
+      26d4:  mov      w20, wzr
+      26d8:  cbz      x0, #0x2728
+      26dc:  mov      w8, w21
+      26e0:  adrp     x21, #0x2000  ; -> sym#106+0x116
+      26e4:  mov      w24, #0x10
+      26e8:  lsl      x25, x8, #4
+      26ec:  add      x21, x21, #0  ; -> $d.45+0x26  'cluster%d'
+      26f0:  cmp      x25, x24
+      26f4:  b.eq     #0x274c  ; -> $x.25+0x160
+      26f8:  ldr      x26, [x23]  ; sym#96+0x20
+      26fc:  add      w20, w20, #1
+      2700:  add      x0, sp, #8
+      2704:  mov      x1, x21
+      2708:  mov      w2, w20
+      270c:  bl       #0x270c  ; -> sprintf+0x0
+      2710:  ldr      x1, [x22]  ; sym#96+0x28
+      2714:  add      x0, sp, #8
+      2718:  bl       #0x2718  ; -> debugfs_create_dir+0x0
+      271c:  str      x0, [x26, x24]
+      2720:  add      x24, x24, #0x10
+      2724:  cbnz     x0, #0x26f0
+      2728:  adrp     x1, #0x2000  ; -> sym#106+0x562
+      272c:  adrp     x2, #0x2000  ; -> sym#106+0x76
+      2730:  add      x1, x1, #0  ; -> $x.4+0x14a
+      2734:  add      x2, x2, #0  ; -> __UNIQUE_ID_vermagic125+0x2  'sprd_debug_init'
+      2738:  mov      x0, x19
+      273c:  mov      w3, w20
+      2740:  bl       #0x2740  ; -> _dev_err+0x0
+      2744:  mov      w0, #-0x16
+      2748:  b        #0x2750  ; -> $x.25+0x164
+      274c:  mov      w0, wzr
+      2750:  adrp     x9, #0x2000  ; -> __stack_chk_guard+0x0
+      2754:  ldur     x8, [x29, #-8]
+      2758:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+      275c:  cmp      x9, x8
+      2760:  b.ne     #0x27c4  ; -> $x.25+0x1d8
+      2764:  ldp      x29, x30, [sp, #0x30]
+      2768:  ldp      x20, x19, [sp, #0x70]
+      276c:  ldp      x22, x21, [sp, #0x60]
+      2770:  ldp      x24, x23, [sp, #0x50]
+      2774:  ldp      x26, x25, [sp, #0x40]
+      2778:  ldr      x30, [x18, #-8]!
+      277c:  add      sp, sp, #0x80
+      2780:  ret      
+      2784:  adrp     x1, #0x2000  ; -> sym#106+0xe3e
+      2788:  adrp     x2, #0x2000  ; -> sym#106+0x76
+      278c:  add      x1, x1, #0  ; -> $x.9+0x572
+      2790:  add      x2, x2, #0  ; -> __UNIQUE_ID_vermagic125+0x2  'sprd_debug_init'
+      2794:  mov      x0, x19
+      2798:  bl       #0x2798  ; -> _dev_err+0x0
+      279c:  mov      w0, #-0x16
+      27a0:  b        #0x2750  ; -> $x.25+0x164
+      27a4:  adrp     x1, #0x2000  ; -> sym#106+0x976
+      27a8:  adrp     x2, #0x2000  ; -> sym#106+0x76
+      27ac:  add      x1, x1, #0  ; -> $x.9+0xaa
+      27b0:  add      x2, x2, #0  ; -> __UNIQUE_ID_vermagic125+0x2  'sprd_debug_init'
+      27b4:  mov      x0, x19
+      27b8:  bl       #0x27b8  ; -> _dev_err+0x0
+      27bc:  mov      w0, #-0xc
+      27c0:  b        #0x2750  ; -> $x.25+0x164
+      27c4:  bl       #0x27c4  ; -> __stack_chk_fail+0x0
+      27c8:  mov      w0, #0x12
+      27cc:  bl       #0x27cc  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+      27d0:  str      x30, [x18], #8
+; sprd_debug_exit @ 0x27d0 (216 B)
+      27d0:  str      x30, [x18], #8
+      27d4:  stp      x29, x30, [sp, #-0x40]!
+      27d8:  str      x23, [sp, #0x10]
+      27dc:  stp      x22, x21, [sp, #0x20]
+      27e0:  stp      x20, x19, [sp, #0x30]
+      27e4:  mov      x29, sp
+      27e8:  adrp     x19, #0x2000  ; -> sym#96+0x18
+      27ec:  ldr      x8, [x19]  ; sym#96+0x18
+      27f0:  cbz      x8, #0x27fc
+      27f4:  mov      w0, #-0x16
+      27f8:  b        #0x2888  ; -> $x.26+0xb8
+      27fc:  adrp     x8, #0x2000  ; -> __cpu_possible_mask+0x0
+      2800:  ldr      w0, [x8]  ; __cpu_possible_mask+0x0
+      2804:  bl       #0x2804  ; -> __sw_hweight64+0x0
+      2808:  sub      w8, w0, #1
+      280c:  cmp      w8, #0x20
+      2810:  b.hs     #0x28a0  ; -> $x.26+0xd0
+      2814:  adrp     x9, #0x2000  ; -> cpu_topology+0x0
+      2818:  add      x9, x9, #0  ; -> $d.3
+      281c:  mov      w10, #0x28
+      2820:  umaddl   x8, w8, w10, x9
+      2824:  ldr      w8, [x8, #8]
+      2828:  adrp     x20, #0x2000  ; -> sym#96+0x20
+      282c:  add      w8, w8, #1
+      2830:  cmp      w8, #1
+      2834:  b.lt     #0x2860  ; -> $x.26+0x90
+      2838:  mov      w8, w8
+      283c:  mov      x21, xzr
+      2840:  lsl      x22, x8, #4
+      2844:  ldr      x23, [x20]  ; sym#96+0x20
+      2848:  ldr      x0, [x23, x21]
+      284c:  bl       #0x284c  ; -> debugfs_remove+0x0
+      2850:  str      xzr, [x23, x21]
+      2854:  add      x21, x21, #0x10
+      2858:  cmp      x22, x21
+      285c:  b.ne     #0x2844  ; -> $x.26+0x74
+      2860:  ldr      x0, [x19]  ; sym#96+0x18
+      2864:  ldr      x1, [x20]  ; sym#96+0x20
+      2868:  bl       #0x2868  ; -> devm_kfree+0x0
+      286c:  adrp     x21, #0x2000  ; -> sym#96+0x28
+      2870:  ldr      x0, [x21]  ; sym#96+0x28
+      2874:  str      xzr, [x20]  ; sym#96+0x20
+      2878:  bl       #0x2878  ; -> debugfs_remove+0x0
+      287c:  mov      w0, wzr
+      2880:  str      xzr, [x21]  ; sym#96+0x28
+      2884:  str      xzr, [x19]  ; sym#96+0x18
+      2888:  ldp      x20, x19, [sp, #0x30]
+      288c:  ldp      x22, x21, [sp, #0x20]
+      2890:  ldr      x23, [sp, #0x10]
+      2894:  ldp      x29, x30, [sp], #0x40
+      2898:  ldr      x30, [x18, #-8]!
+      289c:  ret      
+      28a0:  mov      w0, #0x12
+      28a4:  bl       #0x28a4  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+      28a8:  b        #0x28a8  ; -> sprd_cpufreq_update_opp_v2+0x0

@@ -661,17 +661,6 @@ struct hci_dev {
 				     __u8 **vnd_data);
 	u8 (*classify_pkt_type)(struct hci_dev *hdev, struct sk_buff *skb);
 };
-/* ====== HCI PAST (Power Aware Scanning) not ported to VXTux 6.18 ====== */
-static inline bool past_receiver_capable(struct hci_dev *hdev)
-{
-	(void)hdev;
-	return false;
-}
-static inline bool past_sender_capable(struct hci_dev *hdev)
-{
-	(void)hdev;
-	return false;
-}
 
 
 #define hci_set_quirk(hdev, nr) set_bit((nr), (hdev)->quirk_flags)

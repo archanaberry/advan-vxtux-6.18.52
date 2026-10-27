@@ -1,15 +1,36 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * QEMU virt machine with UMS512/T1030 (Advan Tab VX Lite) peripherals
+ * QEMU virt machine dengan perangkat UMS512/T1030 (Advan Tab VX Lite)
  *
- * This device tree provides a QEMU-bootable configuration using the standard
- * virt machine type, with UMS512-specific peripherals mapped to fixed addresses.
- * Hardware-specific registers are stubbed for QEMU emulation.
+ * Dibangun di atas peta memori QEMU -M virt yang sebenarnya:
+ *   - RAM 2GB @ 0x40000000        (-m 2G)
+ *   - GICv3 GICD @ 0x08000000, GICR @ 0x08010000 (stride 0x20000)
+ *   - PL011 @ 0x09000000 (SPI 1). Driver AMBA PL011 sengaja tidak ada
+ *     di tree V17 (lihat docs/CI-KNOWN-DROPPED.txt), jadi console boot
+ *     memakai virtio-console: -device virtio-serial-pci
+ *     -device virtconsole + console=hvc0.
+ *   - MPIDR CPU linear 0..7 sesuai `-smp 8` QEMU virt. Register CPU lama
+ *     0x100,0x200,... (Aff1) tidak pernah match topologi QEMU dan CPU
+ *     sekunder tidak akan hidup.
+ *
+ * Node stub UMS512 dipertahankan untuk pengujian bertahap, tetapi SEMUA stub
+ * kini status="disabled" pada fase 1 (run 40090028825: boot kustom nol byte
+ * output sementara DTB stok QEMU tembus — kandidatnya probe stub di MMIO
+ * tak terpetakan yang menggantung SEBELUM virtio-console mendaftarkan hvc0,
+ * dan konsol hvc tanpa replay membuat semua print awal hilang). Aktifkan
+ * kembali satu per satu setelah boot dasar hijau. Dua node yang MMIO-nya
+ * jatuh DI DALAM RAM QEMU (musb @ 0x5fff0000, sdhci @ 0x70700000) tetap
+ * disabled permanen: tulisan register driver akan merusak memori tamu.
+ * File ini juga dirender LF (versi lama CRLF + terpotong di tengah node
+ * sdhci sehingga tidak pernah bisa dikompilasi).
  */
+
+/dts-v1/;
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 
 / {
 	compatible = "qemu,ums512-t1030", "qemu,virt";
@@ -25,10 +46,10 @@
 
 	memory@40000000 {
 		device_type = "memory";
-		reg = <0x0 0x40000000 0x0 0x80000000>; /* 2GB at 0x40000000 */
+		reg = <0x0 0x40000000 0x0 0x80000000>; /* 2GB @ 0x40000000 */
 	};
 
-	/* 8 cores: 4x Cortex-A75 + 4x Cortex-A55 */
+	/* 8 cores: 4x Cortex-A55 + 4x Cortex-A75 (label disimpan) */
 	cpus {
 		#address-cells = <2>;
 		#size-cells = <0>;
@@ -39,54 +60,59 @@
 			reg = <0x0 0x0>;
 			enable-method = "psci";
 		};
-		CPU1: cpu@100 {
+		CPU1: cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a55";
-			reg = <0x0 0x100>;
+			reg = <0x0 0x1>;
 			enable-method = "psci";
 		};
-		CPU2: cpu@200 {
+		CPU2: cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a55";
-			reg = <0x0 0x200>;
+			reg = <0x0 0x2>;
 			enable-method = "psci";
 		};
-		CPU3: cpu@300 {
+		CPU3: cpu@3 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a55";
-			reg = <0x0 0x300>;
+			reg = <0x0 0x3>;
 			enable-method = "psci";
 		};
-		CPU4: cpu@400 {
+		CPU4: cpu@4 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a75";
-			reg = <0x0 0x400>;
+			reg = <0x0 0x4>;
 			enable-method = "psci";
 		};
-		CPU5: cpu@500 {
+		CPU5: cpu@5 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a75";
-			reg = <0x0 0x500>;
+			reg = <0x0 0x5>;
 			enable-method = "psci";
 		};
-		CPU6: cpu@600 {
+		CPU6: cpu@6 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a75";
-			reg = <0x0 0x600>;
+			reg = <0x0 0x6>;
 			enable-method = "psci";
 		};
-		CPU7: cpu@700 {
+		CPU7: cpu@7 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a75";
-			reg = <0x0 0x700>;
+			reg = <0x0 0x7>;
 			enable-method = "psci";
 		};
 	};
 
-	/* PSCI for CPU power management */
+	/* PSCI: method WAJIB hvc. QEMU 6.2 virt.c menentukan conduit dari
+	 * properti `virtualization` yang default OFF, sehingga hasilnya
+	 * QEMU_PSCI_CONDUIT_HVC (rumus di virt.c: secure&&fw ? DISABLED :
+	 * virtualization ? SMC : HVC). Dengan EL2 mati, instruksi SMC dari EL1
+	 * (metode "smc" lama) adalah undefined instruction -> trap dini di
+	 * kernel sebelum konsol hidup. */
 	psci {
 		compatible = "arm,psci-0.2";
-		method = "smc";
+		method = "hvc";
 	};
 
 	/* Generic timer */
@@ -99,12 +125,17 @@
 		always-on;
 	};
 
-	/* GICv3 interrupt controller at standard virt location */
+	/* GICv3 persis peta QEMU virt: GICD @ 0x08000000, GICR @ 0x08010000 */
 	gic: interrupt-controller@8000000 {
 		compatible = "arm,gic-v3";
+		/* Alamat persis base_memmap QEMU 6.2 hw/arm/virt.c: GICD @0x08000000,
+		 * GICR @0x080A0000 (0xF60000 = 123 redist x 0x20000, berakhir tepat
+		 * di UART 0x09000000). GICR lama @0x08010000 jatuh di area
+		 * VIRT_GIC_CPU yang TIDAK dipetakan QEMU pada mode gicv3 — probe GIC
+		 * menggantung di redistributor tak terpetakan SEBELUM konsol hvc
+		 * hidup (run 40094005980: boot kustom 0 byte, 240s timeout). */
 		reg = <0x0 0x8000000 0 0x10000>,   /* GICD */
-		      <0x0 0x8010000 0 0x100000>,  /* GICR */
-		      <0x0 0x8020000 0 0x10000>;   /* GICC/CPU interface */
+		      <0x0 0x80a0000 0 0xf60000>;  /* GICR */
 		#interrupt-cells = <3>;
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -115,10 +146,42 @@
 		interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
+	/* GICv3 ITS (MSI) — alamat virt.c VIRT_GIC_ITS. Syarat utama virtio-pci
+	 * memakai MSI-X; tanpa ITS, konsol hvc0 tetap bisa jalan via INTx,
+	 * tetapi PCI butuh interrupt-map (sengaja tidak ditulis, lihat node
+	 * pcie) — jadi ITS dicantumkan agar jalur MSI lengkap. */
+	its: its@8080000 {
+		compatible = "arm,gic-v3-its";
+		msi-controller;
+		reg = <0x0 0x8080000 0 0x20000>;
+	};
+
+	/* Host PCIe virt (GPEX/ECAM) — properti & alamat identik keluaran
+	 * QEMU 6.2 virt.c dengan highmem=off (rentang hanya PIO + MMIO32).
+	 * Sebelumnya DTB kustom TIDAK punya PCIe sama sekali: perangkat
+	 * -device virtio-serial-pci tak pernah terenumerasi sehingga hvc0
+	 * tidak pernah ada dan boot kustom mustahil menampilkan apa pun. */
+	pcie: pcie@10000000 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		#interrupt-cells = <1>;
+		linux,pci-domain = <0>;
+		bus-range = <0 0>;
+		dma-coherent;
+		reg = <0x0 0x3f000000 0x0 0x1000000>; /* ECAM */
+		ranges =
+			<0x01000000 0x0 0x0        0x0 0x3eff0000 0x0 0x10000>,
+			<0x02000000 0x0 0x10000000 0x0 0x10000000 0x0 0x2eff0000>;
+		msi-parent = <&its>;
+	};
+
 	/* System control / global registers for clock gating */
 	syscon: syscon@32070000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x32070000 0 0x1000>;
+		status = "disabled"; /* fase 1: core-only, lihat catatan kepala file */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x32070000 0x1000>;
@@ -133,11 +196,11 @@
 		};
 	};
 
-	/* PL011 UART at 0x40200000 (console) */
-	serial0: serial@40200000 {
+	/* PL011 UART di alamat asli QEMU virt (0x09000000, SPI 1) */
+	serial0: serial@9000000 {
 		compatible = "arm,pl011", "arm,primecell";
-		reg = <0x0 0x40200000 0 0x1000>;
-		interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
+		reg = <0x0 0x9000000 0 0x1000>;
+		interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&uart0_clk>, <&uart0_clk>;
 		clock-names = "uartclk", "apb_pclk";
 		status = "okay";
@@ -158,7 +221,11 @@
 		clock-output-names = "ext-26m";
 	};
 
-	/* MUSB USB OTG at 0x5FFF0000 */
+	/*
+	 * MUSB USB OTG @ 0x5fff0000 — ADA DI DALAM RAM QEMU
+	 * (0x40000000..0xbfffffff). QEMU tidak punya blok MUSB, jadi tulisan
+	 * register driver akan mengubah memori tamu. Disabled.
+	 */
 	usb: usb@5fff0000 {
 		compatible = "sprd,sharkl5pro-musb", "sprd,sharkl3-musb";
 		reg = <0x0 0x5fff0000 0 0x2000>;
@@ -169,14 +236,13 @@
 		dr_mode = "peripheral";
 		multipoint = "true";
 		wakeup-source;
-		status = "okay";
+		status = "disabled";
 
-		/* Stub PHY for QEMU - will use dummy_hcd in kernel */
 		usb-phy = <&hsphy>;
 		phy-names = "usb";
 	};
 
-	/* USB PHY at 0x323B0000 - stub for QEMU */
+	/* USB PHY @ 0x323b0000 — konsumen (musb) disabled, ikut disabled */
 	hsphy: hsphy@323b0000 {
 		compatible = "sprd,sharkl5-phy", "sprd,sharkl5pro-phy";
 		reg = <0x0 0x323b0000 0 0x1000>;
@@ -186,13 +252,14 @@
 		sprd,vdd-voltage = <3050000>;
 		extcon = <&extcon_usb>;
 		#phy-cells = <0>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	/* AON APB registers for USB PHY enable */
 	aon_apb_regs: syscon@327d0000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x327d0000 0 0x3000>;
+		status = "disabled"; /* fase 1: core-only */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x327d0000 0x3000>;
@@ -210,6 +277,7 @@
 	anlg_phy_g2_regs: syscon@323b0000 {
 		compatible = "sprd,ums512-glbregs", "syscon", "simple-mfd";
 		reg = <0x0 0x323b0000 0 0x3000>;
+		status = "disabled"; /* fase 1: core-only */
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0 0 0x323b0000 0x3000>;
@@ -219,7 +287,7 @@
 	extcon_usb: extcon-gpio {
 		compatible = "linux,extcon-usb-gpio";
 		vbus-gpio = <&pmic_eic 0 GPIO_ACTIVE_HIGH>;
-		status = "okay";
+		status = "disabled"; /* fase 1: core-only */
 	};
 
 	/* SC2730 PMIC at 0x32100000 (I2C 0x6B) - stubbed for QEMU */
@@ -231,7 +299,7 @@
 		clocks = <&ext_26m>;
 		#address-cells = <1>;
 		#size-cells = <0>;
-		status = "okay";
+		status = "disabled"; /* fase 1: core-only (kandidat hang probe i2c-sprd) */
 
 		/* SC2730 PMIC on I2C bus at address 0x6B */
 		sc2730_pmic: pmic@6b {
@@ -313,8 +381,17 @@
 		};
 	};
 
-	/* eMMC/SD at 0x70700000 (SDHCI) */
+	/*
+	 * eMMC/SD stub @ 0x70700000 — JUGA di dalam RAM QEMU dan QEMU tidak
+	 * mempunya blok SDHCI Sprd. Disabled (lihat catatan di kepala file).
+	 * Uji eMMC CMDQ tetap butuh hardware asli.
+	 */
 	sdhci0: mmc@70700000 {
 		compatible = "sprd,sdhci-r11", "generic-sdhci";
 		reg = <0x0 0x70700000 0 0x1000>;
-		interrup
+		interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
+		bus-width = <8>;
+		non-removable;
+		status = "disabled";
+	};
+};

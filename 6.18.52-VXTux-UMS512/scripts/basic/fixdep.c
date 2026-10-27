@@ -291,8 +291,9 @@ static void parse_dep_file(char *p, const char *target)
 			}
 			continue;
 		case ' ':
-		case '\t':
-			/* skip whitespaces */
+		case '	':
+		case '\r':
+			/* skip whitespaces (incl. stray CR from MinGW-generated .d) */
 			p++;
 			continue;
 		case '\\':
@@ -300,7 +301,7 @@ static void parse_dep_file(char *p, const char *target)
 			 * backslash/newline combinations continue the
 			 * statement. Skip it just like a whitespace.
 			 */
-			if (*(p + 1) == '\n') {
+			if (*(p + 1) == '\n' || *(p + 1) == '\r') {
 				p += 2;
 				continue;
 			}
@@ -327,13 +328,13 @@ static void parse_dep_file(char *p, const char *target)
 
 		/* find the end of the token */
 		q = p;
-		while (*q != ' ' && *q != '\t' && *q != '\n' && *q != '#' && *q != ':') {
+		while (*q != ' ' && *q != '	' && *q != '\n' && *q != '\r' && *q != '#' && *q != ':') {
 			if (*q == '\\') {
 				/*
 				 * backslash/newline combinations work like as
 				 * a whitespace, so this is the end of token.
 				 */
-				if (*(q + 1) == '\n')
+				if (*(q + 1) == '\n' || *(q + 1) == '\r')
 					break;
 
 				/* escaped special characters */

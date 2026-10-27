@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# drivers/vxtux/debug/Kconfig — instrumen diagnostik boot
+
+config VXTUX_LKFB
+	bool "Framebuffer LK sebagai fbdev (teks console di layar)"
+	depends on VXTUX_DRIVERS
+	depends on FB
+	depends on FRAMEBUFFER_CONSOLE
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	# fb_io_read/fb_io_write/fb_io_mmap dari FB_DEFAULT_IOMEM_OPS
+	# dibangun hanya oleh fb_io_fops.o; tanpa ini link vmlinux gagal
+	# dengan "undefined reference to fb_io_read" (CI 40322990302).
+	select FB_IOMEM_FOPS
+	help
+	  Mendaftarkan framebuffer yang sudah dipindai DISPC
+	  (lcd_base=0x9e000000, 1200x2000 XRGB8888) sebagai perangkat
+	  fbdev, sehingga fbcon mengikat diri dan seluruh pesan
+	  `console=tty0` tercetak di panel — di bawah output terakhir LK
+	  ("INFO: LOCK FLAG IS : UNLOCK!!!").
+
+	  Tanpa ini console=tty0 hanya menulis ke konsol maya: tree tidak
+	  punya CONFIG_FB_SIMPLE (stok tak menaruh node simple-framebuffer
+	  di DTB buatan LK) dan DRM SPRD DPU tidak pernah probe, jadi layar
+	  tetap diam di logo LK walau kernel sudah boot jauh.
+
+	  Memori fb-nya direservasi lewat early_param vxtuxfb=...
+	  (vxtux_beacon.c).  Default n; nyalakan saat memburu boot.
+
+config VXTUX_BEACON
+	bool "Indikator tahap boot di framebuffer LK (diagnostik)"
+	depends on PRINTK
+	help
+	  Mengecat satu kotak putih tambahan ke framebuffer LK pada setiap
+	  tahap initcall (early, core, postcore, arch, subsys, fs, device,
+	  late), sehingga kemajuan boot bisa dibaca langsung dari layar:
+	  hitung kotak putihnya. Pita merah di atas = panic.
+
+	  Ini satu-satunya kanal keluaran yang tersedia SEBELUM driver eMMC
+	  probe (UART tablet tidak diekspos sebagai COM, dan partisi cache
+	  belum bisa ditulis). Buffer framebuffer direservasi lewat
+	  early_param vxtuxfb=..., karena DT stok tidak menandainya.
+
+	  Default n; nyalakan hanya saat memburu masalah boot.
+
+config VXTUX_FLIGHTREC
+	bool "Perekam log boot ke partisi cache (diagnostik)"
+	depends on PRINTK
+	depends on BLOCK
+	help
+	  Menyalin isi log buffer kernel (dmesg) ke partisi `cache`
+	  (mmcblk0p49, offset 8 MiB) setiap ~3 detik dari sebuah kthread,
+	  dan sekali lagi saat panic.
+
+	  Gunanya: boot yang menggantung sebelum userspace tidak
+	  meninggalkan jejak apa pun — layar tetap di logo LK, tidak ada
+	  panic, partisi cache kosong. Dengan perekam ini, initcall
+	  terakhir yang sempat berjalan tetap terekam (cmdline memuat
+	  initcall_debug=1) dan bisa dibaca lewat dump partisi cache.
+
+	  Hasilnya ditandai magic "VXTUXFR1". Default n; nyalakan hanya
+	  saat memburu masalah boot karena menulis ke eMMC terus-menerus.

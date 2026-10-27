@@ -1,0 +1,830 @@
+; in_iqmode @ 0x30 (152 B)
+  0x0030: sub      sp, sp, #0x20
+  0x0034: str      x30, [x18], #8
+  0x0038: stp      x29, x30, [sp, #0x10]
+  0x003c: add      x29, sp, #0x10
+  0x0040: adrp     x8, #0  SHN_UNDEF page +0x0
+  0x0044: ldr      x8, [x8]  [SHN_UNDEF+0x0]
+  0x0048: adrp     x0, #0  .rodata page +0x293
+  0x004c: add      x0, x0, #0  &.rodata+0x293
+  0x0050: mov      x1, xzr
+  0x0054: str      x8, [sp, #8]
+  0x0058: str      xzr, [sp]
+  0x005c: bl       #0x5c  -> of_find_node_opts_by_path
+  0x0060: adrp     x1, #0  .rodata page +0x30
+  0x0064: add      x1, x1, #0  &.rodata+0x30
+  0x0068: mov      x2, sp
+  0x006c: bl       #0x6c  -> of_property_read_string
+  0x0070: cbnz     w0, #0xb0
+  0x0074: ldr      x0, [sp]
+  0x0078: adrp     x1, #0  .rodata page +0x173
+  0x007c: add      x1, x1, #0  &.rodata+0x173
+  0x0080: bl       #0x80  -> strstr
+  0x0084: cmp      x0, #0
+  0x0088: cset     w0, ne
+  0x008c: adrp     x9, #0  SHN_UNDEF page +0x0
+  0x0090: ldr      x8, [sp, #8]
+  0x0094: ldr      x9, [x9]  [SHN_UNDEF+0x0]
+  0x0098: cmp      x9, x8
+  0x009c: b.ne     #0xc4
+  0x00a0: ldp      x29, x30, [sp, #0x10]
+  0x00a4: ldr      x30, [x18, #-8]!
+  0x00a8: add      sp, sp, #0x20
+  0x00ac: ret      
+  0x00b0: adrp     x0, #0  .rodata page +0x1c7
+  0x00b4: add      x0, x0, #0  &.rodata+0x1c7
+  0x00b8: bl       #0xb8  -> printk
+  0x00bc: mov      w0, wzr
+  0x00c0: b        #0x8c
+  0x00c4: bl       #0xc4  -> __stack_chk_fail
+
+; sprd_iq_probe @ 0xc8 (840 B)
+  0x00c8: sub      sp, sp, #0xa0
+  0x00cc: str      x30, [x18], #8
+  0x00d0: stp      x29, x30, [sp, #0x70]
+  0x00d4: str      x21, [sp, #0x80]
+  0x00d8: stp      x20, x19, [sp, #0x90]
+  0x00dc: add      x29, sp, #0x70
+  0x00e0: adrp     x8, #0  SHN_UNDEF page +0x0
+  0x00e4: ldr      x8, [x8]  [SHN_UNDEF+0x0]
+  0x00e8: mov      x19, x0
+  0x00ec: adrp     x0, #0  .rodata page +0x293
+  0x00f0: add      x0, x0, #0  &.rodata+0x293
+  0x00f4: mov      x1, xzr
+  0x00f8: stur     x8, [x29, #-8]
+  0x00fc: str      xzr, [sp]
+  0x0100: bl       #0x100  -> of_find_node_opts_by_path
+  0x0104: adrp     x1, #0  .rodata page +0x30
+  0x0108: add      x1, x1, #0  &.rodata+0x30
+  0x010c: mov      x2, sp
+  0x0110: bl       #0x110  -> of_property_read_string
+  0x0114: cbnz     w0, #0x244
+  0x0118: ldr      x0, [sp]
+  0x011c: adrp     x1, #0  .rodata page +0x173
+  0x0120: add      x1, x1, #0  &.rodata+0x173
+  0x0124: bl       #0x124  -> strstr
+  0x0128: cbz      x0, #0x250
+  0x012c: adrp     x0, #0  .rodata page +0x247
+  0x0130: add      x0, x0, #0  &.rodata+0x247
+  0x0134: bl       #0x134  -> printk
+  0x0138: adrp     x8, #0  .bss page +0x10
+  0x013c: ldr      x8, [x8]  [.bss+0x10]
+  0x0140: cbz      x8, #0x290
+  0x0144: adrp     x8, #0  SHN_UNDEF page +0x38
+  0x0148: ldr      x0, [x8]  [SHN_UNDEF+0x38]
+  0x014c: mov      w1, #0xdc0
+  0x0150: mov      w2, #0x18
+  0x0154: bl       #0x154  -> kmem_cache_alloc_trace
+  0x0158: adrp     x21, #0  .bss page +0x38
+  0x015c: str      x0, [x21]  [.bss+0x38]
+  0x0160: cbz      x0, #0x2d0
+  0x0164: adrp     x0, #0  .data page +0xf0
+  0x0168: adrp     x8, #0  .bss page +0xc
+  0x016c: add      x0, x0, #0  &.data+0xf0
+  0x0170: str      wzr, [x8]  [.bss+0xc]
+  0x0174: bl       #0x174  -> misc_register
+  0x0178: cbnz     w0, #0x30c
+  0x017c: adrp     x20, #0  .bss page +0x10
+  0x0180: add      x20, x20, #0  &.bss+0x10
+  0x0184: adrp     x1, #0  .rodata page +0x34c
+  0x0188: adrp     x2, #0  .bss page +0x60
+  0x018c: add      x1, x1, #0  &.rodata+0x34c
+  0x0190: add      x0, x20, #0x38
+  0x0194: add      x2, x2, #0  &.bss+0x60
+  0x0198: bl       #0x198  -> __init_waitqueue_head
+  0x019c: ldp      x2, x3, [x20]
+  0x01a0: mov      w0, #5
+  0x01a4: mov      w1, wzr
+  0x01a8: bl       #0x1a8  -> shmem_ram_vmap_nocache_ex
+  0x01ac: str      x0, [x20, #0x18]
+  0x01b0: cbz      x0, #0x2d8
+  0x01b4: adrp     x20, #0  .bss page +0x8
+  0x01b8: add      x20, x20, #0  &.bss+0x8
+  0x01bc: ldr      x8, [x20, #0x30]
+  0x01c0: mov      x1, xzr
+  0x01c4: str      x0, [x8]
+  0x01c8: ldr      x8, [x20, #0x20]
+  0x01cc: ldr      x9, [x20, #0x10]
+  0x01d0: ldr      x10, [x20, #0x30]
+  0x01d4: adrp     x0, #0  .text page +0x1d4
+  0x01d8: add      x0, x0, #0  &.text+0x11d4
+  0x01dc: add      x8, x8, x9
+  0x01e0: sub      x8, x8, #0x10
+  0x01e4: str      x8, [x10, #8]
+  0x01e8: ldr      x8, [x20, #0x30]
+  0x01ec: mov      w9, #0x5a5a
+  0x01f0: movk     w9, #0x5a5a, lsl #16
+  0x01f4: ldr      x8, [x8]
+  0x01f8: str      w9, [x8]
+  0x01fc: ldr      x8, [x20, #0x30]
+  0x0200: ldr      x8, [x8, #8]
+  0x0204: str      w9, [x8]
+  0x0208: bl       #0x208  -> kernel_vser_register_callback
+  0x020c: adrp     x0, #0  .text page +0x1d8
+  0x0210: adrp     x3, #0  .rodata page +0x289
+  0x0214: add      x0, x0, #0  &.text+0x11d8
+  0x0218: add      x3, x3, #0  &.rodata+0x289
+  0x021c: mov      w2, #-1
+  0x0220: mov      x1, x20
+  0x0224: bl       #0x224  -> kthread_create_on_node
+  0x0228: cmn      x0, #0xfff
+  0x022c: str      x0, [x20, #0x38]
+  0x0230: b.hs     #0x394
+  0x0234: str      x20, [x19, #0xa8]
+  0x0238: bl       #0x238  -> wake_up_process
+  0x023c: mov      w20, wzr
+  0x0240: b        #0x260
+  0x0244: adrp     x0, #0  .rodata page +0x1c7
+  0x0248: add      x0, x0, #0  &.rodata+0x1c7
+  0x024c: bl       #0x24c  -> printk
+  0x0250: adrp     x0, #0  .rodata page +0x76
+  0x0254: add      x0, x0, #0  &.rodata+0x76
+  0x0258: bl       #0x258  -> printk
+  0x025c: mov      w20, #-0x13
+  0x0260: adrp     x9, #0  SHN_UNDEF page +0x0
+  0x0264: ldur     x8, [x29, #-8]
+  0x0268: ldr      x9, [x9]  [SHN_UNDEF+0x0]
+  0x026c: cmp      x9, x8
+  0x0270: b.ne     #0x40c
+  0x0274: ldp      x29, x30, [sp, #0x70]
+  0x0278: mov      w0, w20
+  0x027c: ldp      x20, x19, [sp, #0x90]
+  0x0280: ldr      x21, [sp, #0x80]
+  0x0284: ldr      x30, [x18, #-8]!
+  0x0288: add      sp, sp, #0xa0
+  0x028c: ret      
+  0x0290: stur     wzr, [x29, #-0xc]
+  0x0294: stp      xzr, xzr, [sp, #0x50]
+  0x0298: stp      xzr, xzr, [sp, #0x40]
+  0x029c: stp      xzr, xzr, [sp, #0x30]
+  0x02a0: stp      xzr, xzr, [sp, #0x20]
+  0x02a4: stp      xzr, xzr, [sp, #0x10]
+  0x02a8: stp      xzr, xzr, [sp]
+  0x02ac: cbz      x19, #0x2f4
+  0x02b0: ldr      x20, [x19, #0x310]
+  0x02b4: cbz      x20, #0x2f4
+  0x02b8: adrp     x1, #0  .rodata page +0xec
+  0x02bc: add      x1, x1, #0  &.rodata+0xec
+  0x02c0: mov      x0, x20
+  0x02c4: mov      w2, wzr
+  0x02c8: bl       #0x2c8  -> of_parse_phandle
+  0x02cc: cbnz     x0, #0x328
+  0x02d0: mov      w20, #-0xc
+  0x02d4: b        #0x260
+  0x02d8: mov      w20, #-0xc
+  0x02dc: adrp     x0, #0  .data page +0xf0
+  0x02e0: add      x0, x0, #0  &.data+0xf0
+  0x02e4: bl       #0x2e4  -> misc_deregister
+  0x02e8: ldr      x0, [x21]  [.bss+0x38]
+  0x02ec: bl       #0x2ec  -> kfree
+  0x02f0: b        #0x260
+  0x02f4: adrp     x1, #0  .rodata page +0x37a
+  0x02f8: add      x1, x1, #0  &.rodata+0x37a
+  0x02fc: add      x0, x19, #0x10
+  0x0300: bl       #0x300  -> _dev_err
+  0x0304: mov      w20, #-0x16
+  0x0308: b        #0x260
+  0x030c: mov      w20, w0
+  0x0310: adrp     x1, #0  .rodata page +0x118
+  0x0314: add      x0, x19, #0x10
+  0x0318: add      x1, x1, #0  &.rodata+0x118
+  0x031c: mov      w2, w20
+  0x0320: bl       #0x320  -> _dev_err
+  0x0324: b        #0x2e8
+  0x0328: mov      x2, sp
+  0x032c: mov      w1, wzr
+  0x0330: bl       #0x330  -> of_address_to_resource
+  0x0334: cbnz     w0, #0x3c4
+  0x0338: ldp      x2, x8, [sp]
+  0x033c: adrp     x21, #0  .bss page +0x10
+  0x0340: adrp     x1, #0  .rodata page +0xf8
+  0x0344: add      x21, x21, #0  &.bss+0x10
+  0x0348: sub      x8, x8, x2
+  0x034c: add      x3, x8, #1
+  0x0350: add      x0, x19, #0x10
+  0x0354: add      x1, x1, #0  &.rodata+0xf8
+  0x0358: stp      x2, x3, [x21]
+  0x035c: bl       #0x35c  -> _dev_info
+  0x0360: adrp     x1, #0  .rodata page +0x1f3
+  0x0364: add      x1, x1, #0  &.rodata+0x1f3
+  0x0368: sub      x2, x29, #0xc
+  0x036c: mov      w3, #1
+  0x0370: mov      x0, x20
+  0x0374: mov      x4, xzr
+  0x0378: str      wzr, [x21, #0x10]
+  0x037c: bl       #0x37c  -> of_property_read_variable_u32_array
+  0x0380: tbnz     w0, #0x1f, #0x3d0
+  0x0384: ldur     w2, [x29, #-0xc]
+  0x0388: adrp     x8, #0  .bss page +0x20
+  0x038c: str      w2, [x8]  [.bss+0x20]
+  0x0390: b        #0x3d8
+  0x0394: adrp     x1, #0  .rodata page +0x22e
+  0x0398: add      x0, x19, #0x10
+  0x039c: add      x1, x1, #0  &.rodata+0x22e
+  0x03a0: bl       #0x3a0  -> _dev_err
+  0x03a4: adrp     x8, #0  .bss page +0x28
+  0x03a8: add      x8, x8, #0  &.bss+0x28
+  0x03ac: ldr      x2, [x8]
+  0x03b0: ldr      w20, [x8, #0x18]
+  0x03b4: mov      w0, #5
+  0x03b8: mov      w1, wzr
+  0x03bc: bl       #0x3bc  -> shmem_ram_unmap_ex
+  0x03c0: b        #0x2dc
+  0x03c4: adrp     x1, #0  .rodata page +0x3e9
+  0x03c8: add      x1, x1, #0  &.rodata+0x3e9
+  0x03cc: b        #0x2fc
+  0x03d0: adrp     x8, #0  .bss page +0x20
+  0x03d4: ldr      w2, [x8]  [.bss+0x20]
+  0x03d8: adrp     x1, #0  .rodata page +0xd5
+  0x03dc: add      x0, x19, #0x10
+  0x03e0: add      x1, x1, #0  &.rodata+0xd5
+  0x03e4: bl       #0x3e4  -> _dev_info
+  0x03e8: ldr      w8, [x21]
+  0x03ec: ldr      w9, [x21, #0x10]
+  0x03f0: ldr      x11, [x21, #8]
+  0x03f4: adrp     x10, #0  .bss page +0x4
+  0x03f8: adrp     x12, #0  .bss page +0x0
+  0x03fc: add      w8, w9, w8
+  0x0400: str      w8, [x10]  [.bss+0x4]
+  0x0404: str      w11, [x12]  [.bss+0x0]
+  0x0408: b        #0x144
+  0x040c: bl       #0x40c  -> __stack_chk_fail
+
+; sprd_iq_remove @ 0x410 (80 B)
+  0x0410: str      x30, [x18], #8
+  0x0414: stp      x29, x30, [sp, #-0x10]!
+  0x0418: mov      x29, sp
+  0x041c: adrp     x8, #0  .bss page +0x28
+  0x0420: ldr      x8, [x8]  [.bss+0x28]
+  0x0424: cbnz     x8, #0x438
+  0x0428: mov      w0, #5
+  0x042c: mov      w1, wzr
+  0x0430: mov      x2, xzr
+  0x0434: bl       #0x434  -> shmem_ram_unmap_ex
+  0x0438: adrp     x8, #0  .bss page +0x38
+  0x043c: ldr      x0, [x8]  [.bss+0x38]
+  0x0440: bl       #0x440  -> kfree
+  0x0444: adrp     x0, #0  .data page +0xf0
+  0x0448: add      x0, x0, #0  &.data+0xf0
+  0x044c: bl       #0x44c  -> misc_deregister
+  0x0450: mov      w0, wzr
+  0x0454: ldp      x29, x30, [sp], #0x10
+  0x0458: ldr      x30, [x18, #-8]!
+  0x045c: ret      
+
+; iq_mem_poll @ 0x460 (260 B)
+  0x0460: str      x30, [x18], #8
+  0x0464: stp      x29, x30, [sp, #-0x30]!
+  0x0468: stp      x22, x21, [sp, #0x10]
+  0x046c: stp      x20, x19, [sp, #0x20]
+  0x0470: mov      x29, sp
+  0x0474: adrp     x22, #0  .bss page +0x38
+  0x0478: ldr      x8, [x22]  [.bss+0x38]
+  0x047c: ldr      x9, [x8]
+  0x0480: cbz      x9, #0x514
+  0x0484: ldr      x8, [x8, #8]
+  0x0488: cbz      x8, #0x514
+  0x048c: mov      x19, x1
+  0x0490: cbz      x1, #0x4cc
+  0x0494: ldr      x21, [x19]
+  0x0498: cbz      x21, #0x4cc
+  0x049c: mov      x20, x0
+  0x04a0: mov      x0, #0xb51f
+  0x04a4: movk     x0, #0x6cd7, lsl #16
+  0x04a8: movk     x0, #0xd6be, lsl #32
+  0x04ac: movk     x0, #0x8990, lsl #48
+  0x04b0: mov      x1, x21
+  0x04b4: bl       #0x4b4  -> __cfi_slowpath
+  0x04b8: adrp     x1, #0  .bss page +0x48
+  0x04bc: add      x1, x1, #0  &.bss+0x48
+  0x04c0: mov      x0, x20
+  0x04c4: mov      x2, x19
+  0x04c8: blr      x21
+  0x04cc: adrp     x8, #0  .bss page +0xc
+  0x04d0: ldr      w8, [x8]  [.bss+0xc]
+  0x04d4: cmp      w8, #2
+  0x04d8: b.eq     #0x51c
+  0x04dc: cmp      w8, #1
+  0x04e0: b.ne     #0x538
+  0x04e4: ldr      x8, [x22]  [.bss+0x38]
+  0x04e8: ldr      x9, [x8]
+  0x04ec: ldr      w10, [x9]
+  0x04f0: mov      w9, #0x5a00
+  0x04f4: movk     w9, #0x8100, lsl #16
+  0x04f8: cmp      w10, w9
+  0x04fc: b.eq     #0x54c
+  0x0500: ldr      x8, [x8, #8]
+  0x0504: ldr      w8, [x8]
+  0x0508: cmp      w8, w9
+  0x050c: b.ne     #0x538
+  0x0510: b        #0x54c
+  0x0514: mov      w0, #8
+  0x0518: b        #0x550
+  0x051c: ldr      x8, [x22]  [.bss+0x38]
+  0x0520: mov      w9, #0x4441
+  0x0524: movk     w9, #0x504d, lsl #16
+  0x0528: ldr      x8, [x8, #0x10]
+  0x052c: ldr      w8, [x8]
+  0x0530: cmp      w8, w9
+  0x0534: b.eq     #0x540
+  0x0538: mov      w0, wzr
+  0x053c: b        #0x550
+  0x0540: adrp     x0, #0  .rodata page +0x29b
+  0x0544: add      x0, x0, #0  &.rodata+0x29b
+  0x0548: bl       #0x548  -> printk
+  0x054c: mov      w0, #0x41
+  0x0550: ldp      x20, x19, [sp, #0x20]
+  0x0554: ldp      x22, x21, [sp, #0x10]
+  0x0558: ldp      x29, x30, [sp], #0x30
+  0x055c: ldr      x30, [x18, #-8]!
+  0x0560: ret      
+
+; iq_mem_ioctl @ 0x564 (768 B)
+  0x0564: sub      sp, sp, #0x40
+  0x0568: str      x30, [x18], #8
+  0x056c: stp      x29, x30, [sp, #0x10]
+  0x0570: str      x21, [sp, #0x20]
+  0x0574: stp      x20, x19, [sp, #0x30]
+  0x0578: add      x29, sp, #0x10
+  0x057c: adrp     x8, #0  SHN_UNDEF page +0x0
+  0x0580: ldr      x8, [x8]  [SHN_UNDEF+0x0]
+  0x0584: adrp     x0, #0  .rodata page +0x1a4
+  0x0588: add      x0, x0, #0  &.rodata+0x1a4
+  0x058c: mov      x19, x2
+  0x0590: mov      w20, w1
+  0x0594: str      x8, [sp, #8]
+  0x0598: str      xzr, [sp]
+  0x059c: bl       #0x59c  -> printk
+  0x05a0: adrp     x21, #0  .bss page +0x38
+  0x05a4: ldr      x8, [x21]  [.bss+0x38]
+  0x05a8: ldr      x10, [x8]
+  0x05ac: cbz      x10, #0x640
+  0x05b0: ldr      x9, [x8, #8]
+  0x05b4: cbz      x9, #0x640
+  0x05b8: cmp      w20, #0x7f
+  0x05bc: mov      x0, xzr
+  0x05c0: b.le     #0x670
+  0x05c4: cmp      w20, #0x80
+  0x05c8: b.eq     #0x6ac
+  0x05cc: cmp      w20, #0x82
+  0x05d0: b.eq     #0x710
+  0x05d4: cmp      w20, #0x83
+  0x05d8: b.ne     #0x644
+  0x05dc: adrp     x9, #0  .bss page +0xc
+  0x05e0: ldr      w9, [x9]  [.bss+0xc]
+  0x05e4: cmp      w9, #2
+  0x05e8: b.ne     #0x82c
+  0x05ec: ldr      x0, [x8, #0x10]
+  0x05f0: mov      x1, x19
+  0x05f4: bl       #0x5f4  -> 
+  0x05f8: cbnz     x0, #0x84c
+  0x05fc: ldr      x8, [x21]  [.bss+0x38]
+  0x0600: mov      w10, #0x5049
+  0x0604: movk     w10, #0x4443, lsl #16
+  0x0608: ldr      x9, [x8, #0x10]
+  0x060c: ldr      x8, [x8]
+  0x0610: ldr      w9, [x9, #8]
+  0x0614: str      w9, [x8, #8]
+  0x0618: ldr      x8, [x21]  [.bss+0x38]
+  0x061c: ldr      x9, [x8, #0x10]
+  0x0620: ldr      w9, [x9]
+  0x0624: cmp      w9, w10
+  0x0628: b.ne     #0x824
+  0x062c: ldr      x8, [x8]
+  0x0630: mov      w9, #0x434b
+  0x0634: mov      x0, xzr
+  0x0638: movk     w9, #0x424c, lsl #16
+  0x063c: b        #0x708
+  0x0640: mov      x0, #-1
+  0x0644: adrp     x9, #0  SHN_UNDEF page +0x0
+  0x0648: ldr      x8, [sp, #8]
+  0x064c: ldr      x9, [x9]  [SHN_UNDEF+0x0]
+  0x0650: cmp      x9, x8
+  0x0654: b.ne     #0x860
+  0x0658: ldp      x29, x30, [sp, #0x10]
+  0x065c: ldp      x20, x19, [sp, #0x30]
+  0x0660: ldr      x21, [sp, #0x20]
+  0x0664: ldr      x30, [x18, #-8]!
+  0x0668: add      sp, sp, #0x40
+  0x066c: ret      
+  0x0670: cbz      w20, #0x738
+  0x0674: cmp      w20, #1
+  0x0678: b.ne     #0x644
+  0x067c: adrp     x9, #0  .bss page +0xc
+  0x0680: ldr      w9, [x9]  [.bss+0xc]
+  0x0684: cmp      w9, #2
+  0x0688: b.ne     #0x82c
+  0x068c: ldr      x1, [x8, #0x10]
+  0x0690: mov      w2, #0x8c
+  0x0694: mov      x0, x19
+  0x0698: bl       #0x698  -> 
+  0x069c: cbz      x0, #0x644
+  0x06a0: adrp     x0, #0  .rodata page +0x39
+  0x06a4: add      x0, x0, #0  &.rodata+0x39
+  0x06a8: b        #0x854
+  0x06ac: cmp      x19, #2
+  0x06b0: b.hi     #0x838
+  0x06b4: adrp     x10, #0  .bss page +0xc
+  0x06b8: cmp      x19, #1
+  0x06bc: str      w19, [x10]  [.bss+0xc]
+  0x06c0: b.eq     #0x7e8
+  0x06c4: cmp      x19, #2
+  0x06c8: b.ne     #0x824
+  0x06cc: adrp     x9, #0  .bss page +0x10
+  0x06d0: add      x9, x9, #0  &.bss+0x10
+  0x06d4: ldr      x10, [x9, #0x18]
+  0x06d8: mov      x0, xzr
+  0x06dc: add      x10, x10, #0x10
+  0x06e0: str      x10, [x8, #0x10]
+  0x06e4: ldr      x8, [x9, #0x28]
+  0x06e8: ldr      w10, [x9]
+  0x06ec: ldr      x8, [x8]
+  0x06f0: add      w10, w10, #0x100
+  0x06f4: str      w10, [x8, #4]
+  0x06f8: ldr      x8, [x9, #0x28]
+  0x06fc: mov      w9, #0x504e
+  0x0700: movk     w9, #0x424f, lsl #16
+  0x0704: ldr      x8, [x8]
+  0x0708: str      w9, [x8]
+  0x070c: b        #0x644
+  0x0710: ldr      w11, [x10]
+  0x0714: mov      w8, #0x5a00
+  0x0718: movk     w8, #0x8100, lsl #16
+  0x071c: cmp      w11, w8
+  0x0720: b.ne     #0x774
+  0x0724: mov      w8, #0x5a5a
+  0x0728: movk     w8, #0x8181, lsl #16
+  0x072c: mov      x0, xzr
+  0x0730: str      w8, [x10]
+  0x0734: b        #0x644
+  0x0738: ldr      w12, [x10]
+  0x073c: mov      w11, #0x5a00
+  0x0740: movk     w11, #0x8100, lsl #16
+  0x0744: cmp      w12, w11
+  0x0748: b.ne     #0x794
+  0x074c: ldr      w9, [x10, #4]
+  0x0750: adrp     x10, #0  .bss page +0x10
+  0x0754: add      x10, x10, #0  &.bss+0x10
+  0x0758: ldr      w11, [x10]
+  0x075c: ldr      w10, [x10, #0x10]
+  0x0760: sub      w9, w9, w11
+  0x0764: sub      w9, w9, w10
+  0x0768: str      w9, [sp]
+  0x076c: ldr      x9, [x8]
+  0x0770: b        #0x7c0
+  0x0774: ldr      w10, [x9]
+  0x0778: cmp      w10, w8
+  0x077c: b.ne     #0x824
+  0x0780: mov      w8, #0x5a5a
+  0x0784: movk     w8, #0x8181, lsl #16
+  0x0788: mov      x0, xzr
+  0x078c: str      w8, [x9]
+  0x0790: b        #0x644
+  0x0794: ldr      w8, [x9]
+  0x0798: cmp      w8, w11
+  0x079c: b.ne     #0x7c8
+  0x07a0: adrp     x10, #0  .bss page +0x10
+  0x07a4: add      x10, x10, #0  &.bss+0x10
+  0x07a8: ldr      w8, [x9, #4]
+  0x07ac: ldr      w11, [x10]
+  0x07b0: ldr      w10, [x10, #0x10]
+  0x07b4: sub      w8, w8, w11
+  0x07b8: sub      w8, w8, w10
+  0x07bc: str      w8, [sp]
+  0x07c0: ldr      w8, [x9, #8]
+  0x07c4: str      w8, [sp, #4]
+  0x07c8: mov      x1, sp
+  0x07cc: mov      w2, #8
+  0x07d0: mov      x0, x19
+  0x07d4: bl       #0x7d4  -> 
+  0x07d8: cbz      x0, #0x644
+  0x07dc: adrp     x0, #0  .rodata page +0x140
+  0x07e0: add      x0, x0, #0  &.rodata+0x140
+  0x07e4: b        #0x854
+  0x07e8: ldr      x8, [x8]
+  0x07ec: ldr      w10, [x8]
+  0x07f0: mov      w8, #0x5a00
+  0x07f4: movk     w8, #0x8100, lsl #16
+  0x07f8: cmp      w10, w8
+  0x07fc: b.eq     #0x80c
+  0x0800: ldr      w9, [x9]
+  0x0804: cmp      w9, w8
+  0x0808: b.ne     #0x824
+  0x080c: adrp     x0, #0  .bss page +0x48
+  0x0810: add      x0, x0, #0  &.bss+0x48
+  0x0814: mov      w1, #1
+  0x0818: mov      w2, #1
+  0x081c: mov      x3, xzr
+  0x0820: bl       #0x820  -> __wake_up
+  0x0824: mov      x0, xzr
+  0x0828: b        #0x644
+  0x082c: adrp     x0, #0  .rodata page +0xa7
+  0x0830: add      x0, x0, #0  &.rodata+0xa7
+  0x0834: b        #0x840
+  0x0838: adrp     x0, #0  .rodata page +0x26a
+  0x083c: add      x0, x0, #0  &.rodata+0x26a
+  0x0840: bl       #0x840  -> printk
+  0x0844: mov      x0, #-0x16
+  0x0848: b        #0x644
+  0x084c: adrp     x0, #0  .rodata page +0x2ed
+  0x0850: add      x0, x0, #0  &.rodata+0x2ed
+  0x0854: bl       #0x854  -> printk
+  0x0858: mov      x0, #-0xe
+  0x085c: b        #0x644
+  0x0860: bl       #0x860  -> __stack_chk_fail
+
+; iq_mem_nocache_mmap @ 0x864 (188 B)
+  0x0864: str      x30, [x18], #8
+  0x0868: stp      x29, x30, [sp, #-0x20]!
+  0x086c: str      x19, [sp, #0x10]
+  0x0870: mov      x29, sp
+  0x0874: adrp     x8, #0  .bss page +0x10
+  0x0878: ldr      x8, [x8]  [.bss+0x10]
+  0x087c: cbnz     x8, #0x894
+  0x0880: adrp     x0, #0  .rodata page +0x355
+  0x0884: add      x0, x0, #0  &.rodata+0x355
+  0x0888: mov      x1, xzr
+  0x088c: bl       #0x88c  -> printk
+  0x0890: b        #0x90c
+  0x0894: mov      x19, x1
+  0x0898: ldp      x1, x9, [x1]
+  0x089c: adrp     x10, #0  .bss page +0x18
+  0x08a0: ldr      x10, [x10]  [.bss+0x18]
+  0x08a4: sub      x3, x9, x1
+  0x08a8: cmp      x3, x10
+  0x08ac: b.ls     #0x8bc
+  0x08b0: adrp     x0, #0  .rodata page +0x387
+  0x08b4: add      x0, x0, #0  &.rodata+0x387
+  0x08b8: b        #0x908
+  0x08bc: ldr      x9, [x19, #0x48]
+  0x08c0: lsr      x2, x8, #0xc
+  0x08c4: mov      x0, x19
+  0x08c8: and      x9, x9, #0xffffffffffffffe3
+  0x08cc: orr      x4, x9, #0x60000000000000
+  0x08d0: str      x4, [x19, #0x48]
+  0x08d4: bl       #0x8d4  -> remap_pfn_range
+  0x08d8: cbnz     w0, #0x900
+  0x08dc: ldr      w2, [x19]
+  0x08e0: ldr      w8, [x19, #8]
+  0x08e4: adrp     x0, #0  .rodata page +0x187
+  0x08e8: add      x0, x0, #0  &.rodata+0x187
+  0x08ec: mov      w1, #0xc
+  0x08f0: sub      w3, w8, w2
+  0x08f4: bl       #0x8f4  -> printk
+  0x08f8: mov      w0, wzr
+  0x08fc: b        #0x910
+  0x0900: adrp     x0, #0  .rodata page +0x2ca
+  0x0904: add      x0, x0, #0  &.rodata+0x2ca
+  0x0908: bl       #0x908  -> printk
+  0x090c: mov      w0, #-0xb
+  0x0910: ldr      x19, [sp, #0x10]
+  0x0914: ldp      x29, x30, [sp], #0x20
+  0x0918: ldr      x30, [x18, #-8]!
+  0x091c: ret      
+
+; iq_mem_open @ 0x920 (48 B)
+  0x0920: str      x30, [x18], #8
+  0x0924: stp      x29, x30, [sp, #-0x10]!
+  0x0928: mov      x29, sp
+  0x092c: adrp     x0, #0  .rodata page +0x91
+  0x0930: adrp     x1, #0  .rodata page +0x25e
+  0x0934: add      x0, x0, #0  &.rodata+0x91
+  0x0938: add      x1, x1, #0  &.rodata+0x25e
+  0x093c: bl       #0x93c  -> printk
+  0x0940: mov      w0, wzr
+  0x0944: ldp      x29, x30, [sp], #0x10
+  0x0948: ldr      x30, [x18, #-8]!
+  0x094c: ret      
+
+; iq_mem_release @ 0x950 (48 B)
+  0x0950: str      x30, [x18], #8
+  0x0954: stp      x29, x30, [sp, #-0x10]!
+  0x0958: mov      x29, sp
+  0x095c: adrp     x0, #0  .rodata page +0x91
+  0x0960: adrp     x1, #0  .rodata page +0x21f
+  0x0964: add      x0, x0, #0  &.rodata+0x91
+  0x0968: add      x1, x1, #0  &.rodata+0x21f
+  0x096c: bl       #0x96c  -> printk
+  0x0970: mov      w0, wzr
+  0x0974: ldp      x29, x30, [sp], #0x10
+  0x0978: ldr      x30, [x18, #-8]!
+  0x097c: ret      
+
+; sprd_iq_complete @ 0xc00 (204 B)
+  0x0c00: str      x30, [x18], #8
+  0x0c04: stp      x29, x30, [sp, #-0x20]!
+  0x0c08: stp      x20, x19, [sp, #0x10]
+  0x0c0c: mov      x29, sp
+  0x0c10: adrp     x8, #0  .bss page +0xc
+  0x0c14: ldr      w8, [x8]  [.bss+0xc]
+  0x0c18: cbz      w8, #0xc2c
+  0x0c1c: ldp      x20, x19, [sp, #0x10]
+  0x0c20: ldp      x29, x30, [sp], #0x20
+  0x0c24: ldr      x30, [x18, #-8]!
+  0x0c28: ret      
+  0x0c2c: mov      w19, w1
+  0x0c30: mov      x20, x0
+  0x0c34: adrp     x0, #0  .rodata page +0x10
+  0x0c38: add      x0, x0, #0  &.rodata+0x10
+  0x0c3c: mov      x1, x20
+  0x0c40: mov      w2, w19
+  0x0c44: bl       #0xc44  -> printk
+  0x0c48: adrp     x12, #0  .bss page +0x20
+  0x0c4c: add      x12, x12, #0  &.bss+0x20
+  0x0c50: ldr      x9, [x12, #0x18]
+  0x0c54: ldr      w10, [x12]
+  0x0c58: adrp     x14, #0  SHN_UNDEF page +0x0
+  0x0c5c: ldr      x11, [x14]  [SHN_UNDEF+0x0]
+  0x0c60: ldr      x13, [x9]
+  0x0c64: add      x8, x20, w19, uxtw
+  0x0c68: ldp      w15, w16, [x13, #4]
+  0x0c6c: sub      w15, w15, w10
+  0x0c70: add      w15, w15, w16
+  0x0c74: sub      x15, x15, x11
+  0x0c78: orr      x15, x15, #0xffffff8000000000
+  0x0c7c: cmp      x8, x15
+  0x0c80: b.ne     #0xc9c
+  0x0c84: mov      w9, #0x5a5a
+  0x0c88: movk     w9, #0x8181, lsl #16
+  0x0c8c: str      w9, [x13]
+  0x0c90: ldr      x9, [x12, #0x18]
+  0x0c94: ldr      w10, [x12]
+  0x0c98: ldr      x11, [x14]  [SHN_UNDEF+0x0]
+  0x0c9c: ldr      x9, [x9, #8]
+  0x0ca0: ldp      w12, w13, [x9, #4]
+  0x0ca4: sub      w10, w12, w10
+  0x0ca8: add      w10, w10, w13
+  0x0cac: sub      x10, x10, x11
+  0x0cb0: orr      x10, x10, #0xffffff8000000000
+  0x0cb4: cmp      x8, x10
+  0x0cb8: b.ne     #0xc1c
+  0x0cbc: mov      w8, #0x5a5a
+  0x0cc0: movk     w8, #0x8181, lsl #16
+  0x0cc4: str      w8, [x9]
+  0x0cc8: b        #0xc1c
+
+; sprd_iq_thread @ 0xccc (652 B)
+  0x0ccc: sub      sp, sp, #0x70
+  0x0cd0: str      x30, [x18], #8
+  0x0cd4: stp      x29, x30, [sp, #0x10]
+  0x0cd8: stp      x28, x27, [sp, #0x20]
+  0x0cdc: stp      x26, x25, [sp, #0x30]
+  0x0ce0: stp      x24, x23, [sp, #0x40]
+  0x0ce4: stp      x22, x21, [sp, #0x50]
+  0x0ce8: stp      x20, x19, [sp, #0x60]
+  0x0cec: add      x29, sp, #0x10
+  0x0cf0: adrp     x8, #0  SHN_UNDEF page +0x0
+  0x0cf4: ldr      x8, [x8]  [SHN_UNDEF+0x0]
+  0x0cf8: str      x8, [sp, #8]
+  0x0cfc: ldr      x24, [x0, #0x30]
+  0x0d00: mov      w8, #0x50
+  0x0d04: str      w8, [sp]
+  0x0d08: ldr      x8, [x24]
+  0x0d0c: cbz      x8, #0xd3c
+  0x0d10: ldr      x8, [x24, #8]
+  0x0d14: cbz      x8, #0xd3c
+  0x0d18: mov      x2, sp
+  0x0d1c: mov      w1, #2
+  0x0d20: mov      x19, x0
+  0x0d24: mrs      x0, sp_el0
+  0x0d28: bl       #0xd28  -> sched_setscheduler
+  0x0d2c: bl       #0xd2c  -> kthread_should_stop
+  0x0d30: tbz      w0, #0, #0xd78
+  0x0d34: mov      w0, wzr
+  0x0d38: b        #0xd40
+  0x0d3c: mov      w0, #-1
+  0x0d40: adrp     x9, #0  SHN_UNDEF page +0x0
+  0x0d44: ldr      x8, [sp, #8]
+  0x0d48: ldr      x9, [x9]  [SHN_UNDEF+0x0]
+  0x0d4c: cmp      x9, x8
+  0x0d50: b.ne     #0xf54
+  0x0d54: ldp      x29, x30, [sp, #0x10]
+  0x0d58: ldp      x20, x19, [sp, #0x60]
+  0x0d5c: ldp      x22, x21, [sp, #0x50]
+  0x0d60: ldp      x24, x23, [sp, #0x40]
+  0x0d64: ldp      x26, x25, [sp, #0x30]
+  0x0d68: ldp      x28, x27, [sp, #0x20]
+  0x0d6c: ldr      x30, [x18, #-8]!
+  0x0d70: add      sp, sp, #0x70
+  0x0d74: ret      
+  0x0d78: mov      w25, #0x5a00
+  0x0d7c: mov      w26, #0x8181
+  0x0d80: mov      w21, #0xd000
+  0x0d84: movk     w25, #0x8100, lsl #16
+  0x0d88: movk     w26, #0x5a5a, lsl #16
+  0x0d8c: add      x19, x19, #0x40
+  0x0d90: adrp     x27, #0  .bss page +0xc
+  0x0d94: movk     w21, #7, lsl #16
+  0x0d98: adrp     x20, #0  SHN_UNDEF page +0x0
+  0x0d9c: b        #0xdbc
+  0x0da0: mov      w1, #1
+  0x0da4: mov      w2, #1
+  0x0da8: mov      x0, x19
+  0x0dac: mov      x3, xzr
+  0x0db0: bl       #0xdb0  -> __wake_up
+  0x0db4: bl       #0xdb4  -> kthread_should_stop
+  0x0db8: tbnz     w0, #0, #0xd34
+  0x0dbc: ldr      w8, [x27]  [.bss+0xc]
+  0x0dc0: cmp      w8, #2
+  0x0dc4: b.ne     #0xe00
+  0x0dc8: ldr      x8, [x24, #0x10]
+  0x0dcc: mov      w10, #0x504d
+  0x0dd0: movk     w10, #0x4441, lsl #16
+  0x0dd4: ldr      w9, [x8]
+  0x0dd8: cmp      w9, w10
+  0x0ddc: b.ne     #0xe00
+  0x0de0: mov      w9, #0x4441
+  0x0de4: movk     w9, #0x504d, lsl #16
+  0x0de8: mov      w1, #1
+  0x0dec: mov      w2, #1
+  0x0df0: mov      x0, x19
+  0x0df4: mov      x3, xzr
+  0x0df8: str      w9, [x8]
+  0x0dfc: bl       #0xdfc  -> __wake_up
+  0x0e00: ldr      x8, [x24]
+  0x0e04: ldr      w2, [x8]
+  0x0e08: cmp      w2, w26
+  0x0e0c: b.ne     #0xe5c
+  0x0e10: str      w25, [x8]
+  0x0e14: ldr      w8, [x27]  [.bss+0xc]
+  0x0e18: cmp      w8, #1
+  0x0e1c: b.eq     #0xda0
+  0x0e20: cbnz     w8, #0xdb4
+  0x0e24: ldr      x8, [x24]
+  0x0e28: adrp     x9, #0  .bss page +0x20
+  0x0e2c: ldr      w9, [x9]  [.bss+0x20]
+  0x0e30: adrp     x0, #0  .rodata page +0x32c
+  0x0e34: ldp      w10, w22, [x8, #4]
+  0x0e38: add      x0, x0, #0  &.rodata+0x32c
+  0x0e3c: sub      w23, w10, w9
+  0x0e40: mov      w1, w23
+  0x0e44: mov      w2, w22
+  0x0e48: bl       #0xe48  -> printk
+  0x0e4c: cbz      w22, #0xdb4
+  0x0e50: mov      w28, wzr
+  0x0e54: mov      w8, w22
+  0x0e58: b        #0xec4
+  0x0e5c: ldr      x8, [x24, #8]
+  0x0e60: ldr      w3, [x8]
+  0x0e64: cmp      w3, w26
+  0x0e68: b.ne     #0xf38
+  0x0e6c: str      w25, [x8]
+  0x0e70: ldr      w8, [x27]  [.bss+0xc]
+  0x0e74: cmp      w8, #1
+  0x0e78: b.eq     #0xda0
+  0x0e7c: cbnz     w8, #0xdb4
+  0x0e80: ldr      x8, [x24, #8]
+  0x0e84: adrp     x9, #0  .bss page +0x20
+  0x0e88: ldr      w9, [x9]  [.bss+0x20]
+  0x0e8c: adrp     x0, #0  .rodata page +0x32c
+  0x0e90: ldp      w10, w22, [x8, #4]
+  0x0e94: add      x0, x0, #0  &.rodata+0x32c
+  0x0e98: sub      w23, w10, w9
+  0x0e9c: mov      w1, w23
+  0x0ea0: mov      w2, w22
+  0x0ea4: bl       #0xea4  -> printk
+  0x0ea8: cbz      w22, #0xdb4
+  0x0eac: mov      w28, wzr
+  0x0eb0: mov      w8, w22
+  0x0eb4: b        #0xf04
+  0x0eb8: add      w28, w28, w0
+  0x0ebc: subs     w8, w22, w28
+  0x0ec0: b.eq     #0xdb4
+  0x0ec4: ldr      x9, [x20]  [SHN_UNDEF+0x0]
+  0x0ec8: add      w10, w28, w23
+  0x0ecc: cmp      w8, w21
+  0x0ed0: csel     w1, w8, w21, lo
+  0x0ed4: sub      x9, x10, x9
+  0x0ed8: orr      x0, x9, #0xffffff8000000000
+  0x0edc: bl       #0xedc  -> vser_pass_user_write
+  0x0ee0: tbz      x0, #0x3f, #0xeb8
+  0x0ee4: mov      w0, #0xc8
+  0x0ee8: bl       #0xee8  -> msleep
+  0x0eec: subs     w8, w22, w28
+  0x0ef0: b.ne     #0xec4
+  0x0ef4: b        #0xdb4
+  0x0ef8: add      w28, w28, w0
+  0x0efc: subs     w8, w22, w28
+  0x0f00: b.eq     #0xdb4
+  0x0f04: ldr      x9, [x20]  [SHN_UNDEF+0x0]
+  0x0f08: add      w10, w28, w23
+  0x0f0c: cmp      w8, w21
+  0x0f10: csel     w1, w8, w21, lo
+  0x0f14: sub      x9, x10, x9
+  0x0f18: orr      x0, x9, #0xffffff8000000000
+  0x0f1c: bl       #0xf1c  -> vser_pass_user_write
+  0x0f20: tbz      x0, #0x3f, #0xef8
+  0x0f24: mov      w0, #0xc8
+  0x0f28: bl       #0xf28  -> msleep
+  0x0f2c: subs     w8, w22, w28
+  0x0f30: b.ne     #0xf04
+  0x0f34: b        #0xdb4
+  0x0f38: ldr      w1, [x27]  [.bss+0xc]
+  0x0f3c: adrp     x0, #0  .rodata page +0x3b4
+  0x0f40: add      x0, x0, #0  &.rodata+0x3b4
+  0x0f44: bl       #0xf44  -> printk
+  0x0f48: mov      w0, #0x5dc
+  0x0f4c: bl       #0xf4c  -> msleep
+  0x0f50: b        #0xdb4
+  0x0f54: bl       #0xf54  -> __stack_chk_fail
+

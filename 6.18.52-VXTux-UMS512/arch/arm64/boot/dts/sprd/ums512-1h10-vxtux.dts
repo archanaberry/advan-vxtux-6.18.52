@@ -915,6 +915,123 @@ charger@6b {
 		uid_end: uid-end@58 {
 			reg = <0x58 0x4>;
 		};
+
+		/* TICK11 — sel kalibrasi thermal/dvfs dari FDT stok (RE 1:1
+		 * donors/fdt_dump.py atas donors/stock_initramfs/stock.dtb,
+		 * node /efuse@800). Semua reg/bits persis stok; label = nama
+		 * node dengan - → _. Konsumen: sprd_thermal.c (thm_sign_cal/
+		 * thm_ratio_cal/sen_delta_cal via nvmem-cell-names), dvfs/gpu
+		 * (gpu-bin, dvfs-bin, cpu-flag) untuk port berikutnya.
+		 * thm1-sen5@2b: di stok namanya thm1-sen4@2b (duplikat nama
+		 * dengan @28) — direname agar label unik, reg tetap stok. */
+		thm0_sign: thm0-sign@38 {
+			reg = <0x38 0x1>;
+			bits = <0 1>;
+		};
+
+		thm0_ratio: thm0-ratio@38 {
+			reg = <0x38 0x1>;
+			bits = <1 7>;
+		};
+
+		thm0_sen0: thm0-sen0@39 {
+			reg = <0x39 0x1>;
+			bits = <0 8>;
+		};
+
+		thm0_sen1: thm0-sen1@41 {
+			reg = <0x41 0x1>;
+			bits = <0 8>;
+		};
+
+		thm0_sen2: thm0-sen2@40 {
+			reg = <0x40 0x1>;
+			bits = <0 8>;
+		};
+
+		thm0_sen3: thm0-sen3@43 {
+			reg = <0x43 0x1>;
+			bits = <0 8>;
+		};
+
+		thm0_sen4: thm0-sen4@42 {
+			reg = <0x42 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sign: thm1-sign@3c {
+			reg = <0x3c 0x1>;
+			bits = <0 1>;
+		};
+
+		thm1_ratio: thm1-ratio@3c {
+			reg = <0x3c 0x1>;
+			bits = <1 7>;
+		};
+
+		thm1_sen0: thm1-sen0@3d {
+			reg = <0x3d 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sen1: thm1-sen1@2f {
+			reg = <0x2f 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sen2: thm1-sen2@2e {
+			reg = <0x2e 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sen3: thm1-sen3@29 {
+			reg = <0x29 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sen4: thm1-sen4@28 {
+			reg = <0x28 0x1>;
+			bits = <0 8>;
+		};
+
+		thm1_sen5: thm1-sen4@2b {
+			reg = <0x2b 0x1>;
+			bits = <0 8>;
+		};
+
+		thm2_sign: thm2-sign@3e {
+			reg = <0x3e 0x1>;
+			bits = <0 1>;
+		};
+
+		thm2_ratio: thm2-ratio@3e {
+			reg = <0x3e 0x1>;
+			bits = <1 7>;
+		};
+
+		thm2_sen0: thm2-sen0@3f {
+			reg = <0x3f 0x1>;
+			bits = <0 8>;
+		};
+
+		gpu_bin: gpu-bin@1b {
+			reg = <0x1b 0x1>;
+			bits = <3 3>;
+		};
+
+		cpu_flag: cpu-flag@50 {
+			reg = <0x50 0x4>;
+		};
+
+		dvfs_bin_17: dvfs-bin@17 {
+			reg = <0x17 0x1>;
+			bits = <0 3>;
+		};
+
+		dvfs_bin_1b: dvfs-bin@1b {
+			reg = <0x1b 0x1>;
+			bits = <0 3>;
+		};
 	};
 
 	sprd_uid {
@@ -1100,6 +1217,372 @@ charger@6b {
 			polling-delay-passive = <0>;
 			polling-delay = <0>;
 			thermal-sensors = <&pmic_tsensor 1>;
+		};
+
+		/* ===== TICK11 — thermal DT chain 3/4 (RE 1:1 dari FDT stok) =====
+		 * Sumber: donors/fdt_dump.py atas donors/stock_initramfs/stock.dtb,
+		 * node /thermal-zones (bukti: donors/RE_THERMALZONES_stock.dtb.txt).
+		 * Semua zona berikut polling 0/0 persis stok: suhu dibaca on-demand
+		 * (governor hanya aktif lewat cooling-map / agregasi virtual sensor).
+		 * phandle stok → padanan: 0xc0 = thermal@32200000 (&ap_thm0),
+		 * 0xc1 = thermal@32210000 (&ap_thm1), 0xc2 = thermal@32220000
+		 * (&ap_thm2), 0xbb = virtual-sensor@0 (&virtual_sensor). */
+		prometheus6_tzone0: prometheus6-tzone0 {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm0 0>;
+		};
+
+		prometheus6_tzone1: prometheus6-tzone1 {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm0 1>;
+		};
+
+		prometheus7_thmzone: prometheus7-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm0 2>;
+		};
+
+		ank0_thmzone: ank0-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm0 3>;
+		};
+
+		ank1_thmzone: ank1-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm0 4>;
+		};
+
+		gpu_thmzone: gpu-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 0>;
+		};
+
+		ank2_thmzone: ank2-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 1>;
+		};
+
+		ank3_thmzone: ank3-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 2>;
+		};
+
+		ank4_thmzone: ank4-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 3>;
+		};
+
+		ank5_thmzone: ank5-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 4>;
+		};
+
+		cputop-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm1 5>;
+		};
+
+		gpuank2-thmzone {
+			polling-delay-passive = <0>;
+			polling-delay = <0>;
+			thermal-sensors = <&ap_thm2 0>;
+		};
+
+		/* Zona induk — satu-satunya zona ber-trips + cooling-map di stok
+		 * (phandle 0x17f). thermal-sensors = <0xbb 0x0> = virtual sensor id 0,
+		 * jadi semua zona thm0/1/2 di atas ikut teragregasi lewat node
+		 * /virtual-sensor@0 (thmzone-cells 0xc4..0xcd = ank0-5, prometheus6
+		 * tzone0/1, prometheus7, gpu). Trips: 70°C/85°C passive (hyst 1°C),
+		 * 110°C critical (hyst 2°C); sustainable-power = 5800 (persis stok).
+		 * cooling-map semua di trip 85°C: cpu@0 (kontribusi 1024), cpu@600
+		 * (682), cluster0/1-cooling (1024), gpu-cooling0 (1024) — persis
+		 * stok map0..map4. */
+		soc-thmzone {
+			polling-delay-passive = <100>;
+			polling-delay = <1000>;
+			sustainable-power = <5800>;
+			thermal-sensors = <&virtual_sensor 0>;
+
+			trips {
+				trip-point@0 {
+					temperature = <70000>;
+					hysteresis = <1000>;
+					type = "passive";
+				};
+
+				soc_trip1: trip-point@1 {
+					temperature = <85000>;
+					hysteresis = <1000>;
+					type = "passive";
+				};
+
+				soc_crit {
+					temperature = <110000>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+
+			cooling-maps {
+				map0 {
+					trip = <&soc_trip1>;
+					contribution = <1024>;
+					cooling-device = <&CPU0 0xffffffff 0xffffffff>;
+				};
+
+				map1 {
+					trip = <&soc_trip1>;
+					contribution = <682>;
+					cooling-device = <&CPU6 0xffffffff 0xffffffff>;
+				};
+
+				map2 {
+					trip = <&soc_trip1>;
+					contribution = <1024>;
+					cooling-device = <&cluster0_cooling 0xffffffff 0xffffffff>;
+				};
+
+				map3 {
+					trip = <&soc_trip1>;
+					contribution = <1024>;
+					cooling-device = <&cluster1_cooling 0xffffffff 0xffffffff>;
+				};
+
+				map4 {
+					trip = <&soc_trip1>;
+					contribution = <1024>;
+					cooling-device = <&gpu_cooling0 0xffffffff 0xffffffff>;
+				};
+			};
+		};
+	};
+
+	/* Virtual sensor (TICK11) — /virtual-sensor@0 stok, driver port
+		 * drivers/thermal/sprd/sprd_soc_thm.c (CONFIG_SPRD_SOC_THM, compatible
+		 * "virtual-thermal"). thmzone-cells: 10 phandle zona stok 0xc4..0xcd
+		 * dalam urutan persis stok (ank0, ank1, ank2, ank3, ank4, ank5,
+		 * prometheus6-tzone0, prometheus6-tzone1, prometheus7, gpu). */
+	virtual_sensor: virtual-sensor@0 {
+		compatible = "virtual-thermal";
+		#thermal-sensor-cells = <1>;
+		thmzone-cells = <&ank0_thmzone &ank1_thmzone
+				 &ank2_thmzone &ank3_thmzone &ank4_thmzone
+				 &ank5_thmzone &prometheus6_tzone0
+				 &prometheus6_tzone1 &prometheus7_thmzone
+				 &gpu_thmzone>;
+	};
+
+	/* Cooling devices (TICK11) — /cooling-devices + /gpu-cooling-devices
+		 * stok, RE 1:1 (properti leak/scale/dynamic persis angka stok).
+		 * cluster0/1-cooling: konsumen sprd_cpu_cooling.c (CONFIG_SPRD_CPU_
+		 * COOLING) yang memindai node "cooling-devices" by-name;
+		 * gpu-cooling0 (sprd,mali-power-model): konsumen sprd_gpu_cooling.c
+		 * yang memindai "gpu-cooling-devices". */
+	cooling-devices {
+		cluster0_cooling: cluster0-cooling {
+			compatible = "sprd,cluster-cooling";
+			#cooling-cells = <2>;
+			sprd,efuse-block7 = <0x7>;
+			sprd,efuse-block15 = <0xf>;
+			sprd,leak-core = <0x2 0x55 0x74d>;
+			sprd,leak-cluster = <0x2 0x55 0x9dc>;
+			sprd,core-temp-scale = <0x12 0xfffffb00 0x1780e 0xfffe136c>;
+			sprd,core-voltage-scale = <0x1e0 0xfffffc4b 0x2e2 0xffffff56>;
+			sprd,cluster-temp-scale = <0x16 0xfffff8e2 0x1d638 0xfff97a5e>;
+			sprd,cluster-voltage-scale = <0x313 0xfffff9a9 0x4cf 0xfffffed9>;
+			sprd,efuse-switch = <0x0>;
+			sprd,hotplug-period = <0xa>;
+			sprd,min-cpufreq = <0x96000>;
+			sprd,min-cpunum = <0x6>;
+			sprd,max-temp = <0x15f90>;
+			sprd,core-base = <0xf6e>;
+			sprd,cluster-base = <0xf38>;
+			sprd,dynamic-core = <0x39f 0x3e8 0x3e8>;
+			sprd,dynamic-cluster = <0xf6 0x3e8 0x3e8>;
+		};
+
+		cluster1_cooling: cluster1-cooling {
+			compatible = "sprd,cluster-cooling";
+			#cooling-cells = <2>;
+			sprd,efuse-block7 = <0x7>;
+			sprd,efuse-block15 = <0xf>;
+			sprd,leak-core = <0x8 0x55 0x7c0>;
+			sprd,leak-cluster = <0x8 0x55 0x810>;
+			sprd,core-temp-scale = <0x12 0xfffffb1b 0x16c58 0xfffd800d>;
+			sprd,core-voltage-scale = <0x16c 0xfffffd3c 0x23b 0xffffff80>;
+			sprd,cluster-temp-scale = <0x16 0xfffff8e2 0x1d638 0xfff97a5e>;
+			sprd,cluster-voltage-scale = <0x313 0xfffff9a9 0x4cf 0xfffffed9>;
+			sprd,efuse-switch = <0x0>;
+			sprd,hotplug-period = <0xa>;
+			sprd,min-cpufreq = <0x12c000>;
+			sprd,min-cpunum = <0x0>;
+			sprd,max-temp = <0x14c08>;
+			sprd,core-base = <0x2d20>;
+			sprd,cluster-base = <0xf38>;
+			sprd,dynamic-core = <0x11cc 0x3e8 0x3e8>;
+			sprd,dynamic-cluster = <0xf6 0x3e8 0x3e8>;
+		};
+	};
+
+	gpu-cooling-devices {
+		gpu_cooling0: gpu-cooling0 {
+			compatible = "sprd,mali-power-model";
+			#cooling-cells = <2>;
+			sprd,efuse-block7 = <0x7>;
+			sprd,efuse-block15 = <0xf>;
+			sprd,leak-core = <0x2 0x55 0x74d>;
+			sprd,leak-cluster = <0x2 0x55 0x9dc>;
+			sprd,temp-scale = <0x19 0xfffff764 0x2015f 0xfff4b1f8>;
+			sprd,voltage-scale = <0x321 0xfffff950 0x537 0xfffffebc>;
+			sprd,hotplug-period = <0x0>;
+			sprd,core-base = <0x247f>;
+			sprd,cluster-base = <0x3c6>;
+			sprd,dynamic-core = <0x1bee 0x352 0x320>;
+			sprd,dynamic-cluster = <0x17b0 0x300 0x384>;
+		};
+	};
+};
+
+/* ===== TICK11 — AP eFuse + 3 controller thermal (RE 1:1 dari FDT stok) =====
+ * Sumber: donors/fdt_dump.py atas donors/stock_initramfs/stock.dtb
+ * (bukti: donors/RE_THERMAL_stock.dtb.txt).
+ *  - /soc/aon/efuse@32240000 → driver drivers/nvmem/sprd-efuse.c
+ *    (CONFIG_NVMEM_SPRD_EFUSE, of_match "sprd,ums312-efuse").
+ *  - /soc/aon/thermal@32200000/32210000/32220000 → driver
+ *    drivers/thermal/sprd_thermal.c (CONFIG_SPRD_THERMAL=y BUILTIN,
+ *    of_match "sprd,ums512-thermal"). Sel kalibrasi diambil lewat
+ *    nvmem-cell-names "thm_sign_cal"/"thm_ratio_cal"/"sen_delta_cal"
+ *    dari node efuse@800 (cache eFuse) — nama sel persis dibaca driver
+ *    (sprd_thm_cal_read). reg anak &aon relatif terhadap bus
+ *    aon@32000000 (ranges <0 0 0x32000000 0x1000000>), persis konvensi
+ *    hwlock/ap_gpio di blok &aon atas. */
+&aon {
+	ap_efuse: efuse@240000 {
+		compatible = "sprd,ums312-efuse", "sprd,ums512-efuse";
+		reg = <0x240000 0x10000>;
+		clock-names = "enable";
+		clocks = <&aonapb_gate CLK_EFUSE_EB>;
+		hwlocks = <&hwlock 8>;
+	};
+
+	ap_thm0: thermal@200000 {
+		compatible = "sprd,ums512-thermal";
+		reg = <0x200000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clock-names = "enable";
+		clocks = <&aonapb_gate CLK_THM0_EB>;
+		#thermal-sensor-cells = <1>;
+		nvmem-cell-names = "thm_sign_cal", "thm_ratio_cal";
+		nvmem-cells = <&thm0_sign &thm0_ratio>;
+
+		sensor@0 {
+			reg = <0x0>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm0_sen0>;
+		};
+
+		sensor@1 {
+			reg = <0x1>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm0_sen1>;
+		};
+
+		sensor@2 {
+			reg = <0x2>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm0_sen2>;
+		};
+
+		sensor@3 {
+			reg = <0x3>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm0_sen3>;
+		};
+
+		sensor@4 {
+			reg = <0x4>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm0_sen4>;
+		};
+	};
+
+	ap_thm1: thermal@210000 {
+		compatible = "sprd,ums512-thermal";
+		reg = <0x210000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clock-names = "enable";
+		clocks = <&aonapb_gate CLK_THM1_EB>;
+		#thermal-sensor-cells = <1>;
+		nvmem-cell-names = "thm_sign_cal", "thm_ratio_cal";
+		nvmem-cells = <&thm1_sign &thm1_ratio>;
+
+		sensor@0 {
+			reg = <0x0>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen0>;
+		};
+
+		sensor@1 {
+			reg = <0x1>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen1>;
+		};
+
+		sensor@2 {
+			reg = <0x2>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen2>;
+		};
+
+		sensor@3 {
+			reg = <0x3>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen3>;
+		};
+
+		sensor@4 {
+			reg = <0x4>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen4>;
+		};
+
+		/* stok menyebut node ini thm1-sen4@2b (duplikat nama dengan
+		 * sensor@4) — sel keduanya dipakai sebagai sen_delta_cal id 5. */
+		sensor@5 {
+			reg = <0x5>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm1_sen5>;
+		};
+	};
+
+	ap_thm2: thermal@220000 {
+		compatible = "sprd,ums512-thermal";
+		reg = <0x220000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clock-names = "enable";
+		clocks = <&aonapb_gate CLK_THM2_EB>;
+		#thermal-sensor-cells = <1>;
+		nvmem-cell-names = "thm_sign_cal", "thm_ratio_cal";
+		nvmem-cells = <&thm2_sign &thm2_ratio>;
+
+		sensor@0 {
+			reg = <0x0>;
+			nvmem-cell-names = "sen_delta_cal";
+			nvmem-cells = <&thm2_sen0>;
 		};
 	};
 };
@@ -2130,3 +2613,46 @@ gpu_opp_table: opp-table {
 	};
 };
 
+
+/*
+ * Statistik tidur subsistem (blob stok sprd_power_stat.ko). Node asli di
+ * stock.dtb: /debugstat { compatible = "sprd,debugstat";
+ * soc_slp_cnt_reg = <0x2 0x784 0xff>; } dan 0x2 adalah phandle
+ * /soc/syscon@327e0000 -> label pmu_apb_regs (ums512.dtsi).
+ * Argumen 0x784 = offset register slp_cnt PMIC, 0xff = masknya.
+ */
+/ {
+	debugstat {
+		compatible = "sprd,debugstat";
+		soc_slp_cnt_reg = <&pmu_apb_regs 0x784 0xff>;
+	};
+
+	/*
+	 * Power debug (blob stok sprd_pdbg.ko).  Node asli di stock.dtb:
+	 * /debuglog { compatible = "sprd,debuglog"; ... } dan tiap properti
+	 * sprd,pdbg-irq-domain-* berisi NAMA irq-domain (bukan phandle) yang
+	 * dicocokkan driver dengan irq_desc->domain->name saat runtime.
+	 */
+	debuglog {
+		compatible = "sprd,debuglog";
+		sprd,pdbg-irq-domain-gic = "GICv3";
+		sprd,pdbg-irq-domain-gpio = "sprd-gpio";
+		sprd,pdbg-irq-domain-ana = "spi4.0";
+		sprd,pdbg-irq-domain-ana-eic = "32100000.spi:pmic@0:gpio@280";
+		sprd,pdbg-irq-domain-ap-eic-sync = "320200c0.gpio";
+	};
+};
+
+/*
+ * PMIC 7s reset (blob stok sprd_7sreset.ko).  Node stok:
+ * /soc/aon/spi@32100000/pmic@0/hw-reset@1bc0 dengan reg = <0x1bf8 0x1bc0>.
+ * Dua sel itu bukan range: index 0 = "reg" (dipakai keypad_mode pada semua
+ * PMIC kecuali SC2731), index 1 = register kontrol 0x1bc0 (semua atribut
+ * lain).  Bit/mask tiap atribut dibaca dari blob — docs/RE-SPRD-7SRESET.md.
+ */
+&sc2730_pmic {
+	hw_reset: hw-reset@1bc0 {
+		compatible = "sprd,sc2730-7sreset";
+		reg = <0x1bf8 0x1bc0>;
+	};
+};

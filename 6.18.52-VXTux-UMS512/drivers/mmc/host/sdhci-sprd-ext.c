@@ -17,6 +17,7 @@
 #include <linux/slab.h>
 #include <linux/ktime.h>
 
+#include <linux/kconfig.h>
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/ioctl.h>
@@ -34,6 +35,9 @@
 
 #include "sdhci.h"
 #include "mmc_hsq.h"
+#if IS_ENABLED(CONFIG_MMC_SWCQ)
+#include "mmc_swcq.h"
+#endif
 
 #define SPRD_WP_MAGIC_KEY	0x53505244	/* "SPRD" */
 #define SPRD_WP_MAX_DEVICES	256
@@ -157,11 +161,13 @@ irqreturn_t sdhci_sprd_irq(int irq, void *dev_id)
 
 /*
  * sdhci_sprd_send_command() - the blob's renamed sdhci_send_command().
+ *
+ * The body is NOT defined here: sdhci.c already provides and exports this
+ * exact forwarder (see the comment there).  Keeping a second copy worked
+ * while this file was a module, but breaks the moment CONFIG_MMC_SDHCI_SPRD=y
+ * links it into vmlinux -- "multiple definition of sdhci_sprd_send_command".
+ * One definition, in sdhci.c, works for both =m and =y.
  */
-bool sdhci_sprd_send_command(struct sdhci_host *host, struct mmc_command *cmd)
-{
-	return sdhci_sprd_send_command_body(host, cmd);
-}
 void sdhci_sprd_int_status(struct sdhci_host *host);
 void sdhci_sprd_signal_voltage_on_off(struct mmc_host *mmc, bool on);
 int sdhci_sprd_irq_request_swcq(struct sdhci_host *host);
@@ -912,20 +918,32 @@ EXPORT_SYMBOL_GPL(_sdhci_request_atomic);
 int mmc_hsq_swcq_init(struct sdhci_host *host, struct platform_device *pdev)
 {
 	struct mmc_hsq *hsq;
-	int ret;
 
 	/*
-	 * ponytail: the Unisoc software command queue (mmc_swcq.c, ~64 KB) is
-	 * not ported to 6.18, so eMMC hosts fall back to HSQ here. Swap in
-	 * mmc_swcq_init() once drivers/mmc/host/mmc_swcq.c is in the tree.
+	 * Decoded from the stock sdhci-sprd.ko (mmc_hsq_swcq_init @ 0x4af0):
+	 * eMMC hosts are the ones with
+	 *	(caps2 & (MMC_CAP2_NO_SDIO | MMC_CAP2_NO_SD)) == both,
+	 * which sdhci_sprd_probe() sets for non-removable controllers.  They
+	 * get the Unisoc software command queue; SD/SDIO hosts keep HSQ.
 	 */
+#if IS_ENABLED(CONFIG_MMC_SWCQ)
+	if ((host->mmc->caps2 & (MMC_CAP2_NO_SDIO | MMC_CAP2_NO_SD)) ==
+	    (MMC_CAP2_NO_SDIO | MMC_CAP2_NO_SD)) {
+		struct mmc_swcq *swcq;
+
+		swcq = devm_kzalloc(&pdev->dev, sizeof(*swcq), GFP_KERNEL);
+		if (!swcq)
+			return -ENOMEM;
+
+		return mmc_swcq_init(swcq, host->mmc);
+	}
+#endif
+
 	hsq = devm_kzalloc(&pdev->dev, sizeof(*hsq), GFP_KERNEL);
 	if (!hsq)
 		return -ENOMEM;
 
-	ret = mmc_hsq_init(hsq, host->mmc);
-
-	return ret;
+	return mmc_hsq_init(hsq, host->mmc);
 }
 EXPORT_SYMBOL_GPL(mmc_hsq_swcq_init);
 

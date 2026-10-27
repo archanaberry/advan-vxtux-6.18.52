@@ -1,0 +1,863 @@
+; in_iqmode @ 0x30 (152 B)
+        30:  sub      sp, sp, #0x20
+        34:  str      x30, [x18], #8
+        38:  stp      x29, x30, [sp, #0x10]
+        3c:  add      x29, sp, #0x10
+        40:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+        44:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+        48:  adrp     x0, #0  ; -> sym#136+0x293
+        4c:  add      x0, x0, #0  ; -> $d.87  '/chosen'
+        50:  mov      x1, xzr
+        54:  str      x8, [sp, #8]
+        58:  str      xzr, [sp]
+        5c:  bl       #0x5c  ; -> of_find_node_opts_by_path+0x0
+        60:  adrp     x1, #0  ; -> sym#136+0x30
+        64:  add      x1, x1, #0  ; -> $d.25  'bootargs'
+        68:  mov      x2, sp
+        6c:  bl       #0x6c  ; -> of_property_read_string+0x0
+        70:  cbnz     w0, #0xb0
+        74:  ldr      x0, [sp]
+        78:  adrp     x1, #0  ; -> sym#136+0x173
+        7c:  add      x1, x1, #0  ; -> $d.91+0x83  'androidboot.mode=iq'
+        80:  bl       #0x80  ; -> strstr+0x0
+        84:  cmp      x0, #0
+        88:  cset     w0, ne
+        8c:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+        90:  ldr      x8, [sp, #8]
+        94:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+        98:  cmp      x9, x8
+        9c:  b.ne     #0xc4  ; -> $d.60+0x4
+        a0:  ldp      x29, x30, [sp, #0x10]
+        a4:  ldr      x30, [x18, #-8]!
+        a8:  add      sp, sp, #0x20
+        ac:  ret      
+        b0:  adrp     x0, #0  ; -> sym#136+0x1c7
+        b4:  add      x0, x0, #0  ; -> $d.91+0xd7
+        b8:  bl       #0xb8  ; -> printk+0x0
+        bc:  mov      w0, wzr
+        c0:  b        #0x8c  ; -> __UNIQUE_ID_intree127+0x7
+        c4:  bl       #0xc4  ; -> __stack_chk_fail+0x0
+        c8:  sub      sp, sp, #0xa0
+
+; sprd_iq_probe @ 0xc8 (840 B)
+        c8:  sub      sp, sp, #0xa0
+        cc:  str      x30, [x18], #8
+        d0:  stp      x29, x30, [sp, #0x70]
+        d4:  str      x21, [sp, #0x80]
+        d8:  stp      x20, x19, [sp, #0x90]
+        dc:  add      x29, sp, #0x70
+        e0:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+        e4:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+        e8:  mov      x19, x0
+        ec:  adrp     x0, #0  ; -> sym#136+0x293
+        f0:  add      x0, x0, #0  ; -> $d.87  '/chosen'
+        f4:  mov      x1, xzr
+        f8:  stur     x8, [x29, #-8]
+        fc:  str      xzr, [sp]
+       100:  bl       #0x100  ; -> of_find_node_opts_by_path+0x0
+       104:  adrp     x1, #0  ; -> sym#136+0x30
+       108:  add      x1, x1, #0  ; -> $d.25  'bootargs'
+       10c:  mov      x2, sp
+       110:  bl       #0x110  ; -> of_property_read_string+0x0
+       114:  cbnz     w0, #0x244
+       118:  ldr      x0, [sp]
+       11c:  adrp     x1, #0  ; -> sym#136+0x173
+       120:  add      x1, x1, #0  ; -> $d.91+0x83  'androidboot.mode=iq'
+       124:  bl       #0x124  ; -> strstr+0x0
+       128:  cbz      x0, #0x250
+       12c:  adrp     x0, #0  ; -> sym#136+0x247
+       130:  add      x0, x0, #0  ; -> $d.91+0x157
+       134:  bl       #0x134  ; -> printk+0x0
+       138:  adrp     x8, #0  ; -> sym#134+0x10
+       13c:  ldr      x8, [x8]  ; sym#134+0x10
+       140:  cbz      x8, #0x290
+       144:  adrp     x8, #0  ; -> kmalloc_caches+0x38
+       148:  ldr      x0, [x8]  ; kmalloc_caches+0x38
+       14c:  mov      w1, #0xdc0
+       150:  mov      w2, #0x18
+       154:  bl       #0x154  ; -> kmem_cache_alloc_trace+0x0
+       158:  adrp     x21, #0  ; -> sym#134+0x38
+       15c:  str      x0, [x21]  ; sym#134+0x38
+       160:  cbz      x0, #0x2d0
+       164:  adrp     x0, #0  ; -> sym#135+0xf0
+       168:  adrp     x8, #0  ; -> sym#134+0xc
+       16c:  add      x0, x0, #0  ; -> $d.91  ',region'
+       170:  str      wzr, [x8]  ; sym#134+0xc
+       174:  bl       #0x174  ; -> misc_register+0x0
+       178:  cbnz     w0, #0x30c
+       17c:  adrp     x20, #0  ; -> sym#134+0x10
+       180:  add      x20, x20, #0  ; -> $d.13
+       184:  adrp     x1, #0  ; -> sym#136+0x34c
+       188:  adrp     x2, #0  ; -> sym#134+0x60
+       18c:  add      x1, x1, #0  ; -> $d.87+0xb9  '&iq.wait'
+       190:  add      x0, x20, #0x38
+       194:  add      x2, x2, #0  ; -> $d.35
+       198:  bl       #0x198  ; -> __init_waitqueue_head+0x0
+       19c:  ldp      x2, x3, [x20]
+       1a0:  mov      w0, #5
+       1a4:  mov      w1, wzr
+       1a8:  bl       #0x1a8  ; -> shmem_ram_vmap_nocache_ex+0x0
+       1ac:  str      x0, [x20, #0x18]
+       1b0:  cbz      x0, #0x2d8
+       1b4:  adrp     x20, #0  ; -> sym#134+0x8
+       1b8:  add      x20, x20, #0  ; -> $d.85  'iq_base'
+       1bc:  ldr      x8, [x20, #0x30]
+       1c0:  mov      x1, xzr
+       1c4:  str      x0, [x8]
+       1c8:  ldr      x8, [x20, #0x20]
+       1cc:  ldr      x9, [x20, #0x10]
+       1d0:  ldr      x10, [x20, #0x30]
+       1d4:  adrp     x0, #0  ; -> sym#137+0x11d4
+       1d8:  add      x0, x0, #0  ; -> $x.78
+       1dc:  add      x8, x8, x9
+       1e0:  sub      x8, x8, #0x10
+       1e4:  str      x8, [x10, #8]
+       1e8:  ldr      x8, [x20, #0x30]
+       1ec:  mov      w9, #0x5a5a
+       1f0:  movk     w9, #0x5a5a, lsl #16
+       1f4:  ldr      x8, [x8]
+       1f8:  str      w9, [x8]
+       1fc:  ldr      x8, [x20, #0x30]
+       200:  ldr      x8, [x8, #8]
+       204:  str      w9, [x8]
+       208:  bl       #0x208  ; -> kernel_vser_register_callback+0x0
+       20c:  adrp     x0, #0  ; -> sym#137+0x11d8
+       210:  adrp     x3, #0  ; -> sym#136+0x289
+       214:  add      x0, x0, #0  ; -> $x.79
+       218:  add      x3, x3, #0  ; -> $d.91+0x199  'iq_thread'
+       21c:  mov      w2, #-1
+       220:  mov      x1, x20
+       224:  bl       #0x224  ; -> kthread_create_on_node+0x0
+       228:  cmn      x0, #0xfff
+       22c:  str      x0, [x20, #0x38]
+       230:  b.hs     #0x394  ; -> $d.87+0x101
+       234:  str      x20, [x19, #0xa8]
+       238:  bl       #0x238  ; -> wake_up_process+0x0
+       23c:  mov      w20, wzr
+       240:  b        #0x260  ; -> $d.91+0x170
+       244:  adrp     x0, #0  ; -> sym#136+0x1c7
+       248:  add      x0, x0, #0  ; -> $d.91+0xd7
+       24c:  bl       #0x24c  ; -> printk+0x0
+       250:  adrp     x0, #0  ; -> sym#136+0x76
+       254:  add      x0, x0, #0  ; -> $d.54+0x6
+       258:  bl       #0x258  ; -> printk+0x0
+       25c:  mov      w20, #-0x13
+       260:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       264:  ldur     x8, [x29, #-8]
+       268:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       26c:  cmp      x9, x8
+       270:  b.ne     #0x40c  ; -> $d.89+0x4
+       274:  ldp      x29, x30, [sp, #0x70]
+       278:  mov      w0, w20
+       27c:  ldp      x20, x19, [sp, #0x90]
+       280:  ldr      x21, [sp, #0x80]
+       284:  ldr      x30, [x18, #-8]!
+       288:  add      sp, sp, #0xa0
+       28c:  ret      
+       290:  stur     wzr, [x29, #-0xc]
+       294:  stp      xzr, xzr, [sp, #0x50]
+       298:  stp      xzr, xzr, [sp, #0x40]
+       29c:  stp      xzr, xzr, [sp, #0x30]
+       2a0:  stp      xzr, xzr, [sp, #0x20]
+       2a4:  stp      xzr, xzr, [sp, #0x10]
+       2a8:  stp      xzr, xzr, [sp]
+       2ac:  cbz      x19, #0x2f4
+       2b0:  ldr      x20, [x19, #0x310]
+       2b4:  cbz      x20, #0x2f4
+       2b8:  adrp     x1, #0  ; -> sym#136+0xec
+       2bc:  add      x1, x1, #0  ; -> $d.66+0x8  'sprd,region'
+       2c0:  mov      x0, x20
+       2c4:  mov      w2, wzr
+       2c8:  bl       #0x2c8  ; -> of_parse_phandle+0x0
+       2cc:  cbnz     x0, #0x328
+       2d0:  mov      w20, #-0xc
+       2d4:  b        #0x260  ; -> $d.91+0x170
+       2d8:  mov      w20, #-0xc
+       2dc:  adrp     x0, #0  ; -> sym#135+0xf0
+       2e0:  add      x0, x0, #0  ; -> $d.91  ',region'
+       2e4:  bl       #0x2e4  ; -> misc_deregister+0x0
+       2e8:  ldr      x0, [x21]  ; sym#134+0x38
+       2ec:  bl       #0x2ec  ; -> kfree+0x0
+       2f0:  b        #0x260  ; -> $d.91+0x170
+       2f4:  adrp     x1, #0  ; -> sym#136+0x37a
+       2f8:  add      x1, x1, #0  ; -> $d.87+0xe7
+       2fc:  add      x0, x19, #0x10
+       300:  bl       #0x300  ; -> _dev_err+0x0
+       304:  mov      w20, #-0x16
+       308:  b        #0x260  ; -> $d.91+0x170
+       30c:  mov      w20, w0
+       310:  adrp     x1, #0  ; -> sym#136+0x118
+       314:  add      x0, x19, #0x10
+       318:  add      x1, x1, #0  ; -> $d.91+0x28
+       31c:  mov      w2, w20
+       320:  bl       #0x320  ; -> _dev_err+0x0
+       324:  b        #0x2e8  ; -> $d.87+0x55
+       328:  mov      x2, sp
+       32c:  mov      w1, wzr
+       330:  bl       #0x330  ; -> of_address_to_resource+0x0
+       334:  cbnz     w0, #0x3c4
+       338:  ldp      x2, x8, [sp]
+       33c:  adrp     x21, #0  ; -> sym#134+0x10
+       340:  adrp     x1, #0  ; -> sym#136+0xf8
+       344:  add      x21, x21, #0  ; -> $d.13
+       348:  sub      x8, x8, x2
+       34c:  add      x3, x8, #1
+       350:  add      x0, x19, #0x10
+       354:  add      x1, x1, #0  ; -> $d.91+0x8
+       358:  stp      x2, x3, [x21]
+       35c:  bl       #0x35c  ; -> _dev_info+0x0
+       360:  adrp     x1, #0  ; -> sym#136+0x1f3
+       364:  add      x1, x1, #0  ; -> $d.91+0x103  'sprd,mapping-offs'
+       368:  sub      x2, x29, #0xc
+       36c:  mov      w3, #1
+       370:  mov      x0, x20
+       374:  mov      x4, xzr
+       378:  str      wzr, [x21, #0x10]
+       37c:  bl       #0x37c  ; -> of_property_read_variable_u32_array+0x0
+       380:  tbnz     w0, #0x1f, #0x3d0
+       384:  ldur     w2, [x29, #-0xc]
+       388:  adrp     x8, #0  ; -> sym#134+0x20
+       38c:  str      w2, [x8]  ; sym#134+0x20
+       390:  b        #0x3d8  ; -> $d.87+0x145
+       394:  adrp     x1, #0  ; -> sym#136+0x22e
+       398:  add      x0, x19, #0x10
+       39c:  add      x1, x1, #0  ; -> $d.91+0x13e
+       3a0:  bl       #0x3a0  ; -> _dev_err+0x0
+       3a4:  adrp     x8, #0  ; -> sym#134+0x28
+       3a8:  add      x8, x8, #0  ; -> $x.36
+       3ac:  ldr      x2, [x8]
+       3b0:  ldr      w20, [x8, #0x18]
+       3b4:  mov      w0, #5
+       3b8:  mov      w1, wzr
+       3bc:  bl       #0x3bc  ; -> shmem_ram_unmap_ex+0x0
+       3c0:  b        #0x2dc  ; -> $d.87+0x49
+       3c4:  adrp     x1, #0  ; -> sym#136+0x3e9
+       3c8:  add      x1, x1, #0  ; -> $d.87+0x156
+       3cc:  b        #0x2fc  ; -> $d.87+0x69
+       3d0:  adrp     x8, #0  ; -> sym#134+0x20
+       3d4:  ldr      w2, [x8]  ; sym#134+0x20
+       3d8:  adrp     x1, #0  ; -> sym#136+0xd5
+       3dc:  add      x0, x19, #0x10
+       3e0:  add      x1, x1, #0  ; -> $d.62+0x9
+       3e4:  bl       #0x3e4  ; -> _dev_info+0x0
+       3e8:  ldr      w8, [x21]
+       3ec:  ldr      w9, [x21, #0x10]
+       3f0:  ldr      x11, [x21, #8]
+       3f4:  adrp     x10, #0  ; -> sym#134+0x4
+       3f8:  adrp     x12, #0  ; -> sym#134+0x0
+       3fc:  add      w8, w9, w8
+       400:  str      w8, [x10]  ; sym#134+0x4
+       404:  str      w11, [x12]  ; sym#134+0x0
+       408:  b        #0x144  ; -> $d.91+0x54
+       40c:  bl       #0x40c  ; -> __stack_chk_fail+0x0
+       410:  str      x30, [x18], #8
+
+; sprd_iq_remove @ 0x410 (80 B)
+       410:  str      x30, [x18], #8
+       414:  stp      x29, x30, [sp, #-0x10]!
+       418:  mov      x29, sp
+       41c:  adrp     x8, #0  ; -> sym#134+0x28
+       420:  ldr      x8, [x8]  ; sym#134+0x28
+       424:  cbnz     x8, #0x438
+       428:  mov      w0, #5
+       42c:  mov      w1, wzr
+       430:  mov      x2, xzr
+       434:  bl       #0x434  ; -> shmem_ram_unmap_ex+0x0
+       438:  adrp     x8, #0  ; -> sym#134+0x38
+       43c:  ldr      x0, [x8]  ; sym#134+0x38
+       440:  bl       #0x440  ; -> kfree+0x0
+       444:  adrp     x0, #0  ; -> sym#135+0xf0
+       448:  add      x0, x0, #0  ; -> $d.91  ',region'
+       44c:  bl       #0x44c  ; -> misc_deregister+0x0
+       450:  mov      w0, wzr
+       454:  ldp      x29, x30, [sp], #0x10
+       458:  ldr      x30, [x18, #-8]!
+       45c:  ret      
+       460:  str      x30, [x18], #8
+
+; iq_mem_poll @ 0x460 (260 B)
+       460:  str      x30, [x18], #8
+       464:  stp      x29, x30, [sp, #-0x30]!
+       468:  stp      x22, x21, [sp, #0x10]
+       46c:  stp      x20, x19, [sp, #0x20]
+       470:  mov      x29, sp
+       474:  adrp     x22, #0  ; -> sym#134+0x38
+       478:  ldr      x8, [x22]  ; sym#134+0x38
+       47c:  ldr      x9, [x8]
+       480:  cbz      x9, #0x514
+       484:  ldr      x8, [x8, #8]
+       488:  cbz      x8, #0x514
+       48c:  mov      x19, x1
+       490:  cbz      x1, #0x4cc
+       494:  ldr      x21, [x19]
+       498:  cbz      x21, #0x4cc
+       49c:  mov      x20, x0
+       4a0:  mov      x0, #0xb51f
+       4a4:  movk     x0, #0x6cd7, lsl #16
+       4a8:  movk     x0, #0xd6be, lsl #32
+       4ac:  movk     x0, #0x8990, lsl #48
+       4b0:  mov      x1, x21
+       4b4:  bl       #0x4b4  ; -> __cfi_slowpath+0x0
+       4b8:  adrp     x1, #0  ; -> sym#134+0x48
+       4bc:  add      x1, x1, #0  ; -> $d.31
+       4c0:  mov      x0, x20
+       4c4:  mov      x2, x19
+       4c8:  blr      x21
+       4cc:  adrp     x8, #0  ; -> sym#134+0xc
+       4d0:  ldr      w8, [x8]  ; sym#134+0xc
+       4d4:  cmp      w8, #2
+       4d8:  b.eq     #0x51c  ; -> $x.5+0xbc
+       4dc:  cmp      w8, #1
+       4e0:  b.ne     #0x538  ; -> $x.5+0xd8
+       4e4:  ldr      x8, [x22]  ; sym#134+0x38
+       4e8:  ldr      x9, [x8]
+       4ec:  ldr      w10, [x9]
+       4f0:  mov      w9, #0x5a00
+       4f4:  movk     w9, #0x8100, lsl #16
+       4f8:  cmp      w10, w9
+       4fc:  b.eq     #0x54c  ; -> $x.5+0xec
+       500:  ldr      x8, [x8, #8]
+       504:  ldr      w8, [x8]
+       508:  cmp      w8, w9
+       50c:  b.ne     #0x538  ; -> $x.5+0xd8
+       510:  b        #0x54c  ; -> $x.5+0xec
+       514:  mov      w0, #8
+       518:  b        #0x550  ; -> $x.5+0xf0
+       51c:  ldr      x8, [x22]  ; sym#134+0x38
+       520:  mov      w9, #0x4441
+       524:  movk     w9, #0x504d, lsl #16
+       528:  ldr      x8, [x8, #0x10]
+       52c:  ldr      w8, [x8]
+       530:  cmp      w8, w9
+       534:  b.eq     #0x540  ; -> $x.5+0xe0
+       538:  mov      w0, wzr
+       53c:  b        #0x550  ; -> $x.5+0xf0
+       540:  adrp     x0, #0  ; -> sym#136+0x29b
+       544:  add      x0, x0, #0  ; -> $d.87+0x8
+       548:  bl       #0x548  ; -> printk+0x0
+       54c:  mov      w0, #0x41
+       550:  ldp      x20, x19, [sp, #0x20]
+       554:  ldp      x22, x21, [sp, #0x10]
+       558:  ldp      x29, x30, [sp], #0x30
+       55c:  ldr      x30, [x18, #-8]!
+       560:  ret      
+       564:  sub      sp, sp, #0x40
+
+; iq_mem_ioctl @ 0x564 (768 B)
+       564:  sub      sp, sp, #0x40
+       568:  str      x30, [x18], #8
+       56c:  stp      x29, x30, [sp, #0x10]
+       570:  str      x21, [sp, #0x20]
+       574:  stp      x20, x19, [sp, #0x30]
+       578:  add      x29, sp, #0x10
+       57c:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       580:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       584:  adrp     x0, #0  ; -> sym#136+0x1a4
+       588:  add      x0, x0, #0  ; -> $d.91+0xb4
+       58c:  mov      x19, x2
+       590:  mov      w20, w1
+       594:  str      x8, [sp, #8]
+       598:  str      xzr, [sp]
+       59c:  bl       #0x59c  ; -> printk+0x0
+       5a0:  adrp     x21, #0  ; -> sym#134+0x38
+       5a4:  ldr      x8, [x21]  ; sym#134+0x38
+       5a8:  ldr      x10, [x8]
+       5ac:  cbz      x10, #0x640
+       5b0:  ldr      x9, [x8, #8]
+       5b4:  cbz      x9, #0x640
+       5b8:  cmp      w20, #0x7f
+       5bc:  mov      x0, xzr
+       5c0:  b.le     #0x670  ; -> $d.92+0xd8
+       5c4:  cmp      w20, #0x80
+       5c8:  b.eq     #0x6ac  ; -> $d.92+0x114
+       5cc:  cmp      w20, #0x82
+       5d0:  b.eq     #0x710  ; -> $d.92+0x178
+       5d4:  cmp      w20, #0x83
+       5d8:  b.ne     #0x644  ; -> $d.92+0xac
+       5dc:  adrp     x9, #0  ; -> sym#134+0xc
+       5e0:  ldr      w9, [x9]  ; sym#134+0xc
+       5e4:  cmp      w9, #2
+       5e8:  b.ne     #0x82c  ; -> $d.92+0x294
+       5ec:  ldr      x0, [x8, #0x10]
+       5f0:  mov      x1, x19
+       5f4:  bl       #0x5f4  ; -> sym#137+0xaa4
+       5f8:  cbnz     x0, #0x84c
+       5fc:  ldr      x8, [x21]  ; sym#134+0x38
+       600:  mov      w10, #0x5049
+       604:  movk     w10, #0x4443, lsl #16
+       608:  ldr      x9, [x8, #0x10]
+       60c:  ldr      x8, [x8]
+       610:  ldr      w9, [x9, #8]
+       614:  str      w9, [x8, #8]
+       618:  ldr      x8, [x21]  ; sym#134+0x38
+       61c:  ldr      x9, [x8, #0x10]
+       620:  ldr      w9, [x9]
+       624:  cmp      w9, w10
+       628:  b.ne     #0x824  ; -> $d.92+0x28c
+       62c:  ldr      x8, [x8]
+       630:  mov      w9, #0x434b
+       634:  mov      x0, xzr
+       638:  movk     w9, #0x424c, lsl #16
+       63c:  b        #0x708  ; -> $d.92+0x170
+       640:  mov      x0, #-1
+       644:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       648:  ldr      x8, [sp, #8]
+       64c:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       650:  cmp      x9, x8
+       654:  b.ne     #0x860  ; -> $d.92+0x2c8
+       658:  ldp      x29, x30, [sp, #0x10]
+       65c:  ldp      x20, x19, [sp, #0x30]
+       660:  ldr      x21, [sp, #0x20]
+       664:  ldr      x30, [x18, #-8]!
+       668:  add      sp, sp, #0x40
+       66c:  ret      
+       670:  cbz      w20, #0x738
+       674:  cmp      w20, #1
+       678:  b.ne     #0x644  ; -> $d.92+0xac
+       67c:  adrp     x9, #0  ; -> sym#134+0xc
+       680:  ldr      w9, [x9]  ; sym#134+0xc
+       684:  cmp      w9, #2
+       688:  b.ne     #0x82c  ; -> $d.92+0x294
+       68c:  ldr      x1, [x8, #0x10]
+       690:  mov      w2, #0x8c
+       694:  mov      x0, x19
+       698:  bl       #0x698  ; -> sym#137+0x980
+       69c:  cbz      x0, #0x644
+       6a0:  adrp     x0, #0  ; -> sym#136+0x39
+       6a4:  add      x0, x0, #0  ; -> $x.49+0x1
+       6a8:  b        #0x854  ; -> $d.92+0x2bc
+       6ac:  cmp      x19, #2
+       6b0:  b.hi     #0x838  ; -> $d.92+0x2a0
+       6b4:  adrp     x10, #0  ; -> sym#134+0xc
+       6b8:  cmp      x19, #1
+       6bc:  str      w19, [x10]  ; sym#134+0xc
+       6c0:  b.eq     #0x7e8  ; -> $d.92+0x250
+       6c4:  cmp      x19, #2
+       6c8:  b.ne     #0x824  ; -> $d.92+0x28c
+       6cc:  adrp     x9, #0  ; -> sym#134+0x10
+       6d0:  add      x9, x9, #0  ; -> $d.13
+       6d4:  ldr      x10, [x9, #0x18]
+       6d8:  mov      x0, xzr
+       6dc:  add      x10, x10, #0x10
+       6e0:  str      x10, [x8, #0x10]
+       6e4:  ldr      x8, [x9, #0x28]
+       6e8:  ldr      w10, [x9]
+       6ec:  ldr      x8, [x8]
+       6f0:  add      w10, w10, #0x100
+       6f4:  str      w10, [x8, #4]
+       6f8:  ldr      x8, [x9, #0x28]
+       6fc:  mov      w9, #0x504e
+       700:  movk     w9, #0x424f, lsl #16
+       704:  ldr      x8, [x8]
+       708:  str      w9, [x8]
+       70c:  b        #0x644  ; -> $d.92+0xac
+       710:  ldr      w11, [x10]
+       714:  mov      w8, #0x5a00
+       718:  movk     w8, #0x8100, lsl #16
+       71c:  cmp      w11, w8
+       720:  b.ne     #0x774  ; -> $d.92+0x1dc
+       724:  mov      w8, #0x5a5a
+       728:  movk     w8, #0x8181, lsl #16
+       72c:  mov      x0, xzr
+       730:  str      w8, [x10]
+       734:  b        #0x644  ; -> $d.92+0xac
+       738:  ldr      w12, [x10]
+       73c:  mov      w11, #0x5a00
+       740:  movk     w11, #0x8100, lsl #16
+       744:  cmp      w12, w11
+       748:  b.ne     #0x794  ; -> $d.92+0x1fc
+       74c:  ldr      w9, [x10, #4]
+       750:  adrp     x10, #0  ; -> sym#134+0x10
+       754:  add      x10, x10, #0  ; -> $d.13
+       758:  ldr      w11, [x10]
+       75c:  ldr      w10, [x10, #0x10]
+       760:  sub      w9, w9, w11
+       764:  sub      w9, w9, w10
+       768:  str      w9, [sp]
+       76c:  ldr      x9, [x8]
+       770:  b        #0x7c0  ; -> $d.92+0x228
+       774:  ldr      w10, [x9]
+       778:  cmp      w10, w8
+       77c:  b.ne     #0x824  ; -> $d.92+0x28c
+       780:  mov      w8, #0x5a5a
+       784:  movk     w8, #0x8181, lsl #16
+       788:  mov      x0, xzr
+       78c:  str      w8, [x9]
+       790:  b        #0x644  ; -> $d.92+0xac
+       794:  ldr      w8, [x9]
+       798:  cmp      w8, w11
+       79c:  b.ne     #0x7c8  ; -> $d.92+0x230
+       7a0:  adrp     x10, #0  ; -> sym#134+0x10
+       7a4:  add      x10, x10, #0  ; -> $d.13
+       7a8:  ldr      w8, [x9, #4]
+       7ac:  ldr      w11, [x10]
+       7b0:  ldr      w10, [x10, #0x10]
+       7b4:  sub      w8, w8, w11
+       7b8:  sub      w8, w8, w10
+       7bc:  str      w8, [sp]
+       7c0:  ldr      w8, [x9, #8]
+       7c4:  str      w8, [sp, #4]
+       7c8:  mov      x1, sp
+       7cc:  mov      w2, #8
+       7d0:  mov      x0, x19
+       7d4:  bl       #0x7d4  ; -> sym#137+0x980
+       7d8:  cbz      x0, #0x644
+       7dc:  adrp     x0, #0  ; -> sym#136+0x140
+       7e0:  add      x0, x0, #0  ; -> $d.91+0x50
+       7e4:  b        #0x854  ; -> $d.92+0x2bc
+       7e8:  ldr      x8, [x8]
+       7ec:  ldr      w10, [x8]
+       7f0:  mov      w8, #0x5a00
+       7f4:  movk     w8, #0x8100, lsl #16
+       7f8:  cmp      w10, w8
+       7fc:  b.eq     #0x80c  ; -> $d.92+0x274
+       800:  ldr      w9, [x9]
+       804:  cmp      w9, w8
+       808:  b.ne     #0x824  ; -> $d.92+0x28c
+       80c:  adrp     x0, #0  ; -> sym#134+0x48
+       810:  add      x0, x0, #0  ; -> $d.31
+       814:  mov      w1, #1
+       818:  mov      w2, #1
+       81c:  mov      x3, xzr
+       820:  bl       #0x820  ; -> __wake_up+0x0
+       824:  mov      x0, xzr
+       828:  b        #0x644  ; -> $d.92+0xac
+       82c:  adrp     x0, #0  ; -> sym#136+0xa7
+       830:  add      x0, x0, #0  ; -> $d.101+0xa
+       834:  b        #0x840  ; -> $d.92+0x2a8
+       838:  adrp     x0, #0  ; -> sym#136+0x26a
+       83c:  add      x0, x0, #0  ; -> $d.91+0x17a
+       840:  bl       #0x840  ; -> printk+0x0
+       844:  mov      x0, #-0x16
+       848:  b        #0x644  ; -> $d.92+0xac
+       84c:  adrp     x0, #0  ; -> sym#136+0x2ed
+       850:  add      x0, x0, #0  ; -> $d.87+0x5a
+       854:  bl       #0x854  ; -> printk+0x0
+       858:  mov      x0, #-0xe
+       85c:  b        #0x644  ; -> $d.92+0xac
+       860:  bl       #0x860  ; -> __stack_chk_fail+0x0
+       864:  str      x30, [x18], #8
+
+; iq_mem_nocache_mmap @ 0x864 (188 B)
+       864:  str      x30, [x18], #8
+       868:  stp      x29, x30, [sp, #-0x20]!
+       86c:  str      x19, [sp, #0x10]
+       870:  mov      x29, sp
+       874:  adrp     x8, #0  ; -> sym#134+0x10
+       878:  ldr      x8, [x8]  ; sym#134+0x10
+       87c:  cbnz     x8, #0x894
+       880:  adrp     x0, #0  ; -> sym#136+0x355
+       884:  add      x0, x0, #0  ; -> $d.87+0xc2
+       888:  mov      x1, xzr
+       88c:  bl       #0x88c  ; -> printk+0x0
+       890:  b        #0x90c  ; -> $x.7+0xa8
+       894:  mov      x19, x1
+       898:  ldp      x1, x9, [x1]
+       89c:  adrp     x10, #0  ; -> sym#134+0x18
+       8a0:  ldr      x10, [x10]  ; sym#134+0x18
+       8a4:  sub      x3, x9, x1
+       8a8:  cmp      x3, x10
+       8ac:  b.ls     #0x8bc  ; -> $x.7+0x58
+       8b0:  adrp     x0, #0  ; -> sym#136+0x387
+       8b4:  add      x0, x0, #0  ; -> $d.87+0xf4
+       8b8:  b        #0x908  ; -> $x.7+0xa4
+       8bc:  ldr      x9, [x19, #0x48]
+       8c0:  lsr      x2, x8, #0xc
+       8c4:  mov      x0, x19
+       8c8:  and      x9, x9, #0xffffffffffffffe3
+       8cc:  orr      x4, x9, #0x60000000000000
+       8d0:  str      x4, [x19, #0x48]
+       8d4:  bl       #0x8d4  ; -> remap_pfn_range+0x0
+       8d8:  cbnz     w0, #0x900
+       8dc:  ldr      w2, [x19]
+       8e0:  ldr      w8, [x19, #8]
+       8e4:  adrp     x0, #0  ; -> sym#136+0x187
+       8e8:  add      x0, x0, #0  ; -> $d.91+0x97
+       8ec:  mov      w1, #0xc
+       8f0:  sub      w3, w8, w2
+       8f4:  bl       #0x8f4  ; -> printk+0x0
+       8f8:  mov      w0, wzr
+       8fc:  b        #0x910  ; -> $x.7+0xac
+       900:  adrp     x0, #0  ; -> sym#136+0x2ca
+       904:  add      x0, x0, #0  ; -> $d.87+0x37
+       908:  bl       #0x908  ; -> printk+0x0
+       90c:  mov      w0, #-0xb
+       910:  ldr      x19, [sp, #0x10]
+       914:  ldp      x29, x30, [sp], #0x20
+       918:  ldr      x30, [x18, #-8]!
+       91c:  ret      
+       920:  str      x30, [x18], #8
+
+; iq_mem_open @ 0x920 (48 B)
+       920:  str      x30, [x18], #8
+       924:  stp      x29, x30, [sp, #-0x10]!
+       928:  mov      x29, sp
+       92c:  adrp     x0, #0  ; -> sym#136+0x91
+       930:  adrp     x1, #0  ; -> sym#136+0x25e
+       934:  add      x0, x0, #0  ; -> $d.48+0x1
+       938:  add      x1, x1, #0  ; -> $d.91+0x16e  'iq_mem_open'
+       93c:  bl       #0x93c  ; -> printk+0x0
+       940:  mov      w0, wzr
+       944:  ldp      x29, x30, [sp], #0x10
+       948:  ldr      x30, [x18, #-8]!
+       94c:  ret      
+       950:  str      x30, [x18], #8
+
+; iq_mem_release @ 0x950 (48 B)
+       950:  str      x30, [x18], #8
+       954:  stp      x29, x30, [sp, #-0x10]!
+       958:  mov      x29, sp
+       95c:  adrp     x0, #0  ; -> sym#136+0x91
+       960:  adrp     x1, #0  ; -> sym#136+0x21f
+       964:  add      x0, x0, #0  ; -> $d.48+0x1
+       968:  add      x1, x1, #0  ; -> $d.91+0x12f  'iq_mem_release'
+       96c:  bl       #0x96c  ; -> printk+0x0
+       970:  mov      w0, wzr
+       974:  ldp      x29, x30, [sp], #0x10
+       978:  ldr      x30, [x18, #-8]!
+       97c:  ret      
+       980:  str      x30, [x18], #8
+
+; sprd_iq_complete @ 0xc00 (204 B)
+       c00:  str      x30, [x18], #8
+       c04:  stp      x29, x30, [sp, #-0x20]!
+       c08:  stp      x20, x19, [sp, #0x10]
+       c0c:  mov      x29, sp
+       c10:  adrp     x8, #0  ; -> sym#134+0xc
+       c14:  ldr      w8, [x8]  ; sym#134+0xc
+       c18:  cbz      w8, #0xc2c
+       c1c:  ldp      x20, x19, [sp, #0x10]
+       c20:  ldp      x29, x30, [sp], #0x20
+       c24:  ldr      x30, [x18, #-8]!
+       c28:  ret      
+       c2c:  mov      w19, w1
+       c30:  mov      x20, x0
+       c34:  adrp     x0, #0  ; -> sym#136+0x10
+       c38:  add      x0, x0, #0  ; -> $d.13
+       c3c:  mov      x1, x20
+       c40:  mov      w2, w19
+       c44:  bl       #0xc44  ; -> printk+0x0
+       c48:  adrp     x12, #0  ; -> sym#134+0x20
+       c4c:  add      x12, x12, #0  ; -> $d.23
+       c50:  ldr      x9, [x12, #0x18]
+       c54:  ldr      w10, [x12]
+       c58:  adrp     x14, #0  ; -> memstart_addr+0x0
+       c5c:  ldr      x11, [x14]  ; memstart_addr+0x0
+       c60:  ldr      x13, [x9]
+       c64:  add      x8, x20, w19, uxtw
+       c68:  ldp      w15, w16, [x13, #4]
+       c6c:  sub      w15, w15, w10
+       c70:  add      w15, w15, w16
+       c74:  sub      x15, x15, x11
+       c78:  orr      x15, x15, #0xffffff8000000000
+       c7c:  cmp      x8, x15
+       c80:  b.ne     #0xc9c  ; -> $x.68+0x9c
+       c84:  mov      w9, #0x5a5a
+       c88:  movk     w9, #0x8181, lsl #16
+       c8c:  str      w9, [x13]
+       c90:  ldr      x9, [x12, #0x18]
+       c94:  ldr      w10, [x12]
+       c98:  ldr      x11, [x14]  ; memstart_addr+0x0
+       c9c:  ldr      x9, [x9, #8]
+       ca0:  ldp      w12, w13, [x9, #4]
+       ca4:  sub      w10, w12, w10
+       ca8:  add      w10, w10, w13
+       cac:  sub      x10, x10, x11
+       cb0:  orr      x10, x10, #0xffffff8000000000
+       cb4:  cmp      x8, x10
+       cb8:  b.ne     #0xc1c  ; -> $x.68+0x1c
+       cbc:  mov      w8, #0x5a5a
+       cc0:  movk     w8, #0x8181, lsl #16
+       cc4:  str      w8, [x9]
+       cc8:  b        #0xc1c  ; -> $x.68+0x1c
+       ccc:  sub      sp, sp, #0x70
+
+; sprd_iq_thread @ 0xccc (652 B)
+       ccc:  sub      sp, sp, #0x70
+       cd0:  str      x30, [x18], #8
+       cd4:  stp      x29, x30, [sp, #0x10]
+       cd8:  stp      x28, x27, [sp, #0x20]
+       cdc:  stp      x26, x25, [sp, #0x30]
+       ce0:  stp      x24, x23, [sp, #0x40]
+       ce4:  stp      x22, x21, [sp, #0x50]
+       ce8:  stp      x20, x19, [sp, #0x60]
+       cec:  add      x29, sp, #0x10
+       cf0:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+       cf4:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+       cf8:  str      x8, [sp, #8]
+       cfc:  ldr      x24, [x0, #0x30]
+       d00:  mov      w8, #0x50
+       d04:  str      w8, [sp]
+       d08:  ldr      x8, [x24]
+       d0c:  cbz      x8, #0xd3c
+       d10:  ldr      x8, [x24, #8]
+       d14:  cbz      x8, #0xd3c
+       d18:  mov      x2, sp
+       d1c:  mov      w1, #2
+       d20:  mov      x19, x0
+       d24:  mrs      x0, sp_el0
+       d28:  bl       #0xd28  ; -> sched_setscheduler+0x0
+       d2c:  bl       #0xd2c  ; -> kthread_should_stop+0x0
+       d30:  tbz      w0, #0, #0xd78
+       d34:  mov      w0, wzr
+       d38:  b        #0xd40  ; -> $x.69+0x74
+       d3c:  mov      w0, #-1
+       d40:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+       d44:  ldr      x8, [sp, #8]
+       d48:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+       d4c:  cmp      x9, x8
+       d50:  b.ne     #0xf54  ; -> $x.69+0x288
+       d54:  ldp      x29, x30, [sp, #0x10]
+       d58:  ldp      x20, x19, [sp, #0x60]
+       d5c:  ldp      x22, x21, [sp, #0x50]
+       d60:  ldp      x24, x23, [sp, #0x40]
+       d64:  ldp      x26, x25, [sp, #0x30]
+       d68:  ldp      x28, x27, [sp, #0x20]
+       d6c:  ldr      x30, [x18, #-8]!
+       d70:  add      sp, sp, #0x70
+       d74:  ret      
+       d78:  mov      w25, #0x5a00
+       d7c:  mov      w26, #0x8181
+       d80:  mov      w21, #0xd000
+       d84:  movk     w25, #0x8100, lsl #16
+       d88:  movk     w26, #0x5a5a, lsl #16
+       d8c:  add      x19, x19, #0x40
+       d90:  adrp     x27, #0  ; -> sym#134+0xc
+       d94:  movk     w21, #7, lsl #16
+       d98:  adrp     x20, #0  ; -> memstart_addr+0x0
+       d9c:  b        #0xdbc  ; -> $x.69+0xf0
+       da0:  mov      w1, #1
+       da4:  mov      w2, #1
+       da8:  mov      x0, x19
+       dac:  mov      x3, xzr
+       db0:  bl       #0xdb0  ; -> __wake_up+0x0
+       db4:  bl       #0xdb4  ; -> kthread_should_stop+0x0
+       db8:  tbnz     w0, #0, #0xd34
+       dbc:  ldr      w8, [x27]  ; sym#134+0xc
+       dc0:  cmp      w8, #2
+       dc4:  b.ne     #0xe00  ; -> $x.69+0x134
+       dc8:  ldr      x8, [x24, #0x10]
+       dcc:  mov      w10, #0x504d
+       dd0:  movk     w10, #0x4441, lsl #16
+       dd4:  ldr      w9, [x8]
+       dd8:  cmp      w9, w10
+       ddc:  b.ne     #0xe00  ; -> $x.69+0x134
+       de0:  mov      w9, #0x4441
+       de4:  movk     w9, #0x504d, lsl #16
+       de8:  mov      w1, #1
+       dec:  mov      w2, #1
+       df0:  mov      x0, x19
+       df4:  mov      x3, xzr
+       df8:  str      w9, [x8]
+       dfc:  bl       #0xdfc  ; -> __wake_up+0x0
+       e00:  ldr      x8, [x24]
+       e04:  ldr      w2, [x8]
+       e08:  cmp      w2, w26
+       e0c:  b.ne     #0xe5c  ; -> $x.69+0x190
+       e10:  str      w25, [x8]
+       e14:  ldr      w8, [x27]  ; sym#134+0xc
+       e18:  cmp      w8, #1
+       e1c:  b.eq     #0xda0  ; -> $x.69+0xd4
+       e20:  cbnz     w8, #0xdb4
+       e24:  ldr      x8, [x24]
+       e28:  adrp     x9, #0  ; -> sym#134+0x20
+       e2c:  ldr      w9, [x9]  ; sym#134+0x20
+       e30:  adrp     x0, #0  ; -> sym#136+0x32c
+       e34:  ldp      w10, w22, [x8, #4]
+       e38:  add      x0, x0, #0  ; -> $d.87+0x99
+       e3c:  sub      w23, w10, w9
+       e40:  mov      w1, w23
+       e44:  mov      w2, w22
+       e48:  bl       #0xe48  ; -> printk+0x0
+       e4c:  cbz      w22, #0xdb4
+       e50:  mov      w28, wzr
+       e54:  mov      w8, w22
+       e58:  b        #0xec4  ; -> $x.69+0x1f8
+       e5c:  ldr      x8, [x24, #8]
+       e60:  ldr      w3, [x8]
+       e64:  cmp      w3, w26
+       e68:  b.ne     #0xf38  ; -> $x.69+0x26c
+       e6c:  str      w25, [x8]
+       e70:  ldr      w8, [x27]  ; sym#134+0xc
+       e74:  cmp      w8, #1
+       e78:  b.eq     #0xda0  ; -> $x.69+0xd4
+       e7c:  cbnz     w8, #0xdb4
+       e80:  ldr      x8, [x24, #8]
+       e84:  adrp     x9, #0  ; -> sym#134+0x20
+       e88:  ldr      w9, [x9]  ; sym#134+0x20
+       e8c:  adrp     x0, #0  ; -> sym#136+0x32c
+       e90:  ldp      w10, w22, [x8, #4]
+       e94:  add      x0, x0, #0  ; -> $d.87+0x99
+       e98:  sub      w23, w10, w9
+       e9c:  mov      w1, w23
+       ea0:  mov      w2, w22
+       ea4:  bl       #0xea4  ; -> printk+0x0
+       ea8:  cbz      w22, #0xdb4
+       eac:  mov      w28, wzr
+       eb0:  mov      w8, w22
+       eb4:  b        #0xf04  ; -> $x.69+0x238
+       eb8:  add      w28, w28, w0
+       ebc:  subs     w8, w22, w28
+       ec0:  b.eq     #0xdb4  ; -> $x.69+0xe8
+       ec4:  ldr      x9, [x20]  ; memstart_addr+0x0
+       ec8:  add      w10, w28, w23
+       ecc:  cmp      w8, w21
+       ed0:  csel     w1, w8, w21, lo
+       ed4:  sub      x9, x10, x9
+       ed8:  orr      x0, x9, #0xffffff8000000000
+       edc:  bl       #0xedc  ; -> vser_pass_user_write+0x0
+       ee0:  tbz      x0, #0x3f, #0xeb8
+       ee4:  mov      w0, #0xc8
+       ee8:  bl       #0xee8  ; -> msleep+0x0
+       eec:  subs     w8, w22, w28
+       ef0:  b.ne     #0xec4  ; -> $x.69+0x1f8
+       ef4:  b        #0xdb4  ; -> $x.69+0xe8
+       ef8:  add      w28, w28, w0
+       efc:  subs     w8, w22, w28
+       f00:  b.eq     #0xdb4  ; -> $x.69+0xe8
+       f04:  ldr      x9, [x20]  ; memstart_addr+0x0
+       f08:  add      w10, w28, w23
+       f0c:  cmp      w8, w21
+       f10:  csel     w1, w8, w21, lo
+       f14:  sub      x9, x10, x9
+       f18:  orr      x0, x9, #0xffffff8000000000
+       f1c:  bl       #0xf1c  ; -> vser_pass_user_write+0x0
+       f20:  tbz      x0, #0x3f, #0xef8
+       f24:  mov      w0, #0xc8
+       f28:  bl       #0xf28  ; -> msleep+0x0
+       f2c:  subs     w8, w22, w28
+       f30:  b.ne     #0xf04  ; -> $x.69+0x238
+       f34:  b        #0xdb4  ; -> $x.69+0xe8
+       f38:  ldr      w1, [x27]  ; sym#134+0xc
+       f3c:  adrp     x0, #0  ; -> sym#136+0x3b4
+       f40:  add      x0, x0, #0  ; -> $d.87+0x121
+       f44:  bl       #0xf44  ; -> printk+0x0
+       f48:  mov      w0, #0x5dc
+       f4c:  bl       #0xf4c  ; -> msleep+0x0
+       f50:  b        #0xdb4  ; -> $x.69+0xe8
+       f54:  bl       #0xf54  ; -> __stack_chk_fail+0x0
+       f58:  udf      #0
+
+; init_module @ 0x0 (80 B)
+         0:  str      x30, [x18], #8
+         4:  stp      x29, x30, [sp, #-0x10]!
+         8:  mov      x29, sp
+         c:  cbz      x0, #0x28
+        10:  ldrb     w8, [x0]
+        14:  cmp      w8, #5
+        18:  b.lo     #0x28  ; -> $x.36
+        1c:  ldp      x29, x30, [sp], #0x10
+        20:  ldr      x30, [x18, #-8]!
+        24:  ret      
+        28:  mov      w0, #2
+        2c:  bl       #0x2c  ; -> __ubsan_handle_cfi_check_fail_abort+0x0
+        30:  sub      sp, sp, #0x20
+        34:  str      x30, [x18], #8
+        38:  stp      x29, x30, [sp, #0x10]
+        3c:  add      x29, sp, #0x10
+        40:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+        44:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+        48:  adrp     x0, #0  ; -> sym#136+0x293
+        4c:  add      x0, x0, #0  ; -> $d.87  '/chosen'
+        50:  mov      x1, xzr
+

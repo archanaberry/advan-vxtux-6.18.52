@@ -5,6 +5,14 @@
 
 obj-y += disp_notify.o
 
+# Instrumen diagnostik boot (2026-10-26): perekam dmesg ke partisi cache.
+# debug/ menampung FLIGHTREC + BEACON + LKFB; turunkan direktorinya bila
+# SALAH SATU saja aktif, supaya mematikan perekam tidak ikut mematikan
+# kanal layar (kelas DIR-TAKDIRUJUK yang sama seperti temuan audit 2026-09-18).
+ifneq ($(filter y,$(CONFIG_VXTUX_FLIGHTREC) $(CONFIG_VXTUX_BEACON) $(CONFIG_VXTUX_LKFB)),)
+obj-y += debug/
+endif
+
 obj-$(CONFIG_TOUCHSCREEN_HIMAX_CHIPSET)		+= touch/hx83102e/
 obj-$(CONFIG_TOUCHSCREEN_CHIPONE)		+= touch/chipone_tddi/
 obj-$(CONFIG_VXTUX_HYBRIDSWAP_REF)		+= mm/hybridswap/

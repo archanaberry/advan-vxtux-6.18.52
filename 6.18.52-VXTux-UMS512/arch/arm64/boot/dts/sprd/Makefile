@@ -4,7 +4,8 @@ dtb-$(CONFIG_ARCH_SPRD) += sc9836-openphone.dtb \
 			sp9863a-1h10.dtb	\
 			ums512-1h10.dtb		\
 			ums512-1h10-vxtux.dtb	\
-			ums9620-2h10.dtb
+			ums9620-2h10.dtb	\
+			qemu-ums512-t1030.dtb
 # F3 2026-09-25: `ums512-1h10-vxtux.dtb` DITAMBAHKAN. DTS-nya sudah ada di
 # direktori ini sejak H6, tetapi tidak pernah masuk daftar `dtb-$(CONFIG_ARCH_SPRD)`
 # — jadi `make dtbs` tak pernah menghasilkannya (defect ke-3 yang ditemukan

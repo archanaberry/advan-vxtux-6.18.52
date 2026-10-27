@@ -90,6 +90,11 @@ obj-$(CONFIG_ARM_TEGRA194_CPUFREQ)	+= tegra194-cpufreq.o
 obj-$(CONFIG_ARM_TI_CPUFREQ)		+= ti-cpufreq.o
 obj-$(CONFIG_ARM_VEXPRESS_SPC_CPUFREQ)	+= vexpress-spc-cpufreq.o
 
+# Unisoc/Spreadtrum AP cpufreq (DVFS over SIP secure monitor).
+obj-$(CONFIG_ARM_SPRD_CPUFREQ_V2)	+= sprd-cpufreq-v2.o
+sprd-cpufreq-v2-objs		:= sprd-cpufreq-v2-driver.o sprd-cpufreq-v2-debug.o
+obj-$(CONFIG_ARM_SPRD_CPUFREQ_PUBLIC)	+= sprd-cpufreq-public.o
+
 
 ##################################################################################
 # PowerPC platform drivers

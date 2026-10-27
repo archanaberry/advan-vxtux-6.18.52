@@ -1,0 +1,199 @@
+; sprd_cpufreq_update_opp @ 0x30 (476 B)
+        30:  str      x30, [x18], #8
+        34:  stp      x29, x30, [sp, #-0x30]!
+        38:  stp      x28, x21, [sp, #0x10]
+        3c:  stp      x20, x19, [sp, #0x20]
+        40:  mov      x29, sp
+        44:  sub      sp, sp, #0x2d0
+        48:  adrp     x8, #0  ; -> __stack_chk_guard+0x0
+        4c:  ldr      x8, [x8]  ; __stack_chk_guard+0x0
+        50:  mov      w19, w1
+        54:  mov      w20, w0
+        58:  mov      x0, sp
+        5c:  mov      w2, #0x2c8
+        60:  mov      w1, wzr
+        64:  stur     x8, [x29, #-8]
+        68:  bl       #0x68  ; -> memset+0x0
+        6c:  mov      x0, sp
+        70:  mov      w1, wzr
+        74:  bl       #0x74  ; -> cpufreq_get_policy+0x0
+        78:  cbz      w0, #0xb0
+        7c:  nop      
+        80:  mov      w0, wzr
+        84:  adrp     x9, #0  ; -> __stack_chk_guard+0x0
+        88:  ldur     x8, [x29, #-8]
+        8c:  ldr      x9, [x9]  ; __stack_chk_guard+0x0
+        90:  cmp      x9, x8
+        94:  b.ne     #0x194  ; -> $x.6+0xbc
+        98:  add      sp, sp, #0x2d0
+        9c:  ldp      x20, x19, [sp, #0x20]
+        a0:  ldp      x28, x21, [sp, #0x10]
+        a4:  ldp      x29, x30, [sp], #0x30
+        a8:  ldr      x30, [x18, #-8]!
+        ac:  ret      
+        b0:  bl       #0xb0  ; -> get_cpu_device+0x0
+        b4:  cbz      x0, #0x158
+        b8:  ldr      x0, [x0, #0x300]
+        bc:  cbz      x0, #0x164
+        c0:  adrp     x1, #0  ; -> sym#44+0xdc
+        c4:  add      x1, x1, #0  ; -> $x.6+0x4  'cpufreq-data-v1'
+        c8:  mov      w2, wzr
+        cc:  bl       #0xcc  ; -> of_parse_phandle+0x0
+        d0:  cbz      x0, #0x170
+        d4:  nop      
+        d8:  ldr      x21, [x0, #0x10]
+        dc:  adrp     x1, #0  ; -> sym#44+0xec
+        e0:  add      x1, x1, #0  ; -> $x.6+0x14  'cpufreq-cluster0'
+        e4:  mov      x0, x21
+        e8:  bl       #0xe8  ; -> strcmp+0x0
+        ec:  cbz      w0, #0x120
+        f0:  adrp     x1, #0  ; -> sym#44+0x7b
+        f4:  add      x1, x1, #0  ; -> $d.15+0x17  'cpufreq-clus0'
+        f8:  mov      x0, x21
+        fc:  bl       #0xfc  ; -> strcmp+0x0
+       100:  cbnz     w0, #0x17c
+       104:  ldr      x8, [sp, #0x288]
+       108:  cbz      x8, #0x84
+       10c:  cmn      x8, #1, lsl #12
+       110:  b.hi     #0x84  ; -> $x.4+0x4
+       114:  ldr      x8, [x8, #0x190]
+       118:  cbnz     x8, #0x138
+       11c:  b        #0x80  ; -> $x.4
+       120:  ldr      x8, [sp, #0x288]
+       124:  cbz      x8, #0x84
+       128:  cmn      x8, #1, lsl #12
+       12c:  b.hi     #0x84  ; -> $x.4+0x4
+       130:  ldr      x8, [x8, #0xe8]
+       134:  cbz      x8, #0x80
+       138:  adrp     x9, #0  ; -> sym#36+0x1040
+       13c:  add      x9, x9, #0  ; -> $x.10
+       140:  cmp      x8, x9
+       144:  b.ne     #0x198  ; -> $x.6+0xc0
+       148:  mov      w0, w20
+       14c:  mov      w1, w19
+       150:  blr      x8
+       154:  b        #0x84  ; -> $x.4+0x4
+       158:  adrp     x0, #0  ; -> sym#44+0xfd
+       15c:  add      x0, x0, #0  ; -> $x.6+0x25
+       160:  b        #0x184  ; -> $x.6+0xac
+       164:  adrp     x0, #0  ; -> sym#44+0x11e
+       168:  add      x0, x0, #0  ; -> $x.6+0x46
+       16c:  b        #0x184  ; -> $x.6+0xac
+       170:  adrp     x0, #0  ; -> sym#44+0x0
+       174:  add      x0, x0, #0  ; -> $d.0
+       178:  b        #0x184  ; -> $x.6+0xac
+       17c:  adrp     x0, #0  ; -> sym#44+0x26
+       180:  add      x0, x0, #0  ; -> __UNIQUE_ID_name126+0x5
+       184:  adrp     x1, #0  ; -> sym#44+0x4c
+       188:  add      x1, x1, #0  ; -> __UNIQUE_ID_vermagic125+0x12  'sprd_cpufreq_update_opp'
+       18c:  bl       #0x18c  ; -> printk+0x0
+       190:  b        #0x80  ; -> $x.4
+       194:  bl       #0x194  ; -> __stack_chk_fail+0x0
+       198:  mov      x0, #0x237e
+       19c:  movk     x0, #0xa505, lsl #16
+       1a0:  movk     x0, #0x9c33, lsl #32
+       1a4:  movk     x0, #0x9eab, lsl #48
+       1a8:  mov      x1, x8
+       1ac:  mov      x21, x8
+       1b0:  bl       #0x1b0  ; -> __cfi_slowpath+0x0
+       1b4:  mov      x8, x21
+       1b8:  b        #0x148  ; -> $x.6+0x70
+       1bc:  adrp     x0, #0  ; -> sym#39+0x0
+       1c0:  adrp     x1, #0  ; -> sym#44+0x64
+       1c4:  adrp     x2, #0  ; -> sym#44+0x4c
+       1c8:  add      x0, x0, #0  ; -> $d.0
+       1cc:  add      x1, x1, #0  ; -> $d.15
+       1d0:  add      x2, x2, #0  ; -> __UNIQUE_ID_vermagic125+0x12  'sprd_cpufreq_update_opp'
+       1d4:  bl       #0x1d4  ; -> __dynamic_pr_debug+0x0
+       1d8:  b        #0x80  ; -> $x.4
+       1dc:  ldr      x3, [x0, #0x10]
+       1e0:  adrp     x8, #0  ; -> sym#39+0x38
+       1e4:  add      x8, x8, #0  ; -> sprd_cpufreq_update_opp.__UNIQUE_ID_ddebug149
+       1e8:  adrp     x1, #0  ; -> sym#44+0xc3
+       1ec:  adrp     x2, #0  ; -> sym#44+0x4c
+       1f0:  add      x1, x1, #0  ; -> $d.24+0x26
+       1f4:  add      x2, x2, #0  ; -> __UNIQUE_ID_vermagic125+0x12  'sprd_cpufreq_update_opp'
+       1f8:  mov      x21, x0
+       1fc:  mov      x0, x8
+       200:  bl       #0x200  ; -> __dynamic_pr_debug+0x0
+       204:  mov      x0, x21
+       208:  b        #0xd8  ; -> $x.6
+       20c:  sub      sp, sp, #0x20
+; sprd_cpufreq_update_normal @ 0x20c (148 B)
+       20c:  sub      sp, sp, #0x20
+       210:  str      x30, [x18], #8
+       214:  stp      x29, x30, [sp, #0x10]
+       218:  add      x29, sp, #0x10
+       21c:  ldr      x8, [x0, #0x288]
+       220:  mov      w0, wzr
+       224:  cbz      x8, #0x25c
+       228:  cmn      x8, #1, lsl #12
+       22c:  b.hi     #0x25c  ; -> $x.7+0x50
+       230:  ldr      x8, [x8, #0xe8]
+       234:  cbz      x8, #0x258
+       238:  adrp     x9, #0  ; -> sym#36+0x1040
+       23c:  add      x9, x9, #0  ; -> $x.10
+       240:  cmp      x8, x9
+       244:  b.ne     #0x26c  ; -> $x.7+0x60
+       248:  mov      w0, w1
+       24c:  mov      w1, w2
+       250:  blr      x8
+       254:  b        #0x25c  ; -> $x.7+0x50
+       258:  mov      w0, wzr
+       25c:  ldp      x29, x30, [sp, #0x10]
+       260:  ldr      x30, [x18, #-8]!
+       264:  add      sp, sp, #0x20
+       268:  ret      
+       26c:  mov      x0, #0x237e
+       270:  movk     x0, #0xa505, lsl #16
+       274:  movk     x0, #0x9c33, lsl #32
+       278:  movk     x0, #0x9eab, lsl #48
+       27c:  stur     w1, [x29, #-4]
+       280:  mov      x1, x8
+       284:  str      w2, [sp, #8]
+       288:  str      x8, [sp]
+       28c:  bl       #0x28c  ; -> __cfi_slowpath+0x0
+       290:  ldr      x8, [sp]
+       294:  ldur     w1, [x29, #-4]
+       298:  ldr      w2, [sp, #8]
+       29c:  b        #0x248  ; -> $x.7+0x3c
+       2a0:  sub      sp, sp, #0x20
+; sprd_cpufreq_update_common @ 0x2a0 (148 B)
+       2a0:  sub      sp, sp, #0x20
+       2a4:  str      x30, [x18], #8
+       2a8:  stp      x29, x30, [sp, #0x10]
+       2ac:  add      x29, sp, #0x10
+       2b0:  ldr      x8, [x0, #0x288]
+       2b4:  mov      w0, wzr
+       2b8:  cbz      x8, #0x2f0
+       2bc:  cmn      x8, #1, lsl #12
+       2c0:  b.hi     #0x2f0  ; -> $x.8+0x50
+       2c4:  ldr      x8, [x8, #0x190]
+       2c8:  cbz      x8, #0x2ec
+       2cc:  adrp     x9, #0  ; -> sym#36+0x1040
+       2d0:  add      x9, x9, #0  ; -> $x.10
+       2d4:  cmp      x8, x9
+       2d8:  b.ne     #0x300  ; -> $x.8+0x60
+       2dc:  mov      w0, w1
+       2e0:  mov      w1, w2
+       2e4:  blr      x8
+       2e8:  b        #0x2f0  ; -> $x.8+0x50
+       2ec:  mov      w0, wzr
+       2f0:  ldp      x29, x30, [sp, #0x10]
+       2f4:  ldr      x30, [x18, #-8]!
+       2f8:  add      sp, sp, #0x20
+       2fc:  ret      
+       300:  mov      x0, #0x237e
+       304:  movk     x0, #0xa505, lsl #16
+       308:  movk     x0, #0x9c33, lsl #32
+       30c:  movk     x0, #0x9eab, lsl #48
+       310:  stur     w1, [x29, #-4]
+       314:  mov      x1, x8
+       318:  str      w2, [sp, #8]
+       31c:  str      x8, [sp]
+       320:  bl       #0x320  ; -> __cfi_slowpath+0x0
+       324:  ldr      x8, [sp]
+       328:  ldur     w1, [x29, #-4]
+       32c:  ldr      w2, [sp, #8]
+       330:  b        #0x2dc  ; -> $x.8+0x3c
+       334:  udf      #0

@@ -55,4 +55,8 @@ source "drivers/vxtux/usb/Kconfig"
 # vdsp_firmware.bin. Menutup entry terakhir inventory103 (102 -> 103).
 source "drivers/vxtux/npu/vdsp/Kconfig"
 
+# Instrumen diagnostik boot (2026-10-26): perekam dmesg ke partisi cache.
+# Dipakai untuk memburu boot yang menggantung sebelum userspace.
+source "drivers/vxtux/debug/Kconfig"
+
 endif # VXTUX_DRIVERS

@@ -1,0 +1,4360 @@
+{
+ "vermagic": "5.4.210 SMP preempt mod_unload modversions aarch64",
+ "exports_total": 15242,
+ "vmlinux_symbols": 140469,
+ "unique_undef": 1488,
+ "classes": {
+  "ok": 4750,
+  "ekspor": 0,
+  "rename": 219,
+  "makro": 330,
+  "port": 24,
+  "instr": 169,
+  "hilang": 80,
+  "undef": 5572,
+  "crc_beda": 3334
+ },
+ "blobs": 129,
+ "blobs_no_port": 91,
+ "leverage": {
+  "sipc-core": 9,
+  "mmc_swcq": 5,
+  "core": 4,
+  "sprd_sip_svc": 3,
+  "zsmalloc": 2,
+  "musb_hdrc": 1
+ },
+ "ekspor": {},
+ "rename": {
+  "printk": "_printk",
+  "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+  "__kmalloc": "__kmalloc_noprof",
+  "__class_create": "class_create",
+  "alloc_workqueue": "alloc_workqueue_noprof",
+  "__memset_io": "memset_io",
+  "find_next_bit": "_find_next_bit",
+  "del_timer": "timer_delete",
+  "vmalloc": "vmalloc_noprof",
+  "hrtimer_init": "hrtimer_setup",
+  "vzalloc": "vzalloc_noprof",
+  "__alloc_pages_nodemask": "__alloc_pages_noprof",
+  "gpiochip_find": "gpio_device_find",
+  "del_timer_sync": "timer_delete_sync",
+  "pwm_apply_state": "pwm_apply_might_sleep",
+  "no_llseek": "noop_llseek",
+  "dma_request_slave_channel": "dma_request_chan",
+  "__class_register": "class_register",
+  "alloc_pages_exact": "alloc_pages_exact_noprof",
+  "dev_printk": "_dev_printk",
+  "pwm_request": "pwm_get",
+  "pwm_free": "pwm_put",
+  "kmemdup": "kmemdup_noprof",
+  "find_next_zero_bit": "_find_next_zero_bit",
+  "kmem_cache_alloc": "kmem_cache_alloc_noprof"
+ },
+ "definisi_pohon": {
+  "mutex_lock": "drivers/clocksource/timer-nxp-stm.c:80",
+  "__list_add_valid": "include/linux/list.h:73",
+  "__list_del_entry_valid": "include/linux/list.h:114",
+  "usleep_range": "drivers/gpu/drm/i915/gt/selftest_slpc.c:8",
+  "of_parse_phandle": "include/linux/of.h:986",
+  "debugfs_create_file": "include/linux/debugfs.h:125",
+  "wakeup_source_create": "drivers/base/power/wakeup.c:80",
+  "wakeup_source_add": "drivers/base/power/wakeup.c:165",
+  "of_get_named_gpio_flags": "drivers/vxtux/sound/asoc/asoc-618-compat.h:120",
+  "device_init_wakeup": "include/linux/pm_wakeup.h:217",
+  "vabits_actual": "arch/arm64/include/asm/memory.h:232",
+  "snd_soc_unregister_component": "include/sound/soc.h:447",
+  "sg_next": "include/linux/scatterlist.h:107",
+  "strlcpy": "tools/include/linux/string.h:27",
+  "seq_puts": "include/linux/seq_file.h:122",
+  "wakeup_source_remove": "drivers/base/power/wakeup.c:185",
+  "debugfs_remove_recursive": "include/linux/debugfs.h:324",
+  "cpumask_next": "include/linux/cpumask.h:230",
+  "devm_add_action": "include/linux/device/devres.h:153",
+  "wakeup_source_destroy": "drivers/base/power/wakeup.c:151",
+  "irq_find_mapping": "include/linux/irqdomain.h:484",
+  "of_parse_phandle_with_args": "include/linux/of.h:1031",
+  "dev_pm_opp_get_freq": "include/linux/pm_opp.h:746",
+  "mutex_trylock": "include/linux/mutex.h:218",
+  "devm_gpiochip_add_data": "include/linux/gpio/driver.h:611",
+  "dma_direct_sync_single_for_cpu": "kernel/dma/direct.h:67",
+  "dma_direct_sync_single_for_device": "kernel/dma/direct.h:56",
+  "pfn_valid": "arch/arm/include/asm/page.h:179",
+  "__alloc_percpu": "include/linux/percpu.h:141",
+  "__get_free_pages": "include/linux/gfp.h:362",
+  "scatterwalk_map_and_copy": "include/crypto/scatterwalk.h:285",
+  "__ion_device_add_heap": "include/linux/ion.h:177",
+  "mutex_lock_interruptible": "include/linux/mutex.h:169",
+  "drm_err": "drivers/gpu/drm/amd/display/include/logger_types.h:31",
+  "simd_skcipher_create_compat": "crypto/simd.c:139",
+  "simd_skcipher_free": "crypto/simd.c:200",
+  "kfree_skb": "include/linux/skbuff.h:1329",
+  "ion_device_remove_heap": "include/linux/ion.h:208",
+  "ion_buffer_prep_noncached": "include/linux/ion.h:334",
+  "devres_alloc_node": "include/linux/device/devres.h:25",
+  "sprd_musb_dma_controller_create": "drivers/usb/musb/sprd_musbhsdma.c:1228",
+  "sprd_musb_dma_controller_destroy": "drivers/usb/musb/sprd_musbhsdma.c:1206",
+  "sprd_dma_interrupt": "drivers/usb/musb/sprd_musbhsdma.c:1118",
+  "musb_dma_controller_destroy": "drivers/usb/musb/musb_dma.h:188",
+  "pwmchip_add": "include/linux/pwm.h:488",
+  "cpu_down": "kernel/cpu.c:1497",
+  "devm_iio_kfifo_allocate": "drivers/iio/buffer/kfifo_buf.c:239",
+  "iio_trigger_alloc": "include/linux/iio/trigger.h:159",
+  "crypto_sha1_update": "crypto/sha1.c:79",
+  "shmem_ram_vmap_cache_ex": "include/linux/soc/sprd/sipc.h:439",
+  "snd_soc_dapm_kcontrol_dapm": "include/sound/soc-dapm.h:738",
+  "dapm_kcontrol_get_value": "include/sound/soc-dapm.h:739",
+  "vbc_phy_ap2dsp": "drivers/vxtux/sound/asoc/dai_v4/vbc-phy-v4.c:76",
+  "get_ap_vbc_phy_base": "drivers/vxtux/sound/asoc/dai_v4/vbc-phy-v4.c:94",
+  "sblock_pcfg_create": "include/linux/soc/sprd/sipc.h:717",
+  "flush_workqueue": "include/linux/workqueue.h:776",
+  "cpufreq_get_policy": "tools/power/cpupower/lib/cpufreq.c:254",
+  "dev_pm_opp_add": "include/linux/pm_opp.h:622",
+  "arch_set_freq_scale": "include/linux/cpufreq.h:1220",
+  "snd_soc_set_runtime_hwparams": "include/sound/soc.h:499",
+  "drm_dbg": "drivers/gpu/drm/amd/display/include/logger_types.h:33",
+  "sprd_gsp_get_capability_ioctl": "drivers/gpu/drm/sprd/gsp/gsp_dev.c:490",
+  "sprd_gsp_trigger_ioctl": "drivers/gpu/drm/sprd/gsp/gsp_dev.c:560",
+  "drm_mode_config_init": "include/drm/drm_mode_config.h:978",
+  "csi_api_reg_trace": "drivers/media/platform/sprd/sensors/sprd_sensor/csi2/sprd/receiver_r3p0/csi_api.c:423",
+  "sprd_iommu_set_cam_bypass": "include/linux/sprd_iommu.h:134",
+  "sprd_sensor_find_dcam_id": "drivers/media/platform/sprd/sensors/sprd_sensor/sprd_sensor_drv.c:1720",
+  "ion_alloc": "include/linux/ion.h:347",
+  "sprd_iommu_map_single_page": "include/linux/sprd_iommu.h:125",
+  "modem_ram_unmap": "drivers/soc/sprd/modem/cp_dump/sprd_cp_dump.h:66",
+  "of_get_address": "include/linux/of_address.h:179",
+  "register_virtio_driver": "include/linux/virtio.h:262",
+  "register_blkdev": "include/linux/blkdev.h:973",
+  "kvmalloc_node": "include/linux/slab.h:1105",
+  "kmem_cache_create": "include/linux/slab.h:461"
+ },
+ "instr": {
+  "__stack_chk_guard": 107,
+  "__cfi_slowpath": 62
+ },
+ "hilang": {
+  "kmalloc_order_trace": 6,
+  "__ioremap": 5,
+  "fpsimd_context_busy": 4,
+  "dma_direct_map_page": 3,
+  "dma_direct_unmap_page": 3,
+  "usbnet_get_stats64": 2,
+  "__dev_kfree_skb_any": 2,
+  "devm_gpio_request": 2,
+  "usbnet_get_link_ksettings": 1,
+  "usbnet_set_link_ksettings": 1,
+  "of_dev_put": 1,
+  "__rtc_register_device": 1,
+  "sdhci_pltfm_free": 1,
+  "iio_triggered_buffer_postenable": 1,
+  "iio_triggered_buffer_predisable": 1,
+  "__iio_trigger_register": 1,
+  "crypto_sha1_finup": 1,
+  "snd_soc_of_parse_daifmt": 1,
+  "snd_soc_component_read32": 1,
+  "dapm_regulator_event": 1,
+  "cpufreq_generic_attr": 1,
+  "drm_gem_cma_prime_get_sg_table": 1,
+  "drm_gem_cma_prime_vmap": 1,
+  "drm_gem_cma_prime_vunmap": 1,
+  "drm_gem_cma_prime_mmap": 1,
+  "drm_gem_cma_vm_ops": 1,
+  "drm_gem_object_put_unlocked": 1,
+  "drm_panel_attach": 1,
+  "drm_panel_detach": 1,
+  "ns_to_timeval": 1,
+  "pm_get_active_wakeup_sources": 1,
+  "devm_gpio_free": 1,
+  "__tracepoint_android_vh_psci_tos_resident_on": 1,
+  "__tracepoint_android_vh_psci_cpu_suspend": 1,
+  "__tracepoint_android_vh_ion_buffer_release": 1,
+  "bdget_disk": 1,
+  "bdput": 1,
+  "fsync_bdev": 1,
+  "blk_cleanup_queue": 1,
+  "blkdev_put": 1,
+  "blk_queue_make_request": 1,
+  "blk_queue_physical_block_size": 1,
+  "blk_queue_logical_block_size": 1,
+  "blk_queue_io_min": 1,
+  "blk_queue_io_opt": 1,
+  "blk_queue_max_discard_sectors": 1,
+  "blk_queue_max_write_zeroes_sectors": 1,
+  "generic_start_io_acct": 1,
+  "generic_end_io_acct": 1,
+  "page_endio": 1,
+  "revalidate_disk": 1,
+  "filp_open_block": 1,
+  "bdgrab": 1,
+  "blkdev_get": 1,
+  "__ClearPageMovable": 1,
+  "__put_page": 1,
+  "__SetPageMovable": 1,
+  "wait_on_page_bit": 1,
+  "page_mapping": 1,
+  "register_shrinker": 1,
+  "unregister_shrinker": 1
+ },
+ "crc_beda": {
+  "__platform_driver_register": 87,
+  "platform_driver_unregister": 82,
+  "_dev_err": 73,
+  "devm_kmalloc": 67,
+  "mutex_unlock": 50,
+  "of_property_read_variable_u32_array": 48,
+  "cpu_hwcap_keys": 47,
+  "kmalloc_caches": 45,
+  "__dynamic_pr_debug": 41,
+  "__mutex_init": 41,
+  "_dev_info": 36,
+  "_dev_warn": 36,
+  "cpu_hwcaps": 35,
+  "__dynamic_dev_dbg": 33,
+  "regmap_update_bits_base": 32,
+  "of_property_read_string": 30,
+  "regmap_read": 29,
+  "_raw_spin_lock_irqsave": 27,
+  "_raw_spin_unlock_irqrestore": 27,
+  "__init_waitqueue_head": 26,
+  "__arch_copy_from_user": 24,
+  "__wake_up": 21,
+  "__arch_copy_to_user": 21,
+  "devm_kfree": 21,
+  "seq_printf": 20,
+  "of_device_get_match_data": 19,
+  "prepare_to_wait_event": 18,
+  "finish_wait": 18,
+  "init_timer_key": 18,
+  "devm_request_threaded_irq": 18,
+  "pm_runtime_enable": 18,
+  "dev_get_regmap": 17,
+  "of_find_node_opts_by_path": 17,
+  "queue_work_on": 17,
+  "of_find_property": 16,
+  "syscon_regmap_lookup_by_phandle_args": 16,
+  "regmap_write": 16,
+  "platform_get_resource": 16,
+  "syscon_regmap_lookup_by_phandle": 15,
+  "devm_clk_get": 15,
+  "misc_register": 15,
+  "devm_ioremap_resource": 15,
+  "platform_get_irq": 15,
+  "_raw_spin_lock": 14,
+  "_raw_spin_unlock": 14,
+  "misc_deregister": 14,
+  "seq_lseek": 14,
+  "seq_read": 14,
+  "single_open": 14,
+  "delayed_work_timer_fn": 14,
+  "queue_delayed_work_on": 14,
+  "__pm_runtime_set_status": 14,
+  "__pm_runtime_resume": 14,
+  "sysfs_create_group": 13,
+  "single_release": 13,
+  "cancel_delayed_work_sync": 13,
+  "kthread_create_on_node": 11,
+  "wake_up_process": 11,
+  "device_create": 10,
+  "class_destroy": 10,
+  "kstrtoint": 10,
+  "kstrtouint": 10,
+  "__pm_stay_awake": 10,
+  "__pm_relax": 10,
+  "debugfs_create_dir": 10,
+  "of_find_device_by_node": 9,
+  "of_address_to_resource": 9,
+  "cdev_init": 9,
+  "of_match_node": 9,
+  "of_property_read_u32_index": 9,
+  "gpio_to_desc": 9,
+  "__pm_runtime_disable": 9,
+  "sysfs_create_groups": 9,
+  "of_find_compatible_node": 8,
+  "cancel_work_sync": 8,
+  "__pm_runtime_suspend": 8,
+  "complete": 8,
+  "__pm_runtime_idle": 8,
+  "of_get_next_child": 8,
+  "regulator_enable": 8,
+  "sysfs_remove_group": 7,
+  "sched_setscheduler": 7,
+  "cdev_add": 7,
+  "of_property_read_variable_u8_array": 7,
+  "cdev_del": 7,
+  "of_device_is_compatible": 7,
+  "devm_platform_ioremap_resource": 7,
+  "__pm_runtime_use_autosuspend": 7,
+  "of_clk_get_by_name": 7,
+  "mod_timer": 7,
+  "regulator_disable": 7,
+  "device_destroy": 7,
+  "snd_soc_register_component": 7,
+  "atomic_notifier_chain_register": 6,
+  "kthread_stop": 6,
+  "gen_pool_alloc_algo_owner": 6,
+  "gen_pool_free_owner": 6,
+  "gen_pool_create": 6,
+  "gen_pool_add_owner": 6,
+  "gpiod_to_irq": 6
+ },
+ "rows": [
+  {
+   "blob": "aes-ce-ccm.ko",
+   "undef": 23,
+   "ok": 19,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 5,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "fpsimd_context_busy",
+     []
+    ]
+   ],
+   "map": {}
+  },
+  {
+   "blob": "aes-neon-blk.ko",
+   "undef": 27,
+   "ok": 23,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 10,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "fpsimd_context_busy",
+     []
+    ]
+   ],
+   "map": {}
+  },
+  {
+   "blob": "agdsp_access.ko",
+   "undef": 33,
+   "ok": 30,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 18,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "apsys-dvfs.ko",
+   "undef": 63,
+   "ok": 55,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 40,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__ioremap",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "arc4.ko",
+   "undef": 9,
+   "ok": 8,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 4,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "asix.ko",
+   "undef": 80,
+   "ok": 68,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 4,
+   "port": 0,
+   "instr": 2,
+   "hilang": 4,
+   "crc_beda": 60,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "__dev_kfree_skb_any",
+     []
+    ],
+    [
+     "usbnet_get_link_ksettings",
+     [
+      "usbnet_get_drvinfo",
+      "usbnet_get_endpoints"
+     ]
+    ],
+    [
+     "usbnet_get_stats64",
+     [
+      "usbnet_get_drvinfo",
+      "usbnet_get_endpoints"
+     ]
+    ],
+    [
+     "usbnet_set_link_ksettings",
+     [
+      "usbnet_set_link_ksettings_mii",
+      "usbnet_set_msglevel"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "audio-dsp-dump.ko",
+   "undef": 66,
+   "ok": 58,
+   "ekspor": 0,
+   "rename": 5,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 28,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "__memset_io",
+     [
+      "memset_io"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__memset_io": "memset_io",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "audio-pipe.ko",
+   "undef": 32,
+   "ok": 28,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 16,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "vmalloc",
+     [
+      "vmalloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "vmalloc": "vmalloc_noprof"
+   }
+  },
+  {
+   "blob": "audio_mem.ko",
+   "undef": 35,
+   "ok": 28,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 21,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "audio_sipc.ko",
+   "undef": 45,
+   "ok": 37,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 24,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__memset_io",
+     [
+      "memset_io"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__memset_io": "memset_io",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "ax88179_178a.ko",
+   "undef": 49,
+   "ok": 45,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 2,
+   "crc_beda": 38,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "__dev_kfree_skb_any",
+     []
+    ],
+    [
+     "usbnet_get_stats64",
+     [
+      "usbnet_get_drvinfo",
+      "usbnet_get_endpoints"
+     ]
+    ]
+   ],
+   "map": {
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "bq2560x-charger.ko",
+   "undef": 65,
+   "ok": 59,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 49,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "clk-sprd.ko",
+   "undef": 28,
+   "ok": 25,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 18,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "core.ko",
+   "undef": 20,
+   "ok": 13,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 9,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__class_create": "class_create",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "extcon-usb-gpio.ko",
+   "undef": 23,
+   "ok": 22,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 19,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "ghash-ce.ko",
+   "undef": 28,
+   "ok": 24,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 9,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "fpsimd_context_busy",
+     []
+    ]
+   ],
+   "map": {}
+  },
+  {
+   "blob": "gpio-eic-sprd.ko",
+   "undef": 26,
+   "ok": 20,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 16,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "find_next_bit",
+     [
+      "_find_next_bit"
+     ]
+    ],
+    [
+     "gpiochip_find",
+     [
+      "gpio_device_find"
+     ]
+    ]
+   ],
+   "map": {
+    "gpiochip_find": "gpio_device_find",
+    "find_next_bit": "_find_next_bit"
+   }
+  },
+  {
+   "blob": "gpio-pmic-eic-sprd.ko",
+   "undef": 24,
+   "ok": 19,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 16,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "find_next_bit",
+     [
+      "_find_next_bit"
+     ]
+    ]
+   ],
+   "map": {
+    "find_next_bit": "_find_next_bit"
+   }
+  },
+  {
+   "blob": "gpio-sprd.ko",
+   "undef": 20,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 12,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "find_next_bit",
+     [
+      "_find_next_bit"
+     ]
+    ]
+   ],
+   "map": {
+    "find_next_bit": "_find_next_bit"
+   }
+  },
+  {
+   "blob": "gpio.ko",
+   "undef": 15,
+   "ok": 10,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 2,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 7,
+   "blokir_modul": {
+    "core": 2
+   },
+   "contoh": [
+    [
+     "gpiochip_find",
+     [
+      "gpio_device_find"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "gpiochip_find": "gpio_device_find"
+   }
+  },
+  {
+   "blob": "hxchipset_83102e.ko",
+   "undef": 96,
+   "ok": 84,
+   "ekspor": 0,
+   "rename": 5,
+   "makro": 5,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 59,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "hrtimer_init",
+     [
+      "hrtimer_setup"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "printk": "_printk",
+    "hrtimer_init": "hrtimer_setup"
+   }
+  },
+  {
+   "blob": "i2c-sprd-hw.ko",
+   "undef": 37,
+   "ok": 35,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 23,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "i2c-sprd.ko",
+   "undef": 52,
+   "ok": 47,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 33,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "dma_direct_map_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ],
+    [
+     "dma_direct_unmap_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ]
+   ],
+   "map": {
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "ion_cma_heap.ko",
+   "undef": 37,
+   "ok": 30,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 4,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 20,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "ion_ipc_trusty.ko",
+   "undef": 30,
+   "ok": 24,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 9,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "jpg.ko",
+   "undef": 75,
+   "ok": 67,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 4,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 51,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "kfifo_buf.ko",
+   "undef": 20,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 7,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "leds-sc27xx-bltc.ko",
+   "undef": 17,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 13,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "ledtrig-pattern.ko",
+   "undef": 23,
+   "ok": 18,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 11,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "del_timer_sync",
+     [
+      "timer_delete_sync"
+     ]
+    ],
+    [
+     "kmalloc_order_trace",
+     []
+    ]
+   ],
+   "map": {
+    "del_timer_sync": "timer_delete_sync"
+   }
+  },
+  {
+   "blob": "mcdt_hw.ko",
+   "undef": 22,
+   "ok": 17,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 13,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "mipi_driver.ko",
+   "undef": 40,
+   "ok": 36,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 24,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "misc_sprd_uid.ko",
+   "undef": 17,
+   "ok": 16,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 9,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "mmc_hsq.ko",
+   "undef": 20,
+   "ok": 17,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 11,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "mmc_swcq.ko",
+   "undef": 62,
+   "ok": 54,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 41,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "del_timer",
+     [
+      "timer_delete"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "del_timer": "timer_delete",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "mmdvfs.ko",
+   "undef": 51,
+   "ok": 41,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 5,
+   "port": 0,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 29,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__ioremap",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "musb_hdrc.ko",
+   "undef": 132,
+   "ok": 114,
+   "ekspor": 0,
+   "rename": 6,
+   "makro": 8,
+   "port": 0,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 90,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "del_timer",
+     [
+      "timer_delete"
+     ]
+    ],
+    [
+     "dev_printk",
+     [
+      "_dev_printk"
+     ]
+    ],
+    [
+     "find_next_bit",
+     [
+      "_find_next_bit"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "dma_direct_map_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ],
+    [
+     "dma_direct_unmap_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ]
+   ],
+   "map": {
+    "find_next_bit": "_find_next_bit",
+    "printk": "_printk",
+    "dev_printk": "_dev_printk",
+    "del_timer": "timer_delete",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "musb_sprd.ko",
+   "undef": 94,
+   "ok": 84,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 6,
+   "port": 1,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 56,
+   "blokir_modul": {
+    "musb_hdrc": 1
+   },
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ]
+   ],
+   "map": {
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "novatek_ts_spi.ko",
+   "undef": 78,
+   "ok": 66,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 6,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 44,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "kmalloc_order_trace",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "nvmem-sc27xx-efuse.ko",
+   "undef": 27,
+   "ok": 24,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 20,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "nvmem_sprd_cache_efuse.ko",
+   "undef": 23,
+   "ok": 20,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 12,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "nvmem_sprd_efuse.ko",
+   "undef": 25,
+   "ok": 22,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 15,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "phy-sprd-sharkl5Pro.ko",
+   "undef": 47,
+   "ok": 42,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 35,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "of_dev_put",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "pinctrl-sprd-sharkl5Pro.ko",
+   "undef": 6,
+   "ok": 6,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 5,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "pinctrl-sprd.ko",
+   "undef": 28,
+   "ok": 27,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 23,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "pinctrl.ko",
+   "undef": 17,
+   "ok": 12,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 2,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 8,
+   "blokir_modul": {
+    "core": 2
+   },
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "pwm-sprd.ko",
+   "undef": 15,
+   "ok": 14,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 10,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "pwm_bl.ko",
+   "undef": 33,
+   "ok": 27,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 23,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "pwm_apply_state",
+     [
+      "pwm_apply_might_sleep"
+     ]
+    ],
+    [
+     "pwm_free",
+     [
+      "pwm_put"
+     ]
+    ],
+    [
+     "pwm_request",
+     [
+      "pwm_get"
+     ]
+    ]
+   ],
+   "map": {
+    "pwm_request": "pwm_get",
+    "pwm_apply_state": "pwm_apply_might_sleep",
+    "pwm_free": "pwm_put"
+   }
+  },
+  {
+   "blob": "rtc-sc27xx.ko",
+   "undef": 28,
+   "ok": 22,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 15,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__rtc_register_device",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sblock_bridge.ko",
+   "undef": 24,
+   "ok": 23,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 11,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sbuf_bridge.ko",
+   "undef": 28,
+   "ok": 25,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 1,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 15,
+   "blokir_modul": {
+    "sipc-core": 1
+   },
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sc2730-regulator.ko",
+   "undef": 29,
+   "ok": 25,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 21,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sc27xx-poweroff.ko",
+   "undef": 19,
+   "ok": 16,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 8,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sc27xx-vibra.ko",
+   "undef": 16,
+   "ok": 16,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 14,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sc27xx_adc.ko",
+   "undef": 34,
+   "ok": 29,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 22,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sc27xx_fuel_gauge.ko",
+   "undef": 72,
+   "ok": 66,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 4,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 50,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sc27xx_typec.ko",
+   "undef": 39,
+   "ok": 38,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 31,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sdhci-sprd.ko",
+   "undef": 130,
+   "ok": 112,
+   "ekspor": 0,
+   "rename": 5,
+   "makro": 5,
+   "port": 5,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 87,
+   "blokir_modul": {
+    "mmc_swcq": 5
+   },
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "del_timer",
+     [
+      "timer_delete"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "no_llseek",
+     [
+      "noop_llseek"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "sdhci_pltfm_free",
+     [
+      "sdhci_pltfm_clk_get_max_clock",
+      "sdhci_pltfm_drv_exit"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "del_timer": "timer_delete",
+    "no_llseek": "noop_llseek",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "sensorhub.ko",
+   "undef": 86,
+   "ok": 72,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 5,
+   "port": 0,
+   "instr": 2,
+   "hilang": 3,
+   "crc_beda": 44,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "find_next_bit",
+     [
+      "_find_next_bit"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__iio_trigger_register",
+     [
+      "__iio_trigger_alloc"
+     ]
+    ],
+    [
+     "iio_triggered_buffer_postenable",
+     [
+      "iio_trigger_attach_poll_func",
+      "iio_trigger_consumer_attr_group"
+     ]
+    ],
+    [
+     "iio_triggered_buffer_predisable",
+     [
+      "iio_trigger_attach_poll_func",
+      "iio_trigger_consumer_attr_group"
+     ]
+    ]
+   ],
+   "map": {
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "find_next_bit": "_find_next_bit",
+    "__class_create": "class_create",
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sha1-ce.ko",
+   "undef": 12,
+   "ok": 9,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 0,
+   "hilang": 2,
+   "crc_beda": 2,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "crypto_sha1_finup",
+     [
+      "crypto_sha1_digest",
+      "crypto_sha1_export"
+     ]
+    ],
+    [
+     "fpsimd_context_busy",
+     []
+    ]
+   ],
+   "map": {}
+  },
+  {
+   "blob": "sipc-core.ko",
+   "undef": 92,
+   "ok": 79,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 8,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 59,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__kmalloc": "__kmalloc_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sipx.ko",
+   "undef": 52,
+   "ok": 42,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 5,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 30,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "hrtimer_init",
+     [
+      "hrtimer_setup"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "hrtimer_init": "hrtimer_setup",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "slog_bridge.ko",
+   "undef": 44,
+   "ok": 34,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 5,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 19,
+   "blokir_modul": {
+    "sipc-core": 5
+   },
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-card.ko",
+   "undef": 63,
+   "ok": 57,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 45,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "snd_soc_of_parse_daifmt",
+     [
+      "snd_soc_of_get_dai_link_codecs",
+      "snd_soc_of_get_dai_link_cpus"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-codec-sc2730-power-dev.ko",
+   "undef": 5,
+   "ok": 4,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 3,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-codec-sc2730-power.ko",
+   "undef": 23,
+   "ok": 19,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 13,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmemdup",
+     [
+      "kmemdup_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmemdup": "kmemdup_noprof"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-codec-sc2730.ko",
+   "undef": 134,
+   "ok": 116,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 11,
+   "port": 0,
+   "instr": 2,
+   "hilang": 3,
+   "crc_beda": 88,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "dapm_regulator_event",
+     []
+    ],
+    [
+     "devm_gpio_request",
+     [
+      "devm_gpio_chip_release",
+      "devm_gpio_release"
+     ]
+    ],
+    [
+     "snd_soc_component_read32",
+     [
+      "snd_soc_compensate_channel_connection_map",
+      "snd_soc_component_async_complete"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "alloc_workqueue": "alloc_workqueue_noprof"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-dummy-codec.ko",
+   "undef": 9,
+   "ok": 7,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 5,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "snd-soc-sprd-vbc-fe.ko",
+   "undef": 20,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 5,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "snd-soc-sprd-vbc-v4.ko",
+   "undef": 89,
+   "ok": 80,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 1,
+   "crc_beda": 44,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "vmalloc",
+     [
+      "vmalloc_noprof"
+     ]
+    ],
+    [
+     "kmalloc_order_trace",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__kmalloc": "__kmalloc_noprof",
+    "__class_create": "class_create",
+    "vmalloc": "vmalloc_noprof"
+   }
+  },
+  {
+   "blob": "spi-sprd-adi.ko",
+   "undef": 32,
+   "ok": 29,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 20,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "spi-sprd.ko",
+   "undef": 55,
+   "ok": 49,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 35,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "dma_direct_map_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ],
+    [
+     "dma_direct_unmap_page",
+     [
+      "dma_direct_all_ram_mapped",
+      "dma_direct_alloc"
+     ]
+    ]
+   ],
+   "map": {
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "spipe.ko",
+   "undef": 33,
+   "ok": 30,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 21,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "__class_create": "class_create",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "spool.ko",
+   "undef": 49,
+   "ok": 42,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 1,
+   "port": 2,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 27,
+   "blokir_modul": {
+    "sipc-core": 2
+   },
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "__class_create": "class_create",
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd-charger-manager.ko",
+   "undef": 99,
+   "ok": 86,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 7,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 63,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "__class_create": "class_create",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd-compr-2stage-dma.ko",
+   "undef": 70,
+   "ok": 54,
+   "ekspor": 0,
+   "rename": 6,
+   "makro": 7,
+   "port": 0,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 24,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "__memset_io",
+     [
+      "memset_io"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "dma_request_slave_channel",
+     [
+      "dma_request_chan"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "kmalloc_order_trace",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "dma_request_slave_channel": "dma_request_chan",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "__memset_io": "memset_io"
+   }
+  },
+  {
+   "blob": "sprd-cpufreq-public.ko",
+   "undef": 11,
+   "ok": 6,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 2,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd-cpufreq-v2.ko",
+   "undef": 68,
+   "ok": 55,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 8,
+   "port": 1,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 37,
+   "blokir_modul": {
+    "sprd_sip_svc": 1
+   },
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "cpufreq_generic_attr",
+     [
+      "cpufreq_generic_frequency_table_verify",
+      "cpufreq_generic_get"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd-dma.ko",
+   "undef": 48,
+   "ok": 43,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 35,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd-dmaengine-pcm.ko",
+   "undef": 45,
+   "ok": 37,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 22,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__memset_io",
+     [
+      "memset_io"
+     ]
+    ],
+    [
+     "dma_request_slave_channel",
+     [
+      "dma_request_chan"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__memset_io": "memset_io",
+    "dma_request_slave_channel": "dma_request_chan"
+   }
+  },
+  {
+   "blob": "sprd-drm.ko",
+   "undef": 288,
+   "ok": 261,
+   "ekspor": 0,
+   "rename": 6,
+   "makro": 9,
+   "port": 0,
+   "instr": 2,
+   "hilang": 10,
+   "crc_beda": 217,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "no_llseek",
+     [
+      "noop_llseek"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "pwm_apply_state",
+     [
+      "pwm_apply_might_sleep"
+     ]
+    ],
+    [
+     "__ioremap",
+     []
+    ],
+    [
+     "drm_gem_cma_prime_get_sg_table",
+     []
+    ],
+    [
+     "drm_gem_cma_prime_mmap",
+     []
+    ],
+    [
+     "drm_gem_cma_prime_vmap",
+     []
+    ],
+    [
+     "drm_gem_cma_prime_vunmap",
+     []
+    ],
+    [
+     "drm_gem_cma_vm_ops",
+     []
+    ],
+    [
+     "drm_gem_object_put_unlocked",
+     [
+      "drm_gem_object_free",
+      "drm_gem_object_handle_get"
+     ]
+    ],
+    [
+     "drm_panel_attach",
+     [
+      "drm_panel_add",
+      "drm_panel_add_follower"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "no_llseek": "noop_llseek",
+    "pwm_apply_state": "pwm_apply_might_sleep",
+    "__kmalloc": "__kmalloc_noprof",
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "sprd-gsp.ko",
+   "undef": 128,
+   "ok": 116,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 6,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 86,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "del_timer",
+     [
+      "timer_delete"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "del_timer": "timer_delete",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd-ion.ko",
+   "undef": 41,
+   "ok": 34,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 25,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__kmalloc": "__kmalloc_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd-platform-pcm-routing.ko",
+   "undef": 9,
+   "ok": 8,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 1,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 7,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd-sc27xx-spi.ko",
+   "undef": 19,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 11,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd-sipc-virt-bus.ko",
+   "undef": 6,
+   "ok": 6,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 5,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd-vsp-pw-domain.ko",
+   "undef": 23,
+   "ok": 21,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 17,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_7sreset.ko",
+   "undef": 16,
+   "ok": 15,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 12,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd_apipe.ko",
+   "undef": 34,
+   "ok": 30,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 18,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "vmalloc",
+     [
+      "vmalloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "vmalloc": "vmalloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_audcp_boot.ko",
+   "undef": 22,
+   "ok": 20,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 11,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__memset_io",
+     [
+      "memset_io"
+     ]
+    ]
+   ],
+   "map": {
+    "__memset_io": "memset_io"
+   }
+  },
+  {
+   "blob": "sprd_audcp_dvfs.ko",
+   "undef": 18,
+   "ok": 17,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 10,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd_battery_info.ko",
+   "undef": 23,
+   "ok": 20,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 1,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 12,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_camera.ko",
+   "undef": 158,
+   "ok": 131,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 19,
+   "port": 0,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 83,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "del_timer_sync",
+     [
+      "timer_delete_sync"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "vzalloc",
+     [
+      "vzalloc_noprof"
+     ]
+    ],
+    [
+     "__ioremap",
+     []
+    ],
+    [
+     "ns_to_timeval",
+     [
+      "ns_to_timespec64"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "del_timer_sync": "timer_delete_sync",
+    "vzalloc": "vzalloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_camsys_pw_domain.ko",
+   "undef": 43,
+   "ok": 37,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 26,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_cpp.ko",
+   "undef": 78,
+   "ok": 65,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 8,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 50,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "vzalloc",
+     [
+      "vzalloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "vzalloc": "vzalloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_flash_drv.ko",
+   "undef": 16,
+   "ok": 13,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 10,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_hwspinlock.ko",
+   "undef": 18,
+   "ok": 18,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 12,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd_iq.ko",
+   "undef": 41,
+   "ok": 36,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 1,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 25,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_manufacturer_model.ko",
+   "undef": 7,
+   "ok": 6,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 4,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_mipi.ko",
+   "undef": 17,
+   "ok": 13,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 6,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_register",
+     [
+      "class_register"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "__class_register": "class_register"
+   }
+  },
+  {
+   "blob": "sprd_modem_loader.ko",
+   "undef": 64,
+   "ok": 52,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 7,
+   "port": 1,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 39,
+   "blokir_modul": {
+    "sipc-core": 1
+   },
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "__class_create": "class_create",
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_pdbg.ko",
+   "undef": 51,
+   "ok": 41,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 4,
+   "port": 1,
+   "instr": 2,
+   "hilang": 1,
+   "crc_beda": 26,
+   "blokir_modul": {
+    "sprd_sip_svc": 1
+   },
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "pm_get_active_wakeup_sources",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_pmic_syscon.ko",
+   "undef": 23,
+   "ok": 19,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 14,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_power_manager.ko",
+   "undef": 33,
+   "ok": 23,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 6,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 14,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "del_timer",
+     [
+      "timer_delete"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "del_timer": "timer_delete"
+   }
+  },
+  {
+   "blob": "sprd_power_stat.ko",
+   "undef": 30,
+   "ok": 22,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 3,
+   "port": 1,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 16,
+   "blokir_modul": {
+    "sprd_sip_svc": 1
+   },
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "sprd_sensor.ko",
+   "undef": 79,
+   "ok": 64,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 8,
+   "port": 0,
+   "instr": 2,
+   "hilang": 2,
+   "crc_beda": 44,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "devm_gpio_free",
+     [
+      "devm_gpio_chip_release",
+      "devm_gpio_release"
+     ]
+    ],
+    [
+     "devm_gpio_request",
+     [
+      "devm_gpio_chip_release",
+      "devm_gpio_release"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_shm.ko",
+   "undef": 43,
+   "ok": 37,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 29,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_sip_svc.ko",
+   "undef": 5,
+   "ok": 3,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 0,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_soc_id.ko",
+   "undef": 14,
+   "ok": 12,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 8,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "sprd_systimer.ko",
+   "undef": 10,
+   "ok": 7,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 4,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "hrtimer_init",
+     [
+      "hrtimer_setup"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "hrtimer_init": "hrtimer_setup"
+   }
+  },
+  {
+   "blob": "sprd_time_sync.ko",
+   "undef": 36,
+   "ok": 31,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 0,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 19,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "sprd_time_sync_cp.ko",
+   "undef": 2,
+   "ok": 2,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 1,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "sprd_wdt_fiq.ko",
+   "undef": 31,
+   "ok": 27,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 15,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "trusty-ipc.ko",
+   "undef": 69,
+   "ok": 58,
+   "ekspor": 0,
+   "rename": 5,
+   "makro": 4,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 40,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__class_create",
+     [
+      "class_create"
+     ]
+    ],
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_pages_exact",
+     [
+      "alloc_pages_exact_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "alloc_pages_exact": "alloc_pages_exact_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "__class_create": "class_create"
+   }
+  },
+  {
+   "blob": "trusty-irq.ko",
+   "undef": 44,
+   "ok": 39,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 27,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "trusty-log.ko",
+   "undef": 39,
+   "ok": 32,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 2,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 21,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__alloc_pages_nodemask",
+     [
+      "__alloc_pages_noprof"
+     ]
+    ],
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "__alloc_pages_nodemask": "__alloc_pages_noprof"
+   }
+  },
+  {
+   "blob": "trusty-pm.ko",
+   "undef": 10,
+   "ok": 7,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 2,
+   "crc_beda": 2,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__tracepoint_android_vh_psci_cpu_suspend",
+     [
+      "__tracepoint_add_device_to_group",
+      "__tracepoint_alarmtimer_cancel"
+     ]
+    ],
+    [
+     "__tracepoint_android_vh_psci_tos_resident_on",
+     [
+      "__tracepoint_add_device_to_group",
+      "__tracepoint_alarmtimer_cancel"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "trusty-tui.ko",
+   "undef": 20,
+   "ok": 17,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 0,
+   "port": 0,
+   "instr": 1,
+   "hilang": 0,
+   "crc_beda": 13,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "trusty-virtio.ko",
+   "undef": 41,
+   "ok": 33,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 4,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 23,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_pages_exact",
+     [
+      "alloc_pages_exact_noprof"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ]
+   ],
+   "map": {
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "alloc_pages_exact": "alloc_pages_exact_noprof"
+   }
+  },
+  {
+   "blob": "trusty.ko",
+   "undef": 66,
+   "ok": 55,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 5,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 41,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "alloc_workqueue": "alloc_workqueue_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "twofish_common.ko",
+   "undef": 1,
+   "ok": 1,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 0,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "twofish_generic.ko",
+   "undef": 4,
+   "ok": 4,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 3,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "ums512-clk.ko",
+   "undef": 18,
+   "ok": 18,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 0,
+   "port": 0,
+   "instr": 0,
+   "hilang": 0,
+   "crc_beda": 17,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "unisoc-iommu.ko",
+   "undef": 63,
+   "ok": 47,
+   "ekspor": 0,
+   "rename": 3,
+   "makro": 8,
+   "port": 0,
+   "instr": 2,
+   "hilang": 3,
+   "crc_beda": 31,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__ioremap",
+     []
+    ],
+    [
+     "__tracepoint_android_vh_ion_buffer_release",
+     [
+      "__tracepoint_add_device_to_group",
+      "__tracepoint_alarmtimer_cancel"
+     ]
+    ],
+    [
+     "kmalloc_order_trace",
+     []
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof"
+   }
+  },
+  {
+   "blob": "unisoc-mailbox.ko",
+   "undef": 49,
+   "ok": 44,
+   "ekspor": 0,
+   "rename": 1,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 33,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk"
+   }
+  },
+  {
+   "blob": "usb_f_vser.ko",
+   "undef": 52,
+   "ok": 44,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 30,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__kmalloc",
+     [
+      "__kmalloc_noprof"
+     ]
+    ],
+    [
+     "alloc_workqueue",
+     [
+      "alloc_workqueue_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__kmalloc": "__kmalloc_noprof",
+    "alloc_workqueue": "alloc_workqueue_noprof"
+   }
+  },
+  {
+   "blob": "virt-dma.ko",
+   "undef": 12,
+   "ok": 8,
+   "ekspor": 0,
+   "rename": 0,
+   "makro": 2,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 6,
+   "blokir_modul": {},
+   "contoh": [],
+   "map": {}
+  },
+  {
+   "blob": "vsp.ko",
+   "undef": 80,
+   "ok": 70,
+   "ekspor": 0,
+   "rename": 2,
+   "makro": 6,
+   "port": 0,
+   "instr": 2,
+   "hilang": 0,
+   "crc_beda": 56,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  },
+  {
+   "blob": "zram.ko",
+   "undef": 129,
+   "ok": 93,
+   "ekspor": 0,
+   "rename": 6,
+   "makro": 7,
+   "port": 2,
+   "instr": 2,
+   "hilang": 19,
+   "crc_beda": 54,
+   "blokir_modul": {
+    "zsmalloc": 2
+   },
+   "contoh": [
+    [
+     "__alloc_pages_nodemask",
+     [
+      "__alloc_pages_noprof"
+     ]
+    ],
+    [
+     "__class_register",
+     [
+      "class_register"
+     ]
+    ],
+    [
+     "find_next_zero_bit",
+     [
+      "_find_next_zero_bit"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "vzalloc",
+     [
+      "vzalloc_noprof"
+     ]
+    ],
+    [
+     "bdget_disk",
+     []
+    ],
+    [
+     "bdgrab",
+     []
+    ],
+    [
+     "bdput",
+     []
+    ],
+    [
+     "blk_cleanup_queue",
+     []
+    ],
+    [
+     "blk_queue_io_min",
+     [
+      "blk_queue_attr_groups",
+      "blk_queue_enter"
+     ]
+    ],
+    [
+     "blk_queue_io_opt",
+     [
+      "blk_queue_attr_groups",
+      "blk_queue_enter"
+     ]
+    ],
+    [
+     "blk_queue_logical_block_size",
+     [
+      "blk_queue_attr_groups",
+      "blk_queue_enter"
+     ]
+    ],
+    [
+     "blk_queue_make_request",
+     [
+      "blk_queue_attr_groups",
+      "blk_queue_enter"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof",
+    "__class_register": "class_register",
+    "__alloc_pages_nodemask": "__alloc_pages_noprof",
+    "vzalloc": "vzalloc_noprof",
+    "find_next_zero_bit": "_find_next_zero_bit"
+   }
+  },
+  {
+   "blob": "zsmalloc.ko",
+   "undef": 56,
+   "ok": 41,
+   "ekspor": 0,
+   "rename": 4,
+   "makro": 3,
+   "port": 0,
+   "instr": 1,
+   "hilang": 7,
+   "crc_beda": 31,
+   "blokir_modul": {},
+   "contoh": [
+    [
+     "__alloc_pages_nodemask",
+     [
+      "__alloc_pages_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "kmem_cache_alloc_trace",
+     [
+      "kmem_cache_alloc_noprof"
+     ]
+    ],
+    [
+     "printk",
+     [
+      "_printk"
+     ]
+    ],
+    [
+     "__ClearPageMovable",
+     []
+    ],
+    [
+     "__SetPageMovable",
+     []
+    ],
+    [
+     "__put_page",
+     []
+    ],
+    [
+     "page_mapping",
+     []
+    ],
+    [
+     "register_shrinker",
+     [
+      "register_snap_client",
+      "register_stat_tracer"
+     ]
+    ],
+    [
+     "unregister_shrinker",
+     [
+      "unregister_asymmetric_key_parser",
+      "unregister_binfmt"
+     ]
+    ],
+    [
+     "wait_on_page_bit",
+     [
+      "wait_on_page_writeback"
+     ]
+    ]
+   ],
+   "map": {
+    "printk": "_printk",
+    "kmem_cache_alloc": "kmem_cache_alloc_noprof",
+    "__alloc_pages_nodemask": "__alloc_pages_noprof",
+    "kmem_cache_alloc_trace": "kmem_cache_alloc_noprof"
+   }
+  }
+ ]
+}

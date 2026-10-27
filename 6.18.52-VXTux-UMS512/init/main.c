@@ -908,11 +908,173 @@ static void __init early_numa_node_init(void)
 #endif
 }
 
+/*
+ * VXTUX boot probe (2026-10-26)
+ * ----------------------------
+ * Kernel Artix berhenti tanpa panic dan tanpa satu baris output: tidak ada
+ * UART, layar hanya menampilkan logo LK, dan partisi `cache` tidak pernah
+ * ditulis.
+ *
+ * DUA jebakan ditemukan dari bedah source (2026-10-26 malam):
+ *
+ * (1) FATAL — linear map belum ada saat start_kernel() masuk.
+ *     early_map_kernel() (arch/arm64/kernel/pi/map_kernel.c) HANYA
+ *     memetakan citra kernel [_stext.._end], rodata, __init, __bss dan FDT
+ *     di idmap; pemetaan seluruh RAM dibuat oleh paging_init() di dalam
+ *     setup_arch() (arch/arm64/kernel/setup.c:334).  Versi awala probe
+ *     menulis __va(0xC0000000) dan mengecat __va(0x9d000000) pada baris
+ *     PERTAMA start_kernel() -> translation fault senyap, jauh sebelum
+ *     printk/console/memblock sempat jalan -> layar diam di logo LK
+ *     selamanya dan partisi cache tak tersentuh.
+ *
+ *     Karena itu checkpoint 0 kini TIDAK menyentuh memori fisik sama
+ *     sekali; semua akses fisik dipindah ke pemetaan ioremap (memremap
+ *     MEMREMAP_WC) yang aman dipakai setelah paging_init(), sekaligus
+ *     tahan bila DT stok menandai daerah itu no-map.
+ *
+ * (2) Geometri framebuffer salah (lihat vxtux_paint di bawah).
+ *
+ * Setiap checkpoint melukis SATU PITA LEBAR PENUH berwarna berbeda;
+ * kalau layar tetap splash LK tanpa pita, kernel berhenti sebelum
+ * checkpoint pertama.  Panic buatan DIHAPUS: dengan kanal visual yang
+ * terlihat, siklus reboot justru menghapus bukti tiap kali.  Bila kernel
+ * menggantung, layar berhenti menampilkan pita terakhir — itulah
+ * initcall/step yang bermasalah.  Perekam (vxtux_flightrec) tetap
+ * menyalin dmesg ke partisi cache untuk kasus panic alami.
+ *
+ * Checkpoint:
+ *   0  entry start_kernel        (hanya printk, tanpa akses fisik)
+ *   1  setelah setup_arch        (paging_init + memblock siap)
+ *   2  setelah mm_core_init
+ *   3  sebelum do_basic_setup
+ *   4..11  setelah tiap level initcall (early..late)
+ */
+#define VXTUX_PROBE_PHYS	0xC0000000UL
+#define VXTUX_PROBE_MAGIC	0x56585400U
+
+/*
+ * Panel: LK meninggalkan display controller tetap memindai memorinya (layar
+ * berhenti menampilkan splash LK saat kernel tidak mengambil alih panel).
+ * Log LK menyebut kedua buffer-nya:
+ *   splashimage addr is 0x9d000000   (fb size 0x9e4000)
+ *   [LCD] Using LCD frambuffer at 0x9e000000
+ *   lcd_name=lcd_hx83102e_qc_1200x2000  lcd_base=9e000000
+ *   lcd_console: have 150/125 col/rws on scr 1200x2000
+ *     -> 150*8 = 1200, 125*16 = 2000 (font 8x16): layar 1200x2000
+ *   fb size 0x9e4000 = align4096(1200 * 2160 * 4) -> 32 bpp XRGB8888,
+ *   stride = 1200*4 = 4800.
+ *
+ * (Versi awal memakai 1200x1920 stride 1200*3 — salah.  Dengan stride
+ *  yang terlalu kecil setiap baris bergeser dan tulisan jadi noda yang
+ *  tidak terbaca, sehingga "kotak" tidak pernah terlihat.)
+ *
+ * Jadi kernel bisa "menggambar kemajuan boot" tanpa satu pun driver: cukup
+ * tulis ke alamat fisik itu lewat linear map (seluruh DRAM sudah dipetakan
+ * oleh PI stub), lalu flush D-cache supaya terbaca oleh DISPC.  SATU PITA
+ * LEBAR PENUH per checkpoint, warna berbeda tiap checkpoint; kalau layar
+ * tetap splash LK tanpa pita sama sekali, berarti kernel berhenti sebelum
+ * start_kernel().
+ */
+#define VXTUX_FB0_PHYS		0x9d000000UL
+#define VXTUX_FB1_PHYS		0x9e000000UL
+#define VXTUX_FB_WIDTH		1200U
+#define VXTUX_FB_BPP		4U		/* 32 bpp (XRGB8888) */
+#define VXTUX_FB_LINE		(VXTUX_FB_WIDTH * VXTUX_FB_BPP)
+#define VXTUX_FB_HEIGHT		2000U
+#define VXTUX_FB_BAR_H		64U
+#define VXTUX_FB_BAR_PITCH	80U
+#define VXTUX_FB_BAR_TOP	40U
+
+/* Warna per checkpoint, ditulis little-endian XRGB8888 -> B,G,R,X. */
+static const u32 vxtux_bar_col[] = {
+	0x00ffffff,	/* 0 putih     */
+	0x0000ff00,	/* 1 hijau     */
+	0x000000ff,	/* 2 merah     */
+	0x00ffff00,	/* 3 cyan      */
+	0x00ff8000,	/* 4 oranye    */
+	0x00ff00ff,	/* 5 magenta   */
+	0x0000ffff,	/* 6 kuning    */
+	0x008080ff,	/* 7 biru      */
+	0x008000ff,	/* 8 ungu      */
+	0x00404040,	/* 9 abu       */
+	0x00ff0080,	/* 10 merah muda */
+	0x0080ff80,	/* 11 mint     */
+};
+
+/*
+ * Pemetaan fisik->virtual untuk mengecat panel.  memremap(MEMREMAP_WC)
+ * menghasilkan pemetaan ioremap tersendiri: aman dipakai setelah
+ * paging_init() DAN tetap bekerja bila DT stok menandai daerah itu no-map
+ * (linear map tidak pernah dibuat untuk daerah no-map).  Karena pemetaannya
+ * write-combining (tidak cache), tulisan langsung terlihat oleh DISPC tanpa
+ * perlu flush D-cache.
+ */
+static void __iomem *vxtux_fb_io[2];
+
+static void __iomem *__init vxtux_fb_map(phys_addr_t phys)
+{
+	int i = (phys == VXTUX_FB1_PHYS);
+
+	if (!vxtux_fb_io[i])
+		vxtux_fb_io[i] = memremap(phys,
+					   (size_t)VXTUX_FB_LINE * VXTUX_FB_HEIGHT,
+					   MEMREMAP_WC);
+	return vxtux_fb_io[i];
+}
+
+static void __init vxtux_paint(unsigned int idx)
+{
+	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
+	u32 col = 0x00ffffff;
+	size_t y0 = VXTUX_FB_BAR_TOP + (size_t)idx * VXTUX_FB_BAR_PITCH;
+	unsigned int k;
+	size_t y;
+
+	if (idx < ARRAY_SIZE(vxtux_bar_col))
+		col = vxtux_bar_col[idx];
+	if (y0 + VXTUX_FB_BAR_H > VXTUX_FB_HEIGHT)
+		return;
+
+	for (k = 0; k < ARRAY_SIZE(fbs); k++) {
+		void __iomem *base = vxtux_fb_map(fbs[k]);
+
+		if (!base)
+			continue;
+		for (y = y0; y < y0 + VXTUX_FB_BAR_H; y++) {
+			u32 __iomem *row = (u32 __iomem *)(base +
+						       y * VXTUX_FB_LINE);
+			unsigned int x;
+
+			for (x = 0; x < VXTUX_FB_WIDTH; x++)
+				writel(col, row + x);
+		}
+	}
+}
+
+static void __init vxtux_probe(unsigned int cp)
+{
+	/*
+	 * cp == 0 berjalan di baris pertama start_kernel(): linear map
+	 * belum ada (lihat catatan di atas), jadi TIDAK boleh menyentuh
+	 * __va() / memori fisik apa pun.  Cukup printk — itu memakai
+	 * alamat virtual citra kernel yang sudah dipetakan PI stub.
+	 */
+	if (cp == 0) {
+		pr_emerg("VXTUX-PROBE-0: start_kernel tercapai\n");
+		return;
+	}
+
+	vxtux_paint(cp);
+	pr_emerg("VXTUX-PROBE-%u: lolos\n", cp);
+}
+
 asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
 void start_kernel(void)
 {
 	char *command_line;
 	char *after_dashes;
+
+	vxtux_probe(0);
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
@@ -932,6 +1094,7 @@ void start_kernel(void)
 	page_address_init();
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);
+	vxtux_probe(1);
 	/* Static keys and static calls are needed by LSMs */
 	jump_label_init();
 	static_call_init();
@@ -971,6 +1134,7 @@ void start_kernel(void)
 	sort_main_extable();
 	trap_init();
 	mm_core_init();
+	vxtux_probe(2);
 	maple_tree_init();
 	poking_init();
 	ftrace_init();
@@ -1361,6 +1525,7 @@ static void __init do_initcalls(void)
 		/* Parser modifies command_line, restore it each time */
 		strcpy(command_line, saved_command_line);
 		do_initcall_level(level, command_line);
+		vxtux_probe(4 + level);
 	}
 
 	kfree(command_line);
@@ -1592,6 +1757,7 @@ static noinline void __init kernel_init_freeable(void)
 	padata_init();
 	page_alloc_init_late();
 
+	vxtux_probe(3);
 	do_basic_setup();
 
 	kunit_run_all_tests();

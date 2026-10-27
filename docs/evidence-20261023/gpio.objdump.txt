@@ -1,0 +1,416 @@
+
+gpio.ko:     file format elf64-littleaarch64
+
+
+Disassembly of section .plt:
+
+0000000000000000 <.plt>:
+	...
+
+Disassembly of section .init.plt:
+
+0000000000000000 <.init.plt>:
+	...
+
+Disassembly of section .text.ftrace_trampoline:
+
+0000000000000000 <.text.ftrace_trampoline>:
+	...
+
+Disassembly of section .text:
+
+0000000000000000 <__cfi_check_fail>:
+       0:	str	x30, [x18], #8
+       4:	stp	x29, x30, [sp, #-16]!
+       8:	mov	x29, sp
+       c:	cbz	x0, 28 <__cfi_check_fail+0x28>
+      10:	ldrb	w8, [x0]
+      14:	cmp	w8, #0x5
+      18:	b.cc	28 <__cfi_check_fail+0x28>  // b.lo, b.ul, b.last
+      1c:	ldp	x29, x30, [sp], #16
+      20:	ldr	x30, [x18, #-8]!
+      24:	ret
+      28:	mov	w0, #0x2                   	// #2
+      2c:	bl	0 <__ubsan_handle_cfi_check_fail_abort>
+			2c: R_AARCH64_CALL26	__ubsan_handle_cfi_check_fail_abort
+
+0000000000000030 <gpio_test>:
+      30:	str	x30, [x18], #8
+      34:	stp	x29, x30, [sp, #-96]!
+      38:	str	x27, [sp, #16]
+      3c:	stp	x26, x25, [sp, #32]
+      40:	stp	x24, x23, [sp, #48]
+      44:	stp	x22, x21, [sp, #64]
+      48:	stp	x20, x19, [sp, #80]
+      4c:	mov	x29, sp
+      50:	mrs	x25, sp_el0
+      54:	ldrb	w10, [x25, #62]
+      58:	ldr	x9, [x25, #8]
+      5c:	mov	x19, x1
+      60:	lsl	x8, x1, #8
+      64:	tbnz	w10, #5, 74 <gpio_test+0x44>
+      68:	ldr	x11, [x25]
+      6c:	mov	x10, x19
+      70:	tbz	w11, #26, 78 <gpio_test+0x48>
+      74:	and	x10, x19, x8, asr #8
+      78:	adds	x10, x10, #0x4
+      7c:	csel	x9, xzr, x9, hi	// hi = pmore
+      80:	csinv	x10, x10, xzr, cc	// cc = lo, ul, last
+      84:	sbcs	xzr, x10, x9
+      88:	cset	x10, ls	// ls = plast
+      8c:	cbz	x10, 134 <gpio_test+0x104>
+      90:	ldr	x9, [x25, #8]
+      94:	and	x26, x19, x8, asr #8
+      98:	bics	xzr, x26, x9
+      9c:	csel	x8, x19, xzr, eq	// eq = none
+      a0:	csdb
+      a4:	b	15c <gpio_test+0x12c>
+      a8:	nop
+      ac:	mrs	x9, daif
+      b0:	and	w10, w9, #0x80
+      b4:	cbnz	w10, c0 <gpio_test+0x90>
+      b8:	mov	w10, #0x60                  	// #96
+      bc:	msr	daifset, #0x2
+      c0:	ldr	x10, [x25, #16]
+      c4:	mrs	x11, ttbr1_el1
+      c8:	mov	x12, x10
+      cc:	bfxil	x12, x11, #0, #48
+      d0:	msr	ttbr1_el1, x12
+      d4:	isb
+      d8:	msr	ttbr0_el1, x10
+      dc:	isb
+      e0:	msr	daif, x9
+      e4:	nop
+      e8:	mov	w9, wzr
+      ec:	ldr	w27, [x8]
+      f0:	b	170 <gpio_test+0x140>
+      f4:	nop
+      f8:	mrs	x8, daif
+      fc:	and	w10, w8, #0x80
+     100:	cbnz	w10, 10c <gpio_test+0xdc>
+     104:	mov	w10, #0x60                  	// #96
+     108:	msr	daifset, #0x2
+     10c:	mrs	x10, ttbr1_el1
+     110:	and	x10, x10, #0xffffffffffff
+     114:	sub	x11, x10, #0x1, lsl #12
+     118:	msr	ttbr0_el1, x11
+     11c:	isb
+     120:	msr	ttbr1_el1, x10
+     124:	isb
+     128:	msr	daif, x8
+     12c:	nop
+     130:	cbz	w9, 184 <gpio_test+0x154>
+     134:	mov	w20, #0xfffffff2            	// #-14
+     138:	mov	w0, w20
+     13c:	ldp	x20, x19, [sp, #80]
+     140:	ldp	x22, x21, [sp, #64]
+     144:	ldp	x24, x23, [sp, #48]
+     148:	ldp	x26, x25, [sp, #32]
+     14c:	ldr	x27, [sp, #16]
+     150:	ldp	x29, x30, [sp], #96
+     154:	ldr	x30, [x18, #-8]!
+     158:	ret
+     15c:	adrp	x9, 0 <cpu_hwcaps>
+			15c: R_AARCH64_ADR_PREL_PG_HI21	cpu_hwcaps
+     160:	ldr	x9, [x9]
+			160: R_AARCH64_LDST64_ABS_LO12_NC	cpu_hwcaps
+     164:	tbz	w9, #4, ac <gpio_test+0x7c>
+     168:	nop
+     16c:	b	e8 <gpio_test+0xb8>
+     170:	adrp	x8, 0 <cpu_hwcaps>
+			170: R_AARCH64_ADR_PREL_PG_HI21	cpu_hwcaps
+     174:	ldr	x8, [x8]
+			174: R_AARCH64_LDST64_ABS_LO12_NC	cpu_hwcaps
+     178:	tbz	w8, #4, f8 <gpio_test+0xc8>
+     17c:	nop
+     180:	cbnz	w9, 134 <gpio_test+0x104>
+     184:	and	w22, w27, #0xffff
+     188:	ubfx	w21, w27, #17, #1
+     18c:	adrp	x0, 0 <__cfi_check_fail>
+			18c: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x4f
+     190:	ubfx	x2, x27, #16, #1
+     194:	add	x0, x0, #0x0
+			194: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x4f
+     198:	mov	w1, w22
+     19c:	mov	w3, w21
+     1a0:	bl	0 <printk>
+			1a0: R_AARCH64_CALL26	printk
+     1a4:	adrp	x1, 0 <__cfi_check_fail>
+			1a4: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10cc
+     1a8:	add	x1, x1, #0x0
+			1a8: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10cc
+     1ac:	mov	x0, xzr
+     1b0:	bl	0 <gpiochip_find>
+			1b0: R_AARCH64_CALL26	gpiochip_find
+     1b4:	cbz	x0, 350 <gpio_test+0x320>
+     1b8:	ldr	w8, [x0, #136]
+     1bc:	mov	x23, x0
+     1c0:	add	w20, w8, w22
+     1c4:	mov	w0, w20
+     1c8:	bl	0 <gpio_to_desc>
+			1c8: R_AARCH64_CALL26	gpio_to_desc
+     1cc:	adrp	x1, 0 <__cfi_check_fail>
+			1cc: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x6c
+     1d0:	mov	x24, x0
+     1d4:	add	x1, x1, #0x0
+			1d4: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x6c
+     1d8:	mov	w0, w20
+     1dc:	bl	0 <gpio_request>
+			1dc: R_AARCH64_CALL26	gpio_request
+     1e0:	tbz	w0, #31, 1f0 <gpio_test+0x1c0>
+     1e4:	mov	w20, w0
+     1e8:	cmn	w0, #0x10
+     1ec:	b.ne	364 <gpio_test+0x334>  // b.any
+     1f0:	tbnz	w27, #16, 2f8 <gpio_test+0x2c8>
+     1f4:	mov	x0, x24
+     1f8:	bl	0 <gpiod_direction_input>
+			1f8: R_AARCH64_CALL26	gpiod_direction_input
+     1fc:	tbnz	w0, #31, 374 <gpio_test+0x344>
+     200:	mov	x0, x24
+     204:	bl	0 <gpiod_get_value>
+			204: R_AARCH64_CALL26	gpiod_get_value
+     208:	ldrb	w9, [x25, #62]
+     20c:	ldr	x8, [x25, #8]
+     210:	tbnz	w9, #5, 220 <gpio_test+0x1f0>
+     214:	ldr	x10, [x25]
+     218:	mov	x9, x19
+     21c:	tbz	w10, #26, 224 <gpio_test+0x1f4>
+     220:	mov	x9, x26
+     224:	adds	x9, x9, #0x4
+     228:	csel	x8, xzr, x8, hi	// hi = pmore
+     22c:	csinv	x9, x9, xzr, cc	// cc = lo, ul, last
+     230:	sbcs	xzr, x9, x8
+     234:	cset	x9, ls	// ls = plast
+     238:	cbz	x9, 2e8 <gpio_test+0x2b8>
+     23c:	cmp	w0, #0x0
+     240:	ldr	x9, [x25, #8]
+     244:	cset	w10, ne	// ne = any
+     248:	bics	xzr, x26, x9
+     24c:	csel	x8, x19, xzr, eq	// eq = none
+     250:	csdb
+     254:	bfi	w27, w10, #17, #1
+     258:	b	38c <gpio_test+0x35c>
+     25c:	nop
+     260:	mrs	x9, daif
+     264:	and	w10, w9, #0x80
+     268:	cbnz	w10, 274 <gpio_test+0x244>
+     26c:	mov	w10, #0x60                  	// #96
+     270:	msr	daifset, #0x2
+     274:	ldr	x10, [x25, #16]
+     278:	mrs	x11, ttbr1_el1
+     27c:	mov	x12, x10
+     280:	bfxil	x12, x11, #0, #48
+     284:	msr	ttbr1_el1, x12
+     288:	isb
+     28c:	msr	ttbr0_el1, x10
+     290:	isb
+     294:	msr	daif, x9
+     298:	nop
+     29c:	mov	w20, wzr
+     2a0:	str	w27, [x8]
+     2a4:	b	3a0 <gpio_test+0x370>
+     2a8:	nop
+     2ac:	mrs	x8, daif
+     2b0:	and	w9, w8, #0x80
+     2b4:	cbnz	w9, 2c0 <gpio_test+0x290>
+     2b8:	mov	w9, #0x60                  	// #96
+     2bc:	msr	daifset, #0x2
+     2c0:	mrs	x9, ttbr1_el1
+     2c4:	and	x9, x9, #0xffffffffffff
+     2c8:	sub	x10, x9, #0x1, lsl #12
+     2cc:	msr	ttbr0_el1, x10
+     2d0:	isb
+     2d4:	msr	ttbr1_el1, x9
+     2d8:	isb
+     2dc:	msr	daif, x8
+     2e0:	nop
+     2e4:	tbz	w20, #31, 138 <gpio_test+0x108>
+     2e8:	adrp	x0, 0 <__cfi_check_fail>
+			2e8: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x36
+     2ec:	add	x0, x0, #0x0
+			2ec: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x36
+     2f0:	bl	0 <printk>
+			2f0: R_AARCH64_CALL26	printk
+     2f4:	b	134 <gpio_test+0x104>
+     2f8:	mov	x0, x23
+     2fc:	mov	w1, w22
+     300:	bl	0 <gpiochip_line_is_irq>
+			300: R_AARCH64_CALL26	gpiochip_line_is_irq
+     304:	tbz	w0, #0, 338 <gpio_test+0x308>
+     308:	ldr	x19, [x23, #64]
+     30c:	mov	x0, #0xad08                	// #44296
+     310:	movk	x0, #0xad0a, lsl #16
+     314:	movk	x0, #0x4a3a, lsl #32
+     318:	movk	x0, #0x365d, lsl #48
+     31c:	mov	x1, x19
+     320:	bl	0 <__cfi_slowpath>
+			320: R_AARCH64_CALL26	__cfi_slowpath
+     324:	mov	x0, x23
+     328:	mov	w1, w22
+     32c:	mov	w2, w21
+     330:	blr	x19
+     334:	b	344 <gpio_test+0x314>
+     338:	mov	x0, x24
+     33c:	mov	w1, w21
+     340:	bl	0 <gpiod_direction_output>
+			340: R_AARCH64_CALL26	gpiod_direction_output
+     344:	mov	w20, w0
+     348:	tbz	w0, #31, 138 <gpio_test+0x108>
+     34c:	b	378 <gpio_test+0x348>
+     350:	adrp	x0, 0 <__cfi_check_fail>
+			350: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x1d
+     354:	add	x0, x0, #0x0
+			354: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x1d
+     358:	bl	0 <printk>
+			358: R_AARCH64_CALL26	printk
+     35c:	mov	w20, #0xffffffea            	// #-22
+     360:	b	138 <gpio_test+0x108>
+     364:	adrp	x0, 0 <__cfi_check_fail>
+			364: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x5
+     368:	add	x0, x0, #0x0
+			368: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x5
+     36c:	bl	0 <printk>
+			36c: R_AARCH64_CALL26	printk
+     370:	b	138 <gpio_test+0x108>
+     374:	mov	w20, w0
+     378:	adrp	x0, 0 <__cfi_check_fail>
+			378: R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x7a
+     37c:	add	x0, x0, #0x0
+			37c: R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x7a
+     380:	mov	w1, w20
+     384:	bl	0 <printk>
+			384: R_AARCH64_CALL26	printk
+     388:	b	138 <gpio_test+0x108>
+     38c:	adrp	x9, 0 <cpu_hwcaps>
+			38c: R_AARCH64_ADR_PREL_PG_HI21	cpu_hwcaps
+     390:	ldr	x9, [x9]
+			390: R_AARCH64_LDST64_ABS_LO12_NC	cpu_hwcaps
+     394:	tbz	w9, #4, 260 <gpio_test+0x230>
+     398:	nop
+     39c:	b	29c <gpio_test+0x26c>
+     3a0:	adrp	x8, 0 <cpu_hwcaps>
+			3a0: R_AARCH64_ADR_PREL_PG_HI21	cpu_hwcaps
+     3a4:	ldr	x8, [x8]
+			3a4: R_AARCH64_LDST64_ABS_LO12_NC	cpu_hwcaps
+     3a8:	tbz	w8, #4, 2ac <gpio_test+0x27c>
+     3ac:	nop
+     3b0:	tbz	w20, #31, 138 <gpio_test+0x108>
+     3b4:	b	2e8 <gpio_test+0x2b8>
+
+00000000000003b8 <gpio_match_name_gpio>:
+     3b8:	ldrh	w8, [x0, #140]
+     3bc:	cmp	w8, #0x100
+     3c0:	cset	w0, eq	// eq = none
+     3c4:	ret
+	...
+
+0000000000001000 <__cfi_check>:
+    1000:	mov	x8, #0x2444                	// #9284
+    1004:	movk	x8, #0x2924, lsl #16
+    1008:	movk	x8, #0xa43e, lsl #32
+    100c:	movk	x8, #0x2b3, lsl #48
+    1010:	cmp	x0, x8
+    1014:	b.gt	1054 <__cfi_check+0x54>
+    1018:	mov	x8, #0xa8e6                	// #43238
+    101c:	movk	x8, #0xff55, lsl #16
+    1020:	movk	x8, #0xb4be, lsl #32
+    1024:	movk	x8, #0x9c5c, lsl #48
+    1028:	cmp	x0, x8
+    102c:	b.eq	1090 <__cfi_check+0x90>  // b.none
+    1030:	mov	x8, #0x8f3a                	// #36666
+    1034:	movk	x8, #0x6e7b, lsl #16
+    1038:	movk	x8, #0x3aed, lsl #32
+    103c:	movk	x8, #0xb3af, lsl #48
+    1040:	cmp	x0, x8
+    1044:	b.ne	10b0 <__cfi_check+0xb0>  // b.any
+    1048:	adrp	x8, 0 <__cfi_check_fail>
+			1048: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10c8
+    104c:	add	x8, x8, #0x0
+			104c: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10c8
+    1050:	b	10a4 <__cfi_check+0xa4>
+    1054:	mov	x8, #0x2445                	// #9285
+    1058:	movk	x8, #0x2924, lsl #16
+    105c:	movk	x8, #0xa43e, lsl #32
+    1060:	movk	x8, #0x2b3, lsl #48
+    1064:	cmp	x0, x8
+    1068:	b.eq	109c <__cfi_check+0x9c>  // b.none
+    106c:	mov	x8, #0xbcd5                	// #48341
+    1070:	movk	x8, #0x7ad8, lsl #16
+    1074:	movk	x8, #0xa0fb, lsl #32
+    1078:	movk	x8, #0x7e04, lsl #48
+    107c:	cmp	x0, x8
+    1080:	b.ne	10b0 <__cfi_check+0xb0>  // b.any
+    1084:	adrp	x8, 0 <__cfi_check_fail>
+			1084: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10d0
+    1088:	add	x8, x8, #0x0
+			1088: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10d0
+    108c:	b	10a4 <__cfi_check+0xa4>
+    1090:	adrp	x8, 0 <__cfi_check_fail>
+			1090: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10cc
+    1094:	add	x8, x8, #0x0
+			1094: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10cc
+    1098:	b	10a4 <__cfi_check+0xa4>
+    109c:	adrp	x8, 0 <__cfi_check_fail>
+			109c: R_AARCH64_ADR_PREL_PG_HI21	.text+0x10c4
+    10a0:	add	x8, x8, #0x0
+			10a0: R_AARCH64_ADD_ABS_LO12_NC	.text+0x10c4
+    10a4:	cmp	x1, x8
+    10a8:	b.ne	10b0 <__cfi_check+0xb0>  // b.any
+    10ac:	ret
+    10b0:	str	x30, [sp, #-16]!
+    10b4:	mov	x0, x2
+    10b8:	bl	0 <__cfi_check_fail>
+			10b8: R_AARCH64_CALL26	__cfi_check_fail
+    10bc:	ldr	x30, [sp], #16
+    10c0:	ret
+    10c4:	b	0 <__cfi_check_fail>
+			10c4: R_AARCH64_JUMP26	init_module
+    10c8:	b	0 <__cfi_check_fail>
+			10c8: R_AARCH64_JUMP26	.text+0x30
+    10cc:	b	0 <__cfi_check_fail>
+			10cc: R_AARCH64_JUMP26	.text+0x3b8
+    10d0:	b	0 <__cfi_check_fail>
+			10d0: R_AARCH64_JUMP26	cleanup_module
+
+Disassembly of section .init.text:
+
+0000000000000000 <init_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-16]!
+   8:	mov	x29, sp
+   c:	adrp	x0, 0 <init_module>
+			c: R_AARCH64_ADR_PREL_PG_HI21	.data
+  10:	add	x0, x0, #0x0
+			10: R_AARCH64_ADD_ABS_LO12_NC	.data
+  14:	bl	0 <sprd_autotest_register_handler>
+			14: R_AARCH64_CALL26	sprd_autotest_register_handler
+  18:	ldp	x29, x30, [sp], #16
+  1c:	ldr	x30, [x18, #-8]!
+  20:	ret
+
+Disassembly of section .fixup:
+
+0000000000000000 <.fixup>:
+   0:	mov	w9, #0xfffffff2            	// #-14
+   4:	mov	x27, #0x0                   	// #0
+   8:	b	0 <.fixup>
+			8: R_AARCH64_JUMP26	.text+0xf0
+   c:	mov	w20, #0xfffffff2            	// #-14
+  10:	b	0 <.fixup>
+			10: R_AARCH64_JUMP26	.text+0x2a4
+
+Disassembly of section .exit.text:
+
+0000000000000000 <cleanup_module>:
+   0:	str	x30, [x18], #8
+   4:	stp	x29, x30, [sp, #-16]!
+   8:	mov	x29, sp
+   c:	adrp	x0, 0 <cleanup_module>
+			c: R_AARCH64_ADR_PREL_PG_HI21	.data
+  10:	add	x0, x0, #0x0
+			10: R_AARCH64_ADD_ABS_LO12_NC	.data
+  14:	bl	0 <sprd_autotest_unregister_handler>
+			14: R_AARCH64_CALL26	sprd_autotest_unregister_handler
+  18:	ldp	x29, x30, [sp], #16
+  1c:	ldr	x30, [x18, #-8]!
+  20:	ret

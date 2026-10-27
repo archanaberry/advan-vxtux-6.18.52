@@ -1,0 +1,12 @@
+# /etc/fstab -- root super fisik (ext4 RW)
+#
+# BARIS ROOT memakai UUID, bukan /dev/block/by-name/super: jalur by-name dibuat
+# oleh ueventd Android, tidak ada di kernel Linux murni.  PARTLABEL sudah
+# dipakai kernel untuk mount root saat boot, jadi baris ini hanya pelengkap
+# (mount -a) dan diberi nofail supaya gagal pun tidak menggagalkan service
+# "mount" dinit.
+UUID=bcb89503-886c-49e3-b47f-464af345cfcd  /  ext4  rw,relatime,errors=remount-ro,nofail  0 1
+proc                    /proc  proc  defaults  0 0
+sysfs                   /sys   sysfs defaults  0 0
+devtmpfs                /dev   devtmpfs mode=0755,nosuid  0 0
+tmpfs                   /tmp   tmpfs rw,nosuid,nodev,size=256M  0 0

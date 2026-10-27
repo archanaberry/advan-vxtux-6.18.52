@@ -1,0 +1,217 @@
+[    3.350208][    T1] Console: switching to colour frame buffer device 128x48
+[    3.362370][    T1] virtio-pci 0000:00:03.0: [drm] fb0: virtio_gpudrmfb frame buffer device
+[    3.664300][    T1] brd: module loaded
+[    3.856261][    T1] loop: module loaded
+[    3.874707][    T1] zram: Added device: zram0
+[    3.909365][    T1] wireguard: WireGuard 1.0.0 loaded. See www.wireguard.com for information.
+[    3.910128][    T1] wireguard: Copyright (C) 2015-2019 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+[    3.952291][    T1] tun: Universal TUN/TAP device driver, 1.6
+[    3.958403][    T1] CAN device driver interface
+[    3.959000][    T1] PPP generic driver version 2.4.2
+[    3.965328][    T1] PPP BSD Compression module registered
+[    3.965990][    T1] PPP Deflate Compression module registered
+[    3.966675][    T1] PPP MPPE Compression module registered
+[    3.967190][    T1] NET: Registered PF_PPPOX protocol family
+[    3.968254][    T1] PPTP driver version 0.8.5
+[    3.972347][    T1] usbcore: registered new device driver r8152-cfgselector
+[    3.974167][    T1] usbcore: registered new interface driver r8152
+[    3.976604][    T1] usbcore: registered new interface driver cdc_ether
+[    3.978380][    T1] usbcore: registered new interface driver net1080
+[    3.980504][    T1] usbcore: registered new interface driver cdc_subset
+[    3.982305][    T1] usbcore: registered new interface driver zaurus
+[    3.984402][    T1] usbcore: registered new interface driver cdc_ncm
+[    3.986300][    T1] usbcore: registered new interface driver aqc111
+[    3.988354][    T1] usbcore: registered new interface driver r8153_ecm
+[    4.005676][    T1] usbcore: registered new interface driver cdc_acm
+[    4.006498][    T1] cdc_acm: USB Abstract Control Model driver for USB modems and ISDN adapters
+[    4.011047][    T1] usbcore: registered new interface driver uas
+[    4.013594][    T1] usbcore: registered new interface driver usb-storage
+[    4.024866][    T1] dummy_hcd dummy_hcd.0: USB Host+Gadget Emulator, driver 02 May 2005
+[    4.026220][    T1] dummy_hcd dummy_hcd.0: Dummy host controller
+[    4.027114][    T1] dummy_hcd dummy_hcd.0: new USB bus registered, assigned bus number 1
+[    4.038573][    T1] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18
+[    4.040317][    T1] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    4.041403][    T1] usb usb1: Product: Dummy host controller
+[    4.042294][    T1] usb usb1: Manufacturer: Linux 6.18.52-VXTux-UMS512 dummy_hcd
+[    4.043361][    T1] usb usb1: SerialNumber: dummy_hcd.0
+[    4.062839][    T1] hub 1-0:1.0: USB hub found
+[    4.065727][    T1] hub 1-0:1.0: 1 port detected
+[    4.109703][    T1] g_ether gadget.0: HOST MAC 02:c0:32:78:86:1c
+[    4.110851][    T1] g_ether gadget.0: MAC 42:36:d0:70:7e:1d
+[    4.119230][    T1] g_ether gadget.0: Ethernet Gadget, version: Memorial Day 2008
+[    4.120390][    T1] g_ether gadget.0: g_ether ready
+[    4.135385][    T1] usbcore: registered new interface driver xpad
+[    4.158610][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 560: register main sensor:0
+[    4.160651][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 562: register sub sensor:0
+[    4.162127][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 564: register main2 sensor:0
+[    4.164625][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 566: register  sub2 sensor:0
+[    4.166355][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 568: register main3 sensor:0
+[    4.168267][    T1] SENSOR_DRV: 1: sprd_sensor_register_driver L 570: register  sub3 sensor:0
+[    4.169368][    T1] SENSOR_CORE: 1: sprd_sensor_core_module_init line=768: sensor register
+[    4.173463][    T1] SENSOR_CORE: 1: sprd_sensor_core_module_init line=771: create device node
+[    4.177871][    T1] gspca_main: v2.14.0 registered
+[    4.180787][    T1] usbcore: registered new interface driver uvcvideo
+[    4.192487][    T1] device-mapper: uevent: version 1.0.3
+[    4.198493][    T1] device-mapper: ioctl: 4.50.0-ioctl (2025-04-28) initialised: dm-devel@lists.linux.dev
+[    4.204865][    T1] Bluetooth: HCI UART driver ver 2.3
+[    4.205695][    T1] Bluetooth: HCI UART protocol H4 registered
+[    4.207251][    T1] Bluetooth: HCI UART protocol LL registered
+[    4.212760][    T1] Bluetooth: HCI UART protocol Broadcom registered
+[    4.214242][    T1] Bluetooth: HCI UART protocol QCA registered
+[    4.223006][    T1] sdhci: Secure Digital Host Controller Interface driver
+[    4.224251][    T1] sdhci: Copyright(c) Pierre Ossman
+[    4.224967][    T1] sdhci-pltfm: SDHCI platform and OF driver helper
+[    4.241502][    T1] hid: raw HID events driver (C) Jiri Kosina
+[    4.285545][    T1] usbcore: registered new interface driver usbhid
+[    4.286559][    T1] usbhid: USB HID core driver
+[    4.290821][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis302dl-spi
+[    4.292337][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis3lv02dl-accel
+[    4.293809][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis3dh-accel
+[    4.294969][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm330d-accel
+[    4.296715][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm330dl-accel
+[    4.297741][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm330dlc-accel
+[    4.299009][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis331dlh-accel
+[    4.300638][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm330-accel
+[    4.302215][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm303agr-accel
+[    4.303239][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis2dh12-accel
+[    4.305095][    T1] SPI driver st-accel-spi has no spi_device_id for st,lng2dm-accel
+[    4.306106][    T1] SPI driver st-accel-spi has no spi_device_id for st,h3lis331dl-accel
+[    4.307179][    T1] SPI driver st-accel-spi has no spi_device_id for st,lis331dl-accel
+[    4.308566][    T1] SPI driver st-accel-spi has no spi_device_id for st,lsm303c-accel
+[    4.310810][    T1] SPI driver st-gyro-spi has no spi_device_id for st,l3g4200d-gyro
+[    4.311983][    T1] SPI driver st-gyro-spi has no spi_device_id for st,lsm330d-gyro
+[    4.312845][    T1] SPI driver st-gyro-spi has no spi_device_id for st,lsm330dl-gyro
+[    4.314033][    T1] SPI driver st-gyro-spi has no spi_device_id for st,lsm330dlc-gyro
+[    4.314953][    T1] SPI driver st-gyro-spi has no spi_device_id for st,l3gd20-gyro
+[    4.316019][    T1] SPI driver st-gyro-spi has no spi_device_id for st,l3gd20h-gyro
+[    4.316871][    T1] SPI driver st-gyro-spi has no spi_device_id for st,l3g4is-gyro
+[    4.317797][    T1] SPI driver st-gyro-spi has no spi_device_id for st,lsm330-gyro
+[    4.318709][    T1] SPI driver st-gyro-spi has no spi_device_id for st,lsm9ds0-gyro
+[    4.343192][    T1] hw perfevents: enabled with armv8_pmuv3 PMU driver, 5 (0,8000000f) counters available
+[    4.345852][   T69] watchdog: NMI not fully supported
+[    4.346628][   T69] watchdog: Hard watchdog permanently disabled
+[    4.358888][    T1]  cs_system_cfg: CoreSight Configuration manager initialised
+[    4.360815][    T1] tmc: error registering AMBA driver
+[    4.361520][   T68] usb 1-1: new high-speed USB device number 2 using dummy_hcd
+[    4.361788][    T1] funnel: error registering AMBA driver
+[    4.363581][    T1] replicator: error registering AMBA driver
+[    4.367020][    T1] Error registering etm4x AMBA driver
+[    4.370351][    T1] stm: error registering AMBA driver
+[    4.374366][    T1] gnss: GNSS driver registered with major 510
+[    4.377160][    T1] Himax common touch panel driver init 123!
+[    4.377597][    T1] Himax check double loading
+[    4.378086][    T1] SPI driver himax_tp has no spi_device_id for himax,hxcommon
+[    4.413270][    T1] usbcore: registered new interface driver snd-usb-audio
+[    4.422470][    T1] GACT probability NOT on
+[    4.423790][    T1] Mirror/redirect action on
+[    4.427453][    T1] u32 classifier
+[    4.430884][    T1]     input device check on
+[    4.431958][    T1]     Actions configured
+[    4.457647][    T1] xt_time: kernel timezone is -0000
+[    4.459071][    T1] ipip: IPv4 and MPLS over IPv4 tunneling driver
+[    4.472670][    T1] gre: GRE over IPv4 demultiplexer driver
+[    4.473391][    T1] ip_gre: GRE over IPv4 tunneling driver
+[    4.506945][    T1] IPv4 over IPsec tunneling driver
+[    4.513060][   T68] usb 1-1: Dual-Role OTG device on HNP port
+[    4.515063][   T68] usb 1-1: New USB device found, idVendor=0525, idProduct=a4a2, bcdDevice= 6.18
+[    4.517626][   T68] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[    4.518713][   T68] usb 1-1: Product: RNDIS/Ethernet Gadget
+[    4.519392][   T68] usb 1-1: Manufacturer: Linux 6.18.52-VXTux-UMS512 with dummy_udc
+[    4.528795][    T1] Initializing XFRM netlink socket
+[    4.530696][    T1] IPsec XFRM device driver
+[    4.538815][    T1] NET: Registered PF_INET6 protocol family
+[    4.579911][   T68] cdc_ether 1-1:1.0 usb1: register 'cdc_ether' at usb-dummy_hcd.0-1, CDC Ethernet Device, 02:c0:32:78:86:1c
+[    4.609400][    T1] Segment Routing with IPv6
+[    4.610413][    T1] In-situ OAM (IOAM) with IPv6
+[    4.612767][    T1] mip6: Mobile IPv6
+[    4.626293][    T1] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    4.654340][    T1] ip6_gre: GRE over IPv6 tunneling driver
+[    4.669032][    T1] NET: Registered PF_PACKET protocol family
+[    4.670338][    T1] NET: Registered PF_KEY protocol family
+[    4.672558][    T1] can: controller area network core
+[    4.675178][    T1] NET: Registered PF_CAN protocol family
+[    4.676209][    T1] can: raw protocol
+[    4.677645][    T1] can: broadcast manager protocol
+[    4.678600][    T1] can: netlink gateway - max_hops=1
+[    4.681723][    T1] Bluetooth: RFCOMM TTY layer initialized
+[    4.682601][    T1] Bluetooth: RFCOMM socket layer initialized
+[    4.684126][    T1] Bluetooth: RFCOMM ver 1.11
+[    4.685190][    T1] Bluetooth: HIDP (Human Interface Emulation) ver 1.2
+[    4.686294][    T1] Bluetooth: HIDP socket layer initialized
+[    4.688737][    T1] l2tp_core: L2TP core driver, V2.0
+[    4.689634][    T1] l2tp_ppp: PPPoL2TP kernel driver, V2.0
+[    4.690336][    T1] tipc: Activated (version 2.0.0)
+[    4.694371][    T1] NET: Registered PF_TIPC protocol family
+[    4.699577][    T1] tipc: Started in single node mode
+[    4.703863][    T1] NET: Registered PF_VSOCK protocol family
+[    4.713294][    T1] ------------[ cut here ]------------
+[    4.714098][    T1] WARNING: CPU: 7 PID: 1 at net/netlink/genetlink.c:585 genl_validate_ops+0x138/0x270
+[    4.715859][    T1] Modules linked in:
+[    4.717043][    T1] CPU: 7 UID: 0 PID: 1 Comm: swapper/0 Not tainted 6.18.52-VXTux-UMS512 #1 PREEMPT 
+[    4.718730][    T1] Hardware name: linux,dummy-virt (DT)
+[    4.719792][    T1] pstate: 00400005 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[    4.721176][    T1] pc : genl_validate_ops+0x138/0x270
+[    4.722095][    T1] lr : genl_validate_ops+0x64/0x270
+[    4.723016][    T1] sp : ffffffc08005bc40
+[    4.723743][    T1] x29: ffffffc08005bd20 x28: ffffffe3c36f99e0 x27: ffffffe3c36300b4
+[    4.725202][    T1] x26: ffffffe3c3549988 x25: ffffffe3c3612c98 x24: 00000000000001b6
+[    4.726588][    T1] x23: ffffffe3c3b15000 x22: ffffffe3c3b14f48 x21: 0000000000000000
+[    4.727701][    T1] x20: ffffffe3c3d1d490 x19: 0000000000000001 x18: 0000000000000014
+[    4.729330][    T1] x17: 00000000fa6e7c3d x16: 00000000c0ffefcd x15: 000000009ee114de
+[    4.730812][    T1] x14: 000000000004ffff x13: ffffffe3c3ff5828 x12: 00000000000c002b
+[    4.732210][    T1] x11: 000000002eb3aa43 x10: 00000000ffffffff x9 : 0000000000000004
+[    4.733635][    T1] x8 : ffffffe3c3d1d490 x7 : 0000000000000001 x6 : ffffffc08005bc48
+[    4.734815][    T1] x5 : 0000000000000000 x4 : 0000000000000001 x3 : 0000000000000000
+[    4.735852][    T1] x2 : 0000000000000000 x1 : 0000000000000000 x0 : 0000000000000001
+[    4.737218][    T1] Call trace:
+[    4.738227][    T1]  genl_validate_ops+0x138/0x270 (P)
+[    4.739028][    T1]  genl_register_family+0x18/0x34
+[    4.739830][    T1]  imsbr_netlink_init+0x18/0x24
+[    4.740685][    T1]  imsbr_init+0x68/0x8c
+[    4.741509][    T1]  do_one_initcall+0x7c/0x378
+[    4.742341][    T1]  kernel_init_freeable+0x270/0x390
+[    4.743196][    T1]  kernel_init+0x24/0x1f4
+[    4.743701][    T1]  ret_from_fork+0x10/0x20
+[    4.744906][    T1] irq event stamp: 119830
+[    4.745545][    T1] hardirqs last  enabled at (119829): [<ffffffe3c168ebcc>] queue_work_on+0xc0/0xf4
+[    4.747103][    T1] hardirqs last disabled at (119830): [<ffffffe3c29e272c>] el1_brk64+0x20/0x5c
+[    4.748701][    T1] softirqs last  enabled at (119820): [<ffffffe3c1669078>] handle_softirqs+0x5f0/0x634
+[    4.750251][    T1] softirqs last disabled at (119811): [<ffffffe3c1610308>] __do_softirq+0x14/0x20
+[    4.751881][    T1] ---[ end trace 0000000000000000 ]---
+[    4.872559][    T1] sprd-sblock: sblock_create_ex: sdev is null, dst = 0
+[    4.874341][    T1] sprd-imsbr-transit: sblock_create data_ap[0-2] fail, error=-19
+[    4.877197][    T1] sprd-imsbr-transit: fail to create imsbr_data_ap
+[    5.490082][    T1] registered taskstats version 1
+[    5.500469][    T1] Loading compiled-in X.509 certificates
+[    5.529517][   T99] kworker/u32:2 (99) used greatest stack depth: 12432 bytes left
+[    5.563450][    T1] Loaded X.509 cert 'Build time autogenerated kernel key: 1211bce24d98a6b360952f7169bc22a92dd7c3ec'
+[    6.371177][    T1] debug_vm_pgtable: [debug_vm_pgtable         ]: Validating architecture page table helpers
+[    6.391126][    T1] Key type .fscrypt registered
+[    6.392316][    T1] Key type fscrypt-provisioning registered
+[    6.424490][    T1] sprd_wdf: get public api error in sprd_wdt -19
+[    6.431203][    T1] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    6.444916][    T1] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    6.447191][    T1] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    6.454505][    T1] clk: Disabling unused clocks
+[    6.456577][   T68] faux_driver regulatory: Direct firmware load for regulatory.db failed with error -2
+[    6.457335][    T1] PM: genpd: Disabling unused power domains
+[    6.465799][   T68] faux_driver regulatory: Falling back to sysfs fallback for: regulatory.db
+[    6.470470][    T1] ALSA device list:
+[    6.474181][    T1]   No soundcards found.
+[    6.577973][    T1] Freeing unused kernel memory: 4864K
+[    6.584375][    T1] rodata_test: all tests were successful
+[    6.585346][    T1] Run /init as init process
+[    6.586035][    T1]   with arguments:
+[    6.586556][    T1]     /init
+[    6.587043][    T1]   with environment:
+[    6.588223][    T1]     HOME=/
+[    6.588822][    T1]     TERM=linux
+=== VXTUX INIT BERJALAN (init C statis arm64) ===
+=== VXTUX INIT BERJALAN (init C statis arm64) ===
+[    6.688566][    T1] === VXTUX INIT BERJALAN (init C statis arm64) ===
+=== tty1: 176 byte CLI tertulis ===
+=== tty1: 176 byte CLI tertulis ===
+[    6.717388][    T1] === tty1: 176 byte CLI tertulis ===
+=== VXTUX-QEMU-BOOT-OK ===
+=== VXTUX-QEMU-BOOT-OK ===
+[    6.721275][    T1] === VXTUX-QEMU-BOOT-OK ===

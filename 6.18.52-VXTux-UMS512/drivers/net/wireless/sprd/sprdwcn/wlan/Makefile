@@ -65,7 +65,8 @@ ccflags-y += -DSPLIT_STACK
 # Same class of gap as the other 13 flags above.
 ccflags-y += -DDFS_MASTER
 
-obj-$(CONFIG_SPRD_LEGACY_WCN_WLAN) += sprdwl.o
+# TICK12: CONFIG_SPRD_LEGACY_WCN_WLAN hantu -> CONFIG_WCN_WLAN (wlan/Kconfig).
+obj-$(CONFIG_WCN_WLAN) += sprdwl.o
 
 sprdwl-y := \
 	sc2355/main.o \
