@@ -29,6 +29,7 @@
 #include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -173,6 +174,7 @@ static void dump_kernel_log(int to_console)
 struct part {
 	char name[64];
 	unsigned long blocks;   /* dalam KiB */
+	unsigned major, minor;  /* untuk fallback mknod */
 };
 
 static int list_partitions(struct part *out, int max)
@@ -193,10 +195,133 @@ static int list_partitions(struct part *out, int max)
 			continue;
 		snprintf(out[n].name, sizeof out[n].name, "%s", name);
 		out[n].blocks = blocks;
+		out[n].major = major;
+		out[n].minor = minor;
 		n++;
 	}
 	fclose(f);
 	return n;
+}
+
+/*
+ * Tampilkan baris dmesg TERAKHIR yang relevan dengan penyimpanan/clock/
+ * deferred probe di layar (dan laporan).  Tanpa ini, penyebab eMMC telat
+ * atau mati hanya terlihat lewat dump; dengan ini, layar selalu
+ * memperlihatkan penjelas terkini selama init menunggu.
+ */
+static void dmesg_hints(int maxlines)
+{
+	static const char *keys[] = { "sdio", "mmc", "sdhci", "-517",
+				      "deferred probe", "enable clock",
+				      "EPROBE_DEFER" };
+	static char *hits[64];
+	char *b, *line, *save;
+	int n, i, nh = 0, from;
+
+	b = malloc(LOG_MAX);
+	if (!b)
+		return;
+	n = klogctl(3 /* SYSLOG_ACTION_READ_ALL */, b, LOG_MAX - 1);
+	if (n <= 0) {
+		free(b);
+		return;
+	}
+	b[n] = 0;
+	for (line = strtok_r(b, "\n", &save); line;
+	     line = strtok_r(NULL, "\n", &save)) {
+		for (i = 0; i < (int)(sizeof keys / sizeof keys[0]); i++)
+			if (strstr(line, keys[i])) {
+				if (nh == 64) {
+					memmove(hits, hits + 1,
+						63 * sizeof hits[0]);
+					nh--;
+				}
+				hits[nh++] = line;
+				break;
+			}
+	}
+	from = nh > maxlines ? nh - maxlines : 0;
+	if (nh > from) {
+		both("  --- dmesg hints (storage/clock/defer) ---\n");
+		for (i = from; i < nh; i++)
+			both_fmt("  %s\n", hits[i]);
+	}
+	free(b);
+}
+
+/*
+ * Tunggu sampai eMMC (mmcblk*) terlihat di /proc/partitions.
+ *
+ * Latar belakang (artix35): pada boot artix34, init berjalan di detik ~30
+ * dan SEKALI membaca daftar partisi -- saat itu host eMMC belum/bahkan
+ * tidak pernah terdaftar (driver clock UMS512 =m -> clock "sdio"/"enable"
+ * host tidak ada -> probe mengembalikan -EPROBE_DEFER selamanya), sehingga
+ * semua langkah berikut (uji tulis, laporan, pindai ext4) gagal serentak
+ * hanya karena terlalu cepat/memasif.  Loop ini:
+ *   - menunggu maksimum timeout_s detik,
+ *   - memperbarui layar tiap 10 detik (jumlah partisi + petunjuk dmesg),
+ *   - mengembalikan daftar partisi TERBARU begitu mmcblk* muncul.
+ */
+static int wait_for_storage(struct part *parts, int max, int timeout_s)
+{
+	int waited = 0, np = 0;
+
+	for (;;) {
+		int i, mmc = 0;
+
+		np = list_partitions(parts, max);
+		if (np < 0)
+			np = 0;
+		for (i = 0; i < np; i++)
+			if (!strncmp(parts[i].name, "mmcblk", 6))
+				mmc++;
+		if (mmc) {
+			both_fmt("VXTUX-STEP: storage ready after %ds: "
+				 "%d mmc partitions (of %d visible)\n",
+				 waited, mmc, np);
+			return np;
+		}
+		if (waited >= timeout_s) {
+			both_fmt("VXTUX-STEP: eMMC ABSENT after %ds "
+				 "(%d partitions, none mmc)\n",
+				 waited, np);
+			dmesg_hints(20);
+			return np;
+		}
+		if (waited % 10 == 0) {
+			both_fmt("VXTUX-STEP: waiting for eMMC (%ds, %d "
+				 "partitions, none mmc yet)\n",
+				 waited, np);
+			dmesg_hints(6);
+		}
+		sleep(2);
+		waited += 2;
+	}
+}
+
+/*
+ * Cadangan bila devtmpfs tidak sempat membuat node: buat node blok yang
+ * hilang langsung dari major/minor /proc/partitions.  Tidak merusak apa pun
+ * - bila node sudah ada (devtmpfs), langkah ini dilewati.
+ */
+static void ensure_nodes(struct part *parts, int np)
+{
+	int i, made = 0;
+
+	for (i = 0; i < np; i++) {
+		char dev[96];
+		struct stat st;
+
+		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
+		if (stat(dev, &st) == 0)
+			continue;
+		if (mknod(dev, S_IFBLK | 0600,
+			  makedev(parts[i].major, parts[i].minor)) == 0)
+			made++;
+	}
+	if (made)
+		both_fmt("VXTUX-STEP: created %d missing block nodes "
+			 "with mknod\n", made);
 }
 
 static int is_ext4(const char *dev)
@@ -542,8 +667,15 @@ int main(void)
 	rep("\n----- /proc/partitions -----\n");
 	dump_file("/proc/partitions", 1);
 	rep("----- end of /proc/partitions -----\n");
-	np = list_partitions(parts, 128);
+
+	/*
+	 * Tunggu eMMC muncul (maks 180 detik, layar diperbarui tiap 10 s).
+	 * Tanpa ini semua langkah berikut bisa gagal serentak hanya karena
+	 * host eMMC lebih lambat terdaftar daripada init berjalan.
+	 */
+	np = wait_for_storage(parts, 128, 180);
 	both_fmt("VXTUX-STEP: %d partitions visible\n", np);
+	ensure_nodes(parts, np);
 
 	/*
 	 * Uji kanal tulis SEBELUM laporan ditulis: kalau gagal, errno-nya

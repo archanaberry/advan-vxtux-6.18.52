@@ -34,6 +34,7 @@
 #include <linux/file.h>
 #include <linux/fs.h>
 #include <linux/init.h>
+#include <linux/jiffies.h>
 #include <linux/kdev_t.h>
 #include <linux/kernel.h>
 #include <linux/kmsg_dump.h>
@@ -78,6 +79,7 @@ static size_t fr_prev_len;
 static u64 fr_seq;
 static bool fr_announced;
 static int fr_last_err;		/* errno terakhir yang sudah dicetak */
+static unsigned long fr_last_err_jif;	/* kapan terakhir dicetak */
 static struct task_struct *fr_task;
 static DEFINE_MUTEX(fr_lock);
 
@@ -91,16 +93,51 @@ static DEFINE_MUTEX(fr_lock);
  * flightrec, init userspace) semuanya gagal serentak.
  *
  * Agar kegagalan berikutnya TIDAK butuh dump lagi: setiap kegagalan yang
- * berbeda dicetak SEKALI ke dmesg (fbcon memutarnya kembali saat 200 baris
- * terakhir), dan setiap tulisan sukses diverifikasi dengan baca-balik.
+ * berbeda dicetak ke dmesg (fbcon memutarnya kembali), DAN kegagalan yang
+ * SAMA dicetak ulang tiap 10 detik sehingga keadaan terkini selalu terlihat
+ * di layar -- bukan hanya kesan sesaat di awal boot.  Bila disk mmcblk0
+ * tidak terdaftar sama sekali, nama-nama disk yang ada ikut dicetak, jadi
+ * langsung terlihat apakah eMMC hilang atau hanya berganti nama.  Setiap
+ * tulisan sukses diverifikasi dengan baca-balik.
  */
-static void fr_report_err(const char *what, int err)
+static bool fr_report_err(const char *what, int err)
 {
-	if (err == fr_last_err)
-		return;
+	if (err == fr_last_err &&
+	    time_before(jiffies, fr_last_err_jif + 10 * HZ))
+		return false;
 	fr_last_err = err;
+	fr_last_err_jif = jiffies;
 	pr_err("%s failed: %d (%pe) - visible on fbcon\n", what, err,
 	       ERR_PTR(err));
+	return true;
+}
+
+static int fr_nth_match(struct device *dev, const void *data)
+{
+	int *left = (int *)data;
+
+	if (*left == 0)
+		return 1;
+	(*left)--;
+	return 0;
+}
+
+/* Cetak nama disk yang sedang terdaftar di block_class (maks 8). */
+static void fr_list_disks(void)
+{
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		int n = i;
+		struct device *dev;
+
+		dev = class_find_device(&block_class, NULL, &n,
+					fr_nth_match);
+		if (!dev)
+			break;
+		pr_info("registered disk[%d]=%s\n", i, dev_name(dev));
+		put_device(dev);
+	}
 }
 
 /*
@@ -128,6 +165,10 @@ static struct file *fr_open(void)
 		if (disk)
 			devt = part_devt(disk, FR_PARTNO);
 		put_device(dev);
+	} else if (fr_report_err("disk " FR_DISK " not registered",
+				 -ENODEV)) {
+		/* cetak ulang terjadi: tunjukkan disk apa yang ada */
+		fr_list_disks();
 	}
 
 	if (devt) {

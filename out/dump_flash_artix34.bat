@@ -1,32 +1,29 @@
 @echo off
 REM ===========================================================================
-REM  artix34 -- KANAL TULIS TERINSTRUMENTASI (kenapa cache nol byte)
+REM  artix34 -- KANAL TULIS TERINSTRUMENTASI + SEMUA TEKS LAYAR BAHASA INGGRIS
 REM             Dump log artix33, flash boot_artix34.img, reset.
 REM
-REM  APA YANG BERUBAH (commit ec52f303c):
-REM    1. VXTUX-WRITE-TEST DI LAYAR.  /vxtux/init kini menguji tulis-baca-
-REM       balik SUNGGUHAN ke partisi cache (zona 6 MiB) SEBELUM hal lain:
+REM  APA YANG BERUBAH (ci_artix34):
+REM    1. VXTUX-WRITE-TEST: /vxtux/init menulis tanda tangan 16 byte
+REM       "VXTUXWRT" di zona 6 MiB partisi cache lalu membaca-balik.
+REM       Hasil dicetak ke console (fbcon) DAN ke laporan:
 REM         VXTUX-WRITE-TEST: OK open+write+readback on /dev/mmcblk0p49
-REM       atau FAIL open/write/readback lengkap dengan errno.  Keputusan
-REM       apakah kanal tulis eMMC hidup atau mati kini TERLIHAT DI LAYAR,
-REM       tanpa perlu dump 30 menit.
-REM    2. FLIGHTREC BERSUARA.  vxtux_flightrec.c: setiap kegagalan berbeda
-REM       (open by devt, open /dev path, write, readback) dicetak sekali ke
-REM       dmesg dengan errno -> fbcon memutarnya kembali; ada fallback kedua
-REM       lewat /dev/mmcblk0p49 (devtmpfs); setiap tulisan sukses diverifikasi
-REM       baca-balik; pesan "write channel recovered" bila kanal pulih.
-REM    3. LAPORAN INIT DIVERIFIKASI.  write_report_to() O_RDWR + baca-balik
-REM       kepala "### VXTUXLOG1" sebelum menyatakan OK; daftar
-REM       /proc/partitions ikut dicetak ke LAYAR.
-REM    4. Semua teks Inggris (sisa "akhir dmesg"/"akhir /proc/partitions"
-REM       diganti "end of ...").
+REM         VXTUX-WRITE-TEST: FAIL <open|write|readback> ...: <errno>
+REM    2. flightrec (vxtux_flightrec.c) kini mencetak errno LENGKAP untuk
+REM       setiap kegagalan yang berbeda (open by devt, open /dev path,
+REM       write, readback) -- sebab kegagalan terlihat langsung di fbcon.
+REM       Dua strategi buka: dev_t gendisk, fallback /dev/mmcblk0p49.
+REM       Setiap tulisan diverifikasi baca-balik 8 byte magic VXTUXFR1.
+REM    3. write_report_to() O_RDWR + baca-balik kepala "### VXTUXLOG1"
+REM       sebelum menyatakan OK; daftar /proc/partitions tampil di layar.
+REM    4. Sisa teks Indonesia di initramfs -> Inggris penuh.
+REM    5. Self-test pita & beacon kotak putih tetap MATI TOTAL (artix33).
 REM
-REM  YANG DIHARAPKAN DI LAYAR (tunggu 40 detik sesudah reset):
-REM    - "VXTUX-STEP: 1/5 partition list" + daftar p1..p71  -> init jalan
-REM    - "VXTUX-WRITE-TEST: OK ..."                          -> kanal tulis HIDUP
-REM    - "VXTUX-WRITE-TEST: FAIL ...: No such device"        -> p49 tidak dibuat
-REM    - "vxtux-fr: open ... failed: -19" (dsb)              -> sebab flightrec
-REM    - "VXTUX-STEP: chroot OK, exec ..."                   -> rootfs Artix ke-mount
+REM  YANG DIHARAPKAN DI LAYAR:
+REM    - Layar hitam bersih + riwayat dmesg kernel (Inggris).
+REM    - "VXTUX-WRITE-TEST: OK open+write+readback" = kanal tulis eMMC HIDUP.
+REM    - "vxtux-fr: ... failed: -N" = errno persis kegagalan flightrec.
+REM    - "VXTUX-STEP: chroot OK, exec ..." = rootfs Artix ke-mount.
 REM
 REM  PAKAI: matikan tablet, tahan VOL- sambil colok USB (BROM), jalankan ini.
 REM ===========================================================================
@@ -39,16 +36,8 @@ set IMG=%OUT%\6.18.52-VXTux-UMS512\boot_artix34.img
 
 if not exist "%LOG%" mkdir "%LOG%"
 if not exist "%IMG%" (
-  echo [!] %IMG% belum ada -- pipeline ci_artix34_pipeline.sh belum selesai.
+  echo [!] %IMG% belum ada -- pipeline ci_artix34 belum selesai.
   exit /b 1
-)
-
-REM amankan dump lama (state artix33) sebelum tertimpa
-if exist "%LOG%\cache.bin" (
-  if exist "%OUT%\logs\artix34_preflash" rmdir /s /q "%OUT%\logs\artix34_preflash"
-  move "%LOG%" "%OUT%\logs\artix34_preflash" >nul
-  echo [i] Dump lama dipindah -^> logs\artix34_preflash
-  mkdir "%LOG%"
 )
 
 echo [1/1] dump log artix33 + flash boot_artix34.img + reset
@@ -69,11 +58,13 @@ echo [1/1] dump log artix33 + flash boot_artix34.img + reset
 echo.
 echo [i] Log tersimpan di %LOG%
 echo [i] Setelah reset TUNGGU 40 DETIK lalu foto layarnya.
-echo       "VXTUX-WRITE-TEST: OK ..."   = kanal tulis eMMC HIDUP (kunci!)
-echo       "VXTUX-WRITE-TEST: FAIL ..." = ketahuan sebabnya langsung di layar
-echo       "vxtux-fr: ... failed: -N"   = sebab flightrec (errno) di fbcon
-echo       "VXTUX-STEP: chroot OK"      = rootfs Artix ke-mount
+echo       "VXTUX-WRITE-TEST: OK open+write+readback" = kanal tulis eMMC HIDUP
+echo       layar hitam + teks kernel Inggris  = fbcon bersih, target tercapai
+echo       tidak ada kotak putih              = beacon mati
+echo       tidak ada pita warna               = self-test mati
+echo       "VXTUX-STEP: chroot OK, exec"       = rootfs Artix ke-mount
+echo       "vxtux-fr: ... failed: -N"          = errno kegagalan flightrec
 echo [i] Verifikasi flash: md5 boot_a.bin harus sama dgn:
 echo       certutil -hashfile %IMG% MD5
-echo       diharapkan = 2e918a88ca6e03ef623b540ea807d306 (44.126.208 byte)
+echo       harus = 2e918a88ca6e03ef623b540ea807d306  (44.126.208 byte)
 pause
