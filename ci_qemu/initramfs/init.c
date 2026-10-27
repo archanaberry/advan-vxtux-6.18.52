@@ -43,6 +43,11 @@
  * pstore (~512 KiB) dan masih jauh di bawah 100 MiB partisi cache.
  */
 #define REPORT_OFFSET  (4 * 1024 * 1024)
+/*
+ * Zona uji tulis-baca-balik (artix34): 6 MiB jatuh di celah kosong di
+ * antara zona pstore (~0-512 KiB), laporan (4 MiB) dan flightrec (8 MiB).
+ */
+#define TEST_OFFSET    (6 * 1024 * 1024)
 
 static char *report;             /* kumpulan teks yang ditulis ke cache */
 static size_t report_len;
@@ -158,7 +163,7 @@ static void dump_kernel_log(int to_console)
 			q = p + 1;
 		con("\n----- last 60 dmesg lines -----\n");
 		con(q);
-		con("\n----- akhir dmesg -----\n");
+		con("\n----- end of dmesg -----\n");
 	}
 	free(b);
 }
@@ -296,10 +301,12 @@ static void dump_pstore(void)
 /* tulis laporan ke satu node blok; 1 = berhasil */
 static int write_report_to(const char *dev)
 {
-	int fd = open(dev, O_WRONLY);
+	char back[12];
+	int fd = open(dev, O_RDWR);
 
 	if (fd < 0) {
-		rep_fmt("  (open %s: %s)\n", dev, strerror(errno));
+		both_fmt("VXTUX-STEP: open %s failed: %s\n", dev,
+			 strerror(errno));
 		return 0;
 	}
 	if (pwrite(fd, report, report_len, REPORT_OFFSET) !=
@@ -309,7 +316,16 @@ static int write_report_to(const char *dev)
 		close(fd);
 		return 0;
 	}
-	both_fmt("VXTUX-STEP: OK %zu bytes at %s (offset 0x%x)\n",
+	/* Baca-balik kepala laporan "### VXTUXLOG1": bukti byte sampai. */
+	if (pread(fd, back, sizeof back, REPORT_OFFSET) !=
+	    (ssize_t)sizeof back ||
+	    memcmp(back, "### VXTUXLOG1", sizeof back) != 0) {
+		both_fmt("VXTUX-STEP: readback FAILED on %s: %s\n", dev,
+			 strerror(errno));
+		close(fd);
+		return 0;
+	}
+	both_fmt("VXTUX-STEP: OK %zu bytes at %s (offset 0x%x, readback verified)\n",
 		 report_len, dev, REPORT_OFFSET);
 	fsync(fd);
 	close(fd);
@@ -342,6 +358,63 @@ static void write_report_to_cache(const struct part *parts, int np)
 	}
 	if (!ok)
 		both("VXTUX-STEP: FAILED to write the report anywhere\n");
+}
+
+/*
+ * Uji tulis-baca-balik kanal cache (artix34)
+ * -------------------------------------------
+ * Bukti dari bedah dump artix33: partisi cache 100% identik antara dump
+ * pra-flash dan pasca-boot - ketiga penulis (pstore_blk, flightrec, init
+ * ini) menulis ke mmcblk0p49 dan semuanya nol byte.  Uji ini menjawab
+ * "kenapa" tanpa perlu dump: tanda tangan ditulis di zona 6 MiB lalu
+ * dibaca balik.  Hasil dicetak ke console (fbcon) DAN ke laporan:
+ *   VXTUX-WRITE-TEST: OK open+write+readback on /dev/mmcblk0p49
+ * atau
+ *   VXTUX-WRITE-TEST: FAIL <open|write|readback> ...: <errno>
+ */
+static void write_readback_test(const struct part *parts, int np)
+{
+	static const char sig[16] = "VXTUXWRT\x01" "UMS512!";
+	char dev[96], back[16];
+	int fd, i;
+
+	dev[0] = 0;
+	for (i = 0; i < np; i++) {
+		if (parts[i].blocks == CACHE_BLOCKS_1K) {
+			snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
+			break;
+		}
+	}
+	if (!dev[0])
+		snprintf(dev, sizeof dev, "/dev/mmcblk0p49");
+
+	fd = open(dev, O_RDWR);
+	if (fd < 0) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL open %s: %s\n", dev,
+			 strerror(errno));
+		return;
+	}
+	if (pwrite(fd, sig, sizeof sig, TEST_OFFSET) != (ssize_t)sizeof sig) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL write %s: %s\n", dev,
+			 strerror(errno));
+		close(fd);
+		return;
+	}
+	fsync(fd);
+	if (pread(fd, back, sizeof back, TEST_OFFSET) !=
+	    (ssize_t)sizeof back) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL readback %s: %s\n", dev,
+			 strerror(errno));
+		close(fd);
+		return;
+	}
+	close(fd);
+	if (memcmp(back, sig, sizeof sig) != 0) {
+		both("VXTUX-WRITE-TEST: FAIL readback mismatch "
+		     "(wrote one thing, read another)\n");
+		return;
+	}
+	both_fmt("VXTUX-WRITE-TEST: OK open+write+readback on %s\n", dev);
 }
 
 /* ---------- cari + pasang root ---------- */
@@ -467,10 +540,17 @@ int main(void)
 
 	both("VXTUX-STEP: 1/5 partition list\n");
 	rep("\n----- /proc/partitions -----\n");
-	dump_file("/proc/partitions", 0);
-	rep("----- akhir /proc/partitions -----\n");
+	dump_file("/proc/partitions", 1);
+	rep("----- end of /proc/partitions -----\n");
 	np = list_partitions(parts, 128);
 	both_fmt("VXTUX-STEP: %d partitions visible\n", np);
+
+	/*
+	 * Uji kanal tulis SEBELUM laporan ditulis: kalau gagal, errno-nya
+	 * langsung terlihat di layar (fbcon) tanpa perlu dump partisi cache.
+	 */
+	both("VXTUX-STEP: 1b/5 write-readback test on the cache partition\n");
+	write_readback_test(parts, np);
 
 	both("VXTUX-STEP: 2/5 copying dmesg into the report\n");
 	dump_kernel_log(1);
