@@ -56,7 +56,7 @@ int wcn_firmware_sec_verify(u32 wcn_or_gnss_bin,
 	}
 
 	if (wcn_or_gnss_bin != 1 && wcn_or_gnss_bin != 2) {
-		pr_err(WCN_SEC_TAG "indeks citra tidak sah: %u\n",
+		pr_err(WCN_SEC_TAG "invalid image index: %u\n",
 		       wcn_or_gnss_bin);
 		return -EINVAL;
 	}

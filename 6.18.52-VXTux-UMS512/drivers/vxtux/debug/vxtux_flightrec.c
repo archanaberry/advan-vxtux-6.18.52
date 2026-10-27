@@ -165,7 +165,7 @@ static int fr_thread(void *unused)
 
 		if (ret == 0 && !fr_announced) {
 			fr_announced = true;
-			pr_info("OK — dmesg %zu B tercatat di %s p%d + %#llx\n",
+			pr_info("OK - dmesg %zu B recorded at %s p%d + %#llx\n",
 				fr_prev_len, FR_DISK, FR_PARTNO,
 				(unsigned long long)FR_OFFSET);
 		}
@@ -217,7 +217,7 @@ static int __init vxtux_flightrec_init(void)
 		return ret;
 	}
 
-	pr_info("aktif — dmesg -> /dev/%sp%d + %#llx tiap 3 dtk\n",
+	pr_info("active - dmesg -> /dev/%sp%d + %#llx every 3 s\n",
 		FR_DISK, FR_PARTNO, (unsigned long long)FR_OFFSET);
 	return 0;
 

@@ -99,132 +99,20 @@ def main():
     RELAY_AT = 0x80200000
     relay_off = RELAY_AT - LK_LOAD              # 0x180000 (1.5 MiB, page-aligned)
 
-    # --- STUB CAT FRAMEBUFFER (2026-10-26, bedah out/logs/artix20) ----------
-    # Bukti dari uboot_log artix20:
-    #   [start_linux] start linux at PC:0x80080000, dt_addr:0x9df00000
-    #   lk consume time: 14324ms
-    #   -> lalu "panic type boot count 473" (watchdog) tanpa satu baris
-    #      kernel 6.18 punya di cache.bin (cache.bin hanya berisi dmesg
-    #      stok 5.4.210, ditulis pstore_blk ke /dev/mmcblk0p49 -- yang
-    #      berarti eMMC tidak pernah hidup).
-    # Artinya LK MEMANG memanggil kernel kita, lalu kernel mati senyap
-    # sebelum bisa mencetak apa pun.  Karena UART tidak dirutekan ke COM
-    # dan fbcon baru aktif jauh di kemudian hari, satu-satunya kanal
-    # AWAL yang pasti terlihat adalah framebuffer LK itu sendiri
-    # (lcd_base=0x9e000000, DISPC terus memindai dari situ).
+    # --- RELAY STUB: pass-through only --------------------------------------
+    # The stub used to paint the bootloader framebuffer with diagnostic
+    # bands -- one solid colour before that -- to prove that the handover
+    # from LK to our code really happened.  Every one of those tests has
+    # passed (ar: kernel reaches fbcon and initcalls), so the stub no longer
+    # touches the panel at all: it branches straight to the kernel image.
     #
-    # Maka: sebelum melompat ke kernel, stub perintah murni (MMU masih
-    # mati, x0 = DTB tidak disentuh) mengecat 8 MiB pertama framebuffer
-    # dengan MAGENTA.  Kalau layar berubah magenta -> serah-terima LK
-    # berhasil dan kode kita di 0x80080000 benar-benar berjalan.  Kalau
-    # layar tetap di logo -> LK tidak pernah melompat / blob tidak ada
-    # di tempat yang kita kira.
+    # Leaving the framebuffer alone also means the first bootloader text the
+    # panel loses is LK's own, cleared by vxtux_lkfb.c when the console takes
+    # over - not a test pattern of ours.
     #
-    # Perataan: panel 1200x2000 @32bpp, stride 4800 (fb stok 0x9E4000 =
-    # 1200*2160*4).  0x200000 word = 8 MiB ~= 1747 baris -> masih di dalam
-    # buffer, tidak menabrak apa pun.
-    FB_BASE = 0x9E000000
-    # --- UJI 4 PITA (2026-10-27, bedah foto layar BIRU artix21) -------------
-    # Foto: layar biru SOLID penuh, tanpa sisa logo, tanpa kotak beacon,
-    # tanpa strip merah panic.  Ini justru BUKTI serah-terima LK -> blob
-    # kita BERHASIL: layar berubah dari logo menjadi biru, padahal delta
-    # satu-satunya dari artix20 (logo diam) adalah stub cat fb ini.
-    #
-    # Mengapa biru, bukan magenta 0x00FF00FF?  Dalam urutan RGB/BGR/ARGB
-    # apa pun, byte {FF,00,FF,00} selalu memberi R=B=FF -> magenta; biru
-    # murni butuh R=0 DAN G=0, mustahil dari word itu.  Jadi biru BUKAN
-    # masalah urutan kanal XR24/XB24.  Dua kandidat nyata:
-    #   (a) byte paling atas 0x00 = alpha 0 -> piksel tembus pandang,
-    #       yang terlihat warna latar/lapisan dasar DISPC (biru);
-    #   (b) pipeline DPU tidak memindai buffer ini lagi (kernel/DPU
-    #       ambil alih) -> biru = warna latar DPU, bukan tulisan kita.
-    #
-    # Maka sekarang: cat SELURUH layar (4 x 600.000 word = 9,6 MB,
-    # muat di fb 0x9E4000) dengan ALPHA 0xFF dan empat pita yang kanal
-    # merah/birunya saling bertukar posisi.  Cara membaca hasilnya:
-    #   pita1 MERAH, pita3 BIRU  -> XRGB8888 (XR24); biru tadi = alpha
-    #   pita1 BIRU,  pita3 MERAH -> XBGR8888 (XB24)
-    #   biru solid lagi           -> bukan urutan kanal; DPU/pipeline
-    #                                (kemungkinan b), lanjut ke bedah DRM
-    # --- HASIL ARTIX22 + RISET WEB (2026-10-27): DPU baca RGB565! ----------
-    # Foto artix22: pita abu-abu + kuning.  Kalau tiap word 32-bit dibaca
-    # sebagai DUA piksel RGB565 (little-endian), semuanya cocok SEMPURNA:
-    #   0x00FF00FF (artix21) -> 0x00FF,0x00FF = biru padat   <- layar biru
-    #   0xFFFF0000 -> 0x0000,0xFFFF = hitam+putih = ABU-ABU <- pita 1
-    #   0xFF00FF00 -> 0xFF00,0xFF00 = KUNING                 <- pita 2
-    # Riset web memastikan DPU Unisoc (dpu_r2p0/r4p0) memang punya mode
-    # RGB565/BGR565 di samping XRGB8888; "fb size 0x9e4000" hanya bukti
-    # alokasi 4 B/piksel, BUKAN bukti format scanout (referensi:
-    # patchew.org/20211207142717.30296-5, github.com/strongtz/linux-sprd
-    # drivers/gpu/drm/sprd/dpu/).  Jadi asumsi XRGB8888 di seluruh kode
-    # (vxtux_lkfb.c, beacon) salah dasar -- MEMBERIKAN SOLUSI: semua warna
-    # ditulis dobel sebagai dua halfword identik.
-    #
-    # Pita RGB565 murni: merah 0xF800, hijau 0x07E0, biru 0x001F, putih 0xFFFF.
-    # Geometri (koreksi artix24): 1 word = 4 byte, jadi 600.000 word =
-    # 2,4 MB -- muatnya cuma 2 pita di layar RGB565 4,8 MB, itulah sebabnya
-    # artix23 hanya menampilkan MERAH+HIJAU (biru & putih keluar layar).
-    # Pita yang benar: 4 x 300.000 word = 4 x 1,2 MB = 4,8 MB =
-    # 1200*2000*2 -> pas 4 pita selebar 1/4 layar, urut penuh.
-    # --- ARTIX26: STUB DIAGNOSTIK (2026-10-27, sesudah artix25) ------------
-    # artix25 (pita merah/hijau/biru/putih, alpha FF) tetap menghasilkan
-    # PELANGI yang sama: 4 pita benar, jadi serah-terima LK -> stub -> `br
-    # 0x80200000` berjalan, TAPI kotak putih beacon (early_initcall di
-    # vxtux_beacon.c) tidak pernah muncul, dan cache.bin tidak memuat satu
-    # jejak pun 6.18 (tidak ada "vxtux-beacon:", tidak ada oops).
-    # Terbukti juga string di Image: "vxtux-beacon", "vxtux-lkfb",
-    # "vxtuxfb=" semuanya ADA di Image yang di-flash, jadi instrumennya ikut
-    # ter-build -- bukan driver yang hilang.
-    #
-    # Artinya kernel mati SEBELUM initcall pertama, yaitu di head.S /
-    # early_map_kernel() / setup_arch() -- di mana tidak ada konsol sama
-    # sekali.  Diagnostik harus dilakukan SEBELUM melompat, karena stub-lah
-    # satu-satunya kode kita yang pasti berjalan.
-    #
-    # Tersangka utama: LK Unisoc menyerahkan kendali dengan MMU + D-cache
-    # HIDUP.  Jalur boot 6.x untuk kasus itu (early_map_kernel() ->
-    # map_kernel() -> idmap_cpu_replace_ttbr1) SAMA SEKALI tidak pernah diuji
-    # di QEMU: qemu-boot.yml selalu `-kernel` langsung, dan QEMU selalu
-    # melompat dengan MMU mati.
-    #
-    # Stub ini mengubah 4 pita dari "warna uji" menjadi "jawaban":
-    #   pita 1 (atas)  MERAH = SCTLR_EL1.M mati (normal)
-    #                  HIJAU = SCTLR_EL1.M hidup  <-- tersangka
-    #   pita 2         BIRU  = CurrentEL = EL1
-    #                  PUTIH = EL2, MAGENTA = EL3
-    #   pita 3         HIJAU = magic FDT 0xD00DFEED valid di [x0]
-    #                  MERAH = tidak valid (DTB tidak sampai ke kernel)
-    #   pita 4         HIJAU = SCTLR_EL1.C (D-cache) hidup
-    #                  MERAH = D-cache mati
-    # 1 word 32-bit = 2 piksel RGB565, 1 baris = 1200 px = 2400 byte = 600 word.
-    # Chip jawaban = 50 baris = 30.000 word; sisanya dicat HITAM supaya kotak
-    # putih dari dalam kernel (init/main.c, vxtux_beacon.c) menonjol.
-    FB_ROW_WORDS = 600
-    CHIP_WORDS = 50 * FB_ROW_WORDS      # 30.000 word = 50 baris
-    TOTAL_WORDS = 2000 * FB_ROW_WORDS   # 1.200.000 word = 1200x2000 RGB565
-    REST_WORDS = TOTAL_WORDS - 4 * CHIP_WORDS
-    BAND_COLORS = {
-        'red':     0xF800F800,             # MERAH  (565 dobel)
-        'green':   0x07E007E0,             # HIJAU
-        'blue':    0x001F001F,             # BIRU
-        'white':   0xFFFFFFFF,             # PUTIH
-        'magenta': 0xF81FF81F,             # MAGENTA (R+B)
-        'black':   0x00000000,             # HITAM
-    }
-    STUB_OFF = 0x40                         # sesudah header Image (64 byte)
-
-    # --- SELF-TEST DIMATIKAN (2026-10-27, setelah ujian lulus) --------------
-    # Uji 4-pita (MMU / CurrentEL / magic FDT / D-cache) sudah terbukti di
-    # foto artix27: kernel boot penuh sampai fbcon + initcall.  Stub kini
-    # cuma melewati: lompat lurus ke Image asli di 0x80200000 tanpa menyapu
-    # framebuffer, supaya layar bersih dan fbcon yang menggambar (via
-    # vxtux_lkfb) langsung terlihat tanpa tumpukan kotak warna.
-    def _passthrough_stub():
-        """stub minimal: x1=FB_BASE disentuh tidak, hanya br ke RELAY_AT."""
-        asm = _Asm()
-        asm.words(_mov_imm(2, RELAY_AT, 1))   # x2 = 0x80200000
-        asm.words([0xD61F0040])               # br x2
-        return asm.assemble()
+    # Requirements for this stub: the MMU may still be off, so it touches no
+    # data; x0 (DTB pointer) is preserved; only x2 is clobbered.
+    STUB_OFF = 0x40                         # right after the Image header (64 B)
 
     def _movz(rd, imm16, sf):
         return ((0xD2800000 if sf else 0x52800000) |
@@ -235,133 +123,18 @@ def main():
                 ((imm16 & 0xFFFF) << 5) | rd)
 
     def _mov_imm(rd, val, sf):
-        """movz/movk untuk membangun konstanta 32-bit."""
+        """movz/movk pair for a 32-bit constant."""
         insns = [_movz(rd, val & 0xFFFF, sf)]
         hi = (val >> 16) & 0xFFFF
         if hi:
             insns.append(_movk(rd, hi, 1, sf))
         return insns
 
-    class _Asm:
-        """Assembler mini: cukup untuk b/bl/b.ne/tbz/tbnz berlabel."""
+    def _passthrough_stub():
+        """x2 = 0x80200000 ; br x2 -- two instructions, no painting."""
+        return _mov_imm(2, RELAY_AT, 1) + [0xD61F0040]
 
-        def __init__(self):
-            self.items = []
-
-        def words(self, insns):
-            for w in insns:
-                self.items.append(('insn', w))
-
-        def label(self, name):
-            self.items.append(('label', name))
-
-        def b(self, name):
-            self.items.append(('br', 0x14000000, name, 26))
-
-        def bl(self, name):
-            self.items.append(('br', 0x94000000, name, 26))
-
-        def bne(self, name):
-            self.items.append(('br', 0x54000001, name, 19))
-
-        def tbnz(self, rt, bit, name):
-            self.items.append(('tbit', rt, bit, name, 1))
-
-        def assemble(self):
-            pos, idx = {}, 0
-            for it in self.items:
-                if it[0] == 'label':
-                    pos[it[1]] = idx
-                else:
-                    idx += 1
-            out = []
-            for it in self.items:
-                if it[0] == 'label':
-                    continue
-                if it[0] == 'insn':
-                    out.append(it[1])
-                    continue
-                if it[0] == 'br':
-                    base, name, bits = it[1], it[2], it[3]
-                    off = pos[name] - len(out)
-                    if bits == 26:
-                        out.append(base | (off & 0x3FFFFFF))
-                    else:
-                        out.append(base | ((off & 0x7FFFF) << 5))
-                    continue
-                _, rt, bit, name, is_tbnz = it
-                off = pos[name] - len(out)
-                base = 0x37000000 if is_tbnz else 0x36000000
-                out.append(base | ((bit >> 5) << 31) | ((bit & 0x1F) << 19) |
-                           ((off & 0x3FFF) << 5) | rt)
-            return out
-
-    A = _Asm()
-    A.words(_mov_imm(1, FB_BASE & 0xFFFFFFFF, 1))   # x1 = kursor framebuffer
-
-    def _band(color, words=CHIP_WORDS):
-        A.words(_mov_imm(2, BAND_COLORS[color], 0))  # w2 = warna
-        A.words(_mov_imm(3, words, 0))               # w3 = jumlah word
-        A.bl('paint')
-
-    A.words([0xD5381009])                    # mrs  x9, sctlr_el1
-    A.tbnz(9, 0, 'mmu_on')
-    _band('red')                             # pita1: MMU mati
-    A.b('b2')
-    A.label('mmu_on')
-    _band('green')                           # pita1: MMU HIDUP
-    A.label('b2')
-
-    A.words([0xD538424A])                    # mrs  x10, CurrentEL
-    A.tbnz(10, 3, 'el23')
-    _band('blue')                            # pita2: EL1
-    A.b('b3')
-    A.label('el23')
-    A.tbnz(10, 2, 'el3')
-    _band('white')                           # pita2: EL2
-    A.b('b3')
-    A.label('el3')
-    _band('magenta')                         # pita2: EL3
-    A.label('b3')
-
-    A.words([0xB940000B])                    # ldr  w11, [x0]  (x0 = DTB)
-    # FDT header big-endian: byte di memori D0 0D FE ED, jadi ldr 32-bit
-    # little-endian menghasilkan 0xEDFE0DD0 (bukan 0xD00DFEED!).  Inilah
-    # sebab pita 3 artix26 merah: pemeriksaannya sendiri yang salah, bukan
-    # DTB-nya.
-    A.words(_mov_imm(12, 0xEDFE0DD0, 0))     # w12 = magic FDT (LE view)
-    A.words([0x6B0C017F])                    # cmp  w11, w12  (rn=11, rm=12)
-    A.bne('fdt_bad')
-    _band('green')                           # pita3: DTB valid
-    A.b('b4')
-    A.label('fdt_bad')
-    _band('red')                             # pita3: DTB TIDAK valid
-    A.label('b4')
-
-    A.tbnz(9, 2, 'dcache_on')
-    _band('red')                             # pita4: D-cache mati
-    A.b('go')
-    A.label('dcache_on')
-    _band('green')                           # pita4: D-cache hidup
-    A.label('go')
-
-    _band('black', REST_WORDS)                # sisanya hitam (latar kotak kernel)
-
-    A.words(_mov_imm(2, RELAY_AT, 1))         # x2 = 0x80200000
-    A.words([0xD61F0040])                     # br x2
-
-    A.label('paint')
-    A.words([0xB9000022])                     # str  w2, [x1]
-    A.words([0x91001021])                     # add  x1, x1, #4
-    A.words([0x71000463])                     # subs w3, w3, #1
-    A.bne('paint')
-    A.words([0xD65F03C0])                     # ret
-
-    # Self-test dimatikan: pakai stub pass-through (tanpa pita warna).
-    # Aktifkan kembali dengan mengembalikan `stub = A.assemble()` di bawah.
-    _ = A  # assembler lama dipertahankan utk referensi; tidak dipakai.
     stub = _passthrough_stub()
-    # stub = A.assemble()   # <-- uncomment utk mengaktifkan lagi uji 4-pita
 
     # Stub kini cuma 2 instruksi (8 B) -- taruh tepat setelah header (0x40)
     # dan arahkan cabang header ke sana (bukan 0x40 yang kini di-padding).
@@ -382,8 +155,8 @@ def main():
     print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_REAL_OFF:x}` (stub pass-through) di "
           f"0x{LK_LOAD:x}, lalu `br` ke 0x{RELAY_AT:x}; "
           f"Image asli di blob+0x{relay_off:x}")
-    print(f"stub: self-test DIMATIKAN, lompat lurus ke kernel "
-          f"(tanpa pita warna di 0x{FB_BASE:x})")
+    print(f"stub: pass-through, {len(stub)} instructions - no framebuffer "
+          f"painting at all")
 
     rd = b""
     if ramdisk_dir:

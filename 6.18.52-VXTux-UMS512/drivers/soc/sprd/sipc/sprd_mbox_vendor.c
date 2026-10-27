@@ -107,7 +107,7 @@ static void vmb_rx_callback(struct mbox_client *cl, void *mssg)
 	struct vmb_core *c = container_of(cl, struct vmb_core, cl);
 
 	atomic_inc(&c->vm->rx_count);
-	pr_debug("rx dari core %u\n", c->id);
+	pr_debug("rx from core %u\n", c->id);
 
 	/*
 	 * Pasangan acquire dari smp_store_release() di mbox_register_irq_handle():
@@ -149,7 +149,7 @@ static struct vmb_core *vmb_create_locked(struct sprd_mbox_vendor *vm, u8 id)
 		 * (mis. 'mboxes' salah/kanal tidak ada) baru layak diperingatkan.
 		 */
 		if (ret != -EPROBE_DEFER)
-			pr_warn("kanal core %u tidak tersedia: %d (cek 'mboxes' di DTS)\n",
+			pr_warn("core %u channel unavailable: %d (check 'mboxes' in the DTS)\n",
 				id, ret);
 		kfree(c);
 		return ERR_PTR(ret);
@@ -157,7 +157,7 @@ static struct vmb_core *vmb_create_locked(struct sprd_mbox_vendor *vm, u8 id)
 
 	/* Publikasikan ke jalur data yang bebas lock (release). */
 	smp_store_release(&vm->core[id], c);
-	dev_dbg(vm->dev, "kanal core %u aktif\n", id);
+	dev_dbg(vm->dev, "core %u channel active\n", id);
 
 	return c;
 }
@@ -222,7 +222,7 @@ void mbox_just_sent(u8 core_id, u64 msg)
 	int ret = mbox_raw_sent(core_id, msg);
 
 	if (ret < 0 && ret != -EPROBE_DEFER)
-		pr_debug("kirim ke core %u gagal: %d\n", core_id, ret);
+		pr_debug("send to core %u failed: %d\n", core_id, ret);
 }
 EXPORT_SYMBOL(mbox_just_sent);
 
@@ -247,7 +247,7 @@ int mbox_register_irq_handle(u8 target_id, MBOX_FUNCALL irq_handler, void *priv_
 	 */
 	smp_store_release(&c->has_handler, true);
 
-	pr_info("handler terdaftar untuk core %u\n", target_id);
+	pr_info("handler registered for core %u\n", target_id);
 
 	return 0;
 }
@@ -332,7 +332,7 @@ static int sprd_mbox_vendor_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, vm);
 	WRITE_ONCE(g_vmb, vm);
 
-	pr_info("provider mailbox vendor siap (%s)\n", dev_name(&pdev->dev));
+	pr_info("vendor mailbox provider ready (%s)\n", dev_name(&pdev->dev));
 
 	return 0;
 }

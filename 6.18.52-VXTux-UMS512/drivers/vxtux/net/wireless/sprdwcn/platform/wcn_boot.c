@@ -3089,27 +3089,27 @@ int __init wcn_init_core(void)
 
 	r = wcn_init_debugfs();
 	if (r) {
-		pr_err("wcn_core: debugfs gagal %d\n", r);
+		pr_err("wcn_core: debugfs failed %d\n", r);
 		return r;
 	}
 	r = init_wcn_sysfs();
 	if (r) {
-		pr_err("wcn_core: sysfs gagal %d\n", r);
+		pr_err("wcn_core: sysfs failed %d\n", r);
 		return r;
 	}
 	r = gnss_module_init();
 	if (r) {
-		pr_err("wcn_core: gnss dbg gagal %d\n", r);
+		pr_err("wcn_core: gnss dbg failed %d\n", r);
 		return r;
 	}
 	r = gnss_pmnotify_ctl_init();
 	if (r) {
-		pr_err("wcn_core: gnss pmnotify gagal %d\n", r);
+		pr_err("wcn_core: gnss pmnotify failed %d\n", r);
 		return r;
 	}
 	r = gnss_common_ctl_init();
 	if (r) {
-		pr_err("wcn_core: gnss common ctl gagal %d\n", r);
+		pr_err("wcn_core: gnss common ctl failed %d\n", r);
 		return r;
 	}
 	return marlin_init();

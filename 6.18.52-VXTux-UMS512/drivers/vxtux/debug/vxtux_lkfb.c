@@ -254,7 +254,7 @@ static void lkfb_replay_dmesg(void)
 		if (++n >= LKFB_REPLAY_LINES)
 			break;
 	}
-	pr_info("putar ulang %d/%d baris dmesg ke fbcon\n", n, total);
+	pr_info("replayed %d/%d dmesg lines to fbcon\n", n, total);
 }
 
 static int __init lkfb_init(void)
@@ -285,7 +285,7 @@ static int __init lkfb_init(void)
 		 * masuk cache, jadi tiap gambar wajib di-flush juga
 		 * (lkfb_need_flush -> lkfb_flush_rows).
 		 */
-		pr_warn("memremap(WC) gagal, pakai __va + flush per-blit\n");
+		pr_warn("memremap(WC) failed, using __va + per-blit flush\n");
 		mem = (void __iomem *)__va(LKFB_PHYS);
 		dcache_clean_inval_poc((unsigned long)mem,
 				       (unsigned long)mem + LKFB_SIZE);
@@ -309,13 +309,30 @@ static int __init lkfb_init(void)
 	info->fix.smem_len = LKFB_SIZE;
 	lkfb_set_par(info);
 
+	/*
+	 * Clean the panel before fbcon binds to it.  The bootloader left its own
+	 * status text in this buffer and the display controller keeps scanning
+	 * from it, so without this wipe the LK text stays visible behind the
+	 * first kernel messages.  After the clear the panel shows kernel output
+	 * only, exactly like any other Linux machine.
+	 *
+	 * memset_io() writes reach DRAM directly for the MEMREMAP_WC mapping; on
+	 * the __va fallback they sit in the D-cache, so the range is flushed to
+	 * the point of coherency here.
+	 */
+	memset_io(info->screen_base, 0, LKFB_SIZE);
+	if (lkfb_need_flush)
+		dcache_clean_inval_poc((unsigned long)info->screen_base,
+				       (unsigned long)info->screen_base +
+				       LKFB_SIZE);
+
 	if (register_framebuffer(info)) {
-		pr_err("register_framebuffer gagal\n");
+		pr_err("register_framebuffer failed\n");
 		framebuffer_release(info);
 		return -ENODEV;
 	}
 
-	pr_info("fb LK %#lx %ux%u/%ubu terdaftar -> fbcon aktif\n",
+	pr_info("LK fb %#lx %ux%u/%ubpp registered, fbcon active\n",
 		LKFB_PHYS, LKFB_WIDTH, LKFB_HEIGHT, LKFB_BPP);
 
 	/* riwayat dmesg level 1..5 dicetak ulang ke layar (lihat di atas) */
