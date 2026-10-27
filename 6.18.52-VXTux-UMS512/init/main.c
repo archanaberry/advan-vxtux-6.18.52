@@ -110,6 +110,7 @@
 #include <asm/setup.h>
 #include <asm/sections.h>
 #include <asm/cacheflush.h>
+#include <asm/memory.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -978,54 +979,58 @@ static void __init early_numa_node_init(void)
 #define VXTUX_FB0_PHYS		0x9d000000UL
 #define VXTUX_FB1_PHYS		0x9e000000UL
 #define VXTUX_FB_WIDTH		1200U
-#define VXTUX_FB_BPP		4U		/* 32 bpp (XRGB8888) */
+#define VXTUX_FB_BPP		2U		/* 16 bpp RGB565 (bukti artix21-26) */
 #define VXTUX_FB_LINE		(VXTUX_FB_WIDTH * VXTUX_FB_BPP)
 #define VXTUX_FB_HEIGHT		2000U
-#define VXTUX_FB_BAR_H		64U
-#define VXTUX_FB_BAR_PITCH	80U
-#define VXTUX_FB_BAR_TOP	40U
+#define VXTUX_FB_BAR_H		80U
+#define VXTUX_FB_BAR_PITCH	110U
+#define VXTUX_FB_BAR_TOP	600U		/* di bawah pita stub relay (0..199) */
 
 /* Warna per checkpoint, ditulis little-endian XRGB8888 -> B,G,R,X. */
 static const u32 vxtux_bar_col[] = {
-	0x00ffffff,	/* 0 putih     */
-	0x0000ff00,	/* 1 hijau     */
-	0x000000ff,	/* 2 merah     */
-	0x00ffff00,	/* 3 cyan      */
-	0x00ff8000,	/* 4 oranye    */
-	0x00ff00ff,	/* 5 magenta   */
-	0x0000ffff,	/* 6 kuning    */
-	0x008080ff,	/* 7 biru      */
-	0x008000ff,	/* 8 ungu      */
-	0x00404040,	/* 9 abu       */
-	0x00ff0080,	/* 10 merah muda */
-	0x0080ff80,	/* 11 mint     */
+	0xFFFFFFFF,	/* 0 putih     */
+	0x07E007E0,	/* 1 hijau     */
+	0xF800F800,	/* 2 merah     */
+	0x07FF07FF,	/* 3 cyan      */
+	0xFC00FC00,	/* 4 oranye    */
+	0xF81FF81F,	/* 5 magenta   */
+	0xFFE0FFE0,	/* 6 kuning    */
+	0x001F001F,	/* 7 biru      */
+	0x801F801F,	/* 8 ungu      */
+	0x84108410,	/* 9 abu       */
+	0xFC1FFC1F,	/* 10 merah muda */
+	0x87F087F0,	/* 11 mint     */
 };
 
 /*
- * Pemetaan fisik->virtual untuk mengecat panel.  memremap(MEMREMAP_WC)
- * menghasilkan pemetaan ioremap tersendiri: aman dipakai setelah
- * paging_init() DAN tetap bekerja bila DT stok menandai daerah itu no-map
- * (linear map tidak pernah dibuat untuk daerah no-map).  Karena pemetaannya
- * write-combining (tidak cache), tulisan langsung terlihat oleh DISPC tanpa
- * perlu flush D-cache.
+ * Pemetaan fisik->virtual untuk mengecat panel.
+ *
+ * BUG LAMA (artix21-26): di sini dipakai memremap(..., MEMREMAP_WC).  Untuk
+ * alamat yang berada DI DALAM /memory, memremap() MENOLAK: ia melihat
+ * region_intersects(IORESOURCE_SYSTEM_RAM) dan mengembalikan NULL sambil
+ * WARN "memremap attempted on ram".  DT stok mendefinisikan
+ * memory@80000000 reg = <0x80000000 0x80000000>, jadi 0x9D000000 dan
+ * 0x9E000000 keduanya System RAM -> vxtux_fb_map() SELALU NULL, vxtux_paint()
+ * tidak pernah menulis satu byte pun, dan sejenis itu juga mematikan
+ * vxtux_beacon.c serta vxtux_lkfb.c.
+ *
+ * Itulah sebabnya layar artix25/artix26 hanya memperlihatkan pita stub relay
+ * dan tidak pernah satu kotak pun: bukan karena kernel mati sebelum
+ * initcall, tapi karena seluruh instrumen framebuffer-nya no-op.
+ *
+ * Perbaikan: pakai linear map apa adanya (__va) lalu flush D-cache, karena
+ * pemetaan linear bersifat cacheable sehingga DISPC hanya melihat tulisan
+ * setelah cache dibersihkan sampai PoC.
  */
-static void __iomem *vxtux_fb_io[2];
-
 static void __iomem *__init vxtux_fb_map(phys_addr_t phys)
 {
-	int i = (phys == VXTUX_FB1_PHYS);
-
-	if (!vxtux_fb_io[i])
-		vxtux_fb_io[i] = memremap(phys,
-					   (size_t)VXTUX_FB_LINE * VXTUX_FB_HEIGHT,
-					   MEMREMAP_WC);
-	return vxtux_fb_io[i];
+	return (void __iomem *)__va(phys);
 }
 
 static void __init vxtux_paint(unsigned int idx)
 {
 	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
-	u32 col = 0x00ffffff;
+	u32 col = 0xFFFFFFFF;
 	size_t y0 = VXTUX_FB_BAR_TOP + (size_t)idx * VXTUX_FB_BAR_PITCH;
 	unsigned int k;
 	size_t y;
@@ -1037,6 +1042,7 @@ static void __init vxtux_paint(unsigned int idx)
 
 	for (k = 0; k < ARRAY_SIZE(fbs); k++) {
 		void __iomem *base = vxtux_fb_map(fbs[k]);
+		unsigned long start, end;
 
 		if (!base)
 			continue;
@@ -1045,9 +1051,15 @@ static void __init vxtux_paint(unsigned int idx)
 						       y * VXTUX_FB_LINE);
 			unsigned int x;
 
-			for (x = 0; x < VXTUX_FB_WIDTH; x++)
+			/* 1 word 32-bit = 2 piksel RGB565 */
+			for (x = 0; x < VXTUX_FB_WIDTH / 2; x++)
 				writel(col, row + x);
 		}
+
+		start = (unsigned long)base + y0 * VXTUX_FB_LINE;
+		end = (unsigned long)base +
+		      (y0 + VXTUX_FB_BAR_H) * VXTUX_FB_LINE;
+		dcache_clean_poc(start, end);
 	}
 }
 

@@ -56,13 +56,16 @@
 #include <linux/string.h>
 #include <linux/types.h>
 
+#include <asm/cacheflush.h>
+#include <asm/memory.h>
+
 #define BEACON_FB_SIZE	0x9e4000U	/* sama dengan "fb size" LK */
 #define BEACON_WIDTH	1200U
 #define BEACON_STRIDE	(BEACON_WIDTH * 2)	/* 16 bpp RGB565 (terbukti artix21-24) */
 #define BEACON_BOX	80U
 #define BEACON_GAP	96U
 #define BEACON_LEFT	40U
-#define BEACON_TOP	40U
+#define BEACON_TOP	260U	/* di bawah 4 pita stub relay (baris 0..199) */
 #define BEACON_MAX_AREAS 4
 
 struct beacon_area {
@@ -104,6 +107,12 @@ static void beacon_box(int idx, u8 r, u8 g, u8 b)
 				writeb(v >> 8,   row + x * 2 + 1);
 			}
 		}
+
+		/* linear map cacheable -> flush agar DISPC melihatnya */
+		dcache_clean_poc((unsigned long)base +
+				 (size_t)BEACON_TOP * BEACON_STRIDE,
+				 (unsigned long)base +
+				 (size_t)(BEACON_TOP + BEACON_BOX) * BEACON_STRIDE);
 	}
 }
 
@@ -146,16 +155,20 @@ static int __init beacon_setup(char *str)
 }
 early_param("vxtuxfb", beacon_setup);
 
+/*
+ * BUG LAMA: di sini dipakai memremap(..., MEMREMAP_WC).  Untuk alamat di
+ * dalam /memory (0x9D000000 dan 0x9E000000 keduanya System RAM menurut
+ * memory@80000000 reg = <0x80000000 0x80000000> di DT stok) memremap()
+ * MENGEMBALIKAN NULL + WARN "memremap attempted on ram", sehingga tidak
+ * satu kotak beacon pun pernah tercat sejak versi memremap dipakai.
+ * Sekarang: linear map apa adanya + flush D-cache sampai PoC.
+ */
 static int __init beacon_map(void)
 {
 	int k;
 
-	for (k = 0; k < beacon_nareas; k++) {
-		beacon_areas[k].va = memremap(beacon_areas[k].base,
-					      BEACON_FB_SIZE, MEMREMAP_WC);
-		if (!beacon_areas[k].va)
-			pr_err("memremap %pa gagal\n", &beacon_areas[k].base);
-	}
+	for (k = 0; k < beacon_nareas; k++)
+		beacon_areas[k].va = (void __iomem *)__va(beacon_areas[k].base);
 	return beacon_nareas;
 }
 
@@ -241,6 +254,8 @@ static int beacon_panic(struct notifier_block *nb, unsigned long action,
 				writeb(v >> 8,   row + x * 2 + 1);
 			}
 		}
+		dcache_clean_poc((unsigned long)base,
+				 (unsigned long)base + 24 * BEACON_STRIDE);
 	}
 	return NOTIFY_OK;
 }

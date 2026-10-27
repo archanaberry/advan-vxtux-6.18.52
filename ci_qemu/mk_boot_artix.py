@@ -165,13 +165,51 @@ def main():
     # artix23 hanya menampilkan MERAH+HIJAU (biru & putih keluar layar).
     # Pita yang benar: 4 x 300.000 word = 4 x 1,2 MB = 4,8 MB =
     # 1200*2000*2 -> pas 4 pita selebar 1/4 layar, urut penuh.
-    FB_WORDS = 0x493E0                      # 300.000 word = 1,2 MB per pita
-    FB_BANDS = (
-        0xF800F800,                        # pita 1: MERAH  (565 dobel)
-        0x07E007E0,                        # pita 2: HIJAU
-        0x001F001F,                        # pita 3: BIRU
-        0xFFFFFFFF,                        # pita 4: PUTIH
-    )
+    # --- ARTIX26: STUB DIAGNOSTIK (2026-10-27, sesudah artix25) ------------
+    # artix25 (pita merah/hijau/biru/putih, alpha FF) tetap menghasilkan
+    # PELANGI yang sama: 4 pita benar, jadi serah-terima LK -> stub -> `br
+    # 0x80200000` berjalan, TAPI kotak putih beacon (early_initcall di
+    # vxtux_beacon.c) tidak pernah muncul, dan cache.bin tidak memuat satu
+    # jejak pun 6.18 (tidak ada "vxtux-beacon:", tidak ada oops).
+    # Terbukti juga string di Image: "vxtux-beacon", "vxtux-lkfb",
+    # "vxtuxfb=" semuanya ADA di Image yang di-flash, jadi instrumennya ikut
+    # ter-build -- bukan driver yang hilang.
+    #
+    # Artinya kernel mati SEBELUM initcall pertama, yaitu di head.S /
+    # early_map_kernel() / setup_arch() -- di mana tidak ada konsol sama
+    # sekali.  Diagnostik harus dilakukan SEBELUM melompat, karena stub-lah
+    # satu-satunya kode kita yang pasti berjalan.
+    #
+    # Tersangka utama: LK Unisoc menyerahkan kendali dengan MMU + D-cache
+    # HIDUP.  Jalur boot 6.x untuk kasus itu (early_map_kernel() ->
+    # map_kernel() -> idmap_cpu_replace_ttbr1) SAMA SEKALI tidak pernah diuji
+    # di QEMU: qemu-boot.yml selalu `-kernel` langsung, dan QEMU selalu
+    # melompat dengan MMU mati.
+    #
+    # Stub ini mengubah 4 pita dari "warna uji" menjadi "jawaban":
+    #   pita 1 (atas)  MERAH = SCTLR_EL1.M mati (normal)
+    #                  HIJAU = SCTLR_EL1.M hidup  <-- tersangka
+    #   pita 2         BIRU  = CurrentEL = EL1
+    #                  PUTIH = EL2, MAGENTA = EL3
+    #   pita 3         HIJAU = magic FDT 0xD00DFEED valid di [x0]
+    #                  MERAH = tidak valid (DTB tidak sampai ke kernel)
+    #   pita 4         HIJAU = SCTLR_EL1.C (D-cache) hidup
+    #                  MERAH = D-cache mati
+    # 1 word 32-bit = 2 piksel RGB565, 1 baris = 1200 px = 2400 byte = 600 word.
+    # Chip jawaban = 50 baris = 30.000 word; sisanya dicat HITAM supaya kotak
+    # putih dari dalam kernel (init/main.c, vxtux_beacon.c) menonjol.
+    FB_ROW_WORDS = 600
+    CHIP_WORDS = 50 * FB_ROW_WORDS      # 30.000 word = 50 baris
+    TOTAL_WORDS = 2000 * FB_ROW_WORDS   # 1.200.000 word = 1200x2000 RGB565
+    REST_WORDS = TOTAL_WORDS - 4 * CHIP_WORDS
+    BAND_COLORS = {
+        'red':     0xF800F800,             # MERAH  (565 dobel)
+        'green':   0x07E007E0,             # HIJAU
+        'blue':    0x001F001F,             # BIRU
+        'white':   0xFFFFFFFF,             # PUTIH
+        'magenta': 0xF81FF81F,             # MAGENTA (R+B)
+        'black':   0x00000000,             # HITAM
+    }
     STUB_OFF = 0x40                         # sesudah header Image (64 byte)
 
     def _movz(rd, imm16, sf):
@@ -190,17 +228,122 @@ def main():
             insns.append(_movk(rd, hi, 1, sf))
         return insns
 
-    stub = []
-    stub += _mov_imm(1, FB_BASE & 0xFFFFFFFF, 1)          # movz/movk x1 = fb base
-    for band_color in FB_BANDS:
-        stub += _mov_imm(2, band_color, 0)                # movz/movk w2 = warna pita
-        stub += _mov_imm(3, FB_WORDS, 0)                  # movz/movk w3 = jumlah word
-        stub.append(0xB9000022)                           # str  w2, [x1]
-        stub.append(0x91001021)                           # add  x1, x1, #4
-        stub.append(0x71000463)                           # subs w3, w3, #1
-        stub.append(0x54FFFFA1)                           # b.ne -3 (kembali ke str)
-    stub += _mov_imm(2, RELAY_AT, 1)                      # movz/movk x2 = 0x80200000
-    stub.append(0xD61F0040)                               # br   x2
+    class _Asm:
+        """Assembler mini: cukup untuk b/bl/b.ne/tbz/tbnz berlabel."""
+
+        def __init__(self):
+            self.items = []
+
+        def words(self, insns):
+            for w in insns:
+                self.items.append(('insn', w))
+
+        def label(self, name):
+            self.items.append(('label', name))
+
+        def b(self, name):
+            self.items.append(('br', 0x14000000, name, 26))
+
+        def bl(self, name):
+            self.items.append(('br', 0x94000000, name, 26))
+
+        def bne(self, name):
+            self.items.append(('br', 0x54000001, name, 19))
+
+        def tbnz(self, rt, bit, name):
+            self.items.append(('tbit', rt, bit, name, 1))
+
+        def assemble(self):
+            pos, idx = {}, 0
+            for it in self.items:
+                if it[0] == 'label':
+                    pos[it[1]] = idx
+                else:
+                    idx += 1
+            out = []
+            for it in self.items:
+                if it[0] == 'label':
+                    continue
+                if it[0] == 'insn':
+                    out.append(it[1])
+                    continue
+                if it[0] == 'br':
+                    base, name, bits = it[1], it[2], it[3]
+                    off = pos[name] - len(out)
+                    if bits == 26:
+                        out.append(base | (off & 0x3FFFFFF))
+                    else:
+                        out.append(base | ((off & 0x7FFFF) << 5))
+                    continue
+                _, rt, bit, name, is_tbnz = it
+                off = pos[name] - len(out)
+                base = 0x37000000 if is_tbnz else 0x36000000
+                out.append(base | ((bit >> 5) << 31) | ((bit & 0x1F) << 19) |
+                           ((off & 0x3FFF) << 5) | rt)
+            return out
+
+    A = _Asm()
+    A.words(_mov_imm(1, FB_BASE & 0xFFFFFFFF, 1))   # x1 = kursor framebuffer
+
+    def _band(color, words=CHIP_WORDS):
+        A.words(_mov_imm(2, BAND_COLORS[color], 0))  # w2 = warna
+        A.words(_mov_imm(3, words, 0))               # w3 = jumlah word
+        A.bl('paint')
+
+    A.words([0xD5381009])                    # mrs  x9, sctlr_el1
+    A.tbnz(9, 0, 'mmu_on')
+    _band('red')                             # pita1: MMU mati
+    A.b('b2')
+    A.label('mmu_on')
+    _band('green')                           # pita1: MMU HIDUP
+    A.label('b2')
+
+    A.words([0xD538424A])                    # mrs  x10, CurrentEL
+    A.tbnz(10, 3, 'el23')
+    _band('blue')                            # pita2: EL1
+    A.b('b3')
+    A.label('el23')
+    A.tbnz(10, 2, 'el3')
+    _band('white')                           # pita2: EL2
+    A.b('b3')
+    A.label('el3')
+    _band('magenta')                         # pita2: EL3
+    A.label('b3')
+
+    A.words([0xB940000B])                    # ldr  w11, [x0]  (x0 = DTB)
+    # FDT header big-endian: byte di memori D0 0D FE ED, jadi ldr 32-bit
+    # little-endian menghasilkan 0xEDFE0DD0 (bukan 0xD00DFEED!).  Inilah
+    # sebab pita 3 artix26 merah: pemeriksaannya sendiri yang salah, bukan
+    # DTB-nya.
+    A.words(_mov_imm(12, 0xEDFE0DD0, 0))     # w12 = magic FDT (LE view)
+    A.words([0x6B0C017F])                    # cmp  w11, w12  (rn=11, rm=12)
+    A.bne('fdt_bad')
+    _band('green')                           # pita3: DTB valid
+    A.b('b4')
+    A.label('fdt_bad')
+    _band('red')                             # pita3: DTB TIDAK valid
+    A.label('b4')
+
+    A.tbnz(9, 2, 'dcache_on')
+    _band('red')                             # pita4: D-cache mati
+    A.b('go')
+    A.label('dcache_on')
+    _band('green')                           # pita4: D-cache hidup
+    A.label('go')
+
+    _band('black', REST_WORDS)                # sisanya hitam (latar kotak kernel)
+
+    A.words(_mov_imm(2, RELAY_AT, 1))         # x2 = 0x80200000
+    A.words([0xD61F0040])                     # br x2
+
+    A.label('paint')
+    A.words([0xB9000022])                     # str  w2, [x1]
+    A.words([0x91001021])                     # add  x1, x1, #4
+    A.words([0x71000463])                     # subs w3, w3, #1
+    A.bne('paint')
+    A.words([0xD65F03C0])                     # ret
+
+    stub = A.assemble()
 
     relay_hdr = bytearray(kern[:64])
     # word0: b ke stub (offset 0x40 -> imm26 = 0x10); x0 (DTB) tidak disentuh.
@@ -218,9 +361,8 @@ def main():
     print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_OFF:x}` (stub cat fb) di "
           f"0x{LK_LOAD:x}, lalu `br` ke 0x{RELAY_AT:x}; "
           f"Image asli di blob+0x{relay_off:x}")
-    print(f"stub: {len(stub)} instruksi, mengecat {FB_WORDS * 4 * len(FB_BANDS) // 1024} "
-          f"KiB framebuffer 0x{FB_BASE:x} dengan {len(FB_BANDS)} pita "
-          f"(merah/hijau/biru/putih, alpha FF)")
+    print(f"stub: {len(stub)} instruksi DIAGNOSTIK, 4 chip jawaban 50 baris di "
+          f"0x{FB_BASE:x} (MMU / CurrentEL / magic FDT / D-cache) + layar hitam")
 
     rd = b""
     if ramdisk_dir:

@@ -61,6 +61,9 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 
+#include <asm/cacheflush.h>
+#include <asm/memory.h>
+
 #define LKFB_PHYS	0x9e000000UL	/* lcd_base= bootargs LK */
 #define LKFB_WIDTH	1200U
 #define LKFB_HEIGHT	2000U
@@ -156,17 +159,19 @@ static int __init lkfb_init(void)
 	if (fb_get_options("vxtuxlkfb", NULL))
 		return -ENODEV;
 
-	mem = memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);
-	if (!mem) {
-		pr_err("gagal memetakan fb LK di %#lx\n", LKFB_PHYS);
-		return -ENOMEM;
-	}
+	/*
+	 * Linear map langsung: memremap(..., MEMREMAP_WC) MENGEMBALIKAN NULL
+	 * untuk alamat di dalam /memory (0x9E000000 termasuk RAM mesin ini),
+	 * jadi fb ini dulu tidak pernah terdaftar.  Konsekuensinya piksel
+	 * bersifat cacheable -- fbcon bisa tampak tertunda sampai cache
+	 * dibersihkan -- tetapi fbcon menggambar terus menerus sehingga
+	 * baris-baris teks tetap muncul.
+	 */
+	mem = (void __iomem *)__va(LKFB_PHYS);
 
 	info = framebuffer_alloc(sizeof(*par), NULL);
-	if (!info) {
-		memunmap(mem);
+	if (!info)
 		return -ENOMEM;
-	}
 
 	par = info->par;
 
@@ -183,7 +188,6 @@ static int __init lkfb_init(void)
 
 	if (register_framebuffer(info)) {
 		pr_err("register_framebuffer gagal\n");
-		memunmap(mem);
 		framebuffer_release(info);
 		return -ENODEV;
 	}
