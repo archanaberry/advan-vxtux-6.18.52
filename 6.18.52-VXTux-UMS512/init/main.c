@@ -1027,6 +1027,17 @@ static void __iomem *__init vxtux_fb_map(phys_addr_t phys)
 	return (void __iomem *)__va(phys);
 }
 
+/*
+ * SELF-TEST DIMATIKAN (2026-10-27)
+ * -------------------------------
+ * Ujian pita 4-warna sudah LULUS (foto artix27: MMU/CurrentEL/DTB/D-cache
+ * terbaca, kernel sampai initcall + fbcon).  Pita warna kini justru menutupi
+ * layar dan menyerupai "self test" yang sudah tak diperlukan, jadi defaultnya
+ * mati: layar diserahkan 100% ke fbcon (vxtux_lkfb).  Ubah false -> true
+ * untuk mengaktifkan kembali pita diagnostik.
+ */
+static bool __initdata vxtux_selftest = false;
+
 static void __init vxtux_paint(unsigned int idx)
 {
 	static const phys_addr_t fbs[] = { VXTUX_FB0_PHYS, VXTUX_FB1_PHYS };
@@ -1034,6 +1045,9 @@ static void __init vxtux_paint(unsigned int idx)
 	size_t y0 = VXTUX_FB_BAR_TOP + (size_t)idx * VXTUX_FB_BAR_PITCH;
 	unsigned int k;
 	size_t y;
+
+	if (!vxtux_selftest)
+		return;
 
 	if (idx < ARRAY_SIZE(vxtux_bar_col))
 		col = vxtux_bar_col[idx];

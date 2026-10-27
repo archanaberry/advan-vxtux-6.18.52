@@ -36,6 +36,13 @@
 #define CACHE_BLOCKS_1K 102400   /* partisi cache = 100 MiB -> 102400 KiB */
 #define LOG_MAX        (1024 * 1024)
 #define REPORT_MAX     (2 * 1024 * 1024)
+/*
+ * Laporan DITULIS DI SINI, bukan offset 0: pstore/blk (CONFIG_PSTORE_BLK,
+ * best_effort) memakai awal partisi yang sama untuk catatan console/kmsg
+ * sehingga menimpa laporan (atau sebaliknya).  4 MiB jauh di luar zona
+ * pstore (~512 KiB) dan masih jauh di bawah 100 MiB partisi cache.
+ */
+#define REPORT_OFFSET  (4 * 1024 * 1024)
 
 static char *report;             /* kumpulan teks yang ditulis ke cache */
 static size_t report_len;
@@ -207,6 +214,85 @@ static void mkdir_p(const char *p)
 	mkdir(p, 0755);
 }
 
+/*
+ * pstore -> layar + laporan (2026-10-27)
+ * ----------------------------------------
+ * Kernel memakai CONFIG_PSTORE + PSTORE_BLK (/dev/mmcblk0p49 = partisi
+ * cache, sesuai dmesg stok 5.4: "mmcblk0p49" 112 kemunculan) +
+ * PSTORE_CONSOLE.  Catatan console/kmsg boot SEBELUMNYA (termasuk teks
+ * panic) tersimpan di sana; dengan `pstore_blk.best_effort=1` di cmdline
+ * backend benar-benar menulis (tanpa flag itu pstore_blk init batal di
+ * __best_effort_init).
+ *
+ * Fungsi ini MEMBACA-nya kembali: mount -t pstore lalu cetak console-* dan
+ * dmesg-* ke /dev/console (fbcon -> panel) dan ke laporan cache.  Dengan
+ * begitu walau boot kali ini berantakan, jejak boot sebelumnya tetap
+ * kelihatan di layar tanpa perlu dump ulang.
+ */
+static void dump_pstore(void)
+{
+	DIR *d;
+	struct dirent *e;
+	int n = 0;
+
+	mkdir_p("/sys/fs");
+	mkdir_p("/sys/fs/pstore");
+	if (mount("pstore", "/sys/fs/pstore", "pstore", 0, "") != 0) {
+		both_fmt("VXTUX-STEP: mount pstore gagal: %s\n",
+			 strerror(errno));
+		return;
+	}
+
+	both("VXTUX-STEP: 2c/5 catatan pstore boot sebelumnya\n");
+	d = opendir("/sys/fs/pstore");
+	if (!d) {
+		both_fmt("  (buka /sys/fs/pstore gagal: %s)\n",
+			 strerror(errno));
+		umount("/sys/fs/pstore");
+		return;
+	}
+	while ((e = readdir(d)) != NULL) {
+		char path[256];
+		int fd, budget = 8192;
+		char buf[512];
+		ssize_t r;
+
+		if (e->d_name[0] == '.')
+			continue;
+		if (!strstr(e->d_name, "console") &&
+		    !strstr(e->d_name, "dmesg"))
+			continue;
+		snprintf(path, sizeof path, "/sys/fs/pstore/%s", e->d_name);
+		both_fmt("  --- pstore %s ---\n", e->d_name);
+		fd = open(path, O_RDONLY);
+		if (fd < 0) {
+			both_fmt("    (gagal buka: %s)\n", strerror(errno));
+			continue;
+		}
+		n++;
+		/* laporan: seluruh isi; layar: 8 KiB pertama supaya fbcon
+		 * tidak terusir oleh ratusan KiB catatan lama */
+		while ((r = read(fd, buf, sizeof buf)) > 0) {
+			if (report_len + (size_t)r < REPORT_MAX) {
+				memcpy(report + report_len, buf, r);
+				report_len += (size_t)r;
+			}
+			if (budget > 0) {
+				int w = r > budget ? budget : (int)r;
+				write(console_fd, buf, w);
+				budget -= w;
+			}
+		}
+		close(fd);
+		if (report && report_len && report[report_len - 1] != '\n')
+			rep("\n");
+	}
+	closedir(d);
+	if (!n)
+		both("  (pstore kosong -- backend belum pernah menulis)\n");
+	umount("/sys/fs/pstore");
+}
+
 /* tulis laporan ke satu node blok; 1 = berhasil */
 static int write_report_to(const char *dev)
 {
@@ -216,14 +302,15 @@ static int write_report_to(const char *dev)
 		rep_fmt("  (buka %s: %s)\n", dev, strerror(errno));
 		return 0;
 	}
-	if (pwrite(fd, report, report_len, 0) != (ssize_t)report_len) {
+	if (pwrite(fd, report, report_len, REPORT_OFFSET) !=
+	    (ssize_t)report_len) {
 		both_fmt("VXTUX-STEP: tulis %s tidak penuh: %s\n", dev,
 			 strerror(errno));
 		close(fd);
 		return 0;
 	}
-	both_fmt("VXTUX-STEP: OK %zu byte di %s (offset 0)\n",
-		 report_len, dev);
+	both_fmt("VXTUX-STEP: OK %zu byte di %s (offset 0x%x)\n",
+		 report_len, dev, REPORT_OFFSET);
 	fsync(fd);
 	close(fd);
 	return 1;
@@ -387,6 +474,9 @@ int main(void)
 
 	both("VXTUX-STEP: 2/5 salin dmesg ke laporan\n");
 	dump_kernel_log(1);
+
+	/* pstore boot sebelumnya (panic/console lama) -> layar + laporan */
+	dump_pstore();
 
 	/* LAPORAN AWAL ditulis di sini, sebelum pindai/mount ext4. Langkah 3/5
 	 * adalah titik yang paling mungkin menggantung (probe/port eMMC belum

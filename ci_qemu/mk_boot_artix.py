@@ -33,6 +33,7 @@ CMDLINE = (
     "rdinit=/vxtux/init "
     "loop.max_part=7 printk.devkmsg=on panic=15 "
     "initcall_debug=1 panic_on_warn softlockup_panic=1 hung_task_panic=1 "
+    "pstore_blk.best_effort=1 "
     "vxtuxfb=0x9d000000,0x9e000000 "
     "androidboot.console=ttyS1 "
     "androidboot.hardware=ums512_1h10 androidboot.slot_suffix=_a "

@@ -77,6 +77,55 @@ struct lkfb_par {
 	u32 palette[16];
 };
 
+/*
+ * Sinkronisasi D-cache (2026-10-27)
+ * ----------------------------------
+ * Bila memremap(MEMREMAP_WC) ditolak (0x9e000000 berada di dalam /memory),
+ * kita jatuh ke __va() yang CACHEABLE: fbcon menulis lewat screen_base ke
+ * D-cache, DISPC membaca DRAM -> tulisan lama/sampah yang tak pernah
+ * ter-flush muncul sebagai garis-garis, kolom kotor dan teks pecah.
+ *
+ * Perbaikan: setiap gambar fbcon (imageblit/fillrect/copyarea) dibersihkan
+ * sampai PoC untuk baris-baris yang disentuh.  flush_dcache_page() tidak
+ * dipakai karena fbcon tidak menandai halaman; kita flush rentang barisnya
+ * langsung.
+ */
+static bool lkfb_need_flush;
+
+static void lkfb_flush_rows(struct fb_info *info, unsigned int dy,
+			    unsigned int height)
+{
+	unsigned long start, end;
+	unsigned long base = (unsigned long)info->screen_base;
+
+	if (!lkfb_need_flush || height == 0)
+		return;
+	start = base + (unsigned long)dy * info->fix.line_length;
+	end = base + (unsigned long)(dy + height) * info->fix.line_length;
+	if (end > base + LKFB_SIZE)
+		end = base + LKFB_SIZE;
+	dcache_clean_poc(start, end);
+}
+
+static void lkfb_imageblit(struct fb_info *info, const struct fb_image *image)
+{
+	cfb_imageblit(info, image);
+	lkfb_flush_rows(info, image->dy, image->height);
+}
+
+static void lkfb_fillrect(struct fb_info *info, const struct fb_fillrect *rect)
+{
+	cfb_fillrect(info, rect);
+	lkfb_flush_rows(info, rect->dy, rect->height);
+}
+
+static void lkfb_copyarea(struct fb_info *info, const struct fb_copyarea *area)
+{
+	cfb_copyarea(info, area);
+	/* sumber maupun tujuan baris yang sama dibersihkan */
+	lkfb_flush_rows(info, area->dy, area->height);
+}
+
 static int lkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 {
 	/* Geometri dipaku: panel tidak bisa diubah oleh fbcon. */
@@ -146,7 +195,14 @@ static int lkfb_setcolreg(unsigned int regno, unsigned int red,
 
 static const struct fb_ops lkfb_ops = {
 	.owner		= THIS_MODULE,
-	FB_DEFAULT_IOMEM_OPS,
+	/* I/O + mmap sama dengan FB_DEFAULT_IOMEM_OPS; hanya tiga operasi
+	 * gambar diganti wrapper agar hasilnya di-flush ke PoC. */
+	.fb_read	= fb_io_read,
+	.fb_write	= fb_io_write,
+	.fb_mmap	= fb_io_mmap,
+	.fb_fillrect	= lkfb_fillrect,
+	.fb_copyarea	= lkfb_copyarea,
+	.fb_imageblit	= lkfb_imageblit,
 	.fb_check_var	= lkfb_check_var,
 	.fb_set_par	= lkfb_set_par,
 	.fb_setcolreg	= lkfb_setcolreg,
@@ -173,16 +229,18 @@ static int __init lkfb_init(void)
 	 * foto layar.  WC menulis langsung ke DRAM tanpa cache, jadi DISPC
 	 * selalu membaca isi terkini -> teks bersih, tanpa glitch.
 	 */
-	mem = (void __iomem *)memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);
-	if (!mem) {
-		/* fallback: __va cacheable + bersihkan seluruh region fb dari
-		 * D-cache sekali di sini.  fbcon menulis via kmap halaman (sudah
-		 * non-kacheable per-baris), jadi flush sekali di awal cukup untuk
-		 * membersihkan sisa logo LK yang tinggal di cache. */
-		pr_warn("memremap(WC) gagal, pakai __va + clean dcache\n");
+	mem = (void __iomem *)memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);	if (!mem) {
+		/*
+		 * Fallback: __va cacheable.  flush sekali di awal HANYA
+		 * membersihkan sisa logo LK; tulisan fbcon berikutnya tetap
+		 * masuk cache, jadi tiap gambar wajib di-flush juga
+		 * (lkfb_need_flush -> lkfb_flush_rows).
+		 */
+		pr_warn("memremap(WC) gagal, pakai __va + flush per-blit\n");
 		mem = (void __iomem *)__va(LKFB_PHYS);
 		dcache_clean_inval_poc((unsigned long)mem,
 				       (unsigned long)mem + LKFB_SIZE);
+		lkfb_need_flush = true;
 	}
 
 	info = framebuffer_alloc(sizeof(*par), NULL);
