@@ -315,11 +315,29 @@ static void switch_root_and_exec(void)
 	}
 	if (chdir("/") != 0)
 		;
-	both("VXTUX-STEP: chroot OK, exec /sbin/init\n");
 
-	execl("/sbin/init", "/sbin/init", (char *)NULL);
-	execl("/bin/sh", "sh", (char *)NULL);
-	both_fmt("VXTUX-STEP: exec /sbin/init gagal: %s\n", strerror(errno));
+	/* Artix (proot-distro) memakai dinit, BUKAN sysvinit/upstart:
+	 *   /init          -> skel dinit (exec dinit-init / dinit-initramfs)
+	 *   /bin/dinit-run -> launcher dinit khas Artix
+	 *   /sbin/init     -> symlink -> dinit (fallback systemd/gentoo)
+	 * Urutan ini penting: coba /init dulu (paling autentik), lalu dinit-run,
+	 * baru /sbin/init + /bin/sh.  Bug sebelumnya: hanya /sbin/init + /bin/sh,
+	 * padahal /sbin/init TIDAK ADA di rootfs Artix -> exec gagal -> kernel
+	 * panic "VFS: Unable to mount root fs". */
+	static const char *inits[] = {
+		"/init", "/bin/dinit-run", "/sbin/init",
+		"/sbin/dinit", "/bin/dinit", "/bin/sh", NULL
+	};
+	for (i = 0; inits[i]; i++) {
+		struct stat st;
+		if (stat(inits[i], &st) != 0)
+			continue;
+		both_fmt("VXTUX-STEP: chroot OK, exec %s\n", inits[i]);
+		execl(inits[i], inits[i], (char *)NULL);
+		both_fmt("VXTUX-STEP: exec %s gagal: %s\n", inits[i],
+			 strerror(errno));
+	}
+	both("VXTUX-STEP: semua init kandidat gagal\n");
 }
 
 /* statis: stack PID1 di kernel hanya 16 KiB, jangan taruh array besar di sana */

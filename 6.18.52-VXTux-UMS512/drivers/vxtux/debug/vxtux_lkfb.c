@@ -60,6 +60,8 @@
 #include <linux/printk.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <linux/dma-mapping.h>
+#include <linux/vmalloc.h>
 
 #include <asm/cacheflush.h>
 #include <asm/memory.h>
@@ -160,14 +162,28 @@ static int __init lkfb_init(void)
 		return -ENODEV;
 
 	/*
-	 * Linear map langsung: memremap(..., MEMREMAP_WC) MENGEMBALIKAN NULL
-	 * untuk alamat di dalam /memory (0x9E000000 termasuk RAM mesin ini),
-	 * jadi fb ini dulu tidak pernah terdaftar.  Konsekuensinya piksel
-	 * bersifat cacheable -- fbcon bisa tampak tertunda sampai cache
-	 * dibersihkan -- tetapi fbcon menggambar terus menerus sehingga
-	 * baris-baris teks tetap muncul.
+	 * Peta framebuffer sebagai WRITE-COMBINE (bukan cacheable biasa).
+	 *
+	 * Kenapa: 0x9E000000 berada di dalam RAM mesin (bukan MMIO), jadi
+	 * memremap(MEMREMAP_WC) sebelumnya mengembalikan NULL dan kita jatuh ke
+	 * __va() biasa yang MENYIMPAN piksel di D-cache.  DISPC membaca dari
+	 * DRAM langsung (bukan lewat cache CPU), sehingga framebuffer yang
+	 * ditulis fbcon tidak pernah terlihat -> teks vertikal tersusun
+	 * menyamping + glitch/stutter (garis-garis + gosong), persis seperti
+	 * foto layar.  WC menulis langsung ke DRAM tanpa cache, jadi DISPC
+	 * selalu membaca isi terkini -> teks bersih, tanpa glitch.
 	 */
-	mem = (void __iomem *)__va(LKFB_PHYS);
+	mem = (void __iomem *)memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);
+	if (!mem) {
+		/* fallback: __va cacheable + bersihkan seluruh region fb dari
+		 * D-cache sekali di sini.  fbcon menulis via kmap halaman (sudah
+		 * non-kacheable per-baris), jadi flush sekali di awal cukup untuk
+		 * membersihkan sisa logo LK yang tinggal di cache. */
+		pr_warn("memremap(WC) gagal, pakai __va + clean dcache\n");
+		mem = (void __iomem *)__va(LKFB_PHYS);
+		dcache_clean_inval_poc((unsigned long)mem,
+				       (unsigned long)mem + LKFB_SIZE);
+	}
 
 	info = framebuffer_alloc(sizeof(*par), NULL);
 	if (!info)

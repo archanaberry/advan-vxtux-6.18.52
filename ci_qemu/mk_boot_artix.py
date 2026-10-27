@@ -212,6 +212,19 @@ def main():
     }
     STUB_OFF = 0x40                         # sesudah header Image (64 byte)
 
+    # --- SELF-TEST DIMATIKAN (2026-10-27, setelah ujian lulus) --------------
+    # Uji 4-pita (MMU / CurrentEL / magic FDT / D-cache) sudah terbukti di
+    # foto artix27: kernel boot penuh sampai fbcon + initcall.  Stub kini
+    # cuma melewati: lompat lurus ke Image asli di 0x80200000 tanpa menyapu
+    # framebuffer, supaya layar bersih dan fbcon yang menggambar (via
+    # vxtux_lkfb) langsung terlihat tanpa tumpukan kotak warna.
+    def _passthrough_stub():
+        """stub minimal: x1=FB_BASE disentuh tidak, hanya br ke RELAY_AT."""
+        asm = _Asm()
+        asm.words(_mov_imm(2, RELAY_AT, 1))   # x2 = 0x80200000
+        asm.words([0xD61F0040])               # br x2
+        return asm.assemble()
+
     def _movz(rd, imm16, sf):
         return ((0xD2800000 if sf else 0x52800000) |
                 ((imm16 & 0xFFFF) << 5) | rd)
@@ -343,12 +356,19 @@ def main():
     A.bne('paint')
     A.words([0xD65F03C0])                     # ret
 
-    stub = A.assemble()
+    # Self-test dimatikan: pakai stub pass-through (tanpa pita warna).
+    # Aktifkan kembali dengan mengembalikan `stub = A.assemble()` di bawah.
+    _ = A  # assembler lama dipertahankan utk referensi; tidak dipakai.
+    stub = _passthrough_stub()
+    # stub = A.assemble()   # <-- uncomment utk mengaktifkan lagi uji 4-pita
 
+    # Stub kini cuma 2 instruksi (8 B) -- taruh tepat setelah header (0x40)
+    # dan arahkan cabang header ke sana (bukan 0x40 yang kini di-padding).
+    STUB_REAL_OFF = 0x40
     relay_hdr = bytearray(kern[:64])
     # word0: b ke stub (offset 0x40 -> imm26 = 0x10); x0 (DTB) tidak disentuh.
     struct.pack_into("<I", relay_hdr, 0,
-                     0x14000000 | ((STUB_OFF >> 2) & 0x03FFFFFF))
+                     0x14000000 | ((STUB_REAL_OFF >> 2) & 0x03FFFFFF))
     struct.pack_into("<I", relay_hdr, 4, 0xD503201F)          # nop (pengaman)
     struct.pack_into("<Q", relay_hdr, 8, 0)                   # text_offset
     struct.pack_into("<Q", relay_hdr, 16, relay_off + len(kern))  # image_size
@@ -358,11 +378,11 @@ def main():
     relay_hdr += b"".join(struct.pack("<I", w) for w in stub)
     assert len(relay_hdr) < relay_off
     kern = bytes(relay_hdr) + b"\0" * (relay_off - len(relay_hdr)) + kern
-    print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_OFF:x}` (stub cat fb) di "
+    print(f"relay: blob mulai `b 0x{LK_LOAD + STUB_REAL_OFF:x}` (stub pass-through) di "
           f"0x{LK_LOAD:x}, lalu `br` ke 0x{RELAY_AT:x}; "
           f"Image asli di blob+0x{relay_off:x}")
-    print(f"stub: {len(stub)} instruksi DIAGNOSTIK, 4 chip jawaban 50 baris di "
-          f"0x{FB_BASE:x} (MMU / CurrentEL / magic FDT / D-cache) + layar hitam")
+    print(f"stub: self-test DIMATIKAN, lompat lurus ke kernel "
+          f"(tanpa pita warna di 0x{FB_BASE:x})")
 
     rd = b""
     if ramdisk_dir:
