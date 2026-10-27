@@ -328,6 +328,7 @@ static void switch_root_and_exec(void)
 		"/init", "/bin/dinit-run", "/sbin/init",
 		"/sbin/dinit", "/bin/dinit", "/bin/sh", NULL
 	};
+	int i;
 	for (i = 0; inits[i]; i++) {
 		struct stat st;
 		if (stat(inits[i], &st) != 0)
