@@ -101,7 +101,9 @@ static void fr_report_err(const char *what, int err)
 	fr_last_err = err;
 	pr_err("%s failed: %d (%pe) - visible on fbcon\n", what, err,
 	       ERR_PTR(err));
-}/*
+}
+
+/*
  * Cari device node partisi cache TANPA bergantung pada devtmpfs: devtmpfs
  * baru di-mount kernel_init setelah seluruh initcall selesai, sementara kita
  * justru ingin merekam saat initcall masih berjalan.
