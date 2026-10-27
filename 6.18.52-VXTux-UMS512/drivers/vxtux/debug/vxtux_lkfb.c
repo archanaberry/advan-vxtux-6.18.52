@@ -55,6 +55,7 @@
 #include <linux/init.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
+#include <linux/kmsg_dump.h>
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/printk.h>
@@ -208,6 +209,54 @@ static const struct fb_ops lkfb_ops = {
 	.fb_setcolreg	= lkfb_setcolreg,
 };
 
+/*
+ * Putar ulang riwayat dmesg ke fbcon (2026-10-27)
+ * ------------------------------------------------
+ * Sejak lkfb_init dipindah ke device_initcall (setelah fb_console_init di
+ * subsys_initcall), framebuffer baru terdaftar di level 6 -- semua printk
+ * level 1..5 sudah terkirim ke konsol DUMMY dan TIDAK otomatis muncul lagi
+ * di konsol baru (hanya console ber-flag CON_PRINTBUFFER yang di-replay,
+ * lihat console_try_replay_all()).
+ *
+ * Karena layar adalah SATU-SATUNYA kanal diagnostik tablet ini (tanpa UART),
+ * riwayat ring buffer dicetak ulang di sini -- 200 baris terakhir saja,
+ * supaya layar langsung menunjukkan apa yang terjadi sebelum fbcon aktif
+ * (termasuk baris terakhir sebelum kemacetan bila ada).
+ */
+#define LKFB_REPLAY_LINES	200
+
+static void lkfb_replay_dmesg(void)
+{
+	struct kmsg_dump_iter iter = { };
+	char line[1024];
+	size_t len;
+	int total = 0, skip, n = 0;
+
+	/* 1. hitung jumlah baris (kmsg_dump_get_line dgn line = NULL) */
+	kmsg_dump_rewind(&iter);
+	while (kmsg_dump_get_line(&iter, true, NULL, 0, NULL))
+		total++;
+
+	/* 2. lewati yang lebih tua dari LKFB_REPLAY_LINES terakhir */
+	skip = total - LKFB_REPLAY_LINES;
+	kmsg_dump_rewind(&iter);
+	while (skip-- > 0) {
+		if (!kmsg_dump_get_line(&iter, true, NULL, 0, NULL))
+			break;
+	}
+
+	/* 3. cetak sisa baris ke printk -> fbcon */
+	while (kmsg_dump_get_line(&iter, true, line, sizeof(line), &len)) {
+		if (!len)
+			continue;
+		printk("%.*s%s", (int)len, line,
+		       (len && line[len - 1] == '\n') ? "" : "\n");
+		if (++n >= LKFB_REPLAY_LINES)
+			break;
+	}
+	pr_info("putar ulang %d/%d baris dmesg ke fbcon\n", n, total);
+}
+
 static int __init lkfb_init(void)
 {
 	struct fb_info *info;
@@ -268,6 +317,27 @@ static int __init lkfb_init(void)
 
 	pr_info("fb LK %#lx %ux%u/%ubu terdaftar -> fbcon aktif\n",
 		LKFB_PHYS, LKFB_WIDTH, LKFB_HEIGHT, LKFB_BPP);
+
+	/* riwayat dmesg level 1..5 dicetak ulang ke layar (lihat di atas) */
+	lkfb_replay_dmesg();
 	return 0;
 }
-core_initcall(lkfb_init);
+/*
+ * device_initcall (level 6), BUKAN core_initcall (level 1) -- 2026-10-27.
+ *
+ * PENYEBAB MACET artix30 di "calling fbmem_init": fb_console_init() (yang
+ * menjalankan subsys_initcall / level 4) adalah PEMILIK sah fbcon -- dia
+ * mengunci console_lock(), membuat device "fbcon" dan mereset
+ * con2fb_map[MAX_NR_CONSOLES] = -1.  Dengan lkfb mendaftar di level 1,
+ * register_framebuffer() -> fbcon_fb_registered() sudah mengambil alih
+ * konsol SEBELUM fb_console_init jalan, sehingga saat level 4 konsol direset
+ * / dikunci dalam keadaan sudah-aktif -> layar berhenti tepat di situ dan
+ * (bila deadlock) seluruh initcall berikutnya tak pernah jalan: eMMC (6),
+ * ramoops (6), pstore_blk (7) dan init userspace tak pernah mengeksekusi
+ * apa pun -> partisi cache tak tersentuh, persis seperti dump artix31.
+ *
+ * Urutan kanonik upstream: fb_class + fb_console_init (subsys/4) dulu,
+ * baru driver fb mendaftar (device_initcall/6, seperti hampir semua fbdev
+ * upstream).  fbcon diambil alih dengan con2fb_map yang sudah sah.
+ */
+device_initcall(lkfb_init);
