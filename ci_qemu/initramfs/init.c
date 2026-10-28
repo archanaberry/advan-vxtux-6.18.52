@@ -972,35 +972,117 @@ static void wait_for_framebuffer(void)
 	both("VXTUX-MOD: fb0 timeout; continue boot with serial/diagnostic fallback\n");
 }
 
+/*
+ * Semua driver yang di konfigurasi build berstatus =m dan dibutuhkan PMIC /
+ * GPIO / i2c / i2s HARUS disebut di sini, karena initramfs tidak punya
+ * mekanisme autoload (tidak ada udev, tidak ada modules.dep).
+ *
+ * Kenapa ini penting: node DT anak PMIC SC2730 (gpio@280 eic, adc@504,
+ * rtc, efuse, typec) memang ada, tetapi driver-nya =m. Sebelum artix40 hanya
+ * tiga modul (clk-sprd, ums512-clk, sc2730-regulator) yang dimuat, sehingga
+ * eic/adc/rtc/efuse/typec TIDAK PERNAH punya driver: setiap konsumennya
+ * (touch IRQ, charger IRQ, battery, thermal) terus "deferred probe pending"
+ * berulang -> itulah "looping di gpio/pmic".
+ *
+ * Urutan dijaga: provider clock dulu, lalu regulator PMIC, lalu anak-anak
+ * yang memakai regmap/nvmem PMIC (efuse -> adc/rtc/eic/typec), terakhir
+ * controller bus AP (spi-sprd) yang tidak bergantung PMIC.
+ */
+static const char *const late_mods[] = {
+	"/vxtux/ko/clk-sprd.ko",		/* framework before clock provider */
+	"/vxtux/ko/ums512-clk.ko",		/* publish UMS512 clocks */
+	"/vxtux/ko/sc2730-regulator.ko",	/* exact PMIC regulator child */
+	"/vxtux/ko/nvmem-sc27xx-efuse.ko",	/* efuse cells (calib) */
+	"/vxtux/ko/sc27xx_adc.ko",		/* PMIC ADC */
+	"/vxtux/ko/rtc-sc27xx.ko",		/* PMIC RTC */
+	"/vxtux/ko/gpio-pmic-eic-sprd.ko",	/* PMIC EIC gpio (touch/charger IRQ) */
+	"/vxtux/ko/sc27xx_typec.ko",		/* PMIC typec */
+	"/vxtux/ko/spi-sprd.ko",		/* AP SPI host (touch SPI) */
+};
+
+/*
+ * Cetak SEKALI daftar device yang masih belum punya driver.
+ * Sumbernya /sys/kernel/debug/devices_deferred (DEBUG_FS=y di build ini).
+ * Tanpa ini layar hanya menampilkan pengulangan "deferred probe pending"
+ * tanpa nama, jadi tidak pernah jelas gpio/pmic/i2c/i2s mana yang tertahan.
+ */
+static void dump_deferred(const char *tag)
+{
+	char buf[4096];
+	char *line;
+	int fd, n, shown = 0;
+
+	mkdir_p("/sys/kernel/debug");
+	if (access("/sys/kernel/debug/devices_deferred", R_OK) != 0 &&
+	    mount("debugfs", "/sys/kernel/debug", "debugfs", 0, "") != 0) {
+		both_fmt("VXTUX-DEFER[%s]: debugfs mount failed: %s\n",
+			 tag, strerror(errno));
+		return;
+	}
+	fd = open("/sys/kernel/debug/devices_deferred", O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		both_fmt("VXTUX-DEFER[%s]: cannot open devices_deferred: %s\n",
+			 tag, strerror(errno));
+		return;
+	}
+	n = (int)read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (n <= 0) {
+		both_fmt("VXTUX-DEFER[%s]: empty -- every device already has a driver\n",
+			 tag);
+		return;
+	}
+	buf[n] = 0;
+	both_fmt("VXTUX-DEFER[%s]: devices without driver (name | reason):\n", tag);
+	line = buf;
+	while (line && *line && shown < 40) {
+		char *nl = strchr(line, '\n');
+
+		if (nl)
+			*nl = 0;
+		if (*line)
+			both_fmt("  %s\n", line);
+		shown++;
+		line = nl ? nl + 1 : NULL;
+	}
+	if (shown >= 40)
+		both("  ... (truncated at 40 lines)\n");
+}
+
 static void load_clock_modules(void)
 {
-	static const char *const mods[] = {
-		"/vxtux/ko/clk-sprd.ko",	/* framework before clock provider */
-		"/vxtux/ko/ums512-clk.ko",	/* publish UMS512 clocks for deferred consumers */
-		"/vxtux/ko/sc2730-regulator.ko", /* bind exact PMIC regulator child */
-	};
-	unsigned int i;
+	unsigned int i, ok = 0, builtin = 0, fail = 0;
 
 	wait_for_framebuffer();
 	both("VXTUX-MOD: loading UMS512 clock modules after fbcon is visible\n");
-	for (i = 0; i < sizeof mods / sizeof mods[0]; i++) {
+	for (i = 0; i < sizeof late_mods / sizeof late_mods[0]; i++) {
 		struct stat st;
 		int ret;
 
-		if (stat(mods[i], &st) != 0) {
-			both_fmt("VXTUX-MOD: %s MISSING: %s\n", mods[i],
+		if (stat(late_mods[i], &st) != 0) {
+			both_fmt("VXTUX-MOD: %s MISSING: %s\n", late_mods[i],
 				 strerror(errno));
+			fail++;
 			continue;
 		}
-		ret = try_insmod(mods[i]);
-		if (ret == 0)
+		ret = try_insmod(late_mods[i]);
+		if (ret == 0) {
 			both_fmt("VXTUX-MOD: %s loaded (%lld bytes)\n",
-				 mods[i], (long long)st.st_size);
-		else
-			both_fmt("VXTUX-MOD: %s FAILED: %s\n", mods[i],
+				 late_mods[i], (long long)st.st_size);
+			ok++;
+		} else if (ret == -EEXIST) {
+			both_fmt("VXTUX-MOD: %s already builtin in Image\n",
+				 late_mods[i]);
+			builtin++;
+		} else {
+			both_fmt("VXTUX-MOD: %s FAILED: %s\n", late_mods[i],
 				 strerror(-ret));
+			fail++;
+		}
 	}
-	both("VXTUX-MOD: providers registered after fbcon; deferred consumers may retry\n");
+	both_fmt("VXTUX-MOD: providers registered after fbcon; deferred consumers may retry (loaded=%u builtin=%u failed=%u)\n",
+		 ok, builtin, fail);
+	dump_deferred("post-modules");
 }
 
 int main(void)
@@ -1032,6 +1114,9 @@ int main(void)
 	/* Register late clock providers before waiting for the eMMC host. */
 	load_clock_modules();
 	np = wait_for_storage(parts, 128, 180);
+	/* Daftar ini yang menjawab "gpio/pmic/i2c/i2s mana yang belum dapat":
+	 * setelah eMMC ditunggu, device yang masih tertinggal tetap tercetak. */
+	dump_deferred("post-emmc");
 	np_parts = np;
 	ensure_nodes(parts, np);
 	save_early_dmesg(parts, np);
