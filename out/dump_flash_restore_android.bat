@@ -37,6 +37,10 @@ REM  Tablet yang terkunci di teks LK pun tetap masuk BROM kalau pakai
 REM  kombinasi VOL- + POWER 15 detik lalu colok USB.
 REM
 REM  CATATAN PENTING:
+REM    * semua cek pakai goto, BUKAN blok if (... ) -- tanda kurung di
+REM      dalam echo di dalam blok if menutup bloknya lebih awal, lalu
+REM      perintah setelahnya bocor dan dieksekusi tanpa syarat (bug yang
+REM      bikin script ini dulu cuma nampilin banner + pause).
 REM    * dump super pake size hex 0x15E000000 (64-bit).  Kalau hasilnya
 REM      berakhir KURANG dari 5.872.025.600 byte, berarti spd_dump memotong
 REM      argumen size-nya.  Itu TIDAK berpengaruh ke flash (perintah w
@@ -63,6 +67,18 @@ set BOOT_SIZE=67108864
 set BOOT_MD5=0a17b97edb355fd9e3d8e44662848a43
 set ARTIX37_MD5=a475dc714c598c4ba348b8ffb63aa533
 
+goto :preflight
+
+:badsz_super
+echo [X] ukuran super SALAH: %_SZ%  harus %SUPER_SIZE% = 5600 MiB
+pause & exit /b 1
+
+:badsz_boot
+echo [X] ukuran boot SALAH: %_SZ%  harus %BOOT_SIZE%
+pause & exit /b 1
+
+:preflight
+
 echo ============================================================
 echo  PRE-FLIGHT: cek file sebelum menyentuh tablet
 echo ============================================================
@@ -73,23 +89,23 @@ if not exist "%SUPER%"  ( echo [X] super ori tidak ada: %SUPER% & pause & exit /
 if not exist "%BOOT%"   ( echo [X] boot magisk tidak ada: %BOOT% & pause & exit /b 1 )
 
 for %%A in ("%SUPER%") do set _SZ=%%~zA
-if not "%_SZ%"=="%SUPER_SIZE%" (
-  echo [X] ukuran super SALAH: %_SZ% (harus %SUPER_SIZE% = 5600 MiB)
-  pause & exit /b 1
-)
+if not "%_SZ%"=="%SUPER_SIZE%" goto :badsz_super
 for %%A in ("%BOOT%") do set _SZ=%%~zA
-if not "%_SZ%"=="%BOOT_SIZE%" (
-  echo [X] ukuran boot SALAH: %_SZ% (harus %BOOT_SIZE%)
-  pause & exit /b 1
-)
+if not "%_SZ%"=="%BOOT_SIZE%" goto :badsz_boot
 echo [OK] ukuran super = %SUPER_SIZE% , boot = %BOOT_SIZE%
 
 if not exist C:\Python314\python.exe goto :nopy1
 echo [i] hitung md5 (super 5.87GB +/- 30 detik) ...
-C:\Python314\python.exe -c "import hashlib;S=r'%SUPER%';B=r'%BOOT%';s=hashlib.md5(open(S,'rb').read()).hexdigest();b=hashlib.md5(open(B,'rb').read()).hexdigest();print('  super md5  =',s);print('  super OK   =',s=='%SUPER_MD5%');print('  boot  md5  =',b);print('  boot  OK   =',b=='%BOOT_MD5%');print('  boot magic =',open(B,'rb').read(8))"
+C:\Python314\python.exe -c "import hashlib;M=lambda p:(lambda f,h:([h.update(x) for x in iter(lambda:f.read(4194304),b'')],h.hexdigest())[1])(open(p,'rb'),hashlib.md5());s=M(r'%SUPER%');b=M(r'%BOOT%');print('  super md5  =',s);print('  super OK   =',s=='%SUPER_MD5%');print('  boot  md5  =',b);print('  boot  OK   =',b=='%BOOT_MD5%');print('  boot magic =',open(r'%BOOT%','rb').read(8));raise SystemExit(0 if (s=='%SUPER_MD5%' and b=='%BOOT_MD5%') else 1)"
+if errorlevel 1 goto :md5fail
 goto :done1
 :nopy1
 echo [i] python tidak ada - lewati cek md5, pakai ukuran saja.
+goto :done1
+:md5fail
+echo [X] md5 super/boot TIDAK COCOK dengan nilai yang diharapkan.
+echo     Jangan lanjut dulu - pastikan filenya benar (lihat header bat ini).
+pause & exit /b 1
 :done1
 echo.
 echo  Log dump  : %LOG%
@@ -142,7 +158,7 @@ echo.
 echo [2/2] verifikasi dump sebelum-restore
 if not exist "%LOG%\boot_a.bin" goto :nodump
 if not exist C:\Python314\python.exe goto :nopy2
-C:\Python314\python.exe -c "import hashlib,os;d=r'%LOG%';h=hashlib.md5(open(d+r'\boot_a.bin','rb').read()).hexdigest();print('  boot_a sebelum-restore md5 =',h);print('  = boot_artix37 (artix37 ter-flash) :',h=='%ARTIX37_MD5%');s=d+r'\super.bin';print('  super terdump                 :',os.path.exists(s),(str(os.path.getsize(s))+' byte') if os.path.exists(s) else '')"
+C:\Python314\python.exe -c "import hashlib,os;M=lambda p:(lambda f,h:([h.update(x) for x in iter(lambda:f.read(4194304),b'')],h.hexdigest())[1])(open(p,'rb'),hashlib.md5());d=r'%LOG%';h=M(d+r'\boot_a.bin');print('  boot_a sebelum-restore md5 =',h);print('  = boot_artix37 (artix37 ter-flash) :',h=='%ARTIX37_MD5%');s=d+r'\super.bin';print('  super terdump                 :',os.path.exists(s),(str(os.path.getsize(s))+' byte') if os.path.exists(s) else '')"
 goto :done2
 :nopy2
 echo [i] python tidak ada - cek manual: certutil -hashfile "%LOG%\boot_a.bin" MD5

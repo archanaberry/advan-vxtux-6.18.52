@@ -74,7 +74,7 @@ echo.
 echo [i] Log tersimpan di %LOG%
 if not exist "%LOG%\boot_a.bin" goto :noverify
 if not exist C:\Python314\python.exe goto :nopy
-C:\Python314\python.exe -c "import hashlib,os;d=r'%LOG%';h=hashlib.md5(open(d+r'\boot_a.bin','rb').read()).hexdigest();print('  md5 boot_a            =',h);print('  boot magisk mendarat  =',h=='%BOOT_MD5%');s=d+r'\super.bin';print('  super terdump         =',os.path.exists(s),(str(os.path.getsize(s))+' byte') if os.path.exists(s) else '');print('  super ori diharap     = 5872025600 byte, md5 1f6e248a52f621d0ff5037590f230d61')"
+C:\Python314\python.exe -c "import hashlib,os;M=lambda p:(lambda f,h:([h.update(x) for x in iter(lambda:f.read(4194304),b'')],h.hexdigest())[1])(open(p,'rb'),hashlib.md5());d=r'%LOG%';h=M(d+r'\boot_a.bin');print('  md5 boot_a            =',h);print('  boot magisk mendarat  =',h=='%BOOT_MD5%');s=d+r'\super.bin';print('  super terdump         =',os.path.exists(s),(str(os.path.getsize(s))+' byte') if os.path.exists(s) else '');print('  super ori diharap     = 5872025600 byte, md5 1f6e248a52f621d0ff5037590f230d61')"
 goto :done2
 :nopy
 echo [i] python tidak ada - hitung manual:
