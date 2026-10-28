@@ -237,6 +237,12 @@
 	no-sd;
 	non-removable;
 	cap-mmc-hw-reset;
+	/* Rail eMMC dari PMIC SC2730 (sc2730.dtsi). sdhci_sprd_main.c memanggil
+	 * mmc_regulator_get_supply(), jadi vmmc di sini benar-benar dipakai:
+	 * tanpa regulator ini host menunda probe sampai driver SC2730 ter-bind.
+	 * Sengaja di board DTS, bukan ums512.dtsi: ums512-1h10.dts memakai dtsi
+	 * itu tanpa sc2730.dtsi, sehingga label ini tidak ada di sana. */
+	vmmc-supply = <&vddemmccore>;
 };
 
 /* ============================================================

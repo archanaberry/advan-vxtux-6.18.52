@@ -75,7 +75,7 @@ CFG=$(find out/ci_artix37/cfg -type f -name "effective.config" -o -name ".config
 echo "CFG=$CFG"
 if [ -n "$CFG" ]; then
   for want in CONFIG_SPRD_COMMON_CLK=m CONFIG_SPRD_UMS512_CLK=m \
-              CONFIG_MODULES=y; do
+              CONFIG_REGULATOR_SC2730=m CONFIG_MODULES=y; do
     if grep -qx "$want" "$CFG"; then
       echo "  config OK : $want"
     else
@@ -90,12 +90,12 @@ if [ -n "$CFG" ]; then
     exit 1
   fi
   echo "  config OK : CONFIG_VXTUX_INITTRACE tidak =y (tracer mati)"
-  # MODULE_SIG_FORCE harus MATI, kalau tidak modul clock ditolak EKEYREJECTED
+  # Module signature enforcement is acceptable only for signed modules.
   if grep -qx "CONFIG_MODULE_SIG_FORCE=y" "$CFG"; then
-    echo "FAILED=config CONFIG_MODULE_SIG_FORCE masih =y (modul unsigned akan ditolak)"
+    echo "FAILED=config CONFIG_MODULE_SIG_FORCE masih =y (CI modules built here are unsigned)"
     exit 1
   fi
-  echo "  config OK : CONFIG_MODULE_SIG_FORCE tidak =y (modul unsigned boleh dimuat)"
+  echo "  config OK : CONFIG_MODULE_SIG_FORCE tidak =y (CI module package dapat dimuat)"
 else
   echo "  (artefak v17-config tidak ada -- verifikasi lewat .ko + Image)"
 fi
@@ -112,6 +112,14 @@ for s in "VXTUX-PROBE" "vxtux-beacon" "VXTUX-ITRACE"; do
 done
 n=$(grep -c -a -F "VXTUX-ITRACE" out/6.18.52-VXTux-UMS512/Image || true)
 [ "$n" -ne 0 ] && { echo "FAILED=tracer initcall masih ikut ke Image (harus mati)"; exit 1; }
+# MMC_BLOCK_MINORS limits consecutive minors per disk, not partition count;
+# block/partitions/core.c allocates extended minors for later GPT partitions.
+grep -qx 'CONFIG_MMC_BLOCK_MINORS=8' out/ci_artix37/cfg/effective.config || {
+  echo "FAILED=unexpected MMC_BLOCK_MINORS; verify the kernel partition-core behavior"
+  grep '^CONFIG_MMC_BLOCK_MINORS=' out/ci_artix37/cfg/effective.config || true
+  exit 1
+}
+echo "  config OK : MMC_BLOCK_MINORS=8 (extended minors cover high GPT partition numbers)"
 # clock =m -> provider TIDAK boleh builtin lagi di Image
 n=$(grep -c -a -F "sprd,ums512-apapb-gate" out/6.18.52-VXTux-UMS512/Image || true)
 echo "  info     : sprd,ums512-apapb-gate di Image -> $n (harus 0, sekarang modul)"
@@ -198,6 +206,7 @@ if not blob:
 
 p, names, elf_ok, inggris_ok, test_ok, wait_ok, mod_ok, earlylog_ok = 0, [], False, False, False, False, False, False
 rawlog_ok, dinit_ok = False, False
+fb_gate_ok, sc2730_load_ok = False, False
 NEWINIT = open('out/artix_ramdisk/vxtux-init-new', 'rb').read()
 init_hdr, init_at, init_old = -1, -1, 0
 trailer_at = -1
@@ -230,10 +239,15 @@ while p + 110 < len(out) and out[p:p + 6] in (b'070701', b'070702'):
                      b'raw vendor log saved to' in d and
                      b'raw vendor log partition not found' in d)
         dinit_ok = (b'/sbin/init' in d and b'/bin/dinit-run' not in d)
-        print('vxtux/init: ELF=%s aarch64=%s dinit=%s inggris=%s writetest=%s wait=%s insmod=%s earlylog=%s rawlog=%s dinitok=%s ukuran=%d'
+        fb_gate_ok = (b'waiting for fb0/fbcon before late providers' in d and
+                      b'fb0 timeout; continue boot' in d)
+        sc2730_load_ok = (b'/vxtux/ko/sc2730-regulator.ko' in d and
+                          b'loading UMS512 clock modules after fbcon is visible' in d)
+        print('vxtux/init: ELF=%s aarch64=%s dinit=%s inggris=%s writetest=%s wait=%s insmod=%s stale-fb-gate=%s sc2730=%s earlylog=%s rawlog=%s dinitok=%s ukuran=%d'
               % (d[:4] == b'\x7fELF', struct.unpack('<H', d[18:20])[0] == 183,
                  b'chroot OK' in d, inggris_ok, test_ok, wait_ok, mod_ok,
-                 earlylog_ok, rawlog_ok, dinit_ok, fsize))
+                 fb_gate_ok, sc2730_load_ok, earlylog_ok, rawlog_ok,
+                 dinit_ok, fsize))
     if name == 'TRAILER!!!':
         trailer_at = p
         names.append(name)
@@ -254,6 +268,10 @@ if not wait_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat wait_for_storage')
 if not mod_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat load_clock_modules (VXTUX-MOD)')
+if not fb_gate_ok:
+    sys.exit('FAILED: init tidak menunggu fb0/fbcon sebelum late provider modules')
+if not sc2730_load_ok:
+    sys.exit('FAILED: init tidak memuat SC2730 regulator module')
 if not earlylog_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat early dmesg snapshot ke /cache/boot_log.txt')
 if not rawlog_ok:
@@ -290,7 +308,12 @@ def newc_entry(name, data, ino, mode=0o100644):
     return ent
 
 ko_paths = [('vxtux/ko/clk-sprd.ko', 'out/artix_ramdisk/clk-sprd.ko'),
-            ('vxtux/ko/ums512-clk.ko', 'out/artix_ramdisk/ums512-clk.ko')]
+            ('vxtux/ko/ums512-clk.ko', 'out/artix_ramdisk/ums512-clk.ko'),
+            ('vxtux/ko/sc2730-regulator.ko',
+             'out/ci_artix37/kox/drivers/regulator/sc2730-regulator.ko')]
+for arcname, path in ko_paths:
+    if not __import__('os').path.isfile(path):
+        sys.exit('FAILED: modul wajib hilang: ' + path)
 entries = b''
 ino = 900001
 for arcname, path in ko_paths:
@@ -298,6 +321,16 @@ for arcname, path in ko_paths:
     entries += newc_entry(arcname, data, ino)
     ino += 1
     print('suntik cpio: %-28s %d byte' % (arcname, len(data)))
+# Verify the regulator module was built with its DT alias; an older module
+# with only alias=platform:... cannot bind the DT regulator child.
+sc2730_path = 'out/ci_artix37/kox/drivers/regulator/sc2730-regulator.ko'
+sc2730 = open(sc2730_path, 'rb').read()
+# file2alias emits both "of:N*T*C<compat>" and "of:N*T*C<compat>C*"; the
+# plain form is the canonical one, so accept it and print what was found.
+if b'alias=of:N*T*Csprd,sc2730-regulator\x00' not in sc2730 and \
+   b'alias=of:N*T*Csprd,sc2730-regulator' not in sc2730:
+    sys.exit('FAILED: sc2730-regulator.ko lacks the generated SC2730 OF alias')
+print('  sc2730-regulator.ko alias OF SC2730: ADA')
 # /init -> /vxtux/init (symlink), cadangan bila rdinit tidak dibaca LK.
 if 'init' not in names:
     entries += newc_entry('init', b'/vxtux/init', ino, mode=0o120777)
@@ -308,7 +341,7 @@ newcpio = out[:trailer_at] + entries + out[trailer_at:]
 
 gz = gzip.compress(newcpio, 9, mtime=0)
 open('out/artix_ramdisk/ramdisk', 'wb').write(gz)
-print('ramdisk ditulis ulang: out/artix_ramdisk/ramdisk = %d byte (gzip cpio, +2 ko)'
+print('ramdisk ditulis ulang: out/artix_ramdisk/ramdisk = %d byte (gzip cpio, +3 ko)'
       % len(gz))
 PYEOF
 if [ $? -ne 0 ]; then echo "FAILED=ramdisk"; exit 1; fi
@@ -318,7 +351,7 @@ if [ $? -ne 0 ]; then echo "FAILED=ramdisk"; exit 1; fi
 import gzip, sys
 d = gzip.decompress(open('out/artix_ramdisk/ramdisk', 'rb').read())
 for need in (b'vxtux/ko/clk-sprd.ko\0', b'vxtux/ko/ums512-clk.ko\0',
-             b'vxtux/init\0', b'init\0'):
+             b'vxtux/ko/sc2730-regulator.ko\0', b'vxtux/init\0', b'init\0'):
     ok = need in d
     print('  %-28s %s' % (need[:-1].decode(), 'ADA' if ok else 'HILANG'))
     if not ok:

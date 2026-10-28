@@ -353,19 +353,52 @@ static void ensure_nodes(struct part *parts, int np)
 			 "with mknod\n", made);
 }
 
+/* Returns 1 for ext4, 0 for a readable non-ext4 block, or -errno on I/O error. */
 static int is_ext4(const char *dev)
 {
 	unsigned char sb[2];
-	int fd = open(dev, O_RDONLY);
-	int ok = 0;
+	ssize_t n;
+	int fd = open(dev, O_RDONLY | O_CLOEXEC);
+	int err;
 
 	if (fd < 0)
-		return 0;
+		return -errno;
 	/* ext4 superblock magic 0xEF53 ada di offset 1024 + 0x38 */
-	if (pread(fd, sb, 2, 1024 + 0x38) == 2)
-		ok = (sb[0] == 0x53 && sb[1] == 0xEF);
+	n = pread(fd, sb, sizeof sb, 1024 + 0x38);
+	err = errno;
 	close(fd);
-	return ok;
+	if (n != (ssize_t)sizeof sb)
+		return n < 0 ? -err : -EIO;
+	return sb[0] == 0x53 && sb[1] == 0xEF;
+}
+
+/* Read the GPT partition name from sysfs uevent when the kernel exposes it. */
+static int get_partname(const char *devname, char *name, size_t name_len)
+{
+	char path[160], line[256];
+	FILE *f;
+	int found = 0;
+
+	if (snprintf(path, sizeof path, "/sys/class/block/%s/uevent", devname)
+	    >= (int)sizeof path)
+		return 0;
+	f = fopen(path, "r");
+	if (!f)
+		return 0;
+	while (fgets(line, sizeof line, f)) {
+		if (strncmp(line, "PARTNAME=", 9) == 0) {
+			size_t n = strcspn(line + 9, "\r\n");
+
+			if (n >= name_len)
+				n = name_len - 1;
+			memcpy(name, line + 9, n);
+			name[n] = 0;
+			found = 1;
+			break;
+		}
+	}
+	fclose(f);
+	return found;
 }
 
 static void mkdir_p(const char *p)
@@ -502,98 +535,101 @@ static int mount_cache_partition(const struct part *parts, int np)
 }
 
 /*
- * Salin satu potong teks ke kanal mentah common_rs1_a.  Pemilihan partisi
- * memakai dua syarat sekaligus: ukuran 8 MiB DAN isi yang memang kelihatan
- * seperti log (tanda VXTUXRS1 atau baris "<14>[..." khas stok).  Tanpa
- * keduanya fungsi ini menolak menulis -- lebih baik kehilangan log ketimbang
- * menimpa dtb/logo/init_boot yang kebetulan berukuran sama.  Begitu satu
- * partisi dikenali, jalurnya disimpan supaya laporan berikutnya tidak perlu
- * menebak lagi (dan tetap bekal partisi belum terpasang -- argumen parts).
+ * Salin log ke common_rs1_a. Pada dump Advan, offset 0 berisi newline dan
+ * NUL sebelum record printk "<14>[..."; jangan perlakukan header sebagai
+ * string C dan jangan mensyaratkan signature tepat di byte 0.
  */
 static char raw_log_dev[96];
+
+static int has_vendor_log_signature(const unsigned char *head, size_t len)
+{
+	size_t i;
+	const size_t magic_len = strlen(RS1_MAGIC);
+
+	if (len >= magic_len && memcmp(head, RS1_MAGIC, magic_len) == 0)
+		return 1;
+	if (len > 64)
+		len = 64;
+	for (i = 0; i + 4 < len; i++) {
+		size_t j;
+
+		if (head[i] != '<')
+			continue;
+		j = i + 1;
+		while (j < len && j - i <= 3 && head[j] >= '0' && head[j] <= '9')
+			j++;
+		if (j > i + 1 && j + 1 < len && head[j] == '>' &&
+		    head[j + 1] == '[')
+			return 1;
+	}
+	return 0;
+}
 
 static int write_raw_vendor_log(const char *data, size_t len,
 				const struct part *parts, int np)
 {
-	char head[64];
+	unsigned char head[64];
 	ssize_t got;
 	int i, fd;
 
 	if (len > RS1_MAX)
 		len = RS1_MAX;
 
-	if (raw_log_dev[0]) {
-		fd = open(raw_log_dev, O_RDWR);
-		if (fd < 0) {
-			both_fmt("VXTUX-STEP: raw log open %s failed: %s\n",
-				 raw_log_dev, strerror(errno));
-			return 0;
-		}
-		if (pwrite(fd, data, len, 0) != (ssize_t)len) {
-			both_fmt("VXTUX-STEP: raw log write %s failed: %s\n",
-				 raw_log_dev, strerror(errno));
-			close(fd);
-			return 0;
-		}
-		fsync(fd);
-		close(fd);
-		both_fmt("VXTUX-STEP: raw vendor log written to %s (%zu bytes, "
-			 "fsync OK)\n", raw_log_dev, len);
-		return 1;
-	}
-
 	for (i = 0; parts && i < np; i++) {
+		char partname[96] = "";
+		char dev[96];
+		int named;
+
 		if (parts[i].blocks != RS1_SIZE_KIB ||
 		    strncmp(parts[i].name, "mmcblk", 6))
 			continue;
-		snprintf(raw_log_dev, sizeof raw_log_dev, "/dev/%s",
-			 parts[i].name);
-		fd = open(raw_log_dev, O_RDWR);
+		named = get_partname(parts[i].name, partname, sizeof partname);
+		if (named && strcmp(partname, "common_rs1_a") != 0)
+			continue;
+		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
+		fd = open(dev, O_RDONLY | O_CLOEXEC);
+		if (fd < 0) {
+			if (named)
+				both_fmt("VXTUX-STEP: raw log read %s failed: %s\n",
+					 dev, strerror(errno));
+			continue;
+		}
+		got = pread(fd, head, sizeof head, 0);
+		close(fd);
+		if (got < 0 || !has_vendor_log_signature(head, (size_t)got))
+			continue;
+
+		fd = open(dev, O_RDWR | O_CLOEXEC);
 		if (fd < 0) {
 			both_fmt("VXTUX-STEP: raw log open %s failed: %s\n",
-				 raw_log_dev, strerror(errno));
-			raw_log_dev[0] = 0;
-			continue;
-		}
-		got = pread(fd, head, sizeof head - 1, 0);
-		if (got < 6) {
-			close(fd);
-			raw_log_dev[0] = 0;
-			continue;
-		}
-		head[got] = 0;
-		/* (a) sudah berisi tulisan kita, (b) log khas stok "<14>[". */
-		if (strncmp(head, RS1_MAGIC, strlen(RS1_MAGIC)) != 0 &&
-		    !(head[0] == '<' && head[1] >= '0' && head[1] <= '9' &&
-		      strchr(head, '[') != NULL)) {
-			close(fd);
-			raw_log_dev[0] = 0;
+				 dev, strerror(errno));
 			continue;
 		}
 		if (pwrite(fd, data, len, 0) != (ssize_t)len) {
+			int err = errno;
+
 			both_fmt("VXTUX-STEP: raw log write %s failed: %s\n",
-				 raw_log_dev, strerror(errno));
+				 dev, strerror(err));
 			close(fd);
-			raw_log_dev[0] = 0;
 			continue;
 		}
-		fsync(fd);
-		memset(head, 0, sizeof head);
-		if (pread(fd, head, strlen(RS1_MAGIC), 0) !=
+		if (fsync(fd) != 0 || pread(fd, head, strlen(RS1_MAGIC), 0) !=
 		    (ssize_t)strlen(RS1_MAGIC) ||
 		    memcmp(head, RS1_MAGIC, strlen(RS1_MAGIC)) != 0) {
-			both_fmt("VXTUX-STEP: raw log readback FAILED on %s\n",
-				 raw_log_dev);
+			int err = errno ? errno : EIO;
+
+			both_fmt("VXTUX-STEP: raw log readback FAILED on %s: %s\n",
+				 dev, strerror(err));
 			close(fd);
-			raw_log_dev[0] = 0;
 			continue;
 		}
 		close(fd);
+		snprintf(raw_log_dev, sizeof raw_log_dev, "%s", dev);
 		both_fmt("VXTUX-STEP: raw vendor log saved to %s (%zu bytes, "
 			 "readback OK)\n", raw_log_dev, len);
 		return 1;
 	}
-	both("VXTUX-STEP: raw vendor log partition not found by size+content "
+	both("VXTUX-STEP: raw vendor log partition not found by name/content "
 	     "(skipped)\n");
 	return 0;
 }
@@ -743,6 +779,29 @@ static void write_readback_test(const struct part *parts, int np)
 
 /* ---------- find and mount root ---------- */
 
+static const char *const init_candidates[] = {
+	"/sbin/init", "/sbin/dinit-init", "/sbin/dinit",
+	"/bin/dinit", "/usr/bin/dinit-init", "/usr/bin/dinit",
+	"/bin/sh", "/usr/bin/sh", NULL
+};
+
+static int root_init_path(char *found, size_t found_len)
+{
+	char path[160];
+	int i;
+
+	for (i = 0; init_candidates[i]; i++) {
+		if (snprintf(path, sizeof path, "/newroot%s", init_candidates[i])
+		    >= (int)sizeof path)
+			continue;
+		if (access(path, X_OK) == 0) {
+			snprintf(found, found_len, "%s", init_candidates[i]);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static int find_and_mount_root(const struct part *parts, int np, char *rootdev,
 			       size_t rootdev_len)
 {
@@ -750,33 +809,50 @@ static int find_and_mount_root(const struct part *parts, int np, char *rootdev,
 
 	mkdir_p("/newroot");
 	for (i = 0; i < np; i++) {
-		char dev[96];
+		char dev[96], partname[96] = "", initpath[96] = "";
+		int probe, named;
 
 		if (!strstr(parts[i].name, "mmcblk") ||
 		    !strchr(parts[i].name, 'p'))
 			continue;
-		if (parts[i].blocks < 1024 * 1024)   /* < 1 GiB: bukan rootfs */
+		named = get_partname(parts[i].name, partname, sizeof partname);
+		/* GPT says super: inspect it regardless of reported size. Without
+		 * PARTNAME support, retain the previous >=1 GiB fallback heuristic. */
+		if (named && strcmp(partname, "super") != 0)
+			continue;
+		if (!named && parts[i].blocks < 1024 * 1024)
 			continue;
 		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
-		if (!is_ext4(dev)) {
-			rep_fmt("  %-16s %8lu KiB  not ext4\n",
-				parts[i].name, parts[i].blocks);
+		probe = is_ext4(dev);
+		if (probe < 0) {
+			rep_fmt("  %s (%s): ext4 probe I/O failed: %s\n",
+				 parts[i].name, named ? partname : "large candidate",
+				 strerror(-probe));
 			continue;
 		}
-		rep_fmt("  %-16s %8lu KiB  ext4 -> trying mount\n",
-			parts[i].name, parts[i].blocks);
-		if (mount(dev, "/newroot", "ext4", 0, "") == 0) {
-			if (access("/newroot/sbin/init", X_OK) == 0) {
-				snprintf(rootdev, rootdev_len, "%s", dev);
-				return 0;
-			}
-			rep_fmt("  %s mounted but /sbin/init is missing\n",
-				parts[i].name);
-			umount("/newroot");
-		} else {
-			rep_fmt("  mount %s failed: %s\n", parts[i].name,
-				strerror(errno));
+		if (!probe) {
+			rep_fmt("  %s (%s): ext4 magic mismatch\n", parts[i].name,
+				 named ? partname : "large candidate");
+			continue;
 		}
+		rep_fmt("  %s (%s, %lu KiB): ext4 -> trying mount\n",
+			 parts[i].name, named ? partname : "large candidate",
+			 parts[i].blocks);
+		if (mount(dev, "/newroot", "ext4", 0, "") != 0) {
+			int err = errno;
+
+			rep_fmt("  mount %s failed: %s\n", parts[i].name,
+				strerror(err));
+			continue;
+		}
+		if (root_init_path(initpath, sizeof initpath)) {
+			snprintf(rootdev, rootdev_len, "%s", dev);
+			rep_fmt("  executable init candidate: %s\n", initpath);
+			return 0;
+		}
+		rep_fmt("  %s mounted, but no executable init candidate found "
+			 "(/sbin/init, dinit-init, dinit, sh)\n", parts[i].name);
+		umount("/newroot");
 	}
 	return -1;
 }
@@ -804,10 +880,7 @@ static void switch_root_and_exec(void)
 	 * Artix root's init.  Once chrooted, use whatever init the rootfs
 	 * actually ships: /bin/dinit-run does NOT exist in this image (raw scan
 	 * of the 5.87 GB super image: 0 hits), /sbin/init -> dinit-init does. */
-	static const char *inits[] = {
-		"/sbin/init", "/sbin/dinit-init", "/sbin/dinit",
-		"/bin/dinit", "/bin/sh", NULL
-	};
+
 	/*
 	 * PID 1 inherits an empty environment from the kernel: only HOME and TERM
 	 * are set, PATH is not.  /sbin/init is a symlink whose target may be a
@@ -819,13 +892,14 @@ static void switch_root_and_exec(void)
 	putenv("TERM=linux");
 	putenv("HOME=/root");
 	int i;
-	for (i = 0; inits[i]; i++) {
+	for (i = 0; init_candidates[i]; i++) {
 		struct stat st;
-		if (stat(inits[i], &st) != 0)
+		if (stat(init_candidates[i], &st) != 0 ||
+		    access(init_candidates[i], X_OK) != 0)
 			continue;
-		both_fmt("VXTUX-STEP: chroot OK, exec %s\n", inits[i]);
-		execl(inits[i], inits[i], (char *)NULL);
-		both_fmt("VXTUX-STEP: exec %s failed: %s\n", inits[i],
+		both_fmt("VXTUX-STEP: chroot OK, exec %s\n", init_candidates[i]);
+		execl(init_candidates[i], init_candidates[i], (char *)NULL);
+		both_fmt("VXTUX-STEP: exec %s failed: %s\n", init_candidates[i],
 			 strerror(errno));
 	}
 	both("VXTUX-STEP: every init candidate failed\n");
@@ -864,15 +938,43 @@ static int try_insmod(const char *path)
 	return ret;
 }
 
+static int framebuffer_is_ready(void)
+{
+	struct stat st;
+
+	/* The kernel registers fb0 during device_initcalls before /init runs. */
+	return stat("/sys/class/graphics/fb0", &st) == 0;
+}
+
+static void wait_for_framebuffer(void)
+{
+	int waited;
+
+	both("VXTUX-MOD: waiting for fb0/fbcon before late providers\n");
+	for (waited = 0; waited < 180; waited += 2) {
+		if (framebuffer_is_ready()) {
+			both_fmt("VXTUX-MOD: fb0 registered after %ds; late probes allowed\n",
+				 waited);
+			return;
+		}
+		if (waited % 20 == 0)
+			both_fmt("VXTUX-MOD: fb0 not registered (%ds)\n", waited);
+		sleep(2);
+	}
+	both("VXTUX-MOD: fb0 timeout; continue boot with serial/diagnostic fallback\n");
+}
+
 static void load_clock_modules(void)
 {
 	static const char *const mods[] = {
-		"/vxtux/ko/clk-sprd.ko",	/* SPRD clock framework first */
-		"/vxtux/ko/ums512-clk.ko",	/* then ap-clk + apapb-gate */
+		"/vxtux/ko/clk-sprd.ko",	/* framework before clock provider */
+		"/vxtux/ko/ums512-clk.ko",	/* publish UMS512 clocks for deferred consumers */
+		"/vxtux/ko/sc2730-regulator.ko", /* bind exact PMIC regulator child */
 	};
 	unsigned int i;
 
-	both("VXTUX-MOD: loading UMS512 clock modules (late, fbcon is up)\n");
+	wait_for_framebuffer();
+	both("VXTUX-MOD: loading UMS512 clock modules after fbcon is visible\n");
 	for (i = 0; i < sizeof mods / sizeof mods[0]; i++) {
 		struct stat st;
 		int ret;
@@ -890,7 +992,7 @@ static void load_clock_modules(void)
 			both_fmt("VXTUX-MOD: %s FAILED: %s\n", mods[i],
 				 strerror(-ret));
 	}
-	both("VXTUX-MOD: deferred probes retriggered, waiting for eMMC\n");
+	both("VXTUX-MOD: providers registered after fbcon; deferred consumers may retry\n");
 }
 
 int main(void)
@@ -906,6 +1008,10 @@ int main(void)
 	mount("devtmpfs", "/dev", "devtmpfs", 0, "mode=0755");
 	mount("proc", "/proc", "proc", 0, "");
 	mount("sysfs", "/sys", "sysfs", 0, "");
+	/* Early userspace opens console before printing; it must exist even if
+	 * devtmpfs did not create the special node on this kernel config. */
+	if (access("/dev/console", F_OK) != 0)
+		mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1));
 
 	console_fd = open("/dev/console", O_WRONLY | O_NOCTTY);
 	if (console_fd < 0)

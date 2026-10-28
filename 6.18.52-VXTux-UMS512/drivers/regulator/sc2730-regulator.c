@@ -202,7 +202,6 @@ static const struct regulator_ops sc2730_regu_linear_ops = {
 			   vstep, vmin, vmax) {				\
 	.name			= #_id,					\
 	.of_match		= of_name,				\
-	.regulators_node	= "regulators",				\
 	.ops			= &sc2730_regu_linear_ops,		\
 	.type			= REGULATOR_VOLTAGE,			\
 	.id			= SC2730_##_id,				\
@@ -338,7 +337,10 @@ static int sc2730_regulator_probe(struct platform_device *pdev)
 	if (ret)
 		return dev_err_probe(&pdev->dev, ret, "failed to release regulator lock\n");
 
-	config.dev = pdev->dev.parent;
+	/* The platform device is created from the DT "regulators" container;
+	 * the descriptors intentionally leave regulators_node unset so the core
+	 * matches each of its child rail nodes directly. */
+	config.dev = &pdev->dev;
 	config.regmap = regmap;
 
 	for (i = 0; i < ARRAY_SIZE(regulators); i++) {
@@ -353,19 +355,19 @@ static int sc2730_regulator_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static const struct platform_device_id sc2730_regulator_id_table[] = {
-	{ .name = "sc2730-regulator" },
+static const struct of_device_id sc2730_regulator_of_match[] = {
+	{ .compatible = "sprd,sc2730-regulator" },
 	{ }
 };
-MODULE_DEVICE_TABLE(platform, sc2730_regulator_id_table);
+MODULE_DEVICE_TABLE(of, sc2730_regulator_of_match);
 
 static struct platform_driver sc2730_regulator_driver = {
 	.driver = {
 		.name = "sc2730-regulator",
+		.of_match_table = sc2730_regulator_of_match,
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = sc2730_regulator_probe,
-	.id_table = sc2730_regulator_id_table,
 };
 
 module_platform_driver(sc2730_regulator_driver);

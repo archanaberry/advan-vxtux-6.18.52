@@ -248,12 +248,11 @@ static int sc2731_regulator_probe(struct platform_device *pdev)
  * of_device_make_bus_id() yang menamai anak PMIC secara KOMPOSIT
  * ("32100000.spi@32100000:pmic@0:<nama-node>"), sehingga node anak PMIC
  * tidak pernah bernama persis "sc27xx-regulator" -> probe tak pernah jalan.
- * Compatible di sini sama dengan yang dipakai DTS vendor (SC2730) dan
- * sc2731.dtsi upstream.
+ * Hanya compatible SC2731 yang ditangani. SC2730 memakai register map
+ * berbeda dan harus di-bind oleh sc2730-regulator.c secara khusus.
  */
 static const struct of_device_id sc2731_regulator_of_match[] = {
 	{ .compatible = "sprd,sc2731-regulator", },
-	{ .compatible = "sprd,sc2730-regulator", },
 	{}
 };
 MODULE_DEVICE_TABLE(of, sc2731_regulator_of_match);

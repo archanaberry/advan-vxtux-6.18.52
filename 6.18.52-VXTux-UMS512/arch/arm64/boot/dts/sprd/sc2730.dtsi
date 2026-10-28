@@ -23,11 +23,9 @@
  * CATATAN BINDING (penting, belum diuji boot):
  *  - adc/efuse/vibrator/rtc/bltc/eic/mfd cocok lewat `compatible`
  *    (rtc & bltc perlu entri `sprd,sc2730-*` yang ditambahkan di driver).
- *  - regulator & poweroff TIDAK punya of_match_table di mainline; keduanya
- *    dicocokkan lewat NAMA driver (`sc27xx-regulator`, `sc27xx-poweroff`),
- *    sehingga node-nya sengaja dinamai persis seperti itu. Inilah kenapa
- *    namanya bukan `power-controller@1800` / `poweroff@1820` seperti di DTS
- *    vendor.
+ *  - regulator dan poweroff di tree ini memakai of_match_table khusus;
+ *    compatible node SC2730 harus persis yang didukung driver, supaya driver
+ *    SC2731 tidak pernah mengklaim PMIC ini.
  *  - tsensor SUDAH ditulis di sini sejak 2026-10-14 (pmic_tsensor):
  *    driver sc27xx_tsensor_thermal sudah diport + ter-build, jadi
  *    alasan lama "belum punya driver mainline" tidak berlaku lagi.
@@ -248,44 +246,29 @@
 		};
 
 		/*
-		 * Regulator SC2730. ATURAN (terverifikasi 2026-09-23): nama anak node
-		 * HARUS sama dengan `of_match` di tabel `regulators[]` driver mainline
-		 * (drivers/regulator/sc2731-regulator.c) — itulah yang dicocokkan
-		 * of_get_regulator_init_data(). DTB stok memakai kosakata sendiri
-		 * (DCDC_CORE, LDO_VDDCAMA0, ...) yang tidak cocok dengan satu pun nama
-		 * driver, sehingga 32 rail "terpasang" tapi nol init data (always-on
-		 * ikut hilang -> rail bisa dimatikan regulator core di late_initcall).
+		 * Regulator SC2730. Nama anak DT harus sama dengan descriptor
+		 * `of_match` di sc2730-regulator.c (mis. ldo-vddemmccore), dan node ini
+		 * sendiri menjadi platform child melalui compatible khusus SC2730.
+		 * Hanya rail yang mapping-nya sudah dibuktikan dari FDT stok diberi
+		 * descriptor constraints/phandle; unknown rails tidak dipetakan ke
+		 * register lain secara spekulatif.
 		 *
-		 * Karena itu hanya rail yang DIKENAL driver yang ditulis di sini
-		 * (17 = seluruh isi tabel driver). Rail vendor lain (DCDC_GEN0/1,
-		 * DCDC_MEMQ/MODEM/SRAM, LDO_VDD28, LDO_AVDD12/18, LDO_VDD18_DCXO,
-		 * LDO_VDDRF18, LDO_VDDRF1V25, LDO_VDDLDO0/1/2, LDO_VDDWCN,
-		 * LDO_VDDSIM2, LDO_VDDKPLED) tidak punya driver di 6.18; tabel lengkap
-		 * (nama + rentang voltase dari FDT stok) ada di docs/pmic_sc2730.md.
-		 *
-		 * Nama node ini sendiri bebas: driver sekarang punya of_match_table
-		 * (ditambahkan 2026-09-23) sehingga bind lewat compatible
-		 * "sprd,sc2731-regulator"/"sprd,sc2730-regulator".
+		 * Driver yang cocok harus khusus SC2730: alamat register SC2731
+		 * berbeda dan tidak boleh dipakai untuk chip ini. Nama container
+		 * `regulators` juga diperlukan oleh regulator core (config.dev merujuk
+		 * parent PMIC); compatible hanya untuk binding driver, sedangkan nama
+		 * child rail harus persis sama dengan descriptor `of_match`.
 		 */
-		sc27xx-regulator {
-			compatible = "sprd,sc2731-regulator", "sprd,sc2730-regulator";
+		regulators {
+			compatible = "sprd,sc2730-regulator";
 
-			BUCK_CPU0 {
-				/* padanan rail vendor belum terbukti; vendor menandai SEMUA 9 rail DCDC always-on */
-				regulator-always-on;
-			};
+			/* Node BUCK_* stok tidak punya padanan descriptor SC2730
+			 * yang sudah dibuktikan; jangan pasang constraints spekulatif. */
+			BUCK_CPU0 { };
+			BUCK_CPU1 { };
+			BUCK_RF { };
 
-			BUCK_CPU1 {
-				/* idem BUCK_CPU0 */
-				regulator-always-on;
-			};
-
-			BUCK_RF {
-				/* idem BUCK_CPU0 */
-				regulator-always-on;
-			};
-
-			vddcama0: LDO_CAMA0 {
+			vddcama0: ldo-vddcama0 {
 				/* DTB stok: LDO_VDDCAMA0 */
 				regulator-name = "vddcama0";
 				regulator-min-microvolt = <1200000>;
@@ -293,7 +276,7 @@
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcama1: LDO_CAMA1 {
+			vddcama1: ldo-vddcama1 {
 				/* DTB stok: LDO_VDDCAMA1 */
 				regulator-name = "vddcama1";
 				regulator-min-microvolt = <1200000>;
@@ -301,7 +284,7 @@
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcamd0: LDO_CAMD0 {
+			vddcamd0: ldo-vddcamd0 {
 				/* DTB stok: LDO_VDDCAMD0 */
 				regulator-name = "vddcamd0";
 				regulator-min-microvolt = <1200000>;
@@ -309,7 +292,7 @@
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcamd1: LDO_CAMD1 {
+			vddcamd1: ldo-vddcamd1 {
 				/* DTB stok: LDO_VDDCAMD1 (min vendor 900000 di-clip ke min driver) */
 				regulator-name = "vddcamd1";
 				regulator-min-microvolt = <1000000>;
@@ -317,7 +300,7 @@
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcamio: LDO_CAMIO {
+			vddcamio: ldo-vddcamio {
 				/* DTB stok: LDO_VDDCAMIO (max vendor 1830000 di-clip ke max driver) */
 				regulator-name = "vddcamio";
 				regulator-min-microvolt = <1200000>;
@@ -325,7 +308,7 @@
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcammot: LDO_CAMMOT {
+			vddcammot: ldo-vddcammot {
 				/* DTB stok: LDO_VDDCAMMOT (rail fixed-voltage) */
 				regulator-name = "vddcammot";
 				regulator-min-microvolt = <2800000>;
@@ -337,8 +320,9 @@
 				/* padanan rail vendor belum terbukti */
 			};
 
-			LDO_EMMCCORE {
-				/* DTB stok: LDO_VDDEMMCCORE */
+			vddemmccore: ldo-vddemmccore {
+				/* Rail eMMC terdaftar dengan label konsumen yang dipakai SDHCI;
+				 * boot-on + always-on mempertahankan tegangan stok. */
 				regulator-name = "vddemmccore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -347,32 +331,28 @@
 				regulator-always-on;
 			};
 
-			LDO_SDCORE {
-				/* DTB stok: LDO_VDDSDCORE */
+			ldo-vddsdcore {
 				regulator-name = "vddsdcore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_SDIO {
-				/* DTB stok: LDO_VDDSDIO */
+			ldo-vddsdio {
 				regulator-name = "vddsdio";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_SRAM {
-				/* always-on: preseden sc2731.dtsi upstream */
-				regulator-always-on;
-			};
+			/* LDO_SRAM tidak memiliki descriptor rail yang tervalidasi. */
+			LDO_SRAM { };
 
 			/* Label `vddusb33` ditambahkan 2026-09-25 (F3): node hsphy USB
 			 * menunjuk rail ini lewat vdd-supply = <&vddusb33> (stok: phandle
 			 * 0x126 = LDO_VDDUSB33). Label tidak mengubah binding apa pun —
 			 * driver SC27xx regulator mencocokkan lewat nama node/rail. */
-			vddusb33: LDO_USB33 {
+			vddusb33: ldo-vddusb33 {
 				/* DTB stok: LDO_VDDUSB33 */
 				regulator-name = "vddusb33";
 				regulator-min-microvolt = <1200000>;
@@ -384,7 +364,7 @@
 				/* padanan rail vendor belum terbukti */
 			};
 
-			LDO_WIFIPA {
+			ldo-vddwifipa {
 				/* DTB stok: LDO_VDDWIFIPA */
 				regulator-name = "vddwifipa";
 				regulator-min-microvolt = <1200000>;
