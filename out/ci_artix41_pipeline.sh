@@ -187,7 +187,7 @@ fi
 # Semua modul yang dimuat /vxtux/init (late_mods[] di ci_qemu/initramfs/init.c).
 # Kalau sintaks ini dan daftar di init.c berbeda, boot akan melaporkan
 # "MISSING" di layar -> daftar ini sumber kebenarannya.
-LATE_KO_NAMES="clk-sprd ums512-clk sc2730-regulator nvmem-sc27xx-efuse sc27xx_adc rtc-sc27xx gpio-pmic-eic-sprd sc27xx_typec spi-sprd"
+LATE_KO_NAMES="clk-sprd ums512-clk sc2730-regulator nvmem-sc27xx-efuse sc27xx_adc rtc-sc27xx gpio-pmic-eic-sprd sc27xx_typec spi-sprd snd-soc-sprd-vbc-v4"
 missing=""
 for n in $LATE_KO_NAMES; do
   f=$(find "$ART/kox" -name "$n.ko" | head -1)
@@ -305,6 +305,7 @@ while p + 110 < len(out) and out[p:p + 6] in (b'070701', b'070702'):
                     b'/vxtux/ko/gpio-pmic-eic-sprd.ko' in d and
                     b'/vxtux/ko/spi-sprd.ko' in d and
                     b'/vxtux/ko/nvmem-sc27xx-efuse.ko' in d and
+                    b'/vxtux/ko/snd-soc-sprd-vbc-v4.ko' in d and
                     b'VXTUX-DEFER' in d)
         earlylog_ok = (b'/cache/boot_log.txt' in d and
                        b'mounted cache and saved early dmesg' in d)
@@ -386,7 +387,8 @@ def newc_entry(name, data, ino, mode=0o100644):
 # Harus sama persis dengan late_mods[] di ci_qemu/initramfs/init.c.
 ko_names = ['clk-sprd', 'ums512-clk', 'sc2730-regulator',
             'nvmem-sc27xx-efuse', 'sc27xx_adc', 'rtc-sc27xx',
-            'gpio-pmic-eic-sprd', 'sc27xx_typec', 'spi-sprd']
+            'gpio-pmic-eic-sprd', 'sc27xx_typec', 'spi-sprd',
+            'snd-soc-sprd-vbc-v4']
 ko_paths = [('vxtux/ko/%s.ko' % n, 'out/artix_ramdisk/%s.ko' % n)
             for n in ko_names]
 for arcname, path in ko_paths:
@@ -430,7 +432,8 @@ import gzip, sys
 d = gzip.decompress(open('out/artix_ramdisk/ramdisk', 'rb').read())
 NEED_KO = [b'clk-sprd', b'ums512-clk', b'sc2730-regulator',
            b'nvmem-sc27xx-efuse', b'sc27xx_adc', b'rtc-sc27xx',
-           b'gpio-pmic-eic-sprd', b'sc27xx_typec', b'spi-sprd']
+           b'gpio-pmic-eic-sprd', b'sc27xx_typec', b'spi-sprd',
+           b'snd-soc-sprd-vbc-v4']
 for need in tuple(b'vxtux/ko/' + n + b'.ko\0' for n in NEED_KO) + \
             (b'vxtux/init\0', b'init\0'):
     ok = need in d
@@ -465,4 +468,15 @@ if [ $? -ne 0 ]; then echo "FAILED=ramdisk-verify"; exit 1; fi
 
 ls -l out/6.18.52-VXTux-UMS512/boot_artix41.img
 md5sum out/6.18.52-VXTux-UMS512/boot_artix41.img
+# Proenance untuk skrip .bat: jangan pernah hardcode md5, karena Image dari
+# CI berubah setiap commit.  .bat membaca dua berkas ini.
+md5sum out/6.18.52-VXTux-UMS512/boot_artix41.img | cut -d' ' -f1 \
+  > out/6.18.52-VXTux-UMS512/boot_artix41.md5
+stat -c%s out/6.18.52-VXTux-UMS512/boot_artix41.img \
+  > out/6.18.52-VXTux-UMS512/boot_artix41.size
+md5sum out/dtb_artix41/ums512-1h10-vxtux.dtb | cut -d' ' -f1 \
+  > out/dtb_artix41/dtb.md5
+stat -c%s out/dtb_artix41/ums512-1h10-vxtux.dtb \
+  > out/dtb_artix41/dtb.size
+echo "DTB=$(cat out/dtb_artix41/dtb.md5) ($(cat out/dtb_artix41/dtb.size) byte)"
 echo "DONE=1"

@@ -998,6 +998,13 @@ static const char *const late_mods[] = {
 	"/vxtux/ko/gpio-pmic-eic-sprd.ko",	/* PMIC EIC gpio (touch/charger IRQ) */
 	"/vxtux/ko/sc27xx_typec.ko",		/* PMIC typec */
 	"/vxtux/ko/spi-sprd.ko",		/* AP SPI host (touch SPI) */
+	/*
+	 * VBC v4 / I2S DAI.  CONFIG_VXTUX_SND_SPRD_VBC_V4=m, sedangkan machine
+	 * card dan codec SC2730 =y.  Tanpa modul ini vbc@33480000 tidak punya
+	 * driver sama sekali, jadi clock I2S tidak pernah punya consumer yang
+	 * bind dan PCM/DAI tidak terdaftar ("i2s clock belum dapat").
+	 */
+	"/vxtux/ko/snd-soc-sprd-vbc-v4.ko",
 };
 
 /*
