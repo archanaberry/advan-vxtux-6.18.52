@@ -29,6 +29,7 @@
 #include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -626,6 +627,72 @@ static void switch_root_and_exec(void)
 	both("VXTUX-STEP: every init candidate failed\n");
 }
 
+/* ---------- modul clock UMS512 (artix37) ---------- */
+
+/*
+ * Mengapa clock tree dimuat DI SINI, bukan builtin (=y):
+ *
+ *   artix34  SPRD_COMMON_CLK/UMS512_CLK =m dan modulnya tidak pernah
+ *            dimuat -> semua konsumen (eMMC, i2c, PMIC) deferred abadi ->
+ *            kernel SELALU selamat sampai fbcon, layar hidup.
+ *   artix35/36  =y -> clock tree ada sejak initcall -> konsumen probe
+ *            terlalu dini -> salah satunya menggantung senyap SEBELUM
+ *            fbcon -> layar buta, tanpa panic, tanpa jejak apa pun.
+ *
+ * Jadi di sini clock tree dimuat sebagai MODUL, SETELAH fbcon hidup dan
+ * layar sudah bisa bicara.  driver_register() dari finit_module() memicu
+ * driver_deferred_probe_trigger(), jadi konsumen yang tadinya deferred
+ * langsung dicoba ulang begitu provider clock terdaftar.  Kalau salah
+ * satunya menggantung, gantungnya terjadi SESUDAH semua pesan di layar
+ * ini tercetak - bukan boot buta lagi.
+ *
+ * Modul berasal dari build kernel yang sama (ditandatangani key build itu,
+ * CONFIG_MODULE_SIG_FORCE=y tetap terpenuhi) dan ditaruh di /vxtux/ko/
+ * oleh pipeline boot_artix37.
+ */
+static int try_insmod(const char *path)
+{
+	int fd, ret;
+
+	fd = open(path, O_RDONLY | O_CLOEXEC);
+	if (fd < 0)
+		return -errno;
+	ret = (int)syscall(SYS_finit_module, fd, "", 0);
+	if (ret < 0)
+		ret = -errno;
+	close(fd);
+	return ret;
+}
+
+static void load_clock_modules(void)
+{
+	static const char *const mods[] = {
+		"/vxtux/ko/clk-sprd.ko",	/* framework clock SPRD dulu */
+		"/vxtux/ko/ums512-clk.ko",	/* lalu ap-clk + apapb-gate */
+	};
+	unsigned int i;
+
+	both("VXTUX-MOD: loading UMS512 clock modules (late, fbcon is up)\n");
+	for (i = 0; i < sizeof mods / sizeof mods[0]; i++) {
+		struct stat st;
+		int ret;
+
+		if (stat(mods[i], &st) != 0) {
+			both_fmt("VXTUX-MOD: %s MISSING: %s\n", mods[i],
+				 strerror(errno));
+			continue;
+		}
+		ret = try_insmod(mods[i]);
+		if (ret == 0)
+			both_fmt("VXTUX-MOD: %s loaded (%lld bytes)\n",
+				 mods[i], (long long)st.st_size);
+		else
+			both_fmt("VXTUX-MOD: %s FAILED: %s\n", mods[i],
+				 strerror(-ret));
+	}
+	both("VXTUX-MOD: deferred probes retriggered, waiting for eMMC\n");
+}
+
 /* statis: stack PID1 di kernel hanya 16 KiB, jangan taruh array besar di sana */
 static struct part g_parts[128];
 
@@ -662,6 +729,9 @@ int main(void)
 
 	rep("### VXTUXLOG1  Artix initramfs boot report (UMS512)\n");
 	rep_fmt("kernel: %s %s\n", u.release, u.version);
+
+	/* artix37: clock tree dimuat sebagai modul, setelah fbcon hidup. */
+	load_clock_modules();
 
 	both("VXTUX-STEP: 1/5 partition list\n");
 	rep("\n----- /proc/partitions -----\n");
