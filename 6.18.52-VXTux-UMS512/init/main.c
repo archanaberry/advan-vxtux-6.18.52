@@ -1274,6 +1274,15 @@ static inline void do_trace_initcall_level(const char *level)
 }
 #endif /* !TRACEPOINTS_ENABLED */
 
+#ifdef CONFIG_VXTUX_INITTRACE
+/*
+ * vxtux_inittrace.c: paint this initcall's symbol onto the LK panel BEFORE
+ * it runs, so a boot that freezes inside an initcall leaves its name as
+ * the last visible line on screen (artix36 boot-hang diagnostic).
+ */
+extern void vxtux_itrace_initcall(initcall_t fn);
+#endif
+
 int __init_or_module do_one_initcall(initcall_t fn)
 {
 	int count = preempt_count();
@@ -1283,6 +1292,9 @@ int __init_or_module do_one_initcall(initcall_t fn)
 	if (initcall_blacklisted(fn))
 		return -EPERM;
 
+#ifdef CONFIG_VXTUX_INITTRACE
+	vxtux_itrace_initcall(fn);
+#endif
 	do_trace_initcall_start(fn);
 	ret = fn();
 	do_trace_initcall_finish(fn, ret);

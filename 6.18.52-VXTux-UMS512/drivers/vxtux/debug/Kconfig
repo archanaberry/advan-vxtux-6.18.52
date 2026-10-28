@@ -55,6 +55,26 @@ config VXTUX_BEACON
 
 	  Default n; required whenever VXTUX_LKFB is enabled.
 
+config VXTUX_INITTRACE
+	bool "Paint every initcall on the bootloader framebuffer"
+	depends on VXTUX_DRIVERS
+	depends on VXTUX_BEACON
+	depends on FONT_SUPPORT
+	depends on KALLSYMS
+	help
+	  Diagnostic for boots that freeze before fbcon exists (artix36:
+	  LK starts the kernel, then the panel stays on the LK warning text
+	  forever - no panic, no reboot, no eMMC write, nothing in cache).
+
+	  Each initcall's symbol name is drawn on the LK panel (lcd_base
+	  0x9e000000, reserved by VXTUX_BEACON) BEFORE the initcall runs,
+	  using the built-in VGA8x16 font through the linear map.  When the
+	  boot hangs, the last line on screen IS the initcall that hung.
+	  vxtux_lkfb calls vxtux_itrace_stop() when fbcon takes over the
+	  panel, so the two never fight over the screen.
+
+	  Default n; enable only while chasing a boot hang.
+
 config VXTUX_FLIGHTREC
 	bool "Record the boot log to the cache partition"
 	depends on PRINTK

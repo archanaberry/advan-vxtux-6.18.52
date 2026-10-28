@@ -19,12 +19,20 @@ REM    uboot_log    4MB  -> log LK boot ini
 REM    sysdumpdb   10MB  -> minidump vendor
 REM    misc         1MB  -> BCB
 REM    miscdata     1MB  -> data misc
-REM    boot_a      64MB  -> VERIFIKASI flash: md5 vs boot_artix35.img
-REM                                  md5 303c06b0a6a10e014a84035dd13708b9,
-REM                                  44.302.336 byte)
+REM    boot_a      64MB  -> VERIFIKASI flash: md5 44.302.336 byte PERTAMA
+REM                         boot_a.bin harus = 303c06b0a6a10e014a84035dd13708b9
+REM                         (md5 utuh 64MB TIDAK bisa dibandingkan langsung)
 REM    reset             -> tablet reboot ke kernel yang sedang ter-flash
 REM
-REM  PAKAI: matikan tablet, tahan VOL- sambil colok USB (BROM), jalankan ini.
+REM  STATUS 28/10 07:30 -- tablet STUCK di layar LK "WARNING LOCK FLAG IS
+REM  UNLOCK" (layar tidak pernah digantikan log kernel).  Dump ini
+REM  menyelidiki 3 hal (semuanya READ-ONLY):
+REM    (1) boot_a prefix md5 -> flash boot_artix35 mendarat atau tidak
+REM    (2) uboot_log.bin     -> sampai di mana LK sebelum macet
+REM    (3) cache.bin         -> apakah kernel sempat menulis apa pun
+REM
+REM  PAKAI (dari kondisi macet): tahan POWER 15 detik sampai tablet mati
+REM  total, lalu tahan VOL- sambil colok USB (BROM), jalankan script ini.
 REM ===========================================================================
 set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe
 set FDL1=G:\UMS512\unlock\advan\fdl1-dl.bin
@@ -64,10 +72,20 @@ echo       VXTUXFR1    @ 8MiB  -^> dmesg flightrec (baca-balik diverifikasi)
 echo       VXTUXLOG1   @ 4MiB  -^> laporan init (baca-balik diverifikasi)
 echo       pstore_blk  @ 0MiB  -^> catatan console/kmsg saat panic
 echo       "storage ready after" -^> bukti eMMC terdaftar di boot ini
-echo [i] boot_a.bin dibandingkan dgn boot_artix35.img utk verifikasi flash:
-echo       certutil -hashfile boot_a.bin MD5
-echo       harus sama dgn md5 boot_artix35.img =
-echo       303c06b0a6a10e014a84035dd13708b9  (44.302.336 byte)
-echo [i] Foto layar sesudah reset (tunggu 40 detik):
-echo     "storage ready after" + "VXTUX-WRITE-TEST: OK" = target tercapai
+echo [i] VERIFIKASI FLASH otomatis (44.302.336 byte PERTAMA boot_a.bin):
+if not exist "%LOG%\boot_a.bin" goto :nosha
+if exist C:\Python314\python.exe C:\Python314\python.exe -c "import hashlib;h=hashlib.md5(open(r'%LOG%\boot_a.bin','rb').read(44302336)).hexdigest();print('  boot_a prefix md5 =',h);print('  flash boot_artix35 mendarat =',h=='303c06b0a6a10e014a84035dd13708b9')"
+if not exist C:\Python314\python.exe echo       [!] C:\Python314\python.exe tidak ada -- hitung manual.
+:nosha
+echo [i] CARA BACA HASIL DUMP:
+echo       prefix md5 SAMA 303c06b0... -> flash OK; yg macet isi kernelnya
+echo       prefix md5 BEDA             -> flash gagal/parsial; jalankan
+echo                                       flash_artix35.bat lalu dump ulang
+echo       uboot_log.bin (strings)     -> baris TERAKHIR LK sebelum macet:
+echo         ada "kernel read OK ... locate to 0x80080000" = LK sudah lompat,
+echo                                  berarti kernel yg hang sebelum fbcon
+echo         tidak ada baris itu      = LK gagal load image (masih di LK)
+echo       cache.bin semua zona nol    -> wajar bila eMMC belum terdaftar
+echo [i] Setelah reset layar dikunci di teks LK lagi = normal; yang penting
+echo       file dump di atas, bukan layarnya -- kirim hasilnya ke chat.
 pause

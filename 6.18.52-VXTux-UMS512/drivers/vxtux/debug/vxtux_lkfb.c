@@ -67,6 +67,11 @@
 #include <asm/cacheflush.h>
 #include <asm/memory.h>
 
+#ifdef CONFIG_VXTUX_INITTRACE
+/* vxtux_inittrace.c - initcall panel tracer; fbcon owns the screen now. */
+extern void vxtux_itrace_stop(void);
+#endif
+
 #define LKFB_PHYS	0x9e000000UL	/* lcd_base= bootargs LK */
 #define LKFB_WIDTH	1200U
 #define LKFB_HEIGHT	2000U
@@ -325,6 +330,10 @@ static int __init lkfb_init(void)
 		dcache_clean_inval_poc((unsigned long)info->screen_base,
 				       (unsigned long)info->screen_base +
 				       LKFB_SIZE);
+#ifdef CONFIG_VXTUX_INITTRACE
+	/* The initcall tracer must stop before fbcon uses this buffer. */
+	vxtux_itrace_stop();
+#endif
 
 	if (register_framebuffer(info)) {
 		pr_err("register_framebuffer failed\n");

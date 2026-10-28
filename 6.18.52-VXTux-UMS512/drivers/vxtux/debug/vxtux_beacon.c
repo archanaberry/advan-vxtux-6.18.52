@@ -52,6 +52,11 @@
 #define VXTUXFB_SIZE	0x9e4000U	/* "fb size" reported by LK */
 #define VXTUXFB_MAX	4
 
+#ifdef CONFIG_VXTUX_INITTRACE
+/* vxtux_inittrace.c - panel initcall tracer (artix36 diagnostic). */
+extern void vxtux_itrace_banner(void);
+#endif
+
 static phys_addr_t vxtuxfb_base[VXTUXFB_MAX];
 static int vxtuxfb_n;
 
@@ -63,6 +68,9 @@ static int vxtuxfb_n;
 static int __init vxtuxfb_setup(char *str)
 {
 	char *tok;
+#ifdef CONFIG_VXTUX_INITTRACE
+	int i;
+#endif
 
 	while (str && *str && vxtuxfb_n < VXTUXFB_MAX) {
 		unsigned long long addr;
@@ -85,6 +93,14 @@ static int __init vxtuxfb_setup(char *str)
 	}
 	pr_info("reserved %d bootloader framebuffer buffer(s), %#x bytes each\n",
 		vxtuxfb_n, VXTUXFB_SIZE);
+#ifdef CONFIG_VXTUX_INITTRACE
+	/* Clear the panel and print the tracer banner at the earliest point. */
+	for (i = 0; i < vxtuxfb_n; i++)
+		if (vxtuxfb_base[i] == 0x9e000000UL) {
+			vxtux_itrace_banner();
+			break;
+		}
+#endif
 	return 0;
 }
 early_param("vxtuxfb", vxtuxfb_setup);
