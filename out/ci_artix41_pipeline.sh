@@ -39,7 +39,7 @@ cd /e/vxtux_build_repo
 # pipeline ini hanya memeriksa artefak, mengompilasi ulang /init dari sumber
 # saat ini, menyuntikkan modul, lalu memaket boot_artix41.img.
 # Tidak butuh jaringan: tanpa gh, tanpa tunggu run.
-ART=out/ci_artix39
+ART=out/ci_artix41_src
 mkdir -p "$ART" out/artix_ramdisk
 RUN=$(cat "$ART/RUN.txt" 2>/dev/null || echo local)
 echo "[pipeline] artefak lokal: $ART (run=$RUN)"
@@ -197,8 +197,8 @@ for n in $LATE_KO_NAMES; do
   if grep -q -a -F '6.18.52-VXTux-UMS512' "$f"; then echo ', vermagic OK'; else echo ", FAILED=vermagic"; exit 1; fi
 done
 [ -n "$missing" ] && { echo "FAILED=modul tidak ada di paket kos:$missing"; exit 1; }
-CLKKO=$(find out/ci_artix39/kox -name 'clk-sprd.ko' | head -1)
-UMSKO=$(find out/ci_artix39/kox -name 'ums512-clk.ko' | head -1)
+CLKKO=$(find "$ART/kox" -name 'clk-sprd.ko' | head -1)
+UMSKO=$(find "$ART/kox" -name 'ums512-clk.ko' | head -1)
 echo "CLKKO=$CLKKO"
 echo "UMSKO=$UMSKO"
 [ -z "$CLKKO" ] || [ -z "$UMSKO" ] && { echo "FAILED=ko clock tidak ditemukan di tarball"; exit 1; }
@@ -403,7 +403,7 @@ for arcname, path in ko_paths:
     print('suntik cpio: %-28s %d byte' % (arcname, len(data)))
 # Verify the regulator module was built with its DT alias; an older module
 # with only alias=platform:... cannot bind the DT regulator child.
-sc2730_path = 'out/ci_artix39/kox/drivers/regulator/sc2730-regulator.ko'
+sc2730_path = 'out/ci_artix41_src/kox/drivers/regulator/sc2730-regulator.ko'
 sc2730 = open(sc2730_path, 'rb').read()
 # file2alias emits both "of:N*T*C<compat>" and "of:N*T*C<compat>C*"; the
 # plain form is the canonical one, so accept it and print what was found.
@@ -421,8 +421,8 @@ newcpio = out[:trailer_at] + entries + out[trailer_at:]
 
 gz = gzip.compress(newcpio, 9, mtime=0)
 open('out/artix_ramdisk/ramdisk', 'wb').write(gz)
-print('ramdisk ditulis ulang: out/artix_ramdisk/ramdisk = %d byte (gzip cpio, +3 ko)'
-      % len(gz))
+print('ramdisk ditulis ulang: out/artix_ramdisk/ramdisk = %d byte (gzip cpio, +%d ko)'
+      % (len(gz), len(ko_names)))
 PYEOF
 if [ $? -ne 0 ]; then echo "FAILED=ramdisk"; exit 1; fi
 

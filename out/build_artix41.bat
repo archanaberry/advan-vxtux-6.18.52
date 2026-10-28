@@ -116,16 +116,24 @@ if exist "%PY%" (
 )
 
 echo.
-if "%RC%"=="0" (
-  findstr /C:"DONE=1" "%LOGDIR%\build.log" >nul && (
-    echo [OK] build selesai.
-    echo      boot_artix41.img  +  out\dtb_artix41\ums512-1h10-vxtux.dtb
-    echo      Lanjut: flash_artix41.bat  (boot_a + dtb_a, boot_a hanya beda DTB)
-    echo      atau  : dump_flash_artix41.bat  (dump log + flash + reset)
-  ) || echo [!] pipeline keluar 0 tapi DONE=1 tidak ada - cek build.log
-) else (
-  echo [X] pipeline GAGAL (rc=%RC%).  Penyebab:
-  findstr /C:"FAILED=" "%LOGDIR%\build.log"
-)
+if not "%RC%"=="0" goto :fail
+findstr /C:"DONE=1" "%LOGDIR%\build.log"
+if errorlevel 1 goto :nodone
+echo [OK] build selesai.
+echo      boot_artix41.img  +  out\dtb_artix41\ums512-1h10-vxtux.dtb
+echo      Lanjut: flash_artix41.bat  boot_a + dtb_a
+echo      atau  : dump_flash_artix41.bat  dump + flash + reset
+echo      atau  : dump_artix41_logonly.bat  dump read-only dulu
+pause
+exit /b 0
+
+:nodone
+echo [!] pipeline keluar 0 tapi DONE=1 tidak ada - cek build.log
+pause
+exit /b 1
+
+:fail
+echo [X] pipeline GAGAL  rc=%RC%   penyebab:
+findstr /C:"FAILED=" "%LOGDIR%\build.log"
 pause
 exit /b %RC%
