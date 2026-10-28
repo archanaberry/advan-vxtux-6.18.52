@@ -946,19 +946,27 @@ static int framebuffer_is_ready(void)
 	return stat("/sys/class/graphics/fb0", &st) == 0;
 }
 
+/*
+ * Urutan provider: clock/PMIC dimuat SETELAH framebuffer terdaftar, supaya
+ * probe display tidak kalah cepat dari provider clock yang dipublikasikan
+ * terlambat. Batas tunggunya sengaja pendek (20 s): fb0 dibuat kernel pada
+ * device_initcall, yaitu sebelum /init dijalankan, jadi kalau fb0 belum ada
+ * saat init start, ia memang tidak akan muncul di board headless (QEMU CI
+ * berjalan dengan -display none). Menunggu 3 menit di sana hanya menunda
+ * boot tanpa menambah informasi, dan sempat membuat boot QEMU kena timeout.
+ */
 static void wait_for_framebuffer(void)
 {
 	int waited;
 
 	both("VXTUX-MOD: waiting for fb0/fbcon before late providers\n");
-	for (waited = 0; waited < 180; waited += 2) {
+	for (waited = 0; waited < 20; waited += 2) {
 		if (framebuffer_is_ready()) {
 			both_fmt("VXTUX-MOD: fb0 registered after %ds; late probes allowed\n",
 				 waited);
 			return;
 		}
-		if (waited % 20 == 0)
-			both_fmt("VXTUX-MOD: fb0 not registered (%ds)\n", waited);
+		both_fmt("VXTUX-MOD: fb0 not registered (%ds)\n", waited);
 		sleep(2);
 	}
 	both("VXTUX-MOD: fb0 timeout; continue boot with serial/diagnostic fallback\n");
