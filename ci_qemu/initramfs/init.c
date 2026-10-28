@@ -655,6 +655,7 @@ static void save_early_dmesg(const struct part *parts, int np)
 
 static void write_report_to_cache(void)
 {
+	char *raw;
 	int ret;
 
 	if (!report || !report_len) {
@@ -671,8 +672,21 @@ static void write_report_to_cache(void)
 				 "fsync OK)\n", REPORT_PATH, report_len);
 		return;
 	}
-	/* cache tidak terpasang: laporan tetap harus tersimpan di suatu tempat */
-	write_raw_vendor_log(report, report_len, g_parts, np_parts);
+	/*
+	 * cache tidak terpasang: laporan tetap harus tersimpan di suatu tempat.
+	 * Tulis dengan kepala VXTUXRS1 juga -- tanpa kepala itu, boot berikutnya
+	 * tidak akan mengenali partisi (isi pertamanya jadi "#" bukan "<14>["),
+	 * dan kanal cadangan ini jatuh sendiri setelah sekali dipakai.
+	 */
+	raw = malloc(report_len + strlen(RS1_MAGIC) + 2);
+	if (raw) {
+		size_t hlen = (size_t)snprintf(raw, strlen(RS1_MAGIC) + 2,
+					       "%s\n", RS1_MAGIC);
+
+		memcpy(raw + hlen, report, report_len);
+		write_raw_vendor_log(raw, hlen + report_len, g_parts, np_parts);
+		free(raw);
+	}
 }
 
 /*
@@ -688,6 +702,16 @@ static void write_readback_test(const struct part *parts, int np)
 
 	(void)parts;
 	(void)np;
+	/*
+	 * Kalau ext4 cache tidak terpasang, berkas ini jatuhnya ke rootfs initramfs
+	 * (ramfs) -- uji akan bilang OK padahal kanal yang kita tuju mati.  Lebih
+	 * jujur melewatinya dengan baris SKIP.
+	 */
+	if (!cache_mounted) {
+		both("VXTUX-WRITE-TEST: SKIP (cache not mounted, no filesystem "
+		     "channel to probe)\n");
+		return;
+	}
 	fd = open(TEST_PATH, O_RDWR | O_CREAT | O_TRUNC, 0600);
 	if (fd < 0) {
 		both_fmt("VXTUX-WRITE-TEST: FAIL open %s: %s\n", TEST_PATH,
