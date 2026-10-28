@@ -646,9 +646,12 @@ static void switch_root_and_exec(void)
  * satunya menggantung, gantungnya terjadi SESUDAH semua pesan di layar
  * ini tercetak - bukan boot buta lagi.
  *
- * Modul berasal dari build kernel yang sama (ditandatangani key build itu,
- * CONFIG_MODULE_SIG_FORCE=y tetap terpenuhi) dan ditaruh di /vxtux/ko/
- * oleh pipeline boot_artix37.
+ * Modul berasal dari build kernel yang sama (vermagic cocok) dan ditaruh di
+ * /vxtux/ko/ oleh pipeline boot_artix37.  Artefak CI ternyata keluar TANPA
+ * tanda tangan (kunci certs/signing_key.pem tidak digenerate saat
+ * `make modules`), jadi CONFIG_MODULE_SIG_FORCE dimatikan di
+ * enhanced_config.cfg; tanpa itu finit_module() menolak keduanya dengan
+ * EKEYREJECTED dan clock tree tidak pernah terdaftar.
  */
 static int try_insmod(const char *path)
 {
