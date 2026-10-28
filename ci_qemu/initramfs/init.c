@@ -808,6 +808,16 @@ static void switch_root_and_exec(void)
 		"/sbin/init", "/sbin/dinit-init", "/sbin/dinit",
 		"/bin/dinit", "/bin/sh", NULL
 	};
+	/*
+	 * PID 1 inherits an empty environment from the kernel: only HOME and TERM
+	 * are set, PATH is not.  /sbin/init is a symlink whose target may be a
+	 * script, and dinit then starts service scripts (agetty on tty1..tty6 =
+	 * the fbcon CLI) that resolve bare command names through PATH.  Set it
+	 * here instead of hoping every script exports its own.
+	 */
+	putenv("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin");
+	putenv("TERM=linux");
+	putenv("HOME=/root");
 	int i;
 	for (i = 0; inits[i]; i++) {
 		struct stat st;
@@ -965,8 +975,10 @@ int main(void)
 	}
 
 	both("\n===== BOOT STOPPED IN THE INITRAMFS =====\n"
-	     "The full report was written to the cache partition (100 MiB).\n"
-	     "Dump it with spd_dump: read_part cache, then look for VXTUXLOG1.\n"
+	     "Root was not found, so dinit was never started.\n"
+	     "Dump the trail with spd_dump:\n"
+	     "  read_part cache        -> /cache/boot_log.txt + vxtux_report.txt\n"
+	     "  read_part common_rs1_a -> raw head \"### VXTUXRS1\" at offset 0\n"
 	     "=========================================\n");
 
 	for (i = 0; i < 3; i++)
