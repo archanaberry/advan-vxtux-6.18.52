@@ -143,6 +143,32 @@ done
 cp "$CLKKO" out/artix_ramdisk/clk-sprd.ko
 cp "$UMSKO" out/artix_ramdisk/ums512-clk.ko
 
+# --- 0d. kompilasi init dari SUMBER saat ini (bukan salinan lama di Image) -
+# CI menanam init ke dalam Image saat build, tapi Image yang diunduh bisa
+# lebih lama daripada ci_qemu/initramfs/init.c.  Init hasil kompilasi lokal
+# ini yang disuntikkan ke ramdisk boot.img; karena cpio eksternal di-unpack
+# SETELAH initramfs bawaan (init/initramfs.c: do_populate_rootfs) dan file
+# yang sama dibuka dengan O_TRUNC, salinan baru selalu menang.
+TCHAIN=""
+if aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
+     -o out/artix_ramdisk/vxtux-init-new ci_qemu/initramfs/init.c 2>/dev/null; then
+    TCHAIN=aarch64-linux-gnu-gcc
+else
+    for cand in \
+      /c/Users/Administrator/scoop/apps/gcc-aarch64-none-linux-gnu/*/bin/aarch64-none-linux-gnu-gcc \
+      /usr/bin/aarch64-linux-gnu-gcc; do
+        [ -x "$cand" ] || continue
+        if "$cand" -static -O2 -march=armv8-a -mabi=lp64 \
+             -o out/artix_ramdisk/vxtux-init-new ci_qemu/initramfs/init.c \
+             2>/dev/null; then
+            TCHAIN="$cand"
+            break
+        fi
+    done
+fi
+[ -n "$TCHAIN" ] || { echo "FAILED=compile-init (cross gcc tidak ada)"; exit 1; }
+echo "INIT_LOCAL=$TCHAIN $(stat -c%s out/artix_ramdisk/vxtux-init-new) byte"
+
 # --- 1. initramfs: validasi init + suntik /vxtux/ko/*.ko, lalu gzip ulang -
 /c/Python*/python.exe - <<'PYEOF'
 import zlib, gzip, sys, struct
@@ -170,7 +196,10 @@ while True:
 if not blob:
     sys.exit('FAILED: initramfs embedded tidak ditemukan di Image')
 
-p, names, elf_ok, inggris_ok, test_ok, wait_ok, mod_ok = 0, [], False, False, False, False, False
+p, names, elf_ok, inggris_ok, test_ok, wait_ok, mod_ok, earlylog_ok = 0, [], False, False, False, False, False, False
+rawlog_ok, dinit_ok = False, False
+NEWINIT = open('out/artix_ramdisk/vxtux-init-new', 'rb').read()
+init_hdr, init_at, init_old = -1, -1, 0
 trailer_at = -1
 while p + 110 < len(out) and out[p:p + 6] in (b'070701', b'070702'):
     fsize = int(out[p + 54:p + 62], 16)
@@ -179,21 +208,32 @@ while p + 110 < len(out) and out[p:p + 6] in (b'070701', b'070702'):
     data = p + 110 + namesize
     aligned = (data + 3) & ~3
     if name == 'vxtux/init':
-        d = out[aligned:aligned + fsize]
+        # Validasi binary yang BARU disuntik, bukan salinan lama di Image.
+        init_hdr, init_at, init_old = p, aligned, fsize
+        d = NEWINIT
         elf_ok = (d[:4] == b'\x7fELF' and
                   struct.unpack('<H', d[18:20])[0] == 183 and
                   b'chroot OK' in d)
         inggris_ok = (b'1/5 partition list' in d and
                       b'daftar partisi' not in d and
                       b'gagal' not in d and b'akhir' not in d)
-        test_ok = (b'VXTUX-WRITE-TEST' in d and b'readback verified' in d)
+        test_ok = (b'VXTUX-WRITE-TEST' in d and
+                   b'file write+readback on %s' in d)
         wait_ok = (b'waiting for eMMC' in d and
                    b'storage ready after' in d and b'mknod' in d)
         mod_ok = (b'VXTUX-MOD:' in d and b'/vxtux/ko/clk-sprd.ko' in d and
                   b'/vxtux/ko/ums512-clk.ko' in d)
-        print('vxtux/init: ELF=%s aarch64=%s dinit=%s inggris=%s writetest=%s wait=%s insmod=%s ukuran=%d'
+        earlylog_ok = (b'/cache/boot_log.txt' in d and
+                       b'mounted cache and saved early dmesg' in d)
+        # Kanal mentah vendor + kandidat init yang benar (dinit-run tidak ada)
+        rawlog_ok = (b'VXTUXRS1' in d and
+                     b'raw vendor log saved to' in d and
+                     b'raw vendor log partition not found' in d)
+        dinit_ok = (b'/sbin/init' in d and b'/bin/dinit-run' not in d)
+        print('vxtux/init: ELF=%s aarch64=%s dinit=%s inggris=%s writetest=%s wait=%s insmod=%s earlylog=%s rawlog=%s dinitok=%s ukuran=%d'
               % (d[:4] == b'\x7fELF', struct.unpack('<H', d[18:20])[0] == 183,
-                 b'chroot OK' in d, inggris_ok, test_ok, wait_ok, mod_ok, fsize))
+                 b'chroot OK' in d, inggris_ok, test_ok, wait_ok, mod_ok,
+                 earlylog_ok, rawlog_ok, dinit_ok, fsize))
     if name == 'TRAILER!!!':
         trailer_at = p
         names.append(name)
@@ -214,8 +254,29 @@ if not wait_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat wait_for_storage')
 if not mod_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat load_clock_modules (VXTUX-MOD)')
+if not earlylog_ok:
+    sys.exit('FAILED: initramfs embedded tidak memuat early dmesg snapshot ke /cache/boot_log.txt')
+if not rawlog_ok:
+    sys.exit('FAILED: initramfs embedded tidak memuat kanal log mentah vendor (VXTUXRS1 / common_rs1_a)')
+if not dinit_ok:
+    sys.exit('FAILED: kandidat init masih memuat /bin/dinit-run yang tidak ada di rootfs Artix')
+if init_at < 0:
+    sys.exit('FAILED: entri vxtux/init tidak ditemukan untuk disuntik')
 if trailer_at < 0:
     sys.exit('FAILED: TRAILER cpio tidak ditemukan')
+
+# --- ganti /vxtux/init dengan binary hasil kompilasi sumber saat ini ------
+# Ukuran data berubah, jadi field filesize di header newc ikut ditulis ulang;
+# tanpa itu pemindai cpio berikutnya melompat ke offset lama dan rusak.
+assert init_old % 4 == len(NEWINIT) % 4, 'alignment cpio tidak cocok'
+delta = len(NEWINIT) - init_old
+out = bytearray(out)
+out[init_at:init_at + init_old] = NEWINIT
+out[init_hdr + 54:init_hdr + 62] = ('%08X' % len(NEWINIT)).encode()
+out = bytes(out)
+trailer_at += delta
+print('suntik cpio: vxtux/init (binary lokal) %d byte (delta %+d)' %
+      (len(NEWINIT), delta))
 
 # --- suntikkan .ko ke dalam cpio (newc) di /vxtux/ko/ --------------------
 def newc_entry(name, data, ino, mode=0o100644):
@@ -237,6 +298,12 @@ for arcname, path in ko_paths:
     entries += newc_entry(arcname, data, ino)
     ino += 1
     print('suntik cpio: %-28s %d byte' % (arcname, len(data)))
+# /init -> /vxtux/init (symlink), cadangan bila rdinit tidak dibaca LK.
+if 'init' not in names:
+    entries += newc_entry('init', b'/vxtux/init', ino, mode=0o120777)
+    ino += 1
+    names.insert(names.index('vxtux/init'), 'init')
+    print('suntik cpio: %-28s -> /vxtux/init' % 'init')
 newcpio = out[:trailer_at] + entries + out[trailer_at:]
 
 gz = gzip.compress(newcpio, 9, mtime=0)
@@ -251,12 +318,28 @@ if [ $? -ne 0 ]; then echo "FAILED=ramdisk"; exit 1; fi
 import gzip, sys
 d = gzip.decompress(open('out/artix_ramdisk/ramdisk', 'rb').read())
 for need in (b'vxtux/ko/clk-sprd.ko\0', b'vxtux/ko/ums512-clk.ko\0',
-             b'vxtux/init\0'):
+             b'vxtux/init\0', b'init\0'):
     ok = need in d
     print('  %-28s %s' % (need[:-1].decode(), 'ADA' if ok else 'HILANG'))
     if not ok:
         sys.exit('FAILED=ramdisk final kehilangan entri')
-print('ramdisk verifikasi OK, isi cpio:', len(d), 'byte')
+# Validate /init is a newc symlink to the actual initramfs program.
+off = 0
+link = None
+while off + 110 <= len(d) and d[off:off + 6] in (b'070701', b'070702'):
+    mode = int(d[off + 14:off + 22], 16)
+    fsize = int(d[off + 54:off + 62], 16)
+    namesize = int(d[off + 94:off + 102], 16)
+    name = d[off + 110:off + 110 + namesize - 1].decode('latin1')
+    start = (off + 110 + namesize + 3) & ~3
+    if name == 'init':
+        link = (mode, d[start:start + fsize])
+    if name == 'TRAILER!!!':
+        break
+    off = (start + fsize + 3) & ~3
+if not link or (link[0] & 0o170000) != 0o120000 or link[1] != b'/vxtux/init':
+    sys.exit('FAILED: /init bukan symlink -> /vxtux/init')
+print('ramdisk verifikasi OK, /init -> /vxtux/init, isi cpio:', len(d), 'byte')
 PYEOF
 if [ $? -ne 0 ]; then echo "FAILED=ramdisk-verify"; exit 1; fi
 

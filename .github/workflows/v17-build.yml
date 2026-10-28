@@ -87,11 +87,9 @@ jobs:
           echo "Simbol yang diminta =m lalu jadi =y: $coerce"
           echo "Pengecualian terdaftar (docs/CI-KNOWN-DROPPED.txt): $known"
           exit $rc
-      # Initramfs diagnostik: init statis yang (a) menulis SELURUH dmesg +
-      # daftar partisi ke partisi `cache`, (b) mencetaknya ke /dev/console
-      # (fbcon -> panel), lalu (c) mount rootfs ext4 dan chroot ke /sbin/init.
-      # DitANAM di dalam Image (CONFIG_INITRAMFS_SOURCE) supaya tidak
-      # bergantung pada cara LK memperlakukan ramdisk di boot.img.
+      # Initramfs diagnostik: /init -> /vxtux/init. Init merekam dmesg ke
+      # file cache sebelum mencoba mount partisi super, lalu melanjutkan
+      # pencatatan layar/laporan dan pencarian rootfs.
       - name: Initramfs diagnostik (init C statis arm64) + tanam ke Image
         run: |
           set -e
@@ -99,6 +97,8 @@ jobs:
                    /tmp/ir/newroot /tmp/ir/tmp
           aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
             -o /tmp/ir/vxtux/init ci_qemu/initramfs/init.c
+          ln -s /vxtux/init /tmp/ir/init
+          test "$(readlink /tmp/ir/init)" = /vxtux/init
           file /tmp/ir/vxtux/init
           ls -l /tmp/ir/vxtux/init
           ( cd /tmp/ir && find . | cpio -o -H newc --owner root:root | gzip -9 ) \

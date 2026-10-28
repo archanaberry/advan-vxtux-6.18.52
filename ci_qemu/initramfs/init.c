@@ -6,14 +6,18 @@
 // (earlycon lama menunjuk 0x71400000 = kontroler eMMC, bukan UART) dan tidak
 // punya console=tty0, jadi setiap kegagalan boot tampak "diam di logo".
 //
-// Init ini melakukan tiga hal, semuanya tanpa userspace lain:
-//   1. mencatat SELURUH isi ring buffer kernel (klogctl READ_ALL) + hasil
-//      pemeriksaan partisi ke partisi `cache` (100 MiB, tidak dipakai Artix)
-//      supaya bisa di-dump lewat spd_dump tanpa perlu UART/layar;
-//   2. mencetak ringkasan yang sama ke /dev/console (fbcon -> panel) supaya
+// Init ini melakukan empat hal, semuanya tanpa userspace lain:
+//   1. memasang partisi `cache` (100 MiB, ext4) lalu menyimpan SELURUH isi
+//      ring buffer kernel (klogctl READ_ALL) sebagai berkas biasa
+//      /cache/boot_log.txt SEBELUM partisi super dipindai -- kanal yang
+//      terbukti terbaca lewat spd_dump tanpa perlu UART/layar;
+//   2. menyalin log yang sama ke kanal mentah vendor `common_rs1_a`
+//      (8 MiB tanpa filesystem, offset 0) -- salinan cadangan yang tetap
+//      hidup walau mount ext4 gagal (lihat penjelasan RS1_* di bawah);
+//   3. mencetak ringkasan yang sama ke /dev/console (fbcon -> panel) supaya
 //      kelihatan di layar kalau DRM/panel hidup;
-//   3. mencari partisi root ext4 (super) dengan memeriksa superblock tiap
-//      partisi mmcblk0p*, mount, lalu chroot + exec /sbin/init.
+//   4. mencari partisi root ext4 (super) dengan memeriksa superblock tiap
+//      partisi mmcblk0p*, mount, lalu chroot + exec init Artix (dinit).
 //
 // Kalau root tidak ditemukan: laporan tetap ditulis, pesan tetap dicetak,
 // lalu init tidur (bukan panic) supaya layar tidak berkedip.
@@ -38,22 +42,46 @@
 #define CACHE_BLOCKS_1K 102400   /* partisi cache = 100 MiB -> 102400 KiB */
 #define LOG_MAX        (1024 * 1024)
 #define REPORT_MAX     (2 * 1024 * 1024)
+/* Cache is mounted as ext4; persist diagnostics as ordinary files. */
+#define CACHE_MOUNT       "/cache"
+#define EARLY_LOG_PATH    "/cache/boot_log.txt"
+#define EARLY_LOG_TMP     "/cache/boot_log.txt.tmp"
+#define REPORT_PATH       "/cache/vxtux_report.txt"
+#define TEST_PATH         "/cache/.vxtux_write_test"
+#define CACHE_PART_BLOCKS 102400UL
+
 /*
- * Laporan DITULIS DI SINI, bukan offset 0: pstore/blk (CONFIG_PSTORE_BLK,
- * best_effort) memakai awal partisi yang sama untuk catatan console/kmsg
- * sehingga menimpa laporan (atau sebaliknya).  4 MiB jauh di luar zona
- * pstore (~512 KiB) dan masih jauh di bawah 100 MiB partisi cache.
+ * Kanal mentah vendor (RE kernel stok 5.4.210, 2026-10-28)
+ * --------------------------------------------------------
+ * Sumber: realme-kernel-opensource/realme_C31_C33_C35_narzo50A-Prime-
+ * AndroidT-kernel-source (Makefile: VERSION=5 PATCHLEVEL=4 SUBLEVEL=210),
+ * file drivers/soc/sprd/debug/sysdump/last_kmsg.c:
+ *
+ *     static const char devicename[] = "/dev/block/by-name/common_rs1_a";
+ *     #define LAST_KMSG_OFFSET 0
+ *     #define KMSG_BUF_SIZE    (128 * 1024)
+ *
+ * Partisi `common_rs1_a` (8 MiB, mentah, TANPA filesystem) berisi teks
+ * log kernel boot sebelumnya: dump stok di PC mulai dengan
+ * "<14>[   71.081754] init: Sending signal 15 ...".  Dump stok juga
+ * membuktikan `cache` adalah ext4 Android (magic 0xEF53 di 1024+0x38),
+ * jadi tulisan mentah ke `cache` merusak filesystem -- sebabnya kanal
+ * utama sekarang berupa berkas di atas ext4 yang dipasang.
+ *
+ * Karena Sembilan partisi di perangkat ini berukuran persis 8 MiB (dtb,
+ * dtbo, logo, fbootlogo, init_boot, common_rs1_a/b), ukuran saja tidak
+ * cukup untuk mengenalinya: pencocokan WAJIB lolos uji isi -- baris log
+ * "<14>[..." milik stok ATAU tanda kita sendiri di offset 0.  Kalau tidak
+ * ada yang cocok, kanal dilewati (tidak pernah menulis membabi buta).
  */
-#define REPORT_OFFSET  (4 * 1024 * 1024)
-/*
- * Zona uji tulis-baca-balik (artix34): 6 MiB jatuh di celah kosong di
- * antara zona pstore (~0-512 KiB), laporan (4 MiB) dan flightrec (8 MiB).
- */
-#define TEST_OFFSET    (6 * 1024 * 1024)
+#define RS1_MAGIC     "### VXTUXRS1"
+#define RS1_SIZE_KIB  8192UL       /* 8 MiB, sesuai common_rs1_a */
+#define RS1_MAX       (128 * 1024) /* KMSG_BUF_SIZE stok */
 
 static char *report;             /* kumpulan teks yang ditulis ke cache */
 static size_t report_len;
 static int console_fd = -1;
+static int cache_mounted;        /* ext4 cache berhasil dipasang */
 
 /* ---------- keluaran ---------- */
 
@@ -154,7 +182,7 @@ static void dump_kernel_log(int to_console)
 	rep("----- end of dmesg -----\n");
 
 	if (to_console) {
-		/* di panel cukup 60 baris terakhir */
+		/* Show only the last 60 lines on the panel. */
 		char *p = b + n, *q = b;
 		int lines = 0;
 		while (p > b && lines < 60) {
@@ -170,13 +198,15 @@ static void dump_kernel_log(int to_console)
 	free(b);
 }
 
-/* ---------- partisi ---------- */
-
-struct part {
+/* ---------- partisi ---------- */struct part {
 	char name[64];
 	unsigned long blocks;   /* dalam KiB */
-	unsigned major, minor;  /* untuk fallback mknod */
+	unsigned major, minor;   /* untuk fallback mknod */
 };
+
+/* Static: PID 1's kernel stack is only 16 KiB; keep large arrays off it. */
+static struct part g_parts[128];
+static int np_parts;             /* jumlah entri g_parts yang terisi */
 
 static int list_partitions(struct part *out, int max)
 {
@@ -248,11 +278,9 @@ static void dmesg_hints(int maxlines)
 			both_fmt("  %s\n", hits[i]);
 	}
 	free(b);
-}
-
-/*
- * Tunggu sampai eMMC (mmcblk*) terlihat di /proc/partitions.
- *
+}	/*
+	 * Tunggu sampai eMMC (mmcblk*) terlihat di /proc/partitions.
+	 *
  * Latar belakang (artix35): pada boot artix34, init berjalan di detik ~30
  * dan SEKALI membaca daftar partisi -- saat itu host eMMC belum/bahkan
  * tidak pernah terdaftar (driver clock UMS512 =m -> clock "sdio"/"enable"
@@ -346,19 +374,9 @@ static void mkdir_p(const char *p)
 }
 
 /*
- * pstore -> layar + laporan (2026-10-27)
- * ----------------------------------------
- * Kernel memakai CONFIG_PSTORE + PSTORE_BLK (/dev/mmcblk0p49 = partisi
- * cache, sesuai dmesg stok 5.4: "mmcblk0p49" 112 kemunculan) +
- * PSTORE_CONSOLE.  Catatan console/kmsg boot SEBELUMNYA (termasuk teks
- * panic) tersimpan di sana; dengan `pstore_blk.best_effort=1` di cmdline
- * backend benar-benar menulis (tanpa flag itu pstore_blk init batal di
- * __best_effort_init).
- *
- * Fungsi ini MEMBACA-nya kembali: mount -t pstore lalu cetak console-* dan
- * dmesg-* ke /dev/console (fbcon -> panel) dan ke laporan cache.  Dengan
- * begitu walau boot kali ini berantakan, jejak boot sebelumnya tetap
- * kelihatan di layar tanpa perlu dump ulang.
+ * pstore -> screen + report (2026-10-27)
+ * ---------------------------------------
+ * Read console-* and dmesg-* records from the previous boot, if present.
  */
 static void dump_pstore(void)
 {
@@ -400,9 +418,7 @@ static void dump_pstore(void)
 			both_fmt("    (cannot open: %s)\n", strerror(errno));
 			continue;
 		}
-		n++;
-		/* laporan: seluruh isi; layar: 8 KiB pertama supaya fbcon
-		 * tidak terusir oleh ratusan KiB catatan lama */
+		n++;		/* Keep the full report; limit panel output to 8 KiB. */
 		while ((r = read(fd, buf, sizeof buf)) > 0) {
 			if (report_len + (size_t)r < REPORT_MAX) {
 				memcpy(report + report_len, buf, r);
@@ -424,126 +440,284 @@ static void dump_pstore(void)
 	umount("/sys/fs/pstore");
 }
 
-/* tulis laporan ke satu node blok; 1 = berhasil */
-static int write_report_to(const char *dev)
+/* Write a complete regular file and flush it to the mounted cache. */
+static int write_cache_file(const char *path, const char *data, size_t len)
 {
-	char back[12];
-	int fd = open(dev, O_RDWR);
+	size_t done = 0;
+	int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
-	if (fd < 0) {
-		both_fmt("VXTUX-STEP: open %s failed: %s\n", dev,
-			 strerror(errno));
-		return 0;
+	if (fd < 0)
+		return -errno;
+	while (done < len) {
+		ssize_t n = write(fd, data + done, len - done);
+
+		if (n < 0) {
+			int err = -errno;
+
+			close(fd);
+			return err;
+		}
+		if (!n) {
+			close(fd);
+			return -EIO;
+		}
+		done += (size_t)n;
 	}
-	if (pwrite(fd, report, report_len, REPORT_OFFSET) !=
-	    (ssize_t)report_len) {
-		both_fmt("VXTUX-STEP: short write to %s: %s\n", dev,
-			 strerror(errno));
+	if (fsync(fd) != 0) {
+		int err = -errno;
+
 		close(fd);
-		return 0;
+		return err;
 	}
-	/* Baca-balik kepala laporan "### VXTUXLOG1": bukti byte sampai. */
-	if (pread(fd, back, sizeof back, REPORT_OFFSET) !=
-	    (ssize_t)sizeof back ||
-	    memcmp(back, "### VXTUXLOG1", sizeof back) != 0) {
-		both_fmt("VXTUX-STEP: readback FAILED on %s: %s\n", dev,
-			 strerror(errno));
-		close(fd);
-		return 0;
-	}
-	both_fmt("VXTUX-STEP: OK %zu bytes at %s (offset 0x%x, readback verified)\n",
-		 report_len, dev, REPORT_OFFSET);
-	fsync(fd);
 	close(fd);
-	return 1;
-}
-
-/* tulis laporan ke partisi cache (100 MiB, tidak dipakai Artix).
- * Fallback: nama perangkat tetap mmcblk0p49 (tabel partisi stok, cache =
- * partisi ke-48 -> p49) supaya laporan tetap tersimpan walau
- * /proc/partitions tidak sempat terbaca penuh. */
-static void write_report_to_cache(const struct part *parts, int np)
-{
-	int i, ok = 0;
-
-	for (i = 0; i < np && !ok; i++) {
-		char dev[96];
-
-		if (parts[i].blocks != CACHE_BLOCKS_1K)
-			continue;
-		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
-		both_fmt("\nVXTUX-STEP: writing report to %s\n", dev);
-		ok = write_report_to(dev);
-	}
-	if (!ok) {
-		static const char *cand[] = { "/dev/mmcblk0p49",
-					      "/dev/mmcblk0p48", NULL };
-		both("VXTUX-STEP: cache not found by size, trying fixed names\n");
-		for (i = 0; cand[i] && !ok; i++)
-			ok = write_report_to(cand[i]);
-	}
-	if (!ok)
-		both("VXTUX-STEP: FAILED to write the report anywhere\n");
+	return 0;
 }
 
 /*
- * Uji tulis-baca-balik kanal cache (artix34)
- * -------------------------------------------
- * Bukti dari bedah dump artix33: partisi cache 100% identik antara dump
- * pra-flash dan pasca-boot - ketiga penulis (pstore_blk, flightrec, init
- * ini) menulis ke mmcblk0p49 dan semuanya nol byte.  Uji ini menjawab
- * "kenapa" tanpa perlu dump: tanda tangan ditulis di zona 6 MiB lalu
- * dibaca balik.  Hasil dicetak ke console (fbcon) DAN ke laporan:
- *   VXTUX-WRITE-TEST: OK open+write+readback on /dev/mmcblk0p49
- * atau
- *   VXTUX-WRITE-TEST: FAIL <open|write|readback> ...: <errno>
+ * Mount only the cache partition, found by its known 100 MiB size.  Do not
+ * fall back to guessing a hard-coded partition number when discovery failed.
  */
-static void write_readback_test(const struct part *parts, int np)
+static int mount_cache_partition(const struct part *parts, int np)
 {
-	static const char sig[16] = "VXTUXWRT\x01" "UMS512!";
-	char dev[96], back[16];
-	int fd, i;
+	int i;
 
-	dev[0] = 0;
+	mkdir_p(CACHE_MOUNT);
 	for (i = 0; i < np; i++) {
-		if (parts[i].blocks == CACHE_BLOCKS_1K) {
-			snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
-			break;
-		}
-	}
-	if (!dev[0])
-		snprintf(dev, sizeof dev, "/dev/mmcblk0p49");
+		char dev[96];
 
-	fd = open(dev, O_RDWR);
-	if (fd < 0) {
-		both_fmt("VXTUX-WRITE-TEST: FAIL open %s: %s\n", dev,
+		if (parts[i].blocks != CACHE_PART_BLOCKS ||
+		    strncmp(parts[i].name, "mmcblk", 6))
+			continue;
+		snprintf(dev, sizeof dev, "/dev/%s", parts[i].name);
+		if (mount(dev, CACHE_MOUNT, "ext4", 0, "") == 0) {
+			cache_mounted = 1;
+			return 1;
+		}
+		both_fmt("VXTUX-STEP: mount cache %s failed: %s\n", dev,
+			 strerror(errno));
+		return 0;
+	}
+	both("VXTUX-STEP: cache partition not found by size\n");
+	return 0;
+}
+
+/*
+ * Salin satu potong teks ke kanal mentah common_rs1_a.  Pemilihan partisi
+ * memakai dua syarat sekaligus: ukuran 8 MiB DAN isi yang memang kelihatan
+ * seperti log (tanda VXTUXRS1 atau baris "<14>[..." khas stok).  Tanpa
+ * keduanya fungsi ini menolak menulis -- lebih baik kehilangan log ketimbang
+ * menimpa dtb/logo/init_boot yang kebetulan berukuran sama.  Begitu satu
+ * partisi dikenali, jalurnya disimpan supaya laporan berikutnya tidak perlu
+ * menebak lagi (dan tetap bekal partisi belum terpasang -- argumen parts).
+ */
+static char raw_log_dev[96];
+
+static int write_raw_vendor_log(const char *data, size_t len,
+				const struct part *parts, int np)
+{
+	char head[64];
+	ssize_t got;
+	int i, fd;
+
+	if (len > RS1_MAX)
+		len = RS1_MAX;
+
+	if (raw_log_dev[0]) {
+		fd = open(raw_log_dev, O_RDWR);
+		if (fd < 0) {
+			both_fmt("VXTUX-STEP: raw log open %s failed: %s\n",
+				 raw_log_dev, strerror(errno));
+			return 0;
+		}
+		if (pwrite(fd, data, len, 0) != (ssize_t)len) {
+			both_fmt("VXTUX-STEP: raw log write %s failed: %s\n",
+				 raw_log_dev, strerror(errno));
+			close(fd);
+			return 0;
+		}
+		fsync(fd);
+		close(fd);
+		both_fmt("VXTUX-STEP: raw vendor log written to %s (%zu bytes, "
+			 "fsync OK)\n", raw_log_dev, len);
+		return 1;
+	}
+
+	for (i = 0; parts && i < np; i++) {
+		if (parts[i].blocks != RS1_SIZE_KIB ||
+		    strncmp(parts[i].name, "mmcblk", 6))
+			continue;
+		snprintf(raw_log_dev, sizeof raw_log_dev, "/dev/%s",
+			 parts[i].name);
+		fd = open(raw_log_dev, O_RDWR);
+		if (fd < 0) {
+			both_fmt("VXTUX-STEP: raw log open %s failed: %s\n",
+				 raw_log_dev, strerror(errno));
+			raw_log_dev[0] = 0;
+			continue;
+		}
+		got = pread(fd, head, sizeof head - 1, 0);
+		if (got < 6) {
+			close(fd);
+			raw_log_dev[0] = 0;
+			continue;
+		}
+		head[got] = 0;
+		/* (a) sudah berisi tulisan kita, (b) log khas stok "<14>[". */
+		if (strncmp(head, RS1_MAGIC, strlen(RS1_MAGIC)) != 0 &&
+		    !(head[0] == '<' && head[1] >= '0' && head[1] <= '9' &&
+		      strchr(head, '[') != NULL)) {
+			close(fd);
+			raw_log_dev[0] = 0;
+			continue;
+		}
+		if (pwrite(fd, data, len, 0) != (ssize_t)len) {
+			both_fmt("VXTUX-STEP: raw log write %s failed: %s\n",
+				 raw_log_dev, strerror(errno));
+			close(fd);
+			raw_log_dev[0] = 0;
+			continue;
+		}
+		fsync(fd);
+		memset(head, 0, sizeof head);
+		if (pread(fd, head, strlen(RS1_MAGIC), 0) !=
+		    (ssize_t)strlen(RS1_MAGIC) ||
+		    memcmp(head, RS1_MAGIC, strlen(RS1_MAGIC)) != 0) {
+			both_fmt("VXTUX-STEP: raw log readback FAILED on %s\n",
+				 raw_log_dev);
+			close(fd);
+			raw_log_dev[0] = 0;
+			continue;
+		}
+		close(fd);
+		both_fmt("VXTUX-STEP: raw vendor log saved to %s (%zu bytes, "
+			 "readback OK)\n", raw_log_dev, len);
+		return 1;
+	}
+	both("VXTUX-STEP: raw vendor log partition not found by size+content "
+	     "(skipped)\n");
+	return 0;
+}
+
+/*
+ * Save the requested early dmesg snapshot before any attempt to mount super.
+ */
+static void save_early_dmesg(const struct part *parts, int np)
+{
+	char *buf, *raw;
+	int n, ret, mounted;
+
+	mounted = mount_cache_partition(parts, np);
+	/* The snapshot must be made before mount_super/find_and_mount_root.
+	 * (Reading old pstore records later may clear the pstore record.) */
+	buf = malloc(LOG_MAX);
+	if (!buf) {
+		both("VXTUX-STEP: cannot allocate early dmesg buffer\n");
+		return;
+	}
+	n = klogctl(3 /* SYSLOG_ACTION_READ_ALL */, buf, LOG_MAX - 1);
+	if (n <= 0) {
+		int err = errno;
+
+		free(buf);
+		both_fmt("VXTUX-STEP: early dmesg read failed: %s\n",
+			 strerror(err));
+		return;
+	}
+	/* Kanal mentah dicoba SETIAP kali: tetap hidup walau ext4 gagal. */
+	raw = malloc((size_t)n + strlen(RS1_MAGIC) + 2);
+	if (raw) {
+		size_t hlen = (size_t)snprintf(raw,
+			strlen(RS1_MAGIC) + 2, "%s\n", RS1_MAGIC);
+
+		memcpy(raw + hlen, buf, (size_t)n);
+		write_raw_vendor_log(raw, hlen + (size_t)n, parts, np);
+		free(raw);
+	}
+	if (!mounted) {
+		free(buf);
+		return;
+	}
+	ret = write_cache_file(EARLY_LOG_TMP, buf, (size_t)n);
+	free(buf);
+	if (ret) {
+		both_fmt("VXTUX-STEP: early log write failed: %s\n",
+			 strerror(-ret));
+		return;
+	}
+	if (rename(EARLY_LOG_TMP, EARLY_LOG_PATH) != 0) {
+		both_fmt("VXTUX-STEP: early log rename failed: %s\n",
 			 strerror(errno));
 		return;
 	}
-	if (pwrite(fd, sig, sizeof sig, TEST_OFFSET) != (ssize_t)sizeof sig) {
-		both_fmt("VXTUX-WRITE-TEST: FAIL write %s: %s\n", dev,
+	both_fmt("VXTUX-STEP: mounted cache and saved early dmesg to %s "
+		 "(%d bytes, fsync OK)\n", EARLY_LOG_PATH, n);
+}
+
+static void write_report_to_cache(void)
+{
+	int ret;
+
+	if (!report || !report_len) {
+		both("VXTUX-STEP: report buffer is empty\n");
+		return;
+	}
+	if (cache_mounted) {
+		ret = write_cache_file(REPORT_PATH, report, report_len);
+		if (ret)
+			both_fmt("VXTUX-STEP: write %s failed: %s\n", REPORT_PATH,
+				 strerror(-ret));
+		else
+			both_fmt("VXTUX-STEP: report saved to %s (%zu bytes, "
+				 "fsync OK)\n", REPORT_PATH, report_len);
+		return;
+	}
+	/* cache tidak terpasang: laporan tetap harus tersimpan di suatu tempat */
+	write_raw_vendor_log(report, report_len, g_parts, np_parts);
+}
+
+/*
+ * Verify the cache write path using a temporary file inside its mounted
+ * ext4 filesystem. Never write diagnostic bytes to arbitrary raw offsets:
+ * cache has a filesystem, so raw writes would corrupt it.
+ */
+static void write_readback_test(const struct part *parts, int np)
+{
+	static const char sig[] = "VXTUXWRT\x01" "UMS512!";
+	char back[sizeof(sig)];
+	int fd;
+
+	(void)parts;
+	(void)np;
+	fd = open(TEST_PATH, O_RDWR | O_CREAT | O_TRUNC, 0600);
+	if (fd < 0) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL open %s: %s\n", TEST_PATH,
+			 strerror(errno));
+		return;
+	}
+	if (write(fd, sig, sizeof(sig)) != (ssize_t)sizeof(sig)) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL write %s: %s\n", TEST_PATH,
 			 strerror(errno));
 		close(fd);
 		return;
 	}
-	fsync(fd);
-	if (pread(fd, back, sizeof back, TEST_OFFSET) !=
-	    (ssize_t)sizeof back) {
-		both_fmt("VXTUX-WRITE-TEST: FAIL readback %s: %s\n", dev,
+	if (fsync(fd) != 0 || pread(fd, back, sizeof(back), 0) !=
+	    (ssize_t)sizeof(back)) {
+		both_fmt("VXTUX-WRITE-TEST: FAIL readback %s: %s\n", TEST_PATH,
 			 strerror(errno));
 		close(fd);
 		return;
 	}
 	close(fd);
-	if (memcmp(back, sig, sizeof sig) != 0) {
+	if (memcmp(back, sig, sizeof(sig)) != 0) {
 		both("VXTUX-WRITE-TEST: FAIL readback mismatch "
 		     "(wrote one thing, read another)\n");
 		return;
 	}
-	both_fmt("VXTUX-WRITE-TEST: OK open+write+readback on %s\n", dev);
+	unlink(TEST_PATH);
+	both_fmt("VXTUX-WRITE-TEST: OK file write+readback on %s\n", CACHE_MOUNT);
 }
 
-/* ---------- cari + pasang root ---------- */
+/* ---------- find and mount root ---------- */
 
 static int find_and_mount_root(const struct part *parts, int np, char *rootdev,
 			       size_t rootdev_len)
@@ -602,17 +776,13 @@ static void switch_root_and_exec(void)
 	if (chdir("/") != 0)
 		;
 
-	/* Artix (proot-distro) memakai dinit, BUKAN sysvinit/upstart:
-	 *   /init          -> skel dinit (exec dinit-init / dinit-initramfs)
-	 *   /bin/dinit-run -> launcher dinit khas Artix
-	 *   /sbin/init     -> symlink -> dinit (fallback systemd/gentoo)
-	 * Urutan ini penting: coba /init dulu (paling autentik), lalu dinit-run,
-	 * baru /sbin/init + /bin/sh.  Bug sebelumnya: hanya /sbin/init + /bin/sh,
-	 * padahal /sbin/init TIDAK ADA di rootfs Artix -> exec gagal -> kernel
-	 * panic "VFS: Unable to mount root fs". */
+	/* /init in the boot initramfs aliases /vxtux/init; it is not the
+	 * Artix root's init.  Once chrooted, use whatever init the rootfs
+	 * actually ships: /bin/dinit-run does NOT exist in this image (raw scan
+	 * of the 5.87 GB super image: 0 hits), /sbin/init -> dinit-init does. */
 	static const char *inits[] = {
-		"/init", "/bin/dinit-run", "/sbin/init",
-		"/sbin/dinit", "/bin/dinit", "/bin/sh", NULL
+		"/sbin/init", "/sbin/dinit-init", "/sbin/dinit",
+		"/bin/dinit", "/bin/sh", NULL
 	};
 	int i;
 	for (i = 0; inits[i]; i++) {
@@ -627,10 +797,10 @@ static void switch_root_and_exec(void)
 	both("VXTUX-STEP: every init candidate failed\n");
 }
 
-/* ---------- modul clock UMS512 (artix37) ---------- */
+/* ---------- UMS512 clock modules (artix37) ---------- */
 
 /*
- * Mengapa clock tree dimuat DI SINI, bukan builtin (=y):
+ * Why load the clock tree here instead of built in (=y):
  *
  *   artix34  SPRD_COMMON_CLK/UMS512_CLK =m dan modulnya tidak pernah
  *            dimuat -> semua konsumen (eMMC, i2c, PMIC) deferred abadi ->
@@ -638,20 +808,13 @@ static void switch_root_and_exec(void)
  *   artix35/36  =y -> clock tree ada sejak initcall -> konsumen probe
  *            terlalu dini -> salah satunya menggantung senyap SEBELUM
  *            fbcon -> layar buta, tanpa panic, tanpa jejak apa pun.
- *
- * Jadi di sini clock tree dimuat sebagai MODUL, SETELAH fbcon hidup dan
- * layar sudah bisa bicara.  driver_register() dari finit_module() memicu
- * driver_deferred_probe_trigger(), jadi konsumen yang tadinya deferred
- * langsung dicoba ulang begitu provider clock terdaftar.  Kalau salah
- * satunya menggantung, gantungnya terjadi SESUDAH semua pesan di layar
- * ini tercetak - bukan boot buta lagi.
- *
- * Modul berasal dari build kernel yang sama (vermagic cocok) dan ditaruh di
- * /vxtux/ko/ oleh pipeline boot_artix37.  Artefak CI ternyata keluar TANPA
- * tanda tangan (kunci certs/signing_key.pem tidak digenerate saat
- * `make modules`), jadi CONFIG_MODULE_SIG_FORCE dimatikan di
- * enhanced_config.cfg; tanpa itu finit_module() menolak keduanya dengan
- * EKEYREJECTED dan clock tree tidak pernah terdaftar.
+ *	 * Load the clock tree as modules AFTER fbcon is alive.  driver_register()
+	 * from finit_module() retriggers deferred probing, so consumers get
+	 * retried after the provider registers. Any hang is now visible on screen.
+ *	 * Modules come from the same kernel build (matching vermagic) and are
+	 * placed in /vxtux/ko/ by the boot_artix37 pipeline. CI artifacts are
+	 * unsigned, so CONFIG_MODULE_SIG_FORCE is disabled; otherwise
+	 * finit_module() rejects them with EKEYREJECTED.
  */
 static int try_insmod(const char *path)
 {
@@ -670,8 +833,8 @@ static int try_insmod(const char *path)
 static void load_clock_modules(void)
 {
 	static const char *const mods[] = {
-		"/vxtux/ko/clk-sprd.ko",	/* framework clock SPRD dulu */
-		"/vxtux/ko/ums512-clk.ko",	/* lalu ap-clk + apapb-gate */
+		"/vxtux/ko/clk-sprd.ko",	/* SPRD clock framework first */
+		"/vxtux/ko/ums512-clk.ko",	/* then ap-clk + apapb-gate */
 	};
 	unsigned int i;
 
@@ -696,9 +859,6 @@ static void load_clock_modules(void)
 	both("VXTUX-MOD: deferred probes retriggered, waiting for eMMC\n");
 }
 
-/* statis: stack PID1 di kernel hanya 16 KiB, jangan taruh array besar di sana */
-static struct part g_parts[128];
-
 int main(void)
 {
 	struct part *parts = g_parts;
@@ -708,7 +868,7 @@ int main(void)
 	struct utsname u;
 	int i;
 
-	/* devtmpfs dulu supaya /dev/console pasti ada sebelum kita bicara */
+	/* Set up pseudo-filesystems required for console, block nodes and sysfs. */
 	mount("devtmpfs", "/dev", "devtmpfs", 0, "mode=0755");
 	mount("proc", "/proc", "proc", 0, "");
 	mount("sysfs", "/sys", "sysfs", 0, "");
@@ -720,6 +880,13 @@ int main(void)
 	report = malloc(REPORT_MAX);
 	if (report)
 		report[0] = 0;
+
+	/* Register late clock providers before waiting for the eMMC host. */
+	load_clock_modules();
+	np = wait_for_storage(parts, 128, 180);
+	np_parts = np;
+	ensure_nodes(parts, np);
+	save_early_dmesg(parts, np);
 
 	uname(&u);
 	snprintf(banner, sizeof banner,
@@ -733,42 +900,25 @@ int main(void)
 	rep("### VXTUXLOG1  Artix initramfs boot report (UMS512)\n");
 	rep_fmt("kernel: %s %s\n", u.release, u.version);
 
-	/* artix37: clock tree dimuat sebagai modul, setelah fbcon hidup. */
-	load_clock_modules();
-
 	both("VXTUX-STEP: 1/5 partition list\n");
 	rep("\n----- /proc/partitions -----\n");
 	dump_file("/proc/partitions", 1);
 	rep("----- end of /proc/partitions -----\n");
-
-	/*
-	 * Tunggu eMMC muncul (maks 180 detik, layar diperbarui tiap 10 s).
-	 * Tanpa ini semua langkah berikut bisa gagal serentak hanya karena
-	 * host eMMC lebih lambat terdaftar daripada init berjalan.
-	 */
-	np = wait_for_storage(parts, 128, 180);
 	both_fmt("VXTUX-STEP: %d partitions visible\n", np);
-	ensure_nodes(parts, np);
 
-	/*
-	 * Uji kanal tulis SEBELUM laporan ditulis: kalau gagal, errno-nya
-	 * langsung terlihat di layar (fbcon) tanpa perlu dump partisi cache.
-	 */
+	/* The log file is now persisted; verify a separate temporary file. */
 	both("VXTUX-STEP: 1b/5 write-readback test on the cache partition\n");
 	write_readback_test(parts, np);
 
 	both("VXTUX-STEP: 2/5 copying dmesg into the report\n");
 	dump_kernel_log(1);
 
-	/* pstore boot sebelumnya (panic/console lama) -> layar + laporan */
+	/* Read prior-boot pstore records to the panel and report. */
 	dump_pstore();
 
-	/* LAPORAN AWAL ditulis di sini, sebelum pindai/mount ext4. Langkah 3/5
-	 * adalah titik yang paling mungkin menggantung (probe/port eMMC belum
-	 * stabil). Bila mount macet, dmesg yang sudah terkumpul tetap tersimpan
-	 * di partisi cache dan bisa di-dump lewat spd_dump tanpa layar. */
+	/* Save the report before scanning or mounting the large super partition. */
 	both("VXTUX-STEP: 2b/5 writing the first report to the cache partition\n");
-	write_report_to_cache(parts, np);
+	write_report_to_cache();
 
 	rep("\n----- scanning partitions for ext4 -----\n");
 	both("VXTUX-STEP: 3/5 looking for an ext4 rootfs\n");
@@ -783,7 +933,7 @@ int main(void)
 	}
 
 	both("VXTUX-STEP: 4/5 writing the report to the cache partition\n");
-	write_report_to_cache(parts, np);
+	write_report_to_cache();
 
 	if (rootdev[0]) {
 		both("VXTUX-STEP: 5/5 switching to the real root\n");
@@ -798,7 +948,7 @@ int main(void)
 	for (i = 0; i < 3; i++)
 		sync();
 	sleep(3);
-	/* jangan panic: biarkan layar menampilkan pesan di atas */
+	/* Do not panic; keep the diagnostic message on screen. */
 	for (;;)
 		sleep(3600);
 	return 0;

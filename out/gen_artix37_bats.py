@@ -92,7 +92,18 @@ REM         = konsumen clock menggantung SESUDAH layar hidup -> namanya
 REM           tinggal dicari dari dmesg/cache, tidak buta lagi
 REM    "VXTUX-MOD: ... FAILED: ..." = modul ditolak (vermagic/tanda tangan)
 REM    "storage ready after Ns: 71 mmc partitions" = eMMC akhirnya terdaftar
-REM    "VXTUX-WRITE-TEST: OK open+write+readback"  = kanal tulis hidup
+REM
+REM  KANAL LOG (bedah kernel stok 5.4.210 -- lihat docs/RE-LOG-DUMP-5.4.210.md):
+REM    "VXTUX-STEP: mounted cache and saved early dmesg to /cache/boot_log.txt"
+REM         = partisi cache (ext4!) terpasang, dmesg awal tersimpan sebagai berkas
+REM    "VXTUX-WRITE-TEST: OK file write+readback on /cache"
+REM         = kanal berkas ext4 hidup (bukan tulisan mentah yang merusak ext4)
+REM    "VXTUX-STEP: raw vendor log saved to /dev/mmcblk0pN"
+REM         = kanal mentah vendor common_rs1_a (8 MiB, offset 0) ikut terisi
+REM    "VXTUX-STEP: raw vendor log partition not found ... (skipped)"
+REM         = ukuran+isi tidak cocok -> kanal dilewati (aman, tidak asal tulis)
+REM    "VXTUX-STEP: chroot OK, exec /sbin/init" = masuk ke dinit Artix
+REM    "/init -> /vxtux/init" ada di ramdisk  = cadangan kalau rdinit tidak dibaca
 REM
 REM  boot_artix37.img : 0x{size:X} byte ({size})
 REM  md5 {prefix_n} byte pertama : {md5}
@@ -101,7 +112,7 @@ REM ===========================================================================
 
 
 def dump_flash():
-    return HDR.format(title="dump log artix36 + flash boot_artix37.img + reset",
+    return HDR.format(title="dump log artix37 + flash boot_artix37.img + reset",
                       size=size, prefix_n=check_n, md5=md5) + r"""set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe
 set FDL1=G:\UMS512\unlock\advan\fdl1-dl.bin
 set FDL2=G:\UMS512\unlock\advan\fdl2-dl.bin
@@ -116,7 +127,7 @@ if not exist "%IMG%" (
   exit /b 1
 )
 
-echo [1/1] dump log artix36 + flash boot_artix37.img + reset
+echo [1/1] dump log artix37 + flash boot_artix37.img + reset
 "%SPD%" --wait 300 ^
   fdl "%FDL1%" 0x5500 ^
   fdl "%FDL2%" 0x9efffe00 ^
@@ -125,10 +136,10 @@ echo [1/1] dump log artix36 + flash boot_artix37.img + reset
   read_part cache        0 0x6400000  cache.bin ^
   read_part uboot_log    0 0x400000   uboot_log.bin ^
   read_part sysdumpdb    0 0xA00000   sysdumpdb.bin ^
-  read_part misc         0 0x100000   misc.bin ^
-  read_part miscdata     0 0x100000   miscdata.bin ^
+  read_part misc         0 0x100000   misc.bin ^  read_part miscdata     0 0x100000  miscdata.bin ^
   read_part boot_a       0 0x4000000  boot_a.bin ^
   w boot_a "%IMG%" ^
+  read_part common_rs1_a 0 0x800000  common_rs1_a.bin ^
   reset
 
 echo.
@@ -137,7 +148,9 @@ echo [i] Setelah reset TUNGGU 40 DETIK lalu foto layarnya:
 echo       "VXTUX-MOD: ... loaded"   = clock tree terdaftar sesudah fbcon
 echo       "waiting for eMMC" dst    = deferred probe dipicu ulang
 echo       "storage ready after Ns"  = eMMC akhirnya terdaftar
-echo       "VXTUX-WRITE-TEST: OK"    = kanal tulis eMMC hidup
+echo       "saved early dmesg"       = berkas /cache/boot_log.txt terbentuk
+echo       "raw vendor log saved"    = kanal mentah common_rs1_a terisi
+echo       "chroot OK, exec /sbin/init" = masuk ke dinit Artix
 echo [i] Verifikasi flash: md5 __PREFIX__ byte PERTAMA boot_a.bin harus =
 echo       __MD5__ (auto-check di bat logonly)
 pause
@@ -170,19 +183,21 @@ echo [1/1] DUMP SEMUA LOG (tanpa flash) -^> %LOG%
   read_part cache        0 0x6400000  cache.bin ^
   read_part uboot_log    0 0x400000   uboot_log.bin ^
   read_part sysdumpdb    0 0xA00000   sysdumpdb.bin ^
-  read_part misc         0 0x100000   misc.bin ^
-  read_part miscdata     0 0x100000   miscdata.bin ^
+  read_part misc         0 0x100000   misc.bin ^  read_part miscdata     0 0x100000  miscdata.bin ^
   read_part boot_a       0 0x4000000  boot_a.bin ^
+  read_part common_rs1_a 0 0x800000  common_rs1_a.bin ^
   reset
 
 echo.
 echo [i] Log tersimpan di %LOG%
-echo [i] Yang dicari:
-echo       VXTUXFR1   @ 8MiB  -^> dmesg flightrec (isi dmesg s/d titik macet)
-echo       VXTUXLOG1  @ 4MiB  -^> laporan init (apakah eMMC terdaftar / mount)
-echo       VXTUXWRT   @ 6MiB  -^> zona uji tulis-balik eMMC
-echo       pstore_blk @ 0MiB  -^> catatan console/kmsg saat panic
-echo       "VXTUX-MOD" juga tercetak di cache lewat laporan init
+echo [i] Yang dicari (semua lewat spd_dump read_part):
+echo       cache.bin      -> mount -t ext4 /dev/mmcblkX  lalu lihat:
+echo           /cache/boot_log.txt     dmesg awal SEBELUM pindai super
+echo           /cache/vxtux_report.txt laporan penuh init
+echo       common_rs1_a   -> teks "### VXTUXRS1" di offset 0 (128 KiB pertama)
+echo                         = kanal mentah vendor, tetap terbaca walau ext4 gagal
+echo       catatan: pstore_blk + flightrec DIMATIKAN (keduanya menulis mentah
+echo               ke partisi ext4 -> merusak metadata filesystem cache)
 echo [i] VERIFIKASI FLASH otomatis (__PREFIX__ byte PERTAMA boot_a.bin):
 if not exist "%LOG%\boot_a.bin" goto :nosha
 if exist C:\Python314\python.exe C:\Python314\python.exe -c "import hashlib;h=hashlib.md5(open(r'%LOG%\boot_a.bin','rb').read(__PREFIX__)).hexdigest();print('  boot_a prefix md5 =',h);print('  flash boot_artix37 mendarat =',h=='__MD5__')"
@@ -247,6 +262,8 @@ if errorlevel 1 (
   echo [OK] selesai -- JANGAN tahan tombol apa pun saat tablet reboot,
   echo      biarkan boot normal +/- 40 detik, lalu foto layarnya.
   echo      "VXTUX-MOD: ... loaded" lalu "waiting for eMMC" = fix jalan.
+  echo      "chroot OK, exec /sbin/init" = initramfs sudah menyerahkannya
+  echo      ke dinit Artix (getty@tty1 -> CLI fbcon di layar).
 )
 pause
 """.replace("__SIZE__", str(size)).replace("__MD5__", md5)
