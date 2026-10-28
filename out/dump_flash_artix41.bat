@@ -13,8 +13,10 @@ REM
 REM  BACKUP OTOMATIS: dtb_a lama dibaca ke logs\artix41\dtb_a_stock.bin
 REM  SEBELUM ditulis.  Untuk kembali: restore_dtb41.bat
 REM
-REM  Kenapa dtb_a: boot image tidak memuat FDT; kernel memakai DTB dari
-REM  partisi dtb_a.  Tanpa menulis dtb_a, sc2730.dtsi tidak pernah dipakai.
+REM  Kenapa dtb_a: boot_a tidak memuat DTB board (hanya stub FDT 131 byte);
+REM  Image juga tidak memuat string ums512-1h10/ldo-vddemmccore.  Jadi DTB
+REM  dibaca dari partisi dtb_a.  Tanpa menulis dtb_a, sc2730.dtsi tidak
+REM  pernah dipakai - itu sebabnya defer tidak sembuh walau DTS diubah.
 REM ===========================================================================
 
 set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe

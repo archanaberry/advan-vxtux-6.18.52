@@ -4,12 +4,13 @@ REM ===========================================================================
 REM  FLASH artix41  ->  boot_a  +  dtb_a   (dtb_a = kunci artix41)
 REM
 REM  KENAPA dtb_a IKUT DI-FLASH:
-REM    boot_artix4x.img TIDAK berisi FDT (tidak ada magic D0 0D FE ED di page
-REM    mana pun), dan boot_a stok juga tidak.  Kernel mendapat DTB dari
-REM    bootloader, yang membacanya dari partisi dtb_a.  Selama ini yang
-REM    di-flash hanya boot_a -> kernel selalu memakai DTB stok, sehingga
-REM    semua perubahan sc2730.dtsi (nama rail, vmmc eMMC, ADI) tidak pernah
-REM    sampai ke kernel.  Itulah sebabnya "defer" tidak pernah sembuh.
+REM    boot_a TIDAK memuat DTB board - pemeriksaan seluruh byte menemukan
+REM    hanya satu magic FDT berukuran 131 byte (stub root #address-cells),
+REM    dan Image tidak memuat string ums512-1h10/ldo-vddemmccore.  Jadi DTB
+REM    dibaca bootloader dari partisi dtb_a.  Selama ini yang di-flash hanya
+REM    boot_a -> kernel selalu memakai DTB stok, sehingga sc2730.dtsi (nama
+REM    rail, vmmc eMMC, ADI) tidak pernah sampai ke kernel.  Itulah sebabnya
+REM    defer tidak pernah sembuh walau DTS diubah tiga kali.
 REM
 REM  Urutan satu sesi spd_dump:
 REM    1. read_part dtb_a  -> logs\artix41\dtb_a_stock.bin  (BACKUP dulu)

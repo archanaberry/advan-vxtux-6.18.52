@@ -4,7 +4,9 @@ REM ===========================================================================
 REM  artix41 -- DUMP SEMUA LOG (read-only, TANPA flash)
 REM
 REM  KENAPA dtb_a / dtbo_a DITAMBAH:
-REM    Boot image kita tidak berisi FDT, jadi kernel memakai DTB dari partisi.
+REM    Boot image kita tidak memuat DTB board (hanya stub FDT 131 byte), dan
+REM    Image tidak memuat string ums512-1h10/ldo-vddemmccore.  Jadi kernel
+REM    memakai DTB dari partisi dtb_a.
 REM    Tanpa membaca dtb_a kita tidak pernah bisa membandingkan DT yang
 REM    BENAR-BENAR dipakai kernel dengan DTS kita.  Itu sebabnya tiga build
 REM    berturut-turut "defer-nya sama saja": yang diubah bukan DT yang dipakai.

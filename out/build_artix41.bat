@@ -6,11 +6,12 @@ REM
 REM  KENAPA artix41 (defer belum sembuh di v39/v40):
 REM
 REM   A. DTB TIDAK PERNAH DIPAKAI.
-REM      boot_artix40.img tidak berisi satu pun FDT (tidak ada magic D0 0D FE
-REM      ED di page mana pun), dan boot_a stok juga tidak.  Kernel menerima
-REM      DTB dari bootloader, yang membacanya dari partisi dtb_a.  Selama ini
-REM      yang di-flash hanya boot_a, jadi sc2730.dtsi (rail eMMC, dll) tidak
-REM      pernah sampai ke kernel - Image berubah, DT tetap DT stok.
+REM      boot_a tidak memuat DTB board: pemeriksaan seluruh byte hanya
+REM      menemukan satu magic FDT 131 byte (stub root #address-cells), dan
+REM      Image tidak memuat string ums512-1h10/ldo-vddemmccore.  Jadi DTB
+REM      dibaca bootloader dari partisi dtb_a.  Selama ini yang di-flash
+REM      hanya boot_a, jadi sc2730.dtsi (rail eMMC, dll) tidak pernah sampai
+REM      ke kernel - Image berubah, DT tetap DT stok.
 REM      -> artix41 ikut membangun dan mem-flash dtb_a.
 REM
 REM   B. NAMA RAIL TIDAK COCOK of_match DRIVER.
