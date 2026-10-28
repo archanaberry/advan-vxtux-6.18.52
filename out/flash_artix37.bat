@@ -14,7 +14,7 @@ REM  Cara pakai:
 REM   1. Matikan tablet, tahan VOL DOWN + POWER 15 detik,
 REM      lepas POWER (VOL DOWN tetap ditekan), colok USB.
 REM   2. Jalankan script ini, tekan apa pun saat pause.
-REM   3. Harus terbaca: file size : 0x45518848  lalu  Write Part Done: boot_a
+REM   3. Harus terbaca: file size : 0x45514752  lalu  Write Part Done: boot_a
 REM   4. Setelah reset: JANGAN tahan tombol apa pun, biarkan boot normal.
 REM ============================================================
 
@@ -28,8 +28,8 @@ if not exist "%BOOT%" ( echo [X] boot image tidak ada: %BOOT% & pause & exit /b 
 
 echo ============================================================
 echo  boot_a  ^<-  %BOOT%
-for %%A in ("%BOOT%") do echo  ukuran : %%~zA byte  (harus 45518848)
-echo  md5 diharapkan : b0e29e381f4554442e9c22a65b477818
+for %%A in ("%BOOT%") do echo  ukuran : %%~zA byte  (harus 45514752)
+echo  md5 diharapkan : 1a0f4a25e5c6c4eba4677a0056115927
 echo.
 echo  Matikan tablet: tahan VOL DOWN + POWER 15 detik,
 echo  lepas POWER (tetap tahan VOL DOWN), colok USB, tunggu 5 detik.

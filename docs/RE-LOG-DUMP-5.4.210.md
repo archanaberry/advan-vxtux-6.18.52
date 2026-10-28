@@ -183,6 +183,11 @@ Diubah di sesi ini (`ci_qemu/initramfs/init.c`, `enhanced_config.cfg`,
   `raw vendor log partition not found (skipped)` adalah gejalanya.
 * Belum ada backend pstore yang benar-benar hidup di 6.18.52 (ramoops butuh node
   reserved-memory di DTS kita; sengaja tidak ditambahkan sesi ini).
-* Config di atas (`PSTORE_BLK`/`FLIGHTREC` mati) **butuh build CI** — artefak lokal
-  `boot_artix37.img` masih memakai Image hasil run CI 10:47 (kedua simbol masih `=y`),
-  tetapi kanal baru sudah aktif karena initramfs ikut boot.img.
+* Build CI `40657123600` (2026-10-28, `test1@081bacfc3`) **sudah** memakai config
+  ini: `effective.config` keluar tanpa `CONFIG_PSTORE_BLK` dan tanpa
+  `CONFIG_VXTUX_FLIGHTREC`, `CONFIG_CMDLINE` tanpa `pstore_blk.best_effort=1`,
+  `SPRD_COMMON_CLK=m` + `SPRD_UMS512_CLK=m`, `VT_CONSOLE=y` +
+  `FRAMEBUFFER_CONSOLE=y` (fbcon).  Artefak: `out/6.18.52-VXTux-UMS512/boot_artix37.img`
+  45.514.752 byte, md5 `1a0f4a25e5c6c4eba4677a0056115927` (bat sudah digenerate ulang).
+* Belum ada yang boot dengan artefak ini — verifikasi sejauh ini = bedah biner,
+  dump partisi, kompilasi, dan pemeriksaan isi ramdisk, bukan hasil di layar.
