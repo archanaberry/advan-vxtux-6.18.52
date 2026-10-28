@@ -51,7 +51,7 @@ REM    "VXTUX-STEP: chroot OK, exec /sbin/init" = masuk ke dinit Artix
 REM    "/init -> /vxtux/init" ada di ramdisk  = cadangan kalau rdinit tidak dibaca
 REM
 REM  boot_artix37.img : 0x2B68000 byte (45514752)
-REM  md5 45514752 byte pertama : 1a0f4a25e5c6c4eba4677a0056115927
+REM  md5 45514752 byte pertama : 016343fa9ea2ec00f6a12feebadb7503
 REM ===========================================================================
 set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe
 set FDL1=G:\UMS512\unlock\advan\fdl1-dl.bin
@@ -92,5 +92,5 @@ echo       "saved early dmesg"       = berkas /cache/boot_log.txt terbentuk
 echo       "raw vendor log saved"    = kanal mentah common_rs1_a terisi
 echo       "chroot OK, exec /sbin/init" = masuk ke dinit Artix
 echo [i] Verifikasi flash: md5 45514752 byte PERTAMA boot_a.bin harus =
-echo       1a0f4a25e5c6c4eba4677a0056115927 (auto-check di bat logonly)
+echo       016343fa9ea2ec00f6a12feebadb7503 (auto-check di bat logonly)
 pause

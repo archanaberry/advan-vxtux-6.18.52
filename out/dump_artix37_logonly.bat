@@ -51,7 +51,7 @@ REM    "VXTUX-STEP: chroot OK, exec /sbin/init" = masuk ke dinit Artix
 REM    "/init -> /vxtux/init" ada di ramdisk  = cadangan kalau rdinit tidak dibaca
 REM
 REM  boot_artix37.img : 0x2B68000 byte (45514752)
-REM  md5 45514752 byte pertama : 1a0f4a25e5c6c4eba4677a0056115927
+REM  md5 45514752 byte pertama : 016343fa9ea2ec00f6a12feebadb7503
 REM ===========================================================================
 set SPD=G:\UMS512\unlock\advan\spd_dump_new.exe
 set FDL1=G:\UMS512\unlock\advan\fdl1-dl.bin
@@ -94,9 +94,9 @@ echo       catatan: pstore_blk + flightrec DIMATIKAN (keduanya menulis mentah
 echo               ke partisi ext4 -> merusak metadata filesystem cache)
 echo [i] VERIFIKASI FLASH otomatis (45514752 byte PERTAMA boot_a.bin):
 if not exist "%LOG%\boot_a.bin" goto :nosha
-if exist C:\Python314\python.exe C:\Python314\python.exe -c "import hashlib;h=hashlib.md5(open(r'%LOG%\boot_a.bin','rb').read(45514752)).hexdigest();print('  boot_a prefix md5 =',h);print('  flash boot_artix37 mendarat =',h=='1a0f4a25e5c6c4eba4677a0056115927')"
+if exist C:\Python314\python.exe C:\Python314\python.exe -c "import hashlib;h=hashlib.md5(open(r'%LOG%\boot_a.bin','rb').read(45514752)).hexdigest();print('  boot_a prefix md5 =',h);print('  flash boot_artix37 mendarat =',h=='016343fa9ea2ec00f6a12feebadb7503')"
 if not exist C:\Python314\python.exe echo       [!] C:\Python314\python.exe tidak ada -- hitung manual.
 :nosha
-echo [i] Bila prefix md5 BEDA 1a0f4a25 -^> flash gagal; jalankan
+echo [i] Bila prefix md5 BEDA 016343fa -^> flash gagal; jalankan
 echo       flash_artix37.bat lalu dump ulang.
 pause

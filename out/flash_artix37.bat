@@ -29,7 +29,7 @@ if not exist "%BOOT%" ( echo [X] boot image tidak ada: %BOOT% & pause & exit /b 
 echo ============================================================
 echo  boot_a  ^<-  %BOOT%
 for %%A in ("%BOOT%") do echo  ukuran : %%~zA byte  (harus 45514752)
-echo  md5 diharapkan : 1a0f4a25e5c6c4eba4677a0056115927
+echo  md5 diharapkan : 016343fa9ea2ec00f6a12feebadb7503
 echo.
 echo  Matikan tablet: tahan VOL DOWN + POWER 15 detik,
 echo  lepas POWER (tetap tahan VOL DOWN), colok USB, tunggu 5 detik.
