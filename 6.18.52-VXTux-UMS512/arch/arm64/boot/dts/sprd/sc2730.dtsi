@@ -257,6 +257,7 @@
 			compatible = "sprd,sc2730-regulator";
 
 			vddcpu: DCDC_CPU {
+				regulator-compatible = "dcdc-cpu";
 				regulator-name = "vddcpu";
 				regulator-min-microvolt = <200000>;
 				regulator-max-microvolt = <1596875>;
@@ -265,6 +266,7 @@
 			};
 
 			vddgpu: DCDC_GPU {
+				regulator-compatible = "dcdc-gpu";
 				regulator-name = "vddgpu";
 				regulator-min-microvolt = <200000>;
 				regulator-max-microvolt = <1596875>;
@@ -273,6 +275,7 @@
 			};
 
 			vddcore: DCDC_CORE {
+				regulator-compatible = "dcdc-core";
 				regulator-name = "vddcore";
 				regulator-min-microvolt = <200000>;
 				regulator-max-microvolt = <1596875>;
@@ -281,6 +284,7 @@
 			};
 
 			vddmodem: DCDC_MODEM {
+				regulator-compatible = "dcdc-modem";
 				regulator-name = "vddmodem";
 				regulator-min-microvolt = <200000>;
 				regulator-max-microvolt = <1596875>;
@@ -289,6 +293,7 @@
 			};
 
 			vddmem: DCDC_MEM {
+				regulator-compatible = "dcdc-mem";
 				regulator-name = "vddmem";
 				regulator-min-microvolt = <400000>;
 				regulator-max-microvolt = <1593750>;
@@ -297,6 +302,7 @@
 			};
 
 			vddmemq: DCDC_MEMQ {
+				regulator-compatible = "dcdc-memq";
 				regulator-name = "vddmemq";
 				regulator-min-microvolt = <400000>;
 				regulator-max-microvolt = <1596875>;
@@ -305,6 +311,7 @@
 			};
 
 			vddgen0: DCDC_GEN0 {
+				regulator-compatible = "dcdc-gen0";
 				regulator-name = "vddgen0";
 				regulator-min-microvolt = <1220000>;
 				regulator-max-microvolt = <2410625>;
@@ -313,6 +320,7 @@
 			};
 
 			vddgen1: DCDC_GEN1 {
+				regulator-compatible = "dcdc-gen1";
 				regulator-name = "vddgen1";
 				regulator-min-microvolt = <850000>;
 				regulator-max-microvolt = <1643750>;
@@ -321,6 +329,7 @@
 			};
 
 			vddsram: DCDC_SRAM {
+				regulator-compatible = "dcdc-sram";
 				regulator-name = "vddsram";
 				regulator-min-microvolt = <200000>;
 				regulator-max-microvolt = <1596875>;
@@ -329,6 +338,7 @@
 			};
 
 			avdd18: LDO_AVDD18 {
+				regulator-compatible = "ldo-avdd18";
 				regulator-name = "avdd18";
 				regulator-min-microvolt = <1175000>;
 				regulator-max-microvolt = <1805000>;
@@ -337,6 +347,7 @@
 			};
 
 			vddrf18: LDO_VDDRF18 {
+				regulator-compatible = "ldo-vddrf18";
 				regulator-name = "vddrf18";
 				regulator-min-microvolt = <1175000>;
 				regulator-max-microvolt = <1805000>;
@@ -345,6 +356,7 @@
 			};
 
 			vddcamio: LDO_VDDCAMIO {
+				regulator-compatible = "ldo-vddcamio";
 				regulator-name = "vddcamio";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <1830000>;
@@ -352,6 +364,7 @@
 			};
 
 			vddwcn: LDO_VDDWCN {
+				regulator-compatible = "ldo-vddwcn";
 				regulator-name = "vddwcn";
 				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1845000>;
@@ -359,6 +372,7 @@
 			};
 
 			vddcamd1: LDO_VDDCAMD1 {
+				regulator-compatible = "ldo-vddcamd1";
 				regulator-name = "vddcamd1";
 				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1365000>;
@@ -366,6 +380,7 @@
 			};
 
 			vddcamd0: LDO_VDDCAMD0 {
+				regulator-compatible = "ldo-vddcamd0";
 				regulator-name = "vddcamd0";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <1200000>;
@@ -373,6 +388,7 @@
 			};
 
 			vddrf1v25: LDO_VDDRF1V25 {
+				regulator-compatible = "ldo-vddrf1v25";
 				regulator-name = "vddrf1v25";
 				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1365000>;
@@ -381,6 +397,7 @@
 			};
 
 			avdd12: LDO_AVDD12 {
+				regulator-compatible = "ldo-avdd12";
 				regulator-name = "avdd12";
 				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1365000>;
@@ -389,6 +406,7 @@
 			};
 
 			vddcama0: LDO_VDDCAMA0 {
+				regulator-compatible = "ldo-vddcama0";
 				regulator-name = "vddcama0";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -396,6 +414,7 @@
 			};
 
 			vddcama1: LDO_VDDCAMA1 {
+				regulator-compatible = "ldo-vddcama1";
 				regulator-name = "vddcama1";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -403,6 +422,7 @@
 			};
 
 			vddcammot: LDO_VDDCAMMOT {
+				regulator-compatible = "ldo-vddcammot";
 				regulator-name = "vddcammot";
 				regulator-min-microvolt = <2800000>;
 				regulator-max-microvolt = <2800000>;
@@ -410,6 +430,7 @@
 			};
 
 			vddsim2: LDO_VDDSIM2 {
+				regulator-compatible = "ldo-vddsim2";
 				regulator-name = "vddsim2";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -417,6 +438,7 @@
 			};
 
 			vddemmccore: LDO_VDDEMMCCORE {
+				regulator-compatible = "ldo-vddemmccore";
 				regulator-name = "vddemmccore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -425,6 +447,7 @@
 			};
 
 			vddsdcore: LDO_VDDSDCORE {
+				regulator-compatible = "ldo-vddsdcore";
 				regulator-name = "vddsdcore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -432,6 +455,7 @@
 			};
 
 			vddsdio: LDO_VDDSDIO {
+				regulator-compatible = "ldo-vddsdio";
 				regulator-name = "vddsdio";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -439,6 +463,7 @@
 			};
 
 			vdd28: LDO_VDD28 {
+				regulator-compatible = "ldo-vdd28";
 				regulator-name = "vdd28";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -447,6 +472,7 @@
 			};
 
 			vddwifipa: LDO_VDDWIFIPA {
+				regulator-compatible = "ldo-vddwifipa";
 				regulator-name = "vddwifipa";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -454,6 +480,7 @@
 			};
 
 			vdd18_dcxo: LDO_VDD18_DCXO {
+				regulator-compatible = "ldo-vdd18-dcxo";
 				regulator-name = "vdd18_dcxo";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -462,6 +489,7 @@
 			};
 
 			vddusb33: LDO_VDDUSB33 {
+				regulator-compatible = "ldo-vddusb33";
 				regulator-name = "vddusb33";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -469,6 +497,7 @@
 			};
 
 			vddldo0: LDO_VDDLDO0 {
+				regulator-compatible = "ldo-vddldo0";
 				regulator-name = "vddldo0";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -477,6 +506,7 @@
 			};
 
 			vddldo1: LDO_VDDLDO1 {
+				regulator-compatible = "ldo-vddldo1";
 				regulator-name = "vddldo1";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -484,6 +514,7 @@
 			};
 
 			vddldo2: LDO_VDDLDO2 {
+				regulator-compatible = "ldo-vddldo2";
 				regulator-name = "vddldo2";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
@@ -491,6 +522,7 @@
 			};
 
 			vddkpled: LDO_VDDKPLED {
+				regulator-compatible = "ldo-vddkpled";
 				regulator-name = "vddkpled";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;

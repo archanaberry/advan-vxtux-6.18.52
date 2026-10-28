@@ -621,6 +621,17 @@ static const struct of_device_id sprd_adi_of_match[] = {
 		.compatible = "sprd,ums512-adi",
 		.data = &ums512_data,
 	},
+	/*
+	 * FDT stok advan (dump ROM asli) menamai ADI UMS512/SharkL5Pro dengan
+	 * "sprd,sharkl5pro-adi".  Perangkat kerasnya sama, jadi konfigurasi
+	 * 15-bit dipakai juga.  Tanpa alias ini, board yang masih memakai DTB
+	 * stok (dtb_a belum di-flash) tidak akan pernah punya bus ADI, sehingga
+	 * PMIC, gpio-eic, adc, rtc, dan semua consumer-nya defer selamanya.
+	 */
+	{
+		.compatible = "sprd,sharkl5pro-adi",
+		.data = &ums512_data,
+	},
 	{ },
 };
 MODULE_DEVICE_TABLE(of, sprd_adi_of_match);
