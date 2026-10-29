@@ -97,7 +97,10 @@ config VXTUX_FLIGHTREC
 config VXTUX_BLDB
 	bool "BLDB early debug ring (/dev/bldb0, Berry Lab Foundation)"
 	depends on PRINTK
-	depends on MISC_DEVICES
+	# TANPA depends on MISC_DEVICES: simbol itu sudah tidak ada lagi di tree
+	# 6.18 ini dan drivers/char/Makefile membangun misc.o sebagai obj-y,
+	# jadi misc_register() selalu tersedia.  depends ke simbol hantu membuat
+	# olddefconfig membuang CONFIG_VXTUX_BLDB=y dan guard CI gagal.
 	default n
 	help
 	  Berry Linux Debug Bridge: a 16 MiB static printk ring plus the
