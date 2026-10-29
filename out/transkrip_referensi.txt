@@ -1,0 +1,104 @@
+# Transkrip REFERENSI: urutan pesan layar menurut init.c
+# Bukan rekaman boot. Rekaman sungguhan ada di perangkat:
+#   /cache/vxtux-logs/00-transcript.log
+#   (dan salinannya di kanal mentah common_rs1_a)
+
+init.c:191   |   (%s: %s)
+init.c:216   |   (klogctl failed: %s)
+init.c:237   | ----- last 60 dmesg lines -----
+init.c:239   | ----- end of dmesg -----
+init.c:319   |   --- dmesg hints (storage/clock/defer) ---
+init.c:321   |   %s
+init.c:351   | VXTUX-STEP: storage ready after %ds: %d mmc partitions (of %d visible)
+init.c:357   | VXTUX-STEP: eMMC ABSENT after %ds (%d partitions, none mmc)
+init.c:364   | VXTUX-STEP: waiting for eMMC (%ds, %d partitions, none mmc yet)
+init.c:395   | VXTUX-STEP: created %d missing block nodes with mknod
+init.c:466   | VXTUX-STEP: mount pstore failed: %s
+init.c:471   | VXTUX-STEP: 2c/5 pstore records from the previous boot
+init.c:474   |   (cannot open /sys/fs/pstore: %s)
+init.c:491   |   --- pstore %s ---
+init.c:494   |     (cannot open: %s)
+init.c:521   |   (pstore empty -- the backend has never written)
+init.c:795   | VXTUX-LOG: %s holds the whole boot log now
+init.c:796   | VXTUX-LOG: 00-transcript 01-partitions 02-dmesg 03-deferred
+init.c:798   | VXTUX-LOG: 04-errors 05-no-driver 06-modules 07-bldb 08-steps 09-pstore 99-index
+init.c:851   | VXTUX-LOG: klogctl failed: %s
+init.c:905   | VXTUX-STEP: mount cache %s failed: %s
+init.c:909   | VXTUX-STEP: cache partition not found by size
+init.c:969   | VXTUX-STEP: raw log read %s failed: %s
+init.c:980   | VXTUX-STEP: raw log open %s failed: %s
+init.c:987   | VXTUX-STEP: raw log write %s failed: %s
+init.c:997   | VXTUX-STEP: raw log readback FAILED on %s: %s
+init.c:1004  | VXTUX-STEP: raw vendor log saved to %s (%zu bytes, readback OK)
+init.c:1008  | VXTUX-STEP: raw vendor log partition not found by name/content (skipped)
+init.c:1081  | VXTUX-STEP: cannot allocate early dmesg buffer
+init.c:1089  | VXTUX-STEP: early dmesg read failed: %s
+init.c:1110  | VXTUX-STEP: early log write failed: %s
+init.c:1115  | VXTUX-STEP: early log rename failed: %s
+init.c:1119  | VXTUX-STEP: mounted cache and saved early dmesg to %s (%d bytes, fsync OK)
+init.c:1130  | VXTUX-STEP: report buffer is empty
+init.c:1136  | VXTUX-STEP: write %s failed: %s
+init.c:1139  | VXTUX-STEP: report saved to %s (%zu bytes, fsync OK)
+init.c:1179  | VXTUX-WRITE-TEST: SKIP (cache not mounted, no filesystem channel to probe)
+init.c:1185  | VXTUX-WRITE-TEST: FAIL open %s: %s
+init.c:1190  | VXTUX-WRITE-TEST: FAIL write %s: %s
+init.c:1197  | VXTUX-WRITE-TEST: FAIL readback %s: %s
+init.c:1204  | VXTUX-WRITE-TEST: FAIL readback mismatch (wrote one thing, read another)
+init.c:1209  | VXTUX-WRITE-TEST: OK file write+readback on %s
+init.c:1305  | VXTUX-STEP: chroot failed: %s
+init.c:1332  | VXTUX-STEP: chroot OK, exec %s
+init.c:1334  | VXTUX-STEP: exec %s failed: %s
+init.c:1337  | VXTUX-STEP: every init candidate failed
+init.c:1394  | VXTUX-MOD: waiting for fb0/fbcon before late providers
+init.c:1397  | VXTUX-MOD: fb0 registered after %ds; late probes allowed
+init.c:1401  | VXTUX-MOD: fb0 not registered (%ds)
+init.c:1404  | VXTUX-MOD: fb0 timeout; continue boot with serial/diagnostic fallback
+init.c:1457  | VXTUX-DEFER[%s]: debugfs mount failed: %s
+init.c:1463  | VXTUX-DEFER[%s]: cannot open devices_deferred: %s
+init.c:1470  | VXTUX-DEFER[%s]: empty -- every device already has a driver
+init.c:1475  | VXTUX-DEFER[%s]: devices without driver (name | reason):
+init.c:1483  |   %s
+init.c:1488  |   ... (truncated at 40 lines)
+init.c:1496  | VXTUX-MOD: loading UMS512 clock modules after fbcon is visible
+init.c:1502  | VXTUX-MOD: %s MISSING: %s
+init.c:1509  | VXTUX-MOD: %s loaded (%lld bytes)
+init.c:1513  | VXTUX-MOD: %s already builtin in Image
+init.c:1517  | VXTUX-MOD: %s FAILED: %s
+init.c:1522  | VXTUX-MOD: providers registered after fbcon; deferred consumers may retry (loaded=%u builtin=%u failed=%u)
+init.c:1584  | VXTUX-BLDB: write %s = %s failed: %s
+init.c:1592  | VXTUX-BLDB: mkdir gadget failed: %s
+init.c:1616  | VXTUX-BLDB: acm symlink failed: %s
+init.c:1620  | VXTUX-BLDB: bind UDC %s failed: %s
+init.c:1633  | VXTUX-BLDB: Berry Linux Debug Bridge starting (stage 1: kernel ring)
+init.c:1636  | VXTUX-BLDB: /dev/bldb0 missing (kernel built without CONFIG_VXTUX_BLDB) -- skip
+init.c:1639  | VXTUX-BLDB: /dev/bldb0 ready (16 MiB ring, recording since core_initcall)
+init.c:1645  | VXTUX-BLDB: configfs mount failed: %s
+init.c:1650  | VXTUX-BLDB: phy-sprd-ums512.ko -> %s
+init.c:1653  | VXTUX-BLDB: phy-sprd-ums512.ko not present in ramdisk
+init.c:1657  | VXTUX-BLDB: sprd_musbhsdma.ko -> %s
+init.c:1669  | VXTUX-BLDB: no UDC yet -- the USB door (ttyGS0) will come
+init.c:1670  | VXTUX-BLDB: up by itself once PHY/regulator are ready;
+init.c:1671  | VXTUX-BLDB: daemon keeps running, waiting for /dev/ttyGS0
+init.c:1673  | VXTUX-BLDB: UDC found: %s
+init.c:1675  | VXTUX-BLDB: ACM gadget bound -- PC will enumerate the device
+init.c:1676  | VXTUX-BLDB: Berry VID:PID 1209:b1db serial 0123456789ABCDEF
+init.c:1686  | VXTUX-BLDB: exec /vxtux/bldbd failed: %s
+init.c:1691  | VXTUX-BLDB: bldbd daemon running (two-way door)
+init.c:1693  | VXTUX-BLDB: fork bldbd failed: %s
+init.c:1747  | VXTUX-STEP: 1/5 partition list
+init.c:1751  | VXTUX-STEP: %d partitions visible
+init.c:1754  | VXTUX-STEP: 1b/5 write-readback test on the cache partition
+init.c:1757  | VXTUX-STEP: 2/5 copying dmesg into the report
+init.c:1764  | VXTUX-STEP: 2b/5 writing the first report to the cache partition
+init.c:1769  | VXTUX-STEP: 3/5 looking for an ext4 rootfs
+init.c:1772  | VXTUX-STEP: root=%s (mounted)
+init.c:1775  | VXTUX-STEP: no ext4 rootfs with /sbin/init found
+init.c:1780  | VXTUX-STEP: 4/5 writing the report to the cache partition
+init.c:1788  | VXTUX-STEP: 5/5 switching to the real root
+init.c:1794  | ===== BOOT STOPPED IN THE INITRAMFS =====
+init.c:1794  | Root was not found, so dinit was never started.
+init.c:1794  | Dump the trail with spd_dump:
+init.c:1794  |   read_part cache        -> /cache/vxtux-logs/*  (10 files)
+init.c:1794  |                             + boot_log.txt + vxtux_report.txt
+init.c:1794  |   read_part common_rs1_a -> raw head "### VXTUXRS1" at offset 0
+init.c:1794  | =========================================
