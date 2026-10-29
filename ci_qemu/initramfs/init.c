@@ -1092,6 +1092,176 @@ static void load_clock_modules(void)
 	dump_deferred("post-modules");
 }
 
+/*
+ * BLDB (Berry Linux Debug Bridge) -- PINTU KEDUA debug selain adbd.
+ * ------------------------------------------------------------------
+ * Inti kernel (CONFIG_VXTUX_BLDB) sudah merekam semua printk ke ring
+ * 16 MiB sejak core_initcall.  Di sini kita:
+ *   1. memuat PHY/DMA USB (modul) bila file-nya ada di /vxtux/ko/,
+ *   2. membangun gadget ACM lewat configfs dengan IDENTITAS PALSU Berry
+ *      (VID 0x1209 / PID 0xb1db) supaya PC tidak mencoba protokol adbd
+ *      terhadap sesuatu yang belum berbicara adbd -- ini fase "initramfs",
+ *      identitas Android asli dipasang oleh rootfs Artix nanti (fase 2,
+ *      pintu yang sama dengan nomor seri sama persis),
+ *   3. menjalankan daemon bldbd yang menyambungkan ring <-> /dev/ttyGS0.
+ *
+ * Semua langkah LOG ke layar dengan awalan VXTUX-BLDB: -- kalau ada yang
+ * gagal, dump cache/biner berikutnya menunjukkan langkah keberapa yang
+ * berhenti.  Kegagalan TIDAK mematikan boot: ring tetap merekam.
+ */
+static int bldb_wr(const char *path, const char *val)
+{
+	int fd = open(path, O_WRONLY | O_CLOEXEC);
+	ssize_t w;
+
+	if (fd < 0)
+		return -1;
+	w = write(fd, val, strlen(val));
+	close(fd);
+	return w < 0 ? -1 : 0;
+}
+
+static int bldb_find_udc(char *out, size_t out_len)
+{
+	DIR *d = opendir("/sys/class/udc");
+	struct dirent *e;
+	int found = 0;
+
+	if (!d)
+		return 0;
+	while ((e = readdir(d))) {
+		if (e->d_name[0] == '.')
+			continue;
+		snprintf(out, out_len, "%s", e->d_name);
+		found = 1;
+		break;
+	}
+	closedir(d);
+	return found;
+}
+
+static int bldb_bind_gadget(const char *udc)
+{
+	static const char *g = "/sys/kernel/config/usb_gadget/bldb";
+	char p[256];
+
+#define BLDB_GSET(path, val) \
+	do { \
+		snprintf(p, sizeof p, "%s/%s", g, path); \
+		if (bldb_wr(p, val) != 0) { \
+			both_fmt("VXTUX-BLDB: tulis %s = %s gagal: %s\n", \
+				 path, val, strerror(errno)); \
+			return -1; \
+		} \
+	} while (0)
+
+	mkdir_p(g);
+	if (access(g, F_OK) != 0) {
+		both_fmt("VXTUX-BLDB: mkdir gadget gagal: %s\n", strerror(errno));
+		return -1;
+	}
+	BLDB_GSET("idVendor", "0x1209");
+	BLDB_GSET("idProduct", "0xb1db");
+	BLDB_GSET("bcdUSB", "0x0200");
+	BLDB_GSET("bcdDevice", "0x0100");
+	mkdir_p("/sys/kernel/config/usb_gadget/bldb/strings/0x409");
+	BLDB_GSET("strings/0x409/serialnumber", "0123456789ABCDEF");
+	BLDB_GSET("strings/0x409/manufacturer", "Berry Lab Foundation");
+	BLDB_GSET("strings/0x409/product", "BLDB");
+	mkdir_p("/sys/kernel/config/usb_gadget/bldb/configs/c.1");
+	mkdir_p("/sys/kernel/config/usb_gadget/bldb/configs/c.1/strings/0x409");
+	BLDB_GSET("configs/c.1/strings/0x409/configuration", "bldb");
+	BLDB_GSET("configs/c.1/MaxPower", "500");
+	/* Pintu serial (ACM) -> muncul sebagai /dev/ttyGS0 di tablet dan
+	 * COM/ttyACM di PC.  Pintu adbd (FunctionFS) ditambahkan rootfs
+	 * Artix pada fase 2 dengan VID/PID Android di konfigurasi yang sama. */
+	mkdir_p("/sys/kernel/config/usb_gadget/bldb/functions/acm.0");
+	if (access("/sys/kernel/config/usb_gadget/bldb/configs/c.1/acm.0",
+		   F_OK) != 0 &&
+	    symlink("/sys/kernel/config/usb_gadget/bldb/functions/acm.0",
+		    "/sys/kernel/config/usb_gadget/bldb/configs/c.1/acm.0") != 0 &&
+	    errno != EEXIST) {
+		both_fmt("VXTUX-BLDB: symlink acm gagal: %s\n", strerror(errno));
+		return -1;
+	}
+	if (bldb_wr("/sys/kernel/config/usb_gadget/bldb/UDC", udc) != 0) {
+		both_fmt("VXTUX-BLDB: bind UDC %s gagal: %s\n", udc,
+			 strerror(errno));
+		return -1;
+	}
+#undef BLDB_GSET
+	return 0;
+}
+
+static void start_bldb(void)
+{
+	char udc[256] = "";
+	int i;
+
+	both("VXTUX-BLDB: Berry Linux Debug Bridge starting (pintu 1: ring kernel)\n");
+
+	if (access("/dev/bldb0", F_OK) != 0) {
+		both("VXTUX-BLDB: /dev/bldb0 tidak ada (kernel tanpa CONFIG_VXTUX_BLDB) -- lewati\n");
+		return;
+	}
+	both("VXTUX-BLDB: /dev/bldb0 siap (ring 16 MiB, merekam sejak core_initcall)\n");
+
+	/* configfs untuk gadget */
+	mkdir_p("/sys/kernel/config");
+	if (mount("configfs", "/sys/kernel/config", "configfs", 0, "") != 0 &&
+	    errno != EBUSY)
+		both_fmt("VXTUX-BLDB: mount configfs gagal: %s\n", strerror(errno));
+
+	/* Modul PHY + DMA musb (glue musb_sprd_vxtux sudah =y / built-in). */
+	if (access("/vxtux/ko/phy-sprd-ums512.ko", R_OK) == 0) {
+		i = try_insmod("/vxtux/ko/phy-sprd-ums512.ko");
+		both_fmt("VXTUX-BLDB: phy-sprd-ums512.ko -> %s\n",
+			 i == 0 ? "loaded" : (i == -EEXIST ? "builtin" : strerror(-i)));
+	} else {
+		both("VXTUX-BLDB: phy-sprd-ums512.ko tidak ada di ramdisk\n");
+	}
+	if (access("/vxtux/ko/sprd_musbhsdma.ko", R_OK) == 0) {
+		i = try_insmod("/vxtux/ko/sprd_musbhsdma.ko");
+		both_fmt("VXTUX-BLDB: sprd_musbhsdma.ko -> %s\n",
+			 i == 0 ? "loaded" : (i == -EEXIST ? "builtin" : strerror(-i)));
+	}
+
+	/* Tunggu UDC (musb).  PHY/regulator mungkin masih deferred, jadi
+	 * beri waktu beberapa detik tapi JANGAN menahan boot lama. */
+	for (i = 0; i < 6 && !udc[0]; i++) {
+		if (bldb_find_udc(udc, sizeof udc))
+			break;
+		sleep(1);
+	}
+	if (!udc[0]) {
+		both("VXTUX-BLDB: UDC belum muncul -- pintu USB (ttyGS0) akan\n");
+		both("VXTUX-BLDB: menyala sendiri setelah PHY/regulator siap;\n");
+		both("VXTUX-BLDB: daemon tetap jalan menunggu /dev/ttyGS0\n");
+	} else {
+		both_fmt("VXTUX-BLDB: UDC ditemukan: %s\n", udc);
+		if (bldb_bind_gadget(udc) == 0) {
+			both("VXTUX-BLDB: gadget ACM terikat -- PC melihat perangkat\n");
+			both("VXTUX-BLDB: Berry VID:PID 1209:b1db serial 0123456789ABCDEF\n");
+		}
+	}
+
+	/* Daemon: menyambungkan ring <-> ttyGS0, menunggu tty bila belum ada. */
+	{
+		pid_t pid = fork();
+
+		if (pid == 0) {
+			execl("/vxtux/bldbd", "bldbd", (char *)NULL);
+			both_fmt("VXTUX-BLDB: exec /vxtux/bldbd gagal: %s\n",
+				 strerror(errno));
+			_exit(1);
+		}
+		if (pid > 0)
+			both("VXTUX-BLDB: daemon bldbd berjalan (pintu dua arah)\n");
+		else
+			both_fmt("VXTUX-BLDB: fork bldbd gagal: %s\n", strerror(errno));
+	}
+}
+
 int main(void)
 {
 	struct part *parts = g_parts;
@@ -1120,6 +1290,8 @@ int main(void)
 
 	/* Register late clock providers before waiting for the eMMC host. */
 	load_clock_modules();
+	/* BLDB: rangkaian pintu debug kedua (ring kernel + gadget ACM). */
+	start_bldb();
 	np = wait_for_storage(parts, 128, 180);
 	/* Daftar ini yang menjawab "gpio/pmic/i2c/i2s mana yang belum dapat":
 	 * setelah eMMC ditunggu, device yang masih tertinggal tetap tercetak. */

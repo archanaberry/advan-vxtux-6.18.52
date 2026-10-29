@@ -197,6 +197,18 @@ for n in $LATE_KO_NAMES; do
   if grep -q -a -F '6.18.52-VXTux-UMS512' "$f"; then echo ', vermagic OK'; else echo ", FAILED=vermagic"; exit 1; fi
 done
 [ -n "$missing" ] && { echo "FAILED=modul tidak ada di paket kos:$missing"; exit 1; }
+# BLDB (pintu debug kedua): modul PHY + DMA musb untuk gadget ACM.
+# Bila salah satu tidak ada di artefak, pintu USB tidak akan bisa bind --
+# itu BUKAN kegagalan build (ring kernel tetap jalan), jadi cukup dicatat.
+for n in phy-sprd-ums512 sprd_musbhsdma; do
+  f=$(find "$ART/kox" -name "$n.ko" | head -1)
+  if [ -z "$f" ]; then
+    echo "  info    : $n.ko tidak ada di artefak (pintu USB bldbd belum bisa bind)"
+    continue
+  fi
+  cp "$f" out/artix_ramdisk/$n.ko
+  printf '  %-26s %s byte (BLDB USB)\n' "$n.ko" "$(stat -c%s "$f")"
+done
 CLKKO=$(find "$ART/kox" -name 'clk-sprd.ko' | head -1)
 UMSKO=$(find "$ART/kox" -name 'ums512-clk.ko' | head -1)
 echo "CLKKO=$CLKKO"
@@ -243,6 +255,17 @@ else
 fi
 [ -n "$TCHAIN" ] || { echo "FAILED=compile-init (cross gcc tidak ada)"; exit 1; }
 echo "INIT_LOCAL=$TCHAIN $(stat -c%s out/artix_ramdisk/vxtux-init-new) byte"
+
+# --- 0e. kompilasi daemon BLDB dari SUMBER saat ini -----------------------
+# bldbd menyambungkan ring kernel (/dev/bldb0) ke /dev/ttyGS0; binernya
+# disuntikkan ke cpio sebagai /vxtux/bldbd (mode 0755) pada langkah 1.
+if "$TCHAIN" -static -O2 -Wall -D_GNU_SOURCE -march=armv8-a -mabi=lp64 \
+     -o out/artix_ramdisk/bldbd-new ci_qemu/bldb/bldbd.c; then
+  echo "BLDBD=$TCHAIN $(stat -c%s out/artix_ramdisk/bldbd-new) byte"
+else
+  echo "FAILED=compile-bldbd"
+  exit 1
+fi
 
 # --- 1. initramfs: validasi init + suntik /vxtux/ko/*.ko, lalu gzip ulang -
 /c/Python*/python.exe - <<'PYEOF'
@@ -355,6 +378,12 @@ if not rawlog_ok:
     sys.exit('FAILED: initramfs embedded tidak memuat kanal log mentah vendor (VXTUXRS1 / common_rs1_a)')
 if not dinit_ok:
     sys.exit('FAILED: kandidat init masih memuat /bin/dinit-run yang tidak ada di rootfs Artix')
+# BLDB: init WAJIB sudah membawa rangkaian pintu debug kedua.
+bldb_ok = (b'VXTUX-BLDB:' in NEWINIT and b'/vxtux/bldbd' in NEWINIT and
+           b'usb_gadget/bldb' in NEWINIT)
+if not bldb_ok:
+    sys.exit('FAILED: init tanpa rangkaian BLDB (VXTUX-BLDB / /vxtux/bldbd / gadget)')
+print('bldbd: rangkaian BLDB di init: ADA')
 if init_at < 0:
     sys.exit('FAILED: entri vxtux/init tidak ditemukan untuk disuntik')
 if trailer_at < 0:
@@ -417,6 +446,17 @@ if 'init' not in names:
     ino += 1
     names.insert(names.index('vxtux/init'), 'init')
     print('suntik cpio: %-28s -> /vxtux/init' % 'init')
+
+# --- suntikkan daemon BLDB: /vxtux/bldbd (executable, mode 0755) --------
+bdbd = open('out/artix_ramdisk/bldbd-new', 'rb').read()
+if not (bdbd[:4] == b'\x7fELF' and struct.unpack('<H', bdbd[18:20])[0] == 183):
+    sys.exit('FAILED: bldbd-new bukan ELF aarch64')
+if b'BLDB - Berry Linux Debug Bridge' not in bdbd:
+    sys.exit('FAILED: biner bldbd tidak memuat penanda BLDB')
+entries += newc_entry('vxtux/bldbd', bdbd, ino, mode=0o100755)
+ino += 1
+print('suntik cpio: %-28s %d byte (daemon BLDB)' % ('vxtux/bldbd', len(bdbd)))
+
 newcpio = out[:trailer_at] + entries + out[trailer_at:]
 
 gz = gzip.compress(newcpio, 9, mtime=0)
@@ -435,7 +475,7 @@ NEED_KO = [b'clk-sprd', b'ums512-clk', b'sc2730-regulator',
            b'gpio-pmic-eic-sprd', b'sc27xx_typec', b'spi-sprd',
            b'snd-soc-sprd-vbc-v4']
 for need in tuple(b'vxtux/ko/' + n + b'.ko\0' for n in NEED_KO) + \
-            (b'vxtux/init\0', b'init\0'):
+            (b'vxtux/init\0', b'init\0', b'vxtux/bldbd\0'):
     ok = need in d
     print('  %-28s %s' % (need[:-1].decode(), 'ADA' if ok else 'HILANG'))
     if not ok:

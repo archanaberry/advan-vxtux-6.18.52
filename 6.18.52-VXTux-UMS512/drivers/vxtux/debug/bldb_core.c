@@ -19,7 +19,7 @@
  *  MITIGASI RING-0 (keputusan sadar, bukan kebetulan):
  *  - Buffer STATIS di .bss: tanpa kmalloc/vmalloc, tanpa page fault di
  *    jalur console (console write sering dipanggil dengan IRQ off).
- *  - Satu spinlock irqsave; TANPA pr_*/printk di dalam write callback
+ *  - Satu spinlock irqsave; TANPA pr_info / printk di dalam write callback
  *    (printk dari printk = rekursi mati).
  *  - peek32/poke32 hanya boleh menyentuh RAM valid (pfn_valid) dan DILARANG
  *    menembak teks kernel (diukur dari alamat FISIK _stext.._end, jadi tetap
@@ -308,7 +308,8 @@ static const struct file_operations bldb_fops = {
 	.owner	= THIS_MODULE,
 	.read	= bldb_read,
 	.write	= bldb_write,
-	.llseek	= no_llseek,
+	/* 6.18: no_llseek dihapus; tanpa field ini llseek default ke
+	 * generic_file_llseek, cukup untuk /dev/bldb0. */
 };
 
 static struct miscdevice bldb_misc = {
@@ -322,10 +323,9 @@ static int __init bldb_init(void)
 {
 	int ret;
 
-	ret = register_console(&bldb_console);
-	if (ret)
-		pr_warn("bldb: register_console gagal (%d), ring tetap jalan\n",
-			ret);
+	/* 6.18: register_console() mengembalikan void (kegagalan dicetak
+	 * sendiri oleh konsol framework), jadi cukup dipanggil. */
+	register_console(&bldb_console);
 	ret = misc_register(&bldb_misc);
 	if (ret) {
 		pr_err("bldb: misc_register gagal (%d)\n", ret);
