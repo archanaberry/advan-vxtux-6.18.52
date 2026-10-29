@@ -1149,7 +1149,7 @@ static int bldb_bind_gadget(const char *udc)
 	do { \
 		snprintf(p, sizeof p, "%s/%s", g, path); \
 		if (bldb_wr(p, val) != 0) { \
-			both_fmt("VXTUX-BLDB: tulis %s = %s gagal: %s\n", \
+			both_fmt("VXTUX-BLDB: write %s = %s failed: %s\n", \
 				 path, val, strerror(errno)); \
 			return -1; \
 		} \
@@ -1157,7 +1157,7 @@ static int bldb_bind_gadget(const char *udc)
 
 	mkdir_p(g);
 	if (access(g, F_OK) != 0) {
-		both_fmt("VXTUX-BLDB: mkdir gadget gagal: %s\n", strerror(errno));
+		both_fmt("VXTUX-BLDB: mkdir gadget failed: %s\n", strerror(errno));
 		return -1;
 	}
 	BLDB_GSET("idVendor", "0x1209");
@@ -1181,11 +1181,11 @@ static int bldb_bind_gadget(const char *udc)
 	    symlink("/sys/kernel/config/usb_gadget/bldb/functions/acm.0",
 		    "/sys/kernel/config/usb_gadget/bldb/configs/c.1/acm.0") != 0 &&
 	    errno != EEXIST) {
-		both_fmt("VXTUX-BLDB: symlink acm gagal: %s\n", strerror(errno));
+		both_fmt("VXTUX-BLDB: acm symlink failed: %s\n", strerror(errno));
 		return -1;
 	}
 	if (bldb_wr("/sys/kernel/config/usb_gadget/bldb/UDC", udc) != 0) {
-		both_fmt("VXTUX-BLDB: bind UDC %s gagal: %s\n", udc,
+		both_fmt("VXTUX-BLDB: bind UDC %s failed: %s\n", udc,
 			 strerror(errno));
 		return -1;
 	}
@@ -1198,19 +1198,19 @@ static void start_bldb(void)
 	char udc[256] = "";
 	int i;
 
-	both("VXTUX-BLDB: Berry Linux Debug Bridge starting (pintu 1: ring kernel)\n");
+	both("VXTUX-BLDB: Berry Linux Debug Bridge starting (stage 1: kernel ring)\n");
 
 	if (access("/dev/bldb0", F_OK) != 0) {
-		both("VXTUX-BLDB: /dev/bldb0 tidak ada (kernel tanpa CONFIG_VXTUX_BLDB) -- lewati\n");
+		both("VXTUX-BLDB: /dev/bldb0 missing (kernel built without CONFIG_VXTUX_BLDB) -- skip\n");
 		return;
 	}
-	both("VXTUX-BLDB: /dev/bldb0 siap (ring 16 MiB, merekam sejak core_initcall)\n");
+	both("VXTUX-BLDB: /dev/bldb0 ready (16 MiB ring, recording since core_initcall)\n");
 
 	/* configfs untuk gadget */
 	mkdir_p("/sys/kernel/config");
 	if (mount("configfs", "/sys/kernel/config", "configfs", 0, "") != 0 &&
 	    errno != EBUSY)
-		both_fmt("VXTUX-BLDB: mount configfs gagal: %s\n", strerror(errno));
+		both_fmt("VXTUX-BLDB: configfs mount failed: %s\n", strerror(errno));
 
 	/* Modul PHY + DMA musb (glue musb_sprd_vxtux sudah =y / built-in). */
 	if (access("/vxtux/ko/phy-sprd-ums512.ko", R_OK) == 0) {
@@ -1218,7 +1218,7 @@ static void start_bldb(void)
 		both_fmt("VXTUX-BLDB: phy-sprd-ums512.ko -> %s\n",
 			 i == 0 ? "loaded" : (i == -EEXIST ? "builtin" : strerror(-i)));
 	} else {
-		both("VXTUX-BLDB: phy-sprd-ums512.ko tidak ada di ramdisk\n");
+		both("VXTUX-BLDB: phy-sprd-ums512.ko not present in ramdisk\n");
 	}
 	if (access("/vxtux/ko/sprd_musbhsdma.ko", R_OK) == 0) {
 		i = try_insmod("/vxtux/ko/sprd_musbhsdma.ko");
@@ -1234,13 +1234,13 @@ static void start_bldb(void)
 		sleep(1);
 	}
 	if (!udc[0]) {
-		both("VXTUX-BLDB: UDC belum muncul -- pintu USB (ttyGS0) akan\n");
-		both("VXTUX-BLDB: menyala sendiri setelah PHY/regulator siap;\n");
-		both("VXTUX-BLDB: daemon tetap jalan menunggu /dev/ttyGS0\n");
+		both("VXTUX-BLDB: no UDC yet -- the USB door (ttyGS0) will come\n");
+		both("VXTUX-BLDB: up by itself once PHY/regulator are ready;\n");
+		both("VXTUX-BLDB: daemon keeps running, waiting for /dev/ttyGS0\n");
 	} else {
-		both_fmt("VXTUX-BLDB: UDC ditemukan: %s\n", udc);
+		both_fmt("VXTUX-BLDB: UDC found: %s\n", udc);
 		if (bldb_bind_gadget(udc) == 0) {
-			both("VXTUX-BLDB: gadget ACM terikat -- PC melihat perangkat\n");
+			both("VXTUX-BLDB: ACM gadget bound -- PC will enumerate the device\n");
 			both("VXTUX-BLDB: Berry VID:PID 1209:b1db serial 0123456789ABCDEF\n");
 		}
 	}
@@ -1251,14 +1251,14 @@ static void start_bldb(void)
 
 		if (pid == 0) {
 			execl("/vxtux/bldbd", "bldbd", (char *)NULL);
-			both_fmt("VXTUX-BLDB: exec /vxtux/bldbd gagal: %s\n",
+			both_fmt("VXTUX-BLDB: exec /vxtux/bldbd failed: %s\n",
 				 strerror(errno));
 			_exit(1);
 		}
 		if (pid > 0)
-			both("VXTUX-BLDB: daemon bldbd berjalan (pintu dua arah)\n");
+			both("VXTUX-BLDB: bldbd daemon running (two-way door)\n");
 		else
-			both_fmt("VXTUX-BLDB: fork bldbd gagal: %s\n", strerror(errno));
+			both_fmt("VXTUX-BLDB: fork bldbd failed: %s\n", strerror(errno));
 	}
 }
 
