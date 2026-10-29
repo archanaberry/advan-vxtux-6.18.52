@@ -191,6 +191,26 @@
 / {
 	model = "Advan Tab VX Lite T1030 (VXTux)";
 	compatible = "advan,t1030", "sprd,ums512-1h10", "sprd,ums512";
+	/*
+	 * IDENTITAS SoC untuk LK (DIPERBAIKI 2026-10-29).
+	 *
+	 * LK Unisoc memilih DT dari multi-DTB dengan mencocokkan properti root,
+	 * dan log di uboot_log tablet ini menyebut kuncinya secara eksplisit:
+	 *
+	 *   Find kernel dtb prop name sprd,sc-id=...,
+	 *   g_fdt_blob sprd,sc-id=ums512 1h10 1000
+	 *   Matches the corresponding dtb in multiple DTB
+	 *
+	 * DT stok (vendor_boot_a) membawa keempat properti di bawah.  DTS di
+	 * repo ini tidak membawanya sama sekali, sehingga DT hasil build kita
+	 * TIDAK akan pernah dicocokkan oleh LK -- sekalipun berhasil ditulis ke
+	 * vendor_boot.  Nilai diambil apa adanya dari DT stok yang sedang dipakai
+	 * perangkat (out/stock_dt/dtb_stock_vendorboot.dts, root node).
+	 */
+	cpuinfo_hardware = "Unisoc ums512";
+	soc-module = "UMS512";
+	soc-manufacturer = "Spreadtrum";
+	sprd,sc-id = "ums512 1000 1000";
 
 	aliases {
 		serial0 = &uart0;

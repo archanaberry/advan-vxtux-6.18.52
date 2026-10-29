@@ -87,7 +87,14 @@
  */
 #define RS1_MAGIC     "### VXTUXRS1"
 #define RS1_SIZE_KIB  8192UL       /* 8 MiB, sesuai common_rs1_a */
-#define RS1_MAX       (128 * 1024) /* KMSG_BUF_SIZE stok */
+/*
+ * DIPERBAIKI 2026-10-29: dulu dibatasi 128 KiB (KMSG_BUF_SIZE stok), jadi
+ * kanal ini hanya cukup untuk dmesg pendek.  Partisinya 8 MiB dan seluruh
+ * isinya memang log; batas baru = ukuran partisi, supaya ekspor bundle
+ * (transkrip + deferred + device tanpa driver + dmesg) muat dalam satu
+ * berkas yang bisa dibaca tanpa parser ext4.
+ */
+#define RS1_MAX       (RS1_SIZE_KIB * 1024)
 
 static char *report;             /* kumpulan teks yang ditulis ke cache */
 static size_t report_len;
@@ -1004,6 +1011,57 @@ static int write_raw_vendor_log(const char *data, size_t len,
 }
 
 /*
+ * Ekspor bundle ke kanal mentah common_rs1_a sebagai SATU berkas teks.
+ *
+ * Alasan: berkas di /cache/vxtux-logs berada pada ext4, dan membacanya dari PC
+ * butuh parser ext4.  Kanal mentah tidak butuh apa pun -- `read_part
+ * common_rs1_a` lalu `strings`, dan seluruh boot sudah terbaca.  Berkas yang
+ * paling menentukan ditaruh paling depan supaya tetap kebaca walau 8 MiB
+ * habis (dmesg 2 MiB ada di tengah, bukan di kepala).
+ */
+static void bundle_export_raw(const struct part *parts, int np)
+{
+	static const char *const order[] = {
+		"99-index.txt", "08-steps.txt", "07-bldb.txt",
+		"03-deferred.txt", "04-errors.txt", "05-no-driver.txt",
+		"01-partitions.txt", "00-transcript.log", "02-dmesg.txt",
+	};
+	char path[320];
+	size_t len = 0, cap = RS1_MAX - 4096;
+	unsigned char *buf;
+	size_t i;
+
+	if (transcript_fd < 0)
+		return;
+	buf = malloc(cap + 128);
+	if (!buf)
+		return;
+	len = (size_t)snprintf((char *)buf, 96, "%s\n", RS1_MAGIC);
+	for (i = 0; i < sizeof order / sizeof order[0]; i++) {
+		char head[128];
+		int fd;
+		ssize_t n;
+
+		snprintf(path, sizeof path, "%s/%s", LOGDIR, order[i]);
+		fd = open(path, O_RDONLY);
+		if (fd < 0)
+			continue;
+		snprintf(head, sizeof head, "===== %s =====\n", order[i]);
+		if (len + strlen(head) < cap) {
+			memcpy(buf + len, head, strlen(head));
+			len += strlen(head);
+		}
+		while (len < cap && (n = read(fd, buf + len, cap - len)) > 0)
+			len += (size_t)n;
+		close(fd);
+		if (len >= cap)
+			break;
+	}
+	write_raw_vendor_log((const char *)buf, len, parts, np);
+	free(buf);
+}
+
+/*
  * Save the requested early dmesg snapshot before any attempt to mount super.
  */
 static void save_early_dmesg(const struct part *parts, int np)
@@ -1722,6 +1780,9 @@ int main(void)
 	both("VXTUX-STEP: 4/5 writing the report to the cache partition\n");
 	write_report_to_cache();
 	bundle_write("stage3-root-scan", parts, np);
+	/* Ekspor ke kanal mentah SEBELUM chroot: setelah switch_root berhasil,
+	 * init ini tidak pernah kembali dan tidak bisa menulis lagi. */
+	bundle_export_raw(parts, np);
 
 	if (rootdev[0]) {
 		both("VXTUX-STEP: 5/5 switching to the real root\n");
@@ -1729,6 +1790,7 @@ int main(void)
 	}
 
 	bundle_write("stage4-stopped", parts, np);
+	bundle_export_raw(parts, np);
 	both("\n===== BOOT STOPPED IN THE INITRAMFS =====\n"
 	     "Root was not found, so dinit was never started.\n"
 	     "Dump the trail with spd_dump:\n"
