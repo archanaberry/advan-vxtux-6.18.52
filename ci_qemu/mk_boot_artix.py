@@ -28,11 +28,23 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bootimg_tool as bt
 
 # Harus SINKRON dengan CONFIG_CMDLINE di ../enhanced_config.cfg.
+#
+# 2026-10-29: `panic_on_warn`, `softlockup_panic=1` dan `hung_task_panic=1`
+# DIBUANG dari build debug ini.  Ketiganya mengubah peringatan yang tidak
+# berbahaya menjadi panic: satu WARN di dalam probe driver -> panic ->
+# CONFIG_PANIC_ON_OOPS -> warm reboot setelah panic=15 -> layar mengulang
+# dari awal.  Di video boot itu tampak sebagai "bootloop yang memuntahkan
+# tabel partisi berulang-ulang", padahal kernel hanya dimatikan oleh WARN
+# pertamanya sendiri sebelum sempat menulis laporan apa pun.
+#
+# `panic=15` DIPERTAHANKAN dengan sengaja: warm reboot membuat ramoops/pstore
+# menyimpan record boot yang panic, lalu init pada boot berikutnya membaca
+# record itu dan menuliskannya ke /cache/vxtux-logs/09-pstore.txt.
 CMDLINE = (
     "earlycon console=tty0 console=ttyS1,115200n8 loglevel=8 ignore_loglevel "
     "rdinit=/vxtux/init "
     "loop.max_part=7 printk.devkmsg=on panic=15 "
-    "initcall_debug=1 panic_on_warn softlockup_panic=1 hung_task_panic=1 "
+    "initcall_debug=1 "
     "vxtuxfb=0x9d000000,0x9e000000 "
     "androidboot.console=ttyS1 "
     "androidboot.hardware=ums512_1h10 androidboot.slot_suffix=_a "

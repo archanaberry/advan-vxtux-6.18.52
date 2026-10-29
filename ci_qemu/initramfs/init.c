@@ -40,8 +40,19 @@
 #include <unistd.h>
 
 #define CACHE_BLOCKS_1K 102400   /* partisi cache = 100 MiB -> 102400 KiB */
-#define LOG_MAX        (1024 * 1024)
-#define REPORT_MAX     (2 * 1024 * 1024)
+/*
+ * 2 MiB, sama dengan CONFIG_LOG_BUF_SHIFT=21 di enhanced_config.cfg.
+ * Dengan initcall_debug=1, ring bawaan 128 KiB penuh dalam hitungan detik
+ * sejak early boot -- READ_ALL lalu memotong justru bagian paling awal,
+ * yaitu bagian yang memuat penyebab deferred probe.  Angka ini harus tetap
+ * sinkron dengan config kernel, kalau tidak klogctl memotong di tengah.
+ */
+#define LOG_MAX        (2 * 1024 * 1024)
+#define REPORT_MAX     (4 * 1024 * 1024)
+/* Satu dump partisi cache = satu direktori log lengkap (lihat bundle_*()). */
+#define LOGDIR            "/cache/vxtux-logs"
+#define LOG_TRANSCRIPT    LOGDIR "/00-transcript.log"
+
 /* Cache is mounted as ext4; persist diagnostics as ordinary files. */
 #define CACHE_MOUNT       "/cache"
 #define EARLY_LOG_PATH    "/cache/boot_log.txt"
@@ -82,13 +93,38 @@ static char *report;             /* kumpulan teks yang ditulis ke cache */
 static size_t report_len;
 static int console_fd = -1;
 static int cache_mounted;        /* ext4 cache berhasil dipasang */
+static int transcript_fd = -1;   /* 00-transcript.log (cermin layar) */
+static int pstore_fd = -1;       /* 09-pstore.txt (record boot sebelumnya) */
+static unsigned bundle_stage;    /* berapa kali bundle_write() dipanggil */
 
 /* ---------- keluaran ---------- */
 
-static void con(const char *s)
+/*
+ * Semua yang tampil di layar juga ditulis ke 00-transcript.log.
+ *
+ * Ini menjawab masalah praktis: satu-satunya bukti boot selama ini adalah
+ * video ponsel yang diputar ulang dan di-OCR, sehingga teksnya berubah
+ * menjadi tebakan.  Dengan cermin ini, dump cache memberi transkrip persis
+ * seperti yang berjalan di panel, tanpa satu byte pun hilang karena blur.
+ */
+static void con_raw(const char *s, size_t n)
 {
 	if (console_fd >= 0)
-		write(console_fd, s, strlen(s));
+		write(console_fd, s, n);
+	if (transcript_fd >= 0)
+		write(transcript_fd, s, n);
+}
+
+static void con(const char *s)
+{
+	con_raw(s, strlen(s));
+}
+
+/* Header 09-pstore.txt untuk satu record dari boot sebelumnya. */
+static void pstore_note(const char *name)
+{
+	if (pstore_fd >= 0)
+		dprintf(pstore_fd, "\n===== %s =====\n", name);
 }
 
 static void con_fmt(const char *fmt, ...)
@@ -154,7 +190,7 @@ static void dump_file(const char *path, int to_console)
 			report_len += n;
 		}
 		if (to_console)
-			write(console_fd, buf, n);
+			con_raw(buf, n);
 	}
 	close(fd);
 }
@@ -451,19 +487,25 @@ static void dump_pstore(void)
 			both_fmt("    (cannot open: %s)\n", strerror(errno));
 			continue;
 		}
+		pstore_note(e->d_name);
 		n++;		/* Keep the full report; limit panel output to 8 KiB. */
 		while ((r = read(fd, buf, sizeof buf)) > 0) {
 			if (report_len + (size_t)r < REPORT_MAX) {
 				memcpy(report + report_len, buf, r);
 				report_len += (size_t)r;
 			}
+			if (pstore_fd >= 0)
+				write(pstore_fd, buf, (size_t)r);
 			if (budget > 0) {
 				int w = r > budget ? budget : (int)r;
-				write(console_fd, buf, w);
+
+				con_raw(buf, (size_t)w);
 				budget -= w;
 			}
 		}
 		close(fd);
+		if (pstore_fd >= 0)
+			fsync(pstore_fd);
 		if (report && report_len && report[report_len - 1] != '\n')
 			rep("\n");
 	}
@@ -504,6 +546,333 @@ static int write_cache_file(const char *path, const char *data, size_t len)
 	}
 	close(fd);
 	return 0;
+}
+
+/* =====================================================================
+ * LOG BUNDLE (2026-10-29) -- satu dump cache = satu set berkas.
+ *
+ * Kenapa: sampai sekarang bukti boot hanya berupa video ponsel yang
+ * di-OCR; hasilnya tebakan (lihat transkrip "/uxtux/init: can't get the
+ * mobile block" -- string itu tidak pernah ada di sumber ini).  Di sini
+ * setiap kategori ditulis sebagai berkas terpisah di /cache/vxtux-logs/,
+ * sehingga `spd_dump read_part cache` saja sudah cukup untuk membaca
+ * SELURUH boot, tanpa layar, tanpa kamera, tanpa UART:
+ *
+ *   00-transcript.log   cermin persis apa yang tampil di layar (live)
+ *   01-partitions.txt   /proc/partitions + PARTNAME tiap partisi
+ *   02-dmesg.txt        ring kernel penuh (2 MiB) pada tahap itu
+ *   03-deferred.txt     baris deferred probe / -517 / probe pending
+ *   04-errors.txt       baris failed / -110 / timeout / BUG / WARN
+ *   05-no-driver.txt    device di sysfs yang TIDAK punya driver terikat
+ *   06-modules.txt      /proc/modules
+ *   07-bldb.txt         semua baris BLDB (pintu USB kedua)
+ *   08-steps.txt        tonggak VXTUX-STEP/MOD/DEFER/WRITE
+ *   09-pstore.txt       record dari boot sebelumnya (ramoops)
+ *   99-index.txt        manifest + ukuran tiap berkas
+ * ===================================================================== */
+static void bundle_copy(const char *name, const char *src, const char *title)
+{
+	char path[256], buf[8192];
+	ssize_t n;
+	int fd, out;
+
+	snprintf(path, sizeof path, "%s/%s", LOGDIR, name);
+	out = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (out < 0)
+		return;
+	dprintf(out, "# %s\n", title);
+	fd = open(src, O_RDONLY);
+	if (fd < 0) {
+		dprintf(out, "# cannot open %s: %s\n", src, strerror(errno));
+		close(out);
+		return;
+	}
+	while ((n = read(fd, buf, sizeof buf)) > 0)
+		write(out, buf, (size_t)n);
+	close(fd);
+	fsync(out);
+	close(out);
+}
+
+static int line_hits(const char *line, const char *const *keys, int nkeys)
+{
+	int i;
+
+	for (i = 0; i < nkeys; i++)
+		if (strstr(line, keys[i]))
+			return 1;
+	return 0;
+}
+
+/* Filter baris dari buf ke LOGDIR/name; buf tidak diubah (dipakai salinan). */
+static void bundle_filter(const char *name, const char *title,
+			  const char *const *keys, int nkeys,
+			  const char *buf, size_t len)
+{
+	char path[256], *copy, *save = NULL, *line;
+	unsigned hits = 0;
+	FILE *f;
+
+	if (!buf || !len)
+		return;
+	snprintf(path, sizeof path, "%s/%s", LOGDIR, name);
+	f = fopen(path, "w");
+	if (!f)
+		return;
+	fprintf(f, "# %s\n# scanned %zu bytes\n", title, len);
+	copy = malloc(len + 1);
+	if (!copy) {
+		fprintf(f, "# out of memory (need %zu bytes)\n", len + 1);
+		fclose(f);
+		return;
+	}
+	memcpy(copy, buf, len);
+	copy[len] = 0;
+	for (line = strtok_r(copy, "\n", &save); line;
+	     line = strtok_r(NULL, "\n", &save)) {
+		if (!line_hits(line, keys, nkeys))
+			continue;
+		if (hits >= 20000)
+			break;
+		fprintf(f, "%s\n", line);
+		hits++;
+	}
+	fprintf(f, "# %u matching lines\n", hits);
+	free(copy);
+	fsync(fileno(f));
+	fclose(f);
+}
+
+/* 01: daftar partisi + nama GPT-nya (PARTNAME dari sysfs uevent). */
+static void bundle_partitions(const struct part *parts, int np)
+{
+	char path[256];
+	FILE *f, *r;
+	int i;
+
+	snprintf(path, sizeof path, "%s/01-partitions.txt", LOGDIR);
+	f = fopen(path, "w");
+	if (!f)
+		return;
+	fprintf(f, "# device          KiB       PARTNAME\n");
+	for (i = 0; i < np; i++) {
+		char pn[96] = "";
+
+		if (!get_partname(parts[i].name, pn, sizeof pn))
+			snprintf(pn, sizeof pn, "(none)");
+		fprintf(f, "%-16s %-9lu %s\n", parts[i].name, parts[i].blocks,
+			pn);
+	}
+	r = fopen("/proc/partitions", "r");
+	if (r) {
+		char line[256];
+
+		fprintf(f, "\n# raw /proc/partitions\n");
+		while (fgets(line, sizeof line, r))
+			fputs(line, f);
+		fclose(r);
+	}
+	fsync(fileno(f));
+	fclose(f);
+}
+
+/*
+ * 05: device yang ADA di sysfs tetapi tidak punya symlink `driver`.
+ * Inilah daftar "node mati" yang selama ini hanya bisa ditebak dari
+ * laporan compatible; sekarang lengkap dengan compatible-nya sendiri.
+ */
+static void bundle_no_driver(void)
+{
+	static const char *const buses[] = {
+		"/sys/bus/platform/devices", "/sys/bus/i2c/devices",
+		"/sys/bus/spi/devices", "/sys/bus/amba/devices",
+		"/sys/bus/mmc/devices", "/sys/bus/nvmem/devices",
+	};
+	char path[256];
+	FILE *f;
+	unsigned total = 0, missing = 0;
+	size_t b;
+
+	snprintf(path, sizeof path, "%s/05-no-driver.txt", LOGDIR);
+	f = fopen(path, "w");
+	if (!f)
+		return;
+	fprintf(f, "# bus device compatible  (no driver bound)\n");
+	for (b = 0; b < sizeof buses / sizeof buses[0]; b++) {
+		DIR *d = opendir(buses[b]);
+		struct dirent *e;
+
+		if (!d)
+			continue;
+		while ((e = readdir(d))) {
+			char p[352], comp[256] = "-";
+			struct stat st;
+
+			if (e->d_name[0] == '.')
+				continue;
+			total++;
+			snprintf(p, sizeof p, "%s/%s/driver", buses[b],
+				 e->d_name);
+			if (stat(p, &st) == 0)
+				continue;
+			missing++;
+			snprintf(p, sizeof p, "%s/%s/of_node/compatible",
+				 buses[b], e->d_name);
+			{
+				int fd = open(p, O_RDONLY);
+
+				if (fd >= 0) {
+					char buf[256];
+					ssize_t n = read(fd, buf, sizeof buf - 1);
+					ssize_t i;
+
+					close(fd);
+					if (n > 0) {
+						buf[n] = 0;
+						for (i = 0; i < n - 1; i++)
+							if (buf[i] == 0)
+								buf[i] = ' ';
+						snprintf(comp, sizeof comp, "%s", buf);
+					}
+				}
+			}
+			fprintf(f, "%s %s %s\n", buses[b], e->d_name, comp);
+		}
+		closedir(d);
+	}
+	fprintf(f, "\n# %u devices scanned, %u without a driver\n",
+		total, missing);
+	fsync(fileno(f));
+	fclose(f);
+}
+
+static void bundle_index(const char *stage)
+{
+	static const char *const names[] = {
+		"00-transcript.log", "01-partitions.txt", "02-dmesg.txt",
+		"03-deferred.txt", "04-errors.txt", "05-no-driver.txt",
+		"06-modules.txt", "07-bldb.txt", "08-steps.txt",
+		"09-pstore.txt",
+	};
+	char path[320];
+	FILE *f;
+	struct utsname u;
+	size_t i;
+
+	snprintf(path, sizeof path, "%s/99-index.txt", LOGDIR);
+	f = fopen(path, "w");
+	if (!f)
+		return;
+	if (uname(&u) == 0)
+		fprintf(f, "# kernel: %s\n", u.release);
+	fprintf(f, "# bundle write #%u, stage: %s\n", bundle_stage, stage);
+	fprintf(f, "# read with: spd_dump read_part cache -> extract the dir\n");
+	fprintf(f, "\n# file              bytes\n");
+	for (i = 0; i < sizeof names / sizeof names[0]; i++) {
+		struct stat st;
+
+		snprintf(path, sizeof path, "%s/%s", LOGDIR, names[i]);
+		if (stat(path, &st) == 0)
+			fprintf(f, "%-20s %lld\n", names[i],
+				(long long)st.st_size);
+		else
+			fprintf(f, "%-20s (missing)\n", names[i]);
+	}
+	fsync(fileno(f));
+	fclose(f);
+}
+
+/* Tampilkan daftar berkas di layar supaya tahu apa yang harus didump. */
+static void names_to_screen(void)
+{
+	both_fmt("VXTUX-LOG: %s holds the whole boot log now\n", LOGDIR);
+	both("VXTUX-LOG: 00-transcript 01-partitions 02-dmesg "
+	     "03-deferred\n");
+	both("VXTUX-LOG: 04-errors 05-no-driver 06-modules 07-bldb "
+	     "08-steps 09-pstore 99-index\n");
+}
+
+static void bundle_write(const char *stage, const struct part *parts, int np)
+{
+	static const char *const defer_keys[] = {
+		"deferred probe", "deferred_probe", "EPROBE_DEFER",
+		"-517", "probe pending",
+	};
+	static const char *const err_keys[] = {
+		"failed", "error -", "cannot", "timeout", "timed out",
+		"panic", "Oops", "BUG:", "WARNING:", "-110", "Call trace",
+		"Unable to handle", "Kernel panic",
+	};
+	static const char *const bldb_keys[] = { "VXTUX-BLDB" };
+	static const char *const step_keys[] = {
+		"VXTUX-STEP", "VXTUX-MOD", "VXTUX-DEFER", "VXTUX-WRITE",
+		"VXTUX-LOG",
+	};
+	char path[256];
+	char *klog;
+	FILE *f;
+	int n;
+
+	if (transcript_fd < 0)
+		return;
+	bundle_stage++;
+	bundle_partitions(parts, np);
+	bundle_copy("06-modules.txt", "/proc/modules",
+		    "/proc/modules (loaded modules)");
+	klog = malloc(LOG_MAX);
+	if (klog) {
+		n = klogctl(3 /* SYSLOG_ACTION_READ_ALL */, klog, LOG_MAX - 1);
+		if (n > 0) {
+			klog[n] = 0;
+			snprintf(path, sizeof path, "%s/02-dmesg.txt",
+				 LOGDIR);
+			f = fopen(path, "w");
+			if (f) {
+				fprintf(f, "# kernel ring, %d bytes, stage %s\n",
+					n, stage);
+				fwrite(klog, 1, (size_t)n, f);
+				fsync(fileno(f));
+				fclose(f);
+			}
+			bundle_filter("03-deferred.txt",
+				      "deferred probe / probe pending lines",
+				      defer_keys, 5, klog, (size_t)n);
+			bundle_filter("04-errors.txt",
+				      "fail / error / timeout / BUG lines",
+				      err_keys, 13, klog, (size_t)n);
+		} else {
+			both_fmt("VXTUX-LOG: klogctl failed: %s\n",
+				 strerror(errno));
+		}
+		free(klog);
+	}
+	bundle_filter("07-bldb.txt", "BLDB USB door lines",
+		      bldb_keys, 1, report, report_len);
+	bundle_filter("08-steps.txt", "VXTUX milestones",
+		      step_keys, 5, report, report_len);
+	bundle_no_driver();
+	bundle_index(stage);
+	names_to_screen();
+}
+
+/*
+ * Simpan semua yang sudah tercetak SEBELUM cache terpasang ke transkrip,
+ * lalu buka berkas transkrip untuk penulisan langsung sesudahnya.
+ */
+static int bundle_open(void)
+{
+	if (!cache_mounted)
+		return 0;
+	mkdir(LOGDIR, 0755);
+	transcript_fd = open(LOG_TRANSCRIPT,
+			     O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (transcript_fd < 0)
+		return 0;
+	if (report && report_len)
+		write(transcript_fd, report, report_len);
+	pstore_fd = open(LOGDIR "/09-pstore.txt",
+			 O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	return 1;
 }
 
 /*
@@ -643,6 +1012,10 @@ static void save_early_dmesg(const struct part *parts, int np)
 	int n, ret, mounted;
 
 	mounted = mount_cache_partition(parts, np);
+	/* Transkrip dibuka di sini: semua yang sudah tercetak sebelum cache
+	 * terpasang ikut disalin, sisanya mengalir langsung ke berkas. */
+	if (mounted)
+		bundle_open();
 	/* The snapshot must be made before mount_super/find_and_mount_root.
 	 * (Reading old pstore records later may clear the pstore record.) */
 	buf = malloc(LOG_MAX);
@@ -687,6 +1060,7 @@ static void save_early_dmesg(const struct part *parts, int np)
 	}
 	both_fmt("VXTUX-STEP: mounted cache and saved early dmesg to %s "
 		 "(%d bytes, fsync OK)\n", EARLY_LOG_PATH, n);
+	bundle_write("stage1-early", parts, np);
 }
 
 static void write_report_to_cache(void)
@@ -1331,6 +1705,7 @@ int main(void)
 	/* Save the report before scanning or mounting the large super partition. */
 	both("VXTUX-STEP: 2b/5 writing the first report to the cache partition\n");
 	write_report_to_cache();
+	bundle_write("stage2-pstore", parts, np);
 
 	rep("\n----- scanning partitions for ext4 -----\n");
 	both("VXTUX-STEP: 3/5 looking for an ext4 rootfs\n");
@@ -1346,16 +1721,19 @@ int main(void)
 
 	both("VXTUX-STEP: 4/5 writing the report to the cache partition\n");
 	write_report_to_cache();
+	bundle_write("stage3-root-scan", parts, np);
 
 	if (rootdev[0]) {
 		both("VXTUX-STEP: 5/5 switching to the real root\n");
 		switch_root_and_exec();
 	}
 
+	bundle_write("stage4-stopped", parts, np);
 	both("\n===== BOOT STOPPED IN THE INITRAMFS =====\n"
 	     "Root was not found, so dinit was never started.\n"
 	     "Dump the trail with spd_dump:\n"
-	     "  read_part cache        -> /cache/boot_log.txt + vxtux_report.txt\n"
+	     "  read_part cache        -> /cache/vxtux-logs/*  (10 files)\n"
+	     "                            + boot_log.txt + vxtux_report.txt\n"
 	     "  read_part common_rs1_a -> raw head \"### VXTUXRS1\" at offset 0\n"
 	     "=========================================\n");
 

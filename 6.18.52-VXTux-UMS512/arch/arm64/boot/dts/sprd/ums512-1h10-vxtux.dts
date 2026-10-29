@@ -2528,9 +2528,40 @@ gpu_opp_table: opp-table {
 			reg = <0 0xb6000000 0 0x00100000>;
 		};
 
+		/*
+		 * DIPERBAIKI 2026-10-29: node ini dulu HANYA punya reg + no-map.
+		 *
+		 * fs/pstore/ram.c menolak probe bila mem_size ada tetapi
+		 * record/console/ftrace/pmsg semuanya nol:
+		 *
+		 *     if (!pdata->mem_size || (!pdata->record_size &&
+		 *             !pdata->console_size && !pdata->ftrace_size &&
+		 *             !pdata->pmsg_size)) {
+		 *             pr_err("The memory size and the record/console size "
+		 *                    "must be non-zero\n");
+		 *             err = -EINVAL;
+		 *
+		 * Akibatnya backend pstore tidak pernah terdaftar: init selalu
+		 * mencetak "pstore empty -- the backend has never written", dan
+		 * SETIAP panic sebelum initramfs (termasuk bootloop) hilang tanpa
+		 * jejak -- hanya layar yang bisa difoto.
+		 *
+		 * Pembagian 256 KiB (0x40000) dari DT stok, semua pangkat dua:
+		 *   dmesg/oops record  128 KiB (0x20000)  -> 1 zona
+		 *   console            64 KiB (0x10000)
+		 *   pmsg                32 KiB (0x8000)
+		 * sisa 32 KiB tetap bebas.  CONFIG_PSTORE_RAM=y,
+		 * CONFIG_PSTORE_CONSOLE=y, CONFIG_PSTORE_PMSG=y sudah aktif.
+		 * panic=15 di cmdline melakukan warm reboot, sehingga record dari
+		 * boot yang panic dibaca init pada boot berikutnya dan ikut ditulis
+		 * ke /cache/vxtux-logs/09-pstore.txt.
+		 */
 		ramoops: ramoops@fff80000 {
 			compatible = "ramoops";
 			reg = <0 0xfff80000 0 0x00040000>;
+			record-size = <0x20000>;
+			console-size = <0x10000>;
+			pmsg-size = <0x8000>;
 			no-map;
 		};
 
