@@ -160,11 +160,25 @@ cro("out/restore_vendor44.bat", RESTORE)
 # dump: turunan artix41 (sudah terbukti jalan), rename + tambahan pembaca bundle
 src = open("out/dump_artix41_logonly.bat", newline="", encoding="utf-8").read()
 t = src.replace("artix41", "artix44")
+# metadata ikut dibaca: satu-satunya tempat bukti FBE (blob keymaster) berada.
+t = t.replace(
+    "  read_part dtbo_a       0 0x800000   dtbo_a.bin ^",
+    "  read_part dtbo_a       0 0x800000   dtbo_a.bin ^\r\n"
+    "  read_part metadata     0 0x1000000  metadata.bin ^\r\n"
+    "  read_part vendor_boot_a 0x15be000 0x20000 vb_dtb.bin ^")
 extra = (
     "\r\necho.\r\n"
     "echo [i] bundle log (kanal mentah common_rs1_a):\r\n"
     "if exist \"%LOG%\\common_rs1_a.bin\" if exist \"%PY%\" (\r\n"
     "  \"%PY%\" \"%OUT%baca_bundle44.py\" \"%LOG%\\common_rs1_a.bin\"\r\n"
+    ")\r\n"
+    "echo [i] keadaan FBE (/metadata):\r\n"
+    "if exist \"%LOG%\\metadata.bin\" if exist \"%PY%\" (\r\n"
+    "  \"%PY%\" \"%OUT%fbe_report.py\" \"%LOG%\\metadata.bin\"\r\n"
+    ")\r\n"
+    "echo [i] DT terpasang + boot image mendarat:\r\n"
+    "if exist \"%PY%\" (\r\n"
+    "  \"%PY%\" \"%OUT%cek_dt44.py\" \"%LOG%\"\r\n"
     ")\r\n"
 )
 t = t.replace("\r\necho  Laporan penuh :", extra + "\r\necho  Laporan penuh :")

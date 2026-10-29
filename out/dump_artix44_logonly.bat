@@ -70,6 +70,8 @@ pushd "%LOG%"
   read_part boot_a       0 0x4000000  boot_a.bin ^
   read_part dtb_a        0 0x800000   dtb_a.bin ^
   read_part dtbo_a       0 0x800000   dtbo_a.bin ^
+  read_part metadata     0 0x1000000  metadata.bin ^
+  read_part vendor_boot_a 0x15be000 0x20000 vb_dtb.bin ^
   reset > "%LOG%\spd_dump_session.log" 2>&1
 set SPDRC=%ERRORLEVEL%
 popd
@@ -115,6 +117,14 @@ echo.
 echo [i] bundle log (kanal mentah common_rs1_a):
 if exist "%LOG%\common_rs1_a.bin" if exist "%PY%" (
   "%PY%" "%OUT%baca_bundle44.py" "%LOG%\common_rs1_a.bin"
+)
+echo [i] keadaan FBE (/metadata):
+if exist "%LOG%\metadata.bin" if exist "%PY%" (
+  "%PY%" "%OUT%fbe_report.py" "%LOG%\metadata.bin"
+)
+echo [i] DT terpasang + boot image mendarat:
+if exist "%PY%" (
+  "%PY%" "%OUT%cek_dt44.py" "%LOG%"
 )
 
 echo  Laporan penuh : %LOG%\analysis.txt
