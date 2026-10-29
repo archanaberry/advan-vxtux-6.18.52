@@ -473,6 +473,42 @@ err_put:
 }
 EXPORT_SYMBOL_GPL(of_regulator_match);
 
+/*
+ * DT rail naming tolerance.
+ *
+ * The DT that this board really boots with lives in vendor_boot_a and was
+ * written for the SPRD vendor tree: its rail nodes are named DCDC_CPU,
+ * LDO_VDDEMMCCORE, ... (upper case, underscores), while the descriptors in
+ * this kernel use the canonical lower-case dash form (dcdc-cpu).  A plain
+ * strcmp therefore never matches, devm_regulator_register() fails with
+ * -ENODEV on the FIRST descriptor, sc2730_regulator_probe() aborts, and every
+ * consumer (eMMC vmmc, sdio, usb33, wifipa, codec) stays deferred forever.
+ * Comparing case-insensitively with '_' == '-' makes the same descriptor bind
+ * to either spelling, so the driver works with the stock DT and with ours.
+ */
+static bool regu_name_eq(const char *a, const char *b)
+{
+	if (!a || !b)
+		return false;
+
+	for (;; a++, b++) {
+		char ca = *a, cb = *b;
+
+		if (ca >= 'A' && ca <= 'Z')
+			ca = ca - 'A' + 'a';
+		if (cb >= 'A' && cb <= 'Z')
+			cb = cb - 'A' + 'a';
+		if (ca == '_')
+			ca = '-';
+		if (cb == '_')
+			cb = '-';
+		if (ca != cb)
+			return false;
+		if (!ca)
+			return true;
+	}
+}
+
 static struct
 device_node *regulator_of_get_init_node(struct device *dev,
 					const struct regulator_desc *desc)
@@ -489,7 +525,7 @@ device_node *regulator_of_get_init_node(struct device *dev,
 	} else {
 		search = of_node_get(dev->of_node);
 
-		if (!strcmp(desc->of_match, search->name))
+		if (regu_name_eq(desc->of_match, search->name))
 			return search;
 	}
 
@@ -508,7 +544,7 @@ device_node *regulator_of_get_init_node(struct device *dev,
 				name = child->full_name;
 		}
 
-		if (!strcmp(desc->of_match, name)) {
+		if (regu_name_eq(desc->of_match, name)) {
 			of_node_put(search);
 			/*
 			 * 'of_node_get(child)' is already performed by the
