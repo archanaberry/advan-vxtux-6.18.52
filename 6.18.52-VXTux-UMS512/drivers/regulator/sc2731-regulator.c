@@ -214,6 +214,21 @@ static int sc2731_regulator_probe(struct platform_device *pdev)
 	struct regulator_config config = { };
 	struct regulator_dev *rdev;
 
+	/* FDT stok UMS512 (vendor_boot) menuliskan compatible PMIC sebagai
+	 * "sprd,sc2731-regulator", "sprd,sc2730-regulator" -- urutan itu membuat
+	 * driver ini (built-in) mengklaim node lebih dulu, padahal PMIC fisik di
+	 * board ini SC2730 dengan peta register berbeda.  Tulis register pakai
+	 * peta sc2731 di atas hardware sc2730 berisiko mengubah tegangan yang
+	 * salah, jadi bila induknya sc2730 kita TOLAK di sini dan menyerahkan ke
+	 * modul sc2730-regulator (of_match "sprd,sc2730-regulator" ikut tercatat
+	 * di node yang sama). */
+	if (pdev->dev.parent && pdev->dev.parent->of_node &&
+	    of_device_is_compatible(pdev->dev.parent->of_node, "sprd,sc2730")) {
+		dev_info(&pdev->dev,
+			 "induk PMIC sc2730 terdeteksi -> serah ke sc2730-regulator\n");
+		return -ENODEV;
+	}
+
 	regmap = dev_get_regmap(pdev->dev.parent, NULL);
 	if (!regmap) {
 		dev_err(&pdev->dev, "failed to get regmap.\n");

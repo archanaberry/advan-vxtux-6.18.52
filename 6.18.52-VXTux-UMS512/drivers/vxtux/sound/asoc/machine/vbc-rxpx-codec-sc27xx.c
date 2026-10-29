@@ -146,6 +146,9 @@ static const struct of_device_id vbc_rxpx_codec_sc27xx_of_match[] = {
 	 .data = &sprd_asoc_data_r2p0_2723},
 	 {.compatible = "sprd,vbc-v4-codec-sc2730",
 	 .data = &sprd_asoc_data_v4_2730},
+	/* FDT stok: kartu suara memakai prefiks "unisoc," (rebrand Unisoc). */
+	 {.compatible = "unisoc,vbc-v4-codec-sc2730",
+	 .data = &sprd_asoc_data_v4_2730},
 	{},
 };
 

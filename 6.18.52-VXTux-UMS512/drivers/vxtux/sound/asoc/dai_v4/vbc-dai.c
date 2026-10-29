@@ -7583,6 +7583,9 @@ static const struct of_device_id vbc_of_match[] = {
 	{.compatible = "sprd,roc1-vbc",},
 	{.compatible = "sprd,qogirl6-vbc",},
 	{.compatible = "sprd,qogirn6pro-vbc",},
+	/* FDT stok UMS512: node VBC memakai prefiks "unisoc," (rebrand). */
+	{.compatible = "unisoc,sharkl5-vbc",},
+	{.compatible = "unisoc,sharkl5pro-vbc",},
 	{},
 };
 
