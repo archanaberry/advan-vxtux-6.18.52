@@ -4,3 +4,5 @@ obj-$(CONFIG_VXTUX_FLIGHTREC)	+= vxtux_flightrec.o
 obj-$(CONFIG_VXTUX_BEACON)	+= vxtux_beacon.o
 obj-$(CONFIG_VXTUX_LKFB)		+= vxtux_lkfb.o
 obj-$(CONFIG_VXTUX_INITTRACE)	+= vxtux_inittrace.o
+# BLDB (Berry Linux Debug Bridge): ring 16 MiB + /dev/bldb0.
+obj-$(CONFIG_VXTUX_BLDB)	+= bldb_core.o

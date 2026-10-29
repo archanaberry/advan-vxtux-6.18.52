@@ -93,3 +93,25 @@ config VXTUX_FLIGHTREC
 	  Records are marked with the magic "VXTUXFR1".  Default n; enable it
 	  only when chasing boot problems, since it writes to eMMC
 	  continuously.
+
+config VXTUX_BLDB
+	bool "BLDB early debug ring (/dev/bldb0, Berry Lab Foundation)"
+	depends on PRINTK
+	depends on MISC_DEVICES
+	default n
+	help
+	  Berry Linux Debug Bridge: a 16 MiB static printk ring plus the
+	  misc device /dev/bldb0, started from core_initcall so it captures
+	  the boot from the very first message.
+
+	  The userspace daemon bldbd relays the ring to the PC over the USB
+	  gadget serial port (configfs ACM) and feeds commands back
+	  (stats/clear/mark/peek32/poke32), giving a two-way debug door that
+	  needs no soldering and survives as long as the kernel does.
+
+	  peek32/poke32 only touch RAM the kernel considers valid and never
+	  the kernel text or the ring itself.  See the header of
+	  drivers/vxtux/debug/bldb_core.c for the full ring-0 mitigation list.
+
+	  Original work of Berry Lab Foundation (Berry Foundation Public v1
+	  - MIT, GPL-compatible); no Unisoc/Spreadtrum code involved.
