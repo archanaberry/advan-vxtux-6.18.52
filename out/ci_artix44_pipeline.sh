@@ -68,12 +68,14 @@ if [ -n "$CFG" ]; then
       exit 1
     fi
   done
-  # tracer HARUS mati: simbol tidak boleh =y ("is not set" atau baris hilang)
-  if grep -qx "CONFIG_VXTUX_INITTRACE=y" "$CFG"; then
-    echo "FAILED=config CONFIG_VXTUX_INITTRACE masih =y (tracer harus mati)"
+  # tracer HARUS hidup (artix45): satu-satunya kanal untuk melihat initcall
+  # tempat kernel membeku -- tidak ada UART di tablet ini.
+  if ! grep -qx "CONFIG_VXTUX_INITTRACE=y" "$CFG"; then
+    echo "FAILED=config CONFIG_VXTUX_INITTRACE bukan =y (tracer harus hidup)"
+    grep -E 'VXTUX_(INITTRACE|BEACON|LKFB)' "$CFG" || true
     exit 1
   fi
-  echo "  config OK : CONFIG_VXTUX_INITTRACE tidak =y (tracer mati)"
+  echo "  config OK : CONFIG_VXTUX_INITTRACE=y (tracer hidup)"
   # Module signature enforcement is acceptable only for signed modules.
   if grep -qx "CONFIG_MODULE_SIG_FORCE=y" "$CFG"; then
     echo "FAILED=config CONFIG_MODULE_SIG_FORCE masih =y (CI modules built here are unsigned)"
@@ -90,12 +92,14 @@ for s in "vxtux-fbmem" "vxtux-lkfb" "vxtuxfb=" "vxtux-fr"; do
   n=$(grep -c -a -F "$s" out/6.18.52-VXTux-UMS512/Image || true)
   echo "  ada      : $s -> $n"
 done
-for s in "VXTUX-PROBE" "vxtux-beacon" "VXTUX-ITRACE"; do
+for s in "VXTUX-PROBE" "vxtux-beacon"; do
   n=$(grep -c -a -F "$s" out/6.18.52-VXTux-UMS512/Image || true)
   echo "  harus 0  : $s -> $n"
 done
+# artix45: tracer initcall WAJIB ada di Image (satu-satunya kanal diagnostik).
 n=$(grep -c -a -F "VXTUX-ITRACE" out/6.18.52-VXTux-UMS512/Image || true)
-[ "$n" -ne 0 ] && { echo "FAILED=tracer initcall masih ikut ke Image (harus mati)"; exit 1; }
+echo "  harus >0 : VXTUX-ITRACE -> $n"
+[ "$n" -eq 0 ] && { echo "FAILED=tracer initcall tidak ada di Image (INITTRAVE tidak terbangun)"; exit 1; }
 # MMC_BLOCK_MINORS limits consecutive minors per disk, not partition count;
 # block/partitions/core.c allocates extended minors for later GPT partitions.
 if [ -z "$CFG" ]; then

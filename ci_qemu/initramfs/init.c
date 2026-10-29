@@ -1720,7 +1720,31 @@ int main(void)
 	if (report)
 		report[0] = 0;
 
+	/*
+	 * Bukti "init hidup" HARUS dicetak sebelum apa pun yang bisa memblokir.
+	 *
+	 * urutan lama: load_clock_modules() -> wait_for_storage(180s) -> banner.
+	 * Akibatnya layar tidak menampilkan satu byte pun selama 3 menit, dan
+	 * karena eMMC tidak pernah muncul (lihat dump artix44: cache dan
+	 * common_rs1_a tetap utuh) seluruh sesi berakhir tanpa jejak di layar
+	 * maupun di partisi.  Kalau baris ini TIDAK muncul di panel, berarti
+	 * kernel berhenti sebelum userspace; kalau muncul, init pasti jalan dan
+	 * titik macetnya ada di baris berikutnya.
+	 */
+	uname(&u);
+	snprintf(banner, sizeof banner,
+		 "\n\n===== VXTUX ARTIX DIAG (initramfs) =====\n"
+		 "kernel : %s %s\n"
+		 "machine: %s\n"
+		 "===============================\n",
+		 u.release, u.version, u.machine);
+	both(banner);
+	both("VXTUX-STEP: 0/5 init alive (userspace reached), looking for eMMC\n");
+	rep("### VXTUXLOG1  Artix initramfs boot report (UMS512)\n");
+	rep_fmt("kernel: %s %s\n", u.release, u.version);
+
 	/* Register late clock providers before waiting for the eMMC host. */
+	both("VXTUX-STEP: 0b/5 loading the clock modules from the initramfs\n");
 	load_clock_modules();
 	/* BLDB: rangkaian pintu debug kedua (ring kernel + gadget ACM). */
 	start_bldb();
@@ -1731,18 +1755,6 @@ int main(void)
 	np_parts = np;
 	ensure_nodes(parts, np);
 	save_early_dmesg(parts, np);
-
-	uname(&u);
-	snprintf(banner, sizeof banner,
-		 "\n\n===== VXTUX ARTIX DIAG (initramfs) =====\n"
-		 "kernel : %s %s\n"
-		 "machine: %s\n"
-		 "===============================\n",
-		 u.release, u.version, u.machine);
-	both(banner);
-
-	rep("### VXTUXLOG1  Artix initramfs boot report (UMS512)\n");
-	rep_fmt("kernel: %s %s\n", u.release, u.version);
 
 	both("VXTUX-STEP: 1/5 partition list\n");
 	rep("\n----- /proc/partitions -----\n");

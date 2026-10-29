@@ -349,7 +349,24 @@ static int __init lkfb_init(void)
 	return 0;
 }
 /*
- * device_initcall (level 6), BUKAN core_initcall (level 1) -- 2026-10-27.
+ * fs_initcall (level 5), BUKAN core_initcall (level 1) dan bukan
+ * device_initcall (level 6) -- 2026-10-29.
+ *
+ * Kenapa dinaikkan dari 6 ke 5:
+ *   fb_console_init() adalah subsys_initcall (level 4) dan tetap harus jalan
+ *   lebih dulu (alasan lengkap di bawah), tetapi level 6 di tree ini berisi
+ *   drivers/mmc (baris 134 drivers/Makefile) dan baru sesudahnya drivers/
+ *   vxtux (baris 203).  Artinya dengan device_initcall layar baru menyala
+ *   SETELAH sdhci-sprd probe; kalau probe eMMC/clock menggantung senyap
+ *   (gejala artix35/36/44: layar beku di teks LK, tanpa panic, tanpa tulisan
+ *   ke cache), konsol tidak pernah lahir dan tidak ada satu pun petunjuk.
+ *   Level 5 berada setelah fbcon (4) dan sebelum seluruh driver perangkat
+ *   (6), jadi fbcon sudah punya pemilik sah dan teks kernel tetap tampil
+ *   sebelum driver yang dicurigai.
+ *
+ * Alasan asli tetap berlaku: level 1 (core) membuat register_framebuffer()
+ * mengambil alih konsol sebelum fb_console_init() mereset con2fb_map -> boot
+ * artix30 beku di "calling fbmem_init".
  *
  * PENYEBAB MACET artix30 di "calling fbmem_init": fb_console_init() (yang
  * menjalankan subsys_initcall / level 4) adalah PEMILIK sah fbcon -- dia
@@ -366,4 +383,4 @@ static int __init lkfb_init(void)
  * baru driver fb mendaftar (device_initcall/6, seperti hampir semua fbdev
  * upstream).  fbcon diambil alih dengan con2fb_map yang sudah sah.
  */
-device_initcall(lkfb_init);
+fs_initcall(lkfb_init);

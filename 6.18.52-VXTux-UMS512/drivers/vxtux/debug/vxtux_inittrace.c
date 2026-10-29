@@ -166,8 +166,14 @@ void vxtux_itrace_banner(void)
 		return;
 	it_font = find_font("VGA8x16");
 	if (!it_font || !it_font->height || !it_font->width) {
-		pr_err("VGA8x16 font unavailable - tracer disabled\n");
-		it_dead = true;
+		/*
+		 * JANGAN menyerah permanen.  find_font() membaca array statik
+		 * lib/fonts/fonts.c yang sudah ada sejak link (CONFIG_FONT_8x16=y),
+		 * tetapi artix37 pernah melihatnya kosong; kalau suatu saat benar
+		 * kosong, banner dicoba ulang di setiap initcall sampai fontnya
+		 * terdaftar.  Menyetel it_dead di sini membuat tracer mustahil
+		 * dipakai lagi di sisa boot (penyebab artix37 "nol informasi").
+		 */
 		return;
 	}
 	it_fb = (void *)__va(IT_PHYS);
@@ -182,6 +188,13 @@ void vxtux_itrace_banner(void)
 			 (unsigned long)it_fb + IT_SIZE);
 	it_on = true;
 	it_puts("VXTUX-ITRACE: kernel alive - watching initcalls, last line = hang\n");
+	/*
+	 * Bila banner baru berhasil sekarang (font telat), sebagian initcall
+	 * sudah lewat.  Baris ini menandai titik mulai supaya jumlah baris di
+	 * bawahnya tidak disalahartikan sebagai nomor initcall absolut.
+	 */
+	if (it_count)
+		it_puts("VXTUX-ITRACE: tracer started late, count resumed here\n");
 	pr_info("panel tracer on: %ux%u font, %u rows, %u cols\n",
 		it_font->width, it_font->height, it_rows, it_cols);
 }
