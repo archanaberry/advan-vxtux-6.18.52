@@ -52,10 +52,21 @@
 #define VXTUXFB_SIZE	0x9e4000U	/* "fb size" reported by LK */
 #define VXTUXFB_MAX	4
 
-#ifdef CONFIG_VXTUX_INITTRACE
-/* vxtux_inittrace.c - panel initcall tracer (artix36 diagnostic). */
-extern void vxtux_itrace_banner(void);
-#endif
+/*
+ * JANGAN memanggil vxtux_itrace_banner() dari sini.
+ *
+ * early_param dijalankan oleh parse_early_param() di arch/arm64/kernel/
+ * setup.c:299, sedangkan paging_init() baru di baris 334.  Artinya linear
+ * map (__va) BELUM ada saat callback ini jalan: setiap akses ke
+ * __va(0x9e000000) fault, dan fault di titik itu terjadi sebelum printk
+ * punya konsol -> layar beku tanpa satu baris, tanpa panic.
+ *
+ * Inilah sebab sebenarnya artix36 "nol informasi": bukan karena
+ * find_font() mengembalikan NULL, melainkan karena gambar pertamanya
+ * menyentuh alamat yang belum dipetakan.  vxtux_inittrace.c sekarang
+ * memulai banner dari do_one_initcall() (setelah paging_init), dan
+ * memanggilnya hanya bila belum pernah berhasil.
+ */
 
 static phys_addr_t vxtuxfb_base[VXTUXFB_MAX];
 static int vxtuxfb_n;
@@ -68,9 +79,6 @@ static int vxtuxfb_n;
 static int __init vxtuxfb_setup(char *str)
 {
 	char *tok;
-#ifdef CONFIG_VXTUX_INITTRACE
-	int i;
-#endif
 
 	while (str && *str && vxtuxfb_n < VXTUXFB_MAX) {
 		unsigned long long addr;
@@ -93,14 +101,7 @@ static int __init vxtuxfb_setup(char *str)
 	}
 	pr_info("reserved %d bootloader framebuffer buffer(s), %#x bytes each\n",
 		vxtuxfb_n, VXTUXFB_SIZE);
-#ifdef CONFIG_VXTUX_INITTRACE
-	/* Clear the panel and print the tracer banner at the earliest point. */
-	for (i = 0; i < vxtuxfb_n; i++)
-		if (vxtuxfb_base[i] == 0x9e000000UL) {
-			vxtux_itrace_banner();
-			break;
-		}
-#endif
+	/* Banner digambar nanti oleh do_one_initcall -> lihat catatan di atas. */
 	return 0;
 }
 early_param("vxtuxfb", vxtuxfb_setup);
