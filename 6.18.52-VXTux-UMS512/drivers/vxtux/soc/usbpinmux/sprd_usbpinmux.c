@@ -71,7 +71,7 @@ static int usbmux_get_args(struct device *dev, const char *name,
 
 	n = of_property_count_u32_elems(dev->of_node, name);
 	if (n != nargs) {
-		dev_dbg(dev, "%s: properti tidak ada/argumen salah (%d)\n",
+		dev_dbg(dev, "%s: property missing or wrong argument count (%d)\n",
 			name, n);
 		return -EINVAL;
 	}
@@ -102,7 +102,7 @@ static int sprd_usbpinmux_probe(struct platform_device *pdev)
 		dev_dbg(dev, "usb_uart_jtag_mux: reg:%x mask:%x\n",
 			args[0], args[1]);
 	} else {
-		dev_warn(dev, "usb_uart_jtag_mux tidak terbaca — mux dianggap tertutup\n");
+		dev_warn(dev, "usb_uart_jtag_mux unreadable - assuming the mux is closed\n");
 		return 0;
 	}
 
@@ -163,7 +163,7 @@ static int sprd_usbpinmux_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	dev_info(dev, "USBMux terbuka: vdd=%umV, pin UART->USB dipilih\n", vdd_vol);
+	dev_info(dev, "USBMux open: vdd=%umV, UART->USB pins selected\n", vdd_vol);
 	return 0;
 }
 

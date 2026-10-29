@@ -1589,7 +1589,7 @@ static struct platform_driver musb_sprd_driver = {
 };
 module_platform_driver(musb_sprd_driver);
 
-MODULE_DESCRIPTION("VXTux: Unisoc sharkl5pro MUSB glue (port GPL fork, v3 PIO + work penuh)");
+MODULE_DESCRIPTION("VXTux: Unisoc sharkl5pro MUSB glue (GPL fork port, v3 PIO + workqueue)");
 MODULE_AUTHOR("LinDroid/VXTux v1.0");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:" DRV_NAME);

@@ -191,6 +191,26 @@
 / {
 	model = "Advan Tab VX Lite T1030 (VXTux)";
 	compatible = "advan,t1030", "sprd,ums512-1h10", "sprd,ums512";
+	/*
+	 * IDENTITAS SoC untuk LK (DIPERBAIKI 2026-10-29).
+	 *
+	 * LK Unisoc memilih DT dari multi-DTB dengan mencocokkan properti root,
+	 * dan log di uboot_log tablet ini menyebut kuncinya secara eksplisit:
+	 *
+	 *   Find kernel dtb prop name sprd,sc-id=...,
+	 *   g_fdt_blob sprd,sc-id=ums512 1h10 1000
+	 *   Matches the corresponding dtb in multiple DTB
+	 *
+	 * DT stok (vendor_boot_a) membawa keempat properti di bawah.  DTS di
+	 * repo ini tidak membawanya sama sekali, sehingga DT hasil build kita
+	 * TIDAK akan pernah dicocokkan oleh LK -- sekalipun berhasil ditulis ke
+	 * vendor_boot.  Nilai diambil apa adanya dari DT stok yang sedang dipakai
+	 * perangkat (out/stock_dt/dtb_stock_vendorboot.dts, root node).
+	 */
+	cpuinfo_hardware = "Unisoc ums512";
+	soc-module = "UMS512";
+	soc-manufacturer = "Spreadtrum";
+	sprd,sc-id = "ums512 1000 1000";
 
 	aliases {
 		serial0 = &uart0;
@@ -237,6 +257,12 @@
 	no-sd;
 	non-removable;
 	cap-mmc-hw-reset;
+	/* Rail eMMC dari PMIC SC2730 (sc2730.dtsi). sdhci_sprd_main.c memanggil
+	 * mmc_regulator_get_supply(), jadi vmmc di sini benar-benar dipakai:
+	 * tanpa regulator ini host menunda probe sampai driver SC2730 ter-bind.
+	 * Sengaja di board DTS, bukan ums512.dtsi: ums512-1h10.dts memakai dtsi
+	 * itu tanpa sc2730.dtsi, sehingga label ini tidak ada di sana. */
+	vmmc-supply = <&vddemmccore>;
 };
 
 /* ============================================================
@@ -2522,9 +2548,40 @@ gpu_opp_table: opp-table {
 			reg = <0 0xb6000000 0 0x00100000>;
 		};
 
+		/*
+		 * DIPERBAIKI 2026-10-29: node ini dulu HANYA punya reg + no-map.
+		 *
+		 * fs/pstore/ram.c menolak probe bila mem_size ada tetapi
+		 * record/console/ftrace/pmsg semuanya nol:
+		 *
+		 *     if (!pdata->mem_size || (!pdata->record_size &&
+		 *             !pdata->console_size && !pdata->ftrace_size &&
+		 *             !pdata->pmsg_size)) {
+		 *             pr_err("The memory size and the record/console size "
+		 *                    "must be non-zero\n");
+		 *             err = -EINVAL;
+		 *
+		 * Akibatnya backend pstore tidak pernah terdaftar: init selalu
+		 * mencetak "pstore empty -- the backend has never written", dan
+		 * SETIAP panic sebelum initramfs (termasuk bootloop) hilang tanpa
+		 * jejak -- hanya layar yang bisa difoto.
+		 *
+		 * Pembagian 256 KiB (0x40000) dari DT stok, semua pangkat dua:
+		 *   dmesg/oops record  128 KiB (0x20000)  -> 1 zona
+		 *   console            64 KiB (0x10000)
+		 *   pmsg                32 KiB (0x8000)
+		 * sisa 32 KiB tetap bebas.  CONFIG_PSTORE_RAM=y,
+		 * CONFIG_PSTORE_CONSOLE=y, CONFIG_PSTORE_PMSG=y sudah aktif.
+		 * panic=15 di cmdline melakukan warm reboot, sehingga record dari
+		 * boot yang panic dibaca init pada boot berikutnya dan ikut ditulis
+		 * ke /cache/vxtux-logs/09-pstore.txt.
+		 */
 		ramoops: ramoops@fff80000 {
 			compatible = "ramoops";
 			reg = <0 0xfff80000 0 0x00040000>;
+			record-size = <0x20000>;
+			console-size = <0x10000>;
+			pmsg-size = <0x8000>;
 			no-map;
 		};
 

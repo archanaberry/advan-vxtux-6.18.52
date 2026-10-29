@@ -118,67 +118,67 @@ struct abi_cap54_row {
 
 static const struct abi_cap54_row abi_caps54[] __initconst = {
 	{  0, "ARM64_WORKAROUND_CLEAN_CACHE",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_CLEAN_CACHE)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_CLEAN_CACHE)" },
 	{  1, "ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)" },
 	{  2, "ARM64_WORKAROUND_845719",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_845719)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_845719)" },
 	{  3, "ARM64_HAS_SYSREG_GIC_CPUIF",
-	  "6.18 berganti nama: cpus_have_cap(ARM64_HAS_GICV3_CPUIF)" },
-	{  4, "ARM64_HAS_PAN (DIBACA BLOB)",
+	  "renamed in 6.18: cpus_have_cap(ARM64_HAS_GICV3_CPUIF)" },
+	{  4, "ARM64_HAS_PAN (READ BY THE BLOB)",
 	  "6.18: system_uses_hw_pan()" },
 	{  5, "ARM64_HAS_LSE_ATOMICS",
-	  "6.18 nama sama: cpus_have_cap(ARM64_HAS_LSE_ATOMICS)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_HAS_LSE_ATOMICS)" },
 	{  6, "ARM64_WORKAROUND_CAVIUM_23154",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_23154)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_23154)" },
 	{  7, "ARM64_WORKAROUND_834220",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_834220)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_834220)" },
 	{  8, "ARM64_HAS_NO_HW_PREFETCH",
-	  "6.18 tidak punya; 5.4 = MIDR ThunderX pass 1.x/2.x (cpufeature.c:795)"
-	  " → T618 bukan ThunderX: 0" },
+	  "not in 6.18; 5.4 = MIDR ThunderX pass 1.x/2.x (cpufeature.c:795)"
+	  " -> T618 is not ThunderX: 0" },
 	{  9, "ARM64_HAS_UAO",
-	  "6.18 menghapus kapabilitas UAO (ID_AA64MMFR2_EL1.UAO tidak lagi"
-	  " diekspos) → 0 konservatif: hanya mematikan jalur optimasi UAO" },
+	  "6.18 removed the UAO capability (ID_AA64MMFR2_EL1.UAO is no longer"
+	  " exposed) -> 0 conservative: it only disables the UAO optimisation path" },
 	{ 10, "ARM64_ALT_PAN_NOT_UAO",
-	  "turunan [A2/cpufeature.c:1063]: bit4 && !bit9" },
+	  "derived [A2/cpufeature.c:1063]: bit4 && !bit9" },
 	{ 11, "ARM64_HAS_VIRT_HOST_EXTN",
-	  "6.18 nama sama: cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN)" },
 	{ 12, "ARM64_WORKAROUND_CAVIUM_27456",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_27456)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_27456)" },
 	{ 13, "ARM64_HAS_32BIT_EL0",
 	  "6.18 helper: system_supports_32bit_el0()" },
 	{ 14, "ARM64_HYP_OFFSET_LOW",
-	  "6.18 tidak punya (5.4 = idmap HYP tak bentrok && !EL2,"
-	  " cpufeature.c:805); bit tidak dipakai blob → 0" },
+	  "not in 6.18 (5.4 = the HYP idmap does not clash && !EL2,"
+	  " cpufeature.c:805); the blob never uses this bit -> 0" },
 	{ 15, "ARM64_MISMATCHED_CACHE_LINE_SIZE",
-	  "6.18 tidak punya (cap dihapus); A75/A55 CTR_EL0 seragam → 0" },
+	  "not in 6.18 (capability removed); A75/A55 CTR_EL0 identical -> 0" },
 	{ 16, "ARM64_HAS_NO_FPSIMD",
-	  "6.18 cap terbalik: !cpus_have_cap(ARM64_HAS_FPSIMD)"
-	  " (setara cpufeature.c:741 system_supports_fpsimd())" },
+	  "the sense is inverted in 6.18: !cpus_have_cap(ARM64_HAS_FPSIMD)"
+	  " (equivalent to cpufeature.c:741 system_supports_fpsimd())" },
 	{ 17, "ARM64_WORKAROUND_REPEAT_TLBI",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_REPEAT_TLBI)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_REPEAT_TLBI)" },
 	{ 18, "ARM64_WORKAROUND_QCOM_FALKOR_E1003",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_QCOM_FALKOR_E1003)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_QCOM_FALKOR_E1003)" },
 	{ 19, "ARM64_WORKAROUND_858921",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_858921)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_858921)" },
 	{ 20, "ARM64_WORKAROUND_CAVIUM_30115",
-	  "6.18 nama sama: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_30115)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_WORKAROUND_CAVIUM_30115)" },
 	{ 21, "ARM64_HAS_DCPOP",
-	  "6.18 nama sama: cpus_have_cap(ARM64_HAS_DCPOP)" },
-	{ 22, "(5.4 tidak memakai nomor ini — lubang di cpucaps.h 5.4)",
-	  "selalu 0" },
-	{ 23, "ARM64_UNMAP_KERNEL_AT_EL0 (DIBACA BLOB)",
-	  "6.18 nama sama: cpus_have_cap(ARM64_UNMAP_KERNEL_AT_EL0)"
+	  "same name in 6.18: cpus_have_cap(ARM64_HAS_DCPOP)" },
+	{ 22, "(unused in 5.4 - a hole in the 5.4 cpucaps.h)",
+	  "always 0" },
+	{ 23, "ARM64_UNMAP_KERNEL_AT_EL0 (READ BY THE BLOB)",
+	  "same name in 6.18: cpus_have_cap(ARM64_UNMAP_KERNEL_AT_EL0)"
 	  " (= arm64_kernel_unmapped_at_el0())" },
 	{ 24, "ARM64_HARDEN_BRANCH_PREDICTOR",
-	  "6.18 berganti nama: cpus_have_cap(ARM64_SPECTRE_V2)" },
+	  "renamed in 6.18: cpus_have_cap(ARM64_SPECTRE_V2)" },
 	{ 25, "ARM64_SSBD",
-	  "5.4 sendiri tidak pernah menyalakannya (grep: 0 entri"
-	  " `.capability = ARM64_SSBD` di cpufeature.c/cpu_errata.c) → 0" },
+	  "5.4 itself never sets it (grep: 0 entries"
+	  " for `.capability = ARM64_SSBD` in cpufeature.c/cpu_errata.c) -> 0" },
 	{ 26, "ARM64_MISMATCHED_CACHE_TYPE",
-	  "6.18 nama sama: cpus_have_cap(ARM64_MISMATCHED_CACHE_TYPE)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_MISMATCHED_CACHE_TYPE)" },
 	{ 27, "ARM64_SSBS",
-	  "6.18 nama sama: cpus_have_cap(ARM64_SSBS)" },
+	  "same name in 6.18: cpus_have_cap(ARM64_SSBS)" },
 };
 
 #define ABI_CAP54_MAX_BIT	(ARM64_NCAPS_54 - 1)
@@ -186,7 +186,7 @@ static const struct abi_cap54_row abi_caps54[] __initconst = {
 
 /* Cek bentuk tabel saat kompilasi: 28 baris (isi/bit dicek gerbang selftest). */
 static_assert(ARRAY_SIZE(abi_caps54) == ABI_CAP54_EXPECT_ROWS,
-	      "tabel kapabilitas 5.4 harus 28 baris");
+	      "the 5.4 capability table must have 28 rows");
 
 static void __init vendor_abi_fill_hwcaps(void)
 {
@@ -246,7 +246,7 @@ static void __init vendor_abi_fill_hwcaps(void)
 
 	WRITE_ONCE(cpu_hwcaps[0], bits);
 
-	pr_info("cpu_hwcaps 5.4 = 0x%016lx (bit dibaca blob: 4=%d 23=%d)\n",
+	pr_info("cpu_hwcaps 5.4 = 0x%016lx (bits the blob reads: 4=%d 23=%d)\n",
 		bits, test_bit(4, &bits) ? 1 : 0, test_bit(23, &bits) ? 1 : 0);
 
 	/*
@@ -276,14 +276,14 @@ static int __init vendor_abi_init(void)
 			__set_bit(abi_caps54[i].bit, &seen);
 		if (!test_bit(22, &seen) || bitmap_weight(&seen, ARM64_NCAPS_54) !=
 		    ARM64_NCAPS_54 - 1)
-			pr_warn("tabel [T] tidak konsisten (bit tertutup=%u)\n",
+			pr_warn("table [T] inconsistent (missing bits=%u)\n",
 				bitmap_weight(&seen, ARM64_NCAPS_54));
 	}
 
 	vendor_abi_fill_hwcaps();
 
-	pr_info("penyedia ABI arm64 5.4 aktif: kimage_vaddr=%#llx, "\
-		"const_caps_ready=mati (blob memakai jalur bitmap)\n",
+	pr_info("arm64 5.4 ABI provider active: kimage_vaddr=%#llx, "\
+		"const_caps_ready=none (blob uses the bitmap path)\n",
 		(unsigned long long)kimage_vaddr);
 	return 0;
 }

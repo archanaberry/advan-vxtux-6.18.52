@@ -366,12 +366,12 @@
 				status = "okay";
 			};
 
-			/* Regulators */
-			sc27xx-regulator {
-				compatible = "sprd,sc2731-regulator", "sprd,sc2730-regulator";
+			/* QEMU's PMIC model uses the SC2730 register map. */
+			regulators {
+				compatible = "sprd,sc2730-regulator";
 				status = "okay";
 
-				vddusb33: LDO_USB33 {
+				vddusb33: ldo-vddusb33 {
 					regulator-name = "vddusb33";
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <3750000>;

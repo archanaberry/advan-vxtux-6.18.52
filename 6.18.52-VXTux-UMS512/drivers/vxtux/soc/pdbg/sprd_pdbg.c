@@ -126,7 +126,7 @@ struct sprd_pdbg {
  */
 static bool sprd_pdbg_log_force;
 module_param_named(sprd_pdbg_log_force, sprd_pdbg_log_force, bool, 0644);
-MODULE_PARM_DESC(sprd_pdbg_log_force, "log sleep/wakeup dengan level err");
+MODULE_PARM_DESC(sprd_pdbg_log_force, "log sleep/wakeup at err level");
 
 static struct sprd_pdbg *pdbg_data;
 

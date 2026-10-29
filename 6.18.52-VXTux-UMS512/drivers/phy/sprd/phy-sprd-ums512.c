@@ -190,7 +190,7 @@ static int sprd_hsphy_init(struct usb_phy *phy)
 		ret = regulator_set_voltage(hsphy->vdd, hsphy->vdd_voltage,
 					    hsphy->vdd_voltage);
 		if (ret) {
-			dev_err(hsphy->dev, "gagal set tegangan vdd %u uV: %d\n",
+			dev_err(hsphy->dev, "cannot set vdd voltage %u uV: %d\n",
 				hsphy->vdd_voltage, ret);
 			return ret;
 		}
@@ -198,14 +198,14 @@ static int sprd_hsphy_init(struct usb_phy *phy)
 		if (!regulator_is_enabled(hsphy->vdd)) {
 			ret = regulator_enable(hsphy->vdd);
 			if (ret) {
-				dev_err(hsphy->dev, "gagal menyalakan vdd: %d\n", ret);
+				dev_err(hsphy->dev, "cannot enable vdd: %d\n", ret);
 				return ret;
 			}
 			hsphy->regulator_enabled_by_us = true;
 		}
 	} else {
 		dev_warn(hsphy->dev,
-			 "rail vdd tidak ada (PMIC belum siap) — lanjut tanpa set tegangan\n");
+			 "no vdd rail (PMIC not ready yet) - continuing without setting the voltage\n");
 	}
 
 	/* +0x44: AON EB1.OTG_UTMI_EB = 1 */
@@ -333,7 +333,7 @@ static enum usb_charger_type sprd_hsphy_charger_detect(struct usb_phy *phy)
 	struct sprd_hsphy *hsphy = container_of(phy, struct sprd_hsphy, phy);
 
 	if (!hsphy->pmic_dev) {
-		dev_dbg(hsphy->dev, "charger_detect tidak tersedia (tanpa PMIC)\n");
+		dev_dbg(hsphy->dev, "charger_detect unavailable (no PMIC)\n");
 		return UNKNOWN_TYPE;
 	}
 	return sprd_pmic_detect_charger_type(hsphy->pmic_dev);
@@ -365,7 +365,7 @@ static ssize_t vdd_voltage_store(struct device *dev,
 
 	ret = regulator_set_voltage(hsphy->vdd, val, val);
 	if (ret) {
-		dev_err(dev, "nilai tegangan %u tidak diterima: %d\n", val, ret);
+		dev_err(dev, "voltage value %u rejected: %d\n", val, ret);
 		return ret;
 	}
 	hsphy->vdd_voltage = val;
@@ -423,7 +423,7 @@ static int sprd_hsphy_probe(struct platform_device *pdev)
 	if (of_property_read_u32(np, "sprd,vdd-voltage", &hsphy->vdd_voltage)) {
 		/* Papan ini menulis 3.050.000 uV (FDT stok). Kalau properti
 		 * hilang, JANGAN menebak: pakai rentang minimum regulator. */
-		dev_warn(dev, "sprd,vdd-voltage tidak ada di DT\n");
+		dev_warn(dev, "sprd,vdd-voltage missing from the DT\n");
 		hsphy->vdd_voltage = 0;
 	}
 
@@ -432,22 +432,22 @@ static int sprd_hsphy_probe(struct platform_device *pdev)
 		int err = PTR_ERR(hsphy->vdd);
 
 		if (err != -ENODEV)
-			return dev_err_probe(dev, err, "gagal mengambil regulator vdd\n");
+			return dev_err_probe(dev, err, "cannot get the vdd regulator\n");
 		hsphy->vdd = NULL;
-		dev_warn(dev, "vdd-supply tidak ada di DT: lanjut tanpa rail\n");
+		dev_warn(dev, "vdd-supply missing from the DT: continuing without the rail\n");
 	}
 
 	hsphy->aon_apb = syscon_regmap_lookup_by_phandle(np,
 							 "sprd,syscon-enable");
 	if (IS_ERR(hsphy->aon_apb))
 		return dev_err_probe(dev, PTR_ERR(hsphy->aon_apb),
-				     "gagal mengambil regmap AON APB\n");
+				     "cannot get the AON APB regmap\n");
 
 	hsphy->anag2 = syscon_regmap_lookup_by_phandle(np,
 						       "sprd,syscon-anag2");
 	if (IS_ERR(hsphy->anag2))
 		return dev_err_probe(dev, PTR_ERR(hsphy->anag2),
-				     "gagal mengambil regmap ANLG PHY G2\n");
+				     "cannot get the ANLG PHY G2 regmap\n");
 
 	/*
 	 * Device PMIC untuk charger detect. Blob MEWAJIBKAN ini (probe gagal
@@ -470,7 +470,7 @@ static int sprd_hsphy_probe(struct platform_device *pdev)
 		}
 	}
 	if (!hsphy->pmic_dev)
-		dev_warn(dev, "PMIC sc2730 tidak ditemukan: charger-detect nonaktif\n");
+		dev_warn(dev, "PMIC sc2730 not found: charger-detect disabled\n");
 
 	platform_set_drvdata(pdev, hsphy);
 	device_init_wakeup(dev, true);
@@ -481,15 +481,15 @@ static int sprd_hsphy_probe(struct platform_device *pdev)
 	 * glue MUSB (EINVAL -22). */
 	ret = usb_add_phy_dev(&hsphy->phy);
 	if (ret) {
-		dev_err(dev, "gagal mendaftarkan usb_phy: %d\n", ret);
+		dev_err(dev, "cannot register usb_phy: %d\n", ret);
 		return ret;
 	}
 
 	ret = device_add_groups(dev, sprd_hsphy_attr_groups);
 	if (ret)
-		dev_warn(dev, "gagal membuat atribut sysfs: %d\n", ret);
+		dev_warn(dev, "cannot create sysfs attributes: %d\n", ret);
 
-	dev_info(dev, "sprd-hsphy siap (vdd %u uV)\n", hsphy->vdd_voltage);
+	dev_info(dev, "sprd-hsphy ready (vdd %u uV)\n", hsphy->vdd_voltage);
 	return 0;
 }
 

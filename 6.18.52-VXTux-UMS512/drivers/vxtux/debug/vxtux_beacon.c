@@ -1,138 +1,86 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * vxtux_beacon.c — indikator tahap boot di framebuffer LK (UMS512).
+ * vxtux_fb_mem.c (build name: vxtux_beacon.o) - keep the bootloader
+ * framebuffer memory out of the buddy allocator (UMS512 / Advan T1030).
  *
- * Masalah: tablet ini tidak mengekspos UART sebagai COM, dan boot yang mati
- * sebelum driver eMMC probe tidak bisa menulis apa pun ke partisi cache.
- * Akibatnya semua kegagalan boot sebelum MMC terlihat sama: layar diam di
- * logo, tanpa jejak.
+ * WHY THIS EXISTS
+ * ---------------
+ * LK leaves the panel scanning out of two buffers that the stock device tree
+ * does NOT reserve:
  *
- * Solusi: LK meninggalkan framebuffer panel tetap menyala, dan display
- * controller terus memindai memori itu walau kernel sudah berjalan (terbukti:
- * kernel 6.18 tidak pernah mengambil alih panel, layar tetap menampilkan
- * splash LK). Driver ini memanfaatkannya sebagai kanal keluaran:
- *
- *   setiap tahap initcall mengecat SATU kotak putih tambahan di kiri-atas.
- *
- * Cara membaca hasilnya: hitung kotak putih di layar.
- *
- *   1 = early_initcall   5 = subsys_initcall
- *   2 = core_initcall    6 = fs_initcall
- *   3 = postcore         7 = device_initcall
- *   4 = arch_initcall    8 = late_initcall (seluruh initcall selesai)
- *
- * Kotak merah selebar layar = kernel panic (notifier panic).
- *
- * Alamat/format framebuffer diambil dari log LK sendiri:
- *   [sprdfb][logo_mem_init] splashimage addr is 0x0x9d000000, fb size is 0x9e4000
+ *   [sprdfb][logo_mem_init] splashimage addr is 0x9d000000, fb size 0x9e4000
  *   [sprdlk][lcd_init] [LCD] Using LCD frambuffer at 0x9e000000
  *   lcd_name=lcd_hx83102e_qc_1200x2000, lcd_base=9e000000
- *   lcd_console: have 150/125 col/rws on scr 1200x2000
- *     -> 150*8 = 1200 dan 125*16 = 2000 (font 8x16) => layar 1200x2000
- *   fb size 0x9e4000 = alokasi LK 4 byte/piksel, TAPI scanout DPU terbukti
- *   RGB565 16-bit lewat uji boot artix21-24 (mk_boot_artix.py): word
- *   0x00FF00FF tampil biru (=2 piksel 0x00FF), 0xF800F800 tampil merah,
- *   dan 4 pita x 300.000 word (= 1,2 MB = 600 baris @ 1200 px) membagi
- *   layar 1200x2000 persis menjadi 4 -> stride 1200*2 = 2400, 16 bpp
- *   RGB565.  (Versi awal 32 bpp XRGB8888 dan 1200x1920/stride 1200*3
- *   keduanya salah -- barisnya bergeser dan kotak jadi noda.)
  *
- * Kedua buffer dicat supaya benar apa pun yang sedang dipindai DISPC.
+ * vxtux_lkfb.c registers the second buffer as an fbdev so fbcon can print
+ * kernel messages on the panel.  If the kernel ever handed those pages to
+ * somebody else, the framebuffer would be scribbled over and the console
+ * would fill with garbage.  So both ranges are claimed here.
  *
- * Memori itu TIDAK direservasi di DT stok, jadi tanpa penjagaan kernel bisa
- * memakainya untuk hal lain. Karena itu reservasi dilakukan pada early_param
- * ("vxtuxfb=0x9d000000,0x9e000000"), saat memblock masih bisa diatur — jauh
- * sebelum buddy allocator mengambil alih.
+ * HOW
+ * ---
+ * early_param runs while memblock is still editable, long before the buddy
+ * allocator exists, which is the only point where this is safe:
+ *
+ *   cmdline: ... vxtuxfb=0x9d000000,0x9e000000
+ *
+ * The command line is built by ci_qemu/mk_boot_artix.py (CMDLINE constant).
+ *
+ * HISTORY
+ * -------
+ * This file used to also draw a debug beacon: one white box per initcall
+ * level in the top-left corner, plus a red bar on panic.  Those boxes were
+ * the only feedback channel back when nothing could print on the panel.  The
+ * framebuffer console (vxtux_lkfb.c, device_initcall) plus its 200-line dmesg
+ * replay now cover that job, and the leftover boxes made the handover from LK
+ * to the kernel look dirty, so the whole drawing path is gone.
+ *
+ * If early-boot feedback is ever needed again, note that anything drawn from
+ * this file is drawn THROUGH THE CACHEABLE LINEAR MAP, so it must be flushed
+ * to the point of coherency (dcache_clean_poc) or the display controller
+ * never sees it - see git history for the removed beacon code.
  */
-#define pr_fmt(fmt)	"vxtux-beacon: " fmt
+#define pr_fmt(fmt) "vxtux-fbmem: " fmt
 
 #include <linux/init.h>
-#include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/memblock.h>
-#include <linux/notifier.h>
-#include <linux/panic_notifier.h>
 #include <linux/printk.h>
 #include <linux/string.h>
 #include <linux/types.h>
 
-#include <asm/cacheflush.h>
-#include <asm/memory.h>
-
-#define BEACON_FB_SIZE	0x9e4000U	/* sama dengan "fb size" LK */
-#define BEACON_WIDTH	1200U
-#define BEACON_STRIDE	(BEACON_WIDTH * 2)	/* 16 bpp RGB565 (terbukti artix21-24) */
-#define BEACON_BOX	80U
-#define BEACON_GAP	96U
-#define BEACON_LEFT	40U
-#define BEACON_TOP	260U	/* di bawah 4 pita stub relay (baris 0..199) */
-#define BEACON_MAX_AREAS 4
-
-struct beacon_area {
-	phys_addr_t	base;
-	void __iomem	*va;
-};
-
-static struct beacon_area beacon_areas[BEACON_MAX_AREAS];
-static int beacon_nareas;
-static int beacon_stage;
+#define VXTUXFB_SIZE	0x9e4000U	/* "fb size" reported by LK */
+#define VXTUXFB_MAX	4
 
 /*
- * RGB888 -> RGB565 (format scanout DPU yang terbukti dari uji pita
- * artix21-24) dan tulis sebagai 2 byte little-endian per piksel.
+ * JANGAN memanggil vxtux_itrace_banner() dari sini.
+ *
+ * early_param dijalankan oleh parse_early_param() di arch/arm64/kernel/
+ * setup.c:299, sedangkan paging_init() baru di baris 334.  Artinya linear
+ * map (__va) BELUM ada saat callback ini jalan: setiap akses ke
+ * __va(0x9e000000) fault, dan fault di titik itu terjadi sebelum printk
+ * punya konsol -> layar beku tanpa satu baris, tanpa panic.
+ *
+ * Inilah sebab sebenarnya artix36 "nol informasi": bukan karena
+ * find_font() mengembalikan NULL, melainkan karena gambar pertamanya
+ * menyentuh alamat yang belum dipetakan.  vxtux_inittrace.c sekarang
+ * memulai banner dari do_one_initcall() (setelah paging_init), dan
+ * memanggilnya hanya bila belum pernah berhasil.
  */
-static inline u16 beacon_rgb565(u8 r, u8 g, u8 b)
-{
-	return (u16)((r & 0xF8) << 8) | (u16)((g & 0xFC) << 3) | (u16)(b >> 3);
-}
 
-static void beacon_box(int idx, u8 r, u8 g, u8 b)
-{
-	unsigned int y, x, k;
-	u16 v = beacon_rgb565(r, g, b);
-
-	for (k = 0; k < beacon_nareas; k++) {
-		u8 __iomem *base = beacon_areas[k].va;
-		unsigned int x0;
-
-		if (!base)
-			continue;
-
-		x0 = BEACON_LEFT + (unsigned int)idx * BEACON_GAP;
-		for (y = BEACON_TOP; y < BEACON_TOP + BEACON_BOX; y++) {
-			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
-
-			for (x = x0; x < x0 + BEACON_BOX; x++) {
-				writeb(v & 0xff, row + x * 2 + 0);
-				writeb(v >> 8,   row + x * 2 + 1);
-			}
-		}
-
-		/* linear map cacheable -> flush agar DISPC melihatnya */
-		dcache_clean_poc((unsigned long)base +
-				 (size_t)BEACON_TOP * BEACON_STRIDE,
-				 (unsigned long)base +
-				 (size_t)(BEACON_TOP + BEACON_BOX) * BEACON_STRIDE);
-	}
-}
-
-static void beacon_mark(int stage)
-{
-	if (stage <= beacon_stage)
-		return;
-	beacon_stage = stage;
-	beacon_box(stage - 1, 0xff, 0xff, 0xff);
-}
+static phys_addr_t vxtuxfb_base[VXTUXFB_MAX];
+static int vxtuxfb_n;
 
 /*
- * early_param: reservasi kedua buffer SEBELUM buddy allocator memakai RAM.
- * Format: vxtuxfb=0x9d000000,0x9e000000
+ * vxtuxfb=0x9d000000,0x9e000000
+ *
+ * Reserve every address listed, before the buddy allocator can take it.
  */
-static int __init beacon_setup(char *str)
+static int __init vxtuxfb_setup(char *str)
 {
 	char *tok;
 
-	while (str && *str && beacon_nareas < BEACON_MAX_AREAS) {
+	while (str && *str && vxtuxfb_n < VXTUXFB_MAX) {
 		unsigned long long addr;
 
 		tok = strsep(&str, ",");
@@ -141,135 +89,19 @@ static int __init beacon_setup(char *str)
 		addr = memparse(tok, NULL);
 		if (!addr)
 			continue;
-		if (memblock_reserve(addr, BEACON_FB_SIZE)) {
-			pr_err("reservasi %pa gagal\n", &addr);
+		if (memblock_reserve(addr, VXTUXFB_SIZE)) {
+			pr_err("cannot reserve %pa\n", &addr);
 			continue;
 		}
-		beacon_areas[beacon_nareas].base = addr;
-		beacon_nareas++;
+		vxtuxfb_base[vxtuxfb_n++] = addr;
 	}
-	if (beacon_nareas)
-		pr_info("%d buffer framebuffer direservasi (%#x byte)\n",
-			beacon_nareas, BEACON_FB_SIZE);
-	return 0;
-}
-early_param("vxtuxfb", beacon_setup);
-
-/*
- * BUG LAMA: di sini dipakai memremap(..., MEMREMAP_WC).  Untuk alamat di
- * dalam /memory (0x9D000000 dan 0x9E000000 keduanya System RAM menurut
- * memory@80000000 reg = <0x80000000 0x80000000> di DT stok) memremap()
- * MENGEMBALIKAN NULL + WARN "memremap attempted on ram", sehingga tidak
- * satu kotak beacon pun pernah tercat sejak versi memremap dipakai.
- * Sekarang: linear map apa adanya + flush D-cache sampai PoC.
- */
-static int __init beacon_map(void)
-{
-	int k;
-
-	for (k = 0; k < beacon_nareas; k++)
-		beacon_areas[k].va = (void __iomem *)__va(beacon_areas[k].base);
-	return beacon_nareas;
-}
-
-/* --- tahap-tahap ------------------------------------------------------- */
-
-static int __init beacon_early(void)
-{
-	if (!beacon_map())
+	if (!vxtuxfb_n) {
+		pr_warn("no framebuffer buffer reserved - pass vxtuxfb=<phys>,...\n");
 		return 0;
-	beacon_mark(1);
-	return 0;
-}
-early_initcall(beacon_early);
-
-static int __init beacon_core(void)
-{
-	beacon_mark(2);
-	return 0;
-}
-core_initcall(beacon_core);
-
-static int __init beacon_postcore(void)
-{
-	beacon_mark(3);
-	return 0;
-}
-postcore_initcall(beacon_postcore);
-
-static int __init beacon_arch(void)
-{
-	beacon_mark(4);
-	return 0;
-}
-arch_initcall(beacon_arch);
-
-static int __init beacon_subsys(void)
-{
-	beacon_mark(5);
-	return 0;
-}
-subsys_initcall(beacon_subsys);
-
-static int __init beacon_fs(void)
-{
-	beacon_mark(6);
-	return 0;
-}
-fs_initcall(beacon_fs);
-
-static int __init beacon_device(void)
-{
-	beacon_mark(7);
-	return 0;
-}
-device_initcall(beacon_device);
-
-static int __init beacon_late(void)
-{
-	beacon_mark(8);
-	return 0;
-}
-late_initcall(beacon_late);
-
-/* --- panic ------------------------------------------------------------- */
-
-static int beacon_panic(struct notifier_block *nb, unsigned long action,
-			void *data)
-{
-	unsigned int y, x, k;
-
-	/* pita merah (RGB565 0xF800) selebar layar di paling atas = panic */
-	for (k = 0; k < beacon_nareas; k++) {
-		u8 __iomem *base = beacon_areas[k].va;
-		u16 v = beacon_rgb565(0xff, 0x00, 0x00);
-
-		if (!base)
-			continue;
-		for (y = 0; y < 24; y++) {
-			u8 __iomem *row = base + (size_t)y * BEACON_STRIDE;
-
-			for (x = 0; x < BEACON_WIDTH; x++) {
-				writeb(v & 0xff, row + x * 2 + 0);
-				writeb(v >> 8,   row + x * 2 + 1);
-			}
-		}
-		dcache_clean_poc((unsigned long)base,
-				 (unsigned long)base + 24 * BEACON_STRIDE);
 	}
-	return NOTIFY_OK;
-}
-
-static struct notifier_block beacon_panic_nb = {
-	.notifier_call	= beacon_panic,
-	.priority	= 0,
-};
-
-static int __init beacon_notifier(void)
-{
-	if (beacon_nareas)
-		atomic_notifier_chain_register(&panic_notifier_list,
-					       &beacon_panic_nb);
+	pr_info("reserved %d bootloader framebuffer buffer(s), %#x bytes each\n",
+		vxtuxfb_n, VXTUXFB_SIZE);
+	/* Banner digambar nanti oleh do_one_initcall -> lihat catatan di atas. */
 	return 0;
 }
-late_initcall(beacon_notifier);
+early_param("vxtuxfb", vxtuxfb_setup);

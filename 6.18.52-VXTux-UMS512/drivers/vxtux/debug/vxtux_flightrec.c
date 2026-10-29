@@ -34,6 +34,7 @@
 #include <linux/file.h>
 #include <linux/fs.h>
 #include <linux/init.h>
+#include <linux/jiffies.h>
 #include <linux/kdev_t.h>
 #include <linux/kernel.h>
 #include <linux/kmsg_dump.h>
@@ -44,6 +45,7 @@
 #include <linux/printk.h>
 #include <linux/sched.h>
 #include <linux/string.h>
+#include <linux/stringify.h>
 #include <linux/timekeeping.h>
 #include <linux/vmalloc.h>
 
@@ -76,33 +78,113 @@ static char *fr_prev;			/* teks terakhir yang sudah ditulis */
 static size_t fr_prev_len;
 static u64 fr_seq;
 static bool fr_announced;
+static int fr_last_err;		/* errno terakhir yang sudah dicetak */
+static unsigned long fr_last_err_jif;	/* kapan terakhir dicetak */
 static struct task_struct *fr_task;
 static DEFINE_MUTEX(fr_lock);
+
+/*
+ * Kanal tulis ke eMMC belum pernah terbukti bekerja di perangkat ini:
+ * 28 dump partisi cache (artix6..artix33) tidak pernah memuat VXTUXFR1,
+ * bahkan pada boot yang TERBUKTI driver MMC sudah jalan penuh (daftar
+ * mmcblk0p1..p71 muncul di layar).  Bedah dump artix33 (out/_bedah33.py)
+ * menunjukkan partisi cache 100% identik antara dump pra-flash dan
+ * pasca-boot: nol byte ditulis, dan tiga penulis berbeda (pstore_blk,
+ * flightrec, init userspace) semuanya gagal serentak.
+ *
+ * Agar kegagalan berikutnya TIDAK butuh dump lagi: setiap kegagalan yang
+ * berbeda dicetak ke dmesg (fbcon memutarnya kembali), DAN kegagalan yang
+ * SAMA dicetak ulang tiap 10 detik sehingga keadaan terkini selalu terlihat
+ * di layar -- bukan hanya kesan sesaat di awal boot.  Bila disk mmcblk0
+ * tidak terdaftar sama sekali, nama-nama disk yang ada ikut dicetak, jadi
+ * langsung terlihat apakah eMMC hilang atau hanya berganti nama.  Setiap
+ * tulisan sukses diverifikasi dengan baca-balik.
+ */
+static bool fr_report_err(const char *what, int err)
+{
+	if (err == fr_last_err &&
+	    time_before(jiffies, fr_last_err_jif + 10 * HZ))
+		return false;
+	fr_last_err = err;
+	fr_last_err_jif = jiffies;
+	pr_err("%s failed: %d (%pe) - visible on fbcon\n", what, err,
+	       ERR_PTR(err));
+	return true;
+}
+
+static int fr_nth_match(struct device *dev, const void *data)
+{
+	int *left = (int *)data;
+
+	if (*left == 0)
+		return 1;
+	(*left)--;
+	return 0;
+}
+
+/* Cetak nama disk yang sedang terdaftar di block_class (maks 8). */
+static void fr_list_disks(void)
+{
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		int n = i;
+		struct device *dev;
+
+		dev = class_find_device(&block_class, NULL, &n,
+					fr_nth_match);
+		if (!dev)
+			break;
+		pr_info("registered disk[%d]=%s\n", i, dev_name(dev));
+		put_device(dev);
+	}
+}
 
 /*
  * Cari device node partisi cache TANPA bergantung pada devtmpfs: devtmpfs
  * baru di-mount kernel_init setelah seluruh initcall selesai, sementara kita
  * justru ingin merekam saat initcall masih berjalan.
+ *
+ * Dua strategi dicoba berurutan (artix34):
+ *   1. langsung dari gendisk lewat dev_t - jalan sebelum devtmpfs ada;
+ *   2. lewat node /dev/mmcblk0p49 - jalan setelah devtmpfs ter-mount.
+ * Kalau keduanya gagal, errno masing-masing tercetak di fbcon sehingga
+ * langsung terlihat apakah p49 memang tidak dibuat (-ENODEV), disk read-
+ * only (-EROFS), atau hal lain.
  */
 static struct file *fr_open(void)
 {
 	struct device *dev;
 	struct gendisk *disk;
 	dev_t devt = 0;
+	struct file *f;
 
 	dev = class_find_device_by_name(&block_class, FR_DISK);
-	if (!dev)
-		return ERR_PTR(-ENODEV);
+	if (dev) {
+		disk = dev_to_disk(dev);
+		if (disk)
+			devt = part_devt(disk, FR_PARTNO);
+		put_device(dev);
+	} else if (fr_report_err("disk " FR_DISK " not registered",
+				 -ENODEV)) {
+		/* cetak ulang terjadi: tunjukkan disk apa yang ada */
+		fr_list_disks();
+	}
 
-	disk = dev_to_disk(dev);
-	if (disk)
-		devt = part_devt(disk, FR_PARTNO);
-	put_device(dev);
+	if (devt) {
+		f = bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
+		if (!IS_ERR(f))
+			return f;
+		fr_report_err("open " FR_DISK "p" __stringify(FR_PARTNO)
+			      " by devt", PTR_ERR(f));
+	}
 
-	if (!devt)
-		return ERR_PTR(-ENODEV);
-
-	return bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
+	f = bdev_file_open_by_path("/dev/" FR_DISK "p" __stringify(FR_PARTNO),
+				   BLK_OPEN_WRITE, NULL, NULL);
+	if (IS_ERR(f))
+		fr_report_err("open /dev/" FR_DISK "p" __stringify(FR_PARTNO),
+			      PTR_ERR(f));
+	return f;
 }
 
 static int fr_dump_locked(u32 reason)
@@ -143,9 +225,34 @@ static int fr_dump_locked(u32 reason)
 		return PTR_ERR(file);
 
 	ret = kernel_write(file, fr_cur, total, &pos);
+	if (ret != (int)total) {
+		int err = ret < 0 ? ret : -EIO;
+
+		fput(file);
+		fr_report_err("write", err);
+		return err;
+	}
+
+	/* Baca-balik: bukti fisik bahwa byte benar-benar sampai ke eMMC. */
+	{
+		char back[8];
+		loff_t rpos = FR_OFFSET;
+		ssize_t rn = kernel_read(file, back, sizeof(back), &rpos);
+
+		if (rn != (ssize_t)sizeof(back) ||
+		    memcmp(back, FR_MAGIC, sizeof(back))) {
+			fput(file);
+			fr_report_err("readback after write", -EIO);
+			return -EIO;
+		}
+	}
 	fput(file);
-	if (ret < 0)
-		return ret;
+	if (fr_last_err) {
+		pr_info("write channel recovered (was %d) - dmesg %zu B recorded at %s p%d + %#llx\n",
+			fr_last_err, len, FR_DISK, FR_PARTNO,
+			(unsigned long long)FR_OFFSET);
+		fr_last_err = 0;
+	}
 
 	fr_seq++;
 	memcpy(fr_prev, text, len);
@@ -165,7 +272,7 @@ static int fr_thread(void *unused)
 
 		if (ret == 0 && !fr_announced) {
 			fr_announced = true;
-			pr_info("OK — dmesg %zu B tercatat di %s p%d + %#llx\n",
+			pr_info("OK - dmesg %zu B recorded at %s p%d + %#llx\n",
 				fr_prev_len, FR_DISK, FR_PARTNO,
 				(unsigned long long)FR_OFFSET);
 		}
@@ -217,7 +324,7 @@ static int __init vxtux_flightrec_init(void)
 		return ret;
 	}
 
-	pr_info("aktif — dmesg -> /dev/%sp%d + %#llx tiap 3 dtk\n",
+	pr_info("active - dmesg -> /dev/%sp%d + %#llx every 3 s (write+readback verified)\n",
 		FR_DISK, FR_PARTNO, (unsigned long long)FR_OFFSET);
 	return 0;
 

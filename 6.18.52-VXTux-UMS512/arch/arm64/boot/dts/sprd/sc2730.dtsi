@@ -23,11 +23,9 @@
  * CATATAN BINDING (penting, belum diuji boot):
  *  - adc/efuse/vibrator/rtc/bltc/eic/mfd cocok lewat `compatible`
  *    (rtc & bltc perlu entri `sprd,sc2730-*` yang ditambahkan di driver).
- *  - regulator & poweroff TIDAK punya of_match_table di mainline; keduanya
- *    dicocokkan lewat NAMA driver (`sc27xx-regulator`, `sc27xx-poweroff`),
- *    sehingga node-nya sengaja dinamai persis seperti itu. Inilah kenapa
- *    namanya bukan `power-controller@1800` / `poweroff@1820` seperti di DTS
- *    vendor.
+ *  - regulator dan poweroff di tree ini memakai of_match_table khusus;
+ *    compatible node SC2730 harus persis yang didukung driver, supaya driver
+ *    SC2731 tidak pernah mengklaim PMIC ini.
  *  - tsensor SUDAH ditulis di sini sejak 2026-10-14 (pmic_tsensor):
  *    driver sc27xx_tsensor_thermal sudah diport + ter-build, jadi
  *    alasan lama "belum punya driver mainline" tidak berlaku lagi.
@@ -248,149 +246,289 @@
 		};
 
 		/*
-		 * Regulator SC2730. ATURAN (terverifikasi 2026-09-23): nama anak node
-		 * HARUS sama dengan `of_match` di tabel `regulators[]` driver mainline
-		 * (drivers/regulator/sc2731-regulator.c) — itulah yang dicocokkan
-		 * of_get_regulator_init_data(). DTB stok memakai kosakata sendiri
-		 * (DCDC_CORE, LDO_VDDCAMA0, ...) yang tidak cocok dengan satu pun nama
-		 * driver, sehingga 32 rail "terpasang" tapi nol init data (always-on
-		 * ikut hilang -> rail bisa dimatikan regulator core di late_initcall).
-		 *
-		 * Karena itu hanya rail yang DIKENAL driver yang ditulis di sini
-		 * (17 = seluruh isi tabel driver). Rail vendor lain (DCDC_GEN0/1,
-		 * DCDC_MEMQ/MODEM/SRAM, LDO_VDD28, LDO_AVDD12/18, LDO_VDD18_DCXO,
-		 * LDO_VDDRF18, LDO_VDDRF1V25, LDO_VDDLDO0/1/2, LDO_VDDWCN,
-		 * LDO_VDDSIM2, LDO_VDDKPLED) tidak punya driver di 6.18; tabel lengkap
-		 * (nama + rentang voltase dari FDT stok) ada di docs/pmic_sc2730.md.
-		 *
-		 * Nama node ini sendiri bebas: driver sekarang punya of_match_table
-		 * (ditambahkan 2026-09-23) sehingga bind lewat compatible
-		 * "sprd,sc2731-regulator"/"sprd,sc2730-regulator".
+		 * Rail PMIC: 1:1 dari FDT stok (rom backup advan,
+		 * /soc/aon/spi@32100000/pmic@0/power-controller@1800).
+		 * Nama child WAJIB sama dengan descriptor `of_match` driver:
+		 * regulator core mencocokkan node anak lewat NAMA, bukan reg.
+		 * Satu saja tidak ada -> devm_regulator_register() -ENODEV ->
+		 * seluruh provider batal -> semua consumer defer selamanya.
 		 */
-		sc27xx-regulator {
-			compatible = "sprd,sc2731-regulator", "sprd,sc2730-regulator";
+		regulators {
+			compatible = "sprd,sc2730-regulator";
 
-			BUCK_CPU0 {
-				/* padanan rail vendor belum terbukti; vendor menandai SEMUA 9 rail DCDC always-on */
+			vddcpu: DCDC_CPU {
+				regulator-compatible = "dcdc-cpu";
+				regulator-name = "vddcpu";
+				regulator-min-microvolt = <200000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
 				regulator-always-on;
 			};
 
-			BUCK_CPU1 {
-				/* idem BUCK_CPU0 */
+			vddgpu: DCDC_GPU {
+				regulator-compatible = "dcdc-gpu";
+				regulator-name = "vddgpu";
+				regulator-min-microvolt = <200000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
 				regulator-always-on;
 			};
 
-			BUCK_RF {
-				/* idem BUCK_CPU0 */
+			vddcore: DCDC_CORE {
+				regulator-compatible = "dcdc-core";
+				regulator-name = "vddcore";
+				regulator-min-microvolt = <200000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
 				regulator-always-on;
 			};
 
-			vddcama0: LDO_CAMA0 {
-				/* DTB stok: LDO_VDDCAMA0 */
-				regulator-name = "vddcama0";
+			vddmodem: DCDC_MODEM {
+				regulator-compatible = "dcdc-modem";
+				regulator-name = "vddmodem";
+				regulator-min-microvolt = <200000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddmem: DCDC_MEM {
+				regulator-compatible = "dcdc-mem";
+				regulator-name = "vddmem";
+				regulator-min-microvolt = <400000>;
+				regulator-max-microvolt = <1593750>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddmemq: DCDC_MEMQ {
+				regulator-compatible = "dcdc-memq";
+				regulator-name = "vddmemq";
+				regulator-min-microvolt = <400000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddgen0: DCDC_GEN0 {
+				regulator-compatible = "dcdc-gen0";
+				regulator-name = "vddgen0";
+				regulator-min-microvolt = <1220000>;
+				regulator-max-microvolt = <2410625>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddgen1: DCDC_GEN1 {
+				regulator-compatible = "dcdc-gen1";
+				regulator-name = "vddgen1";
+				regulator-min-microvolt = <850000>;
+				regulator-max-microvolt = <1643750>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddsram: DCDC_SRAM {
+				regulator-compatible = "dcdc-sram";
+				regulator-name = "vddsram";
+				regulator-min-microvolt = <200000>;
+				regulator-max-microvolt = <1596875>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			avdd18: LDO_AVDD18 {
+				regulator-compatible = "ldo-avdd18";
+				regulator-name = "avdd18";
+				regulator-min-microvolt = <1175000>;
+				regulator-max-microvolt = <1805000>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddrf18: LDO_VDDRF18 {
+				regulator-compatible = "ldo-vddrf18";
+				regulator-name = "vddrf18";
+				regulator-min-microvolt = <1175000>;
+				regulator-max-microvolt = <1805000>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddcamio: LDO_VDDCAMIO {
+				regulator-compatible = "ldo-vddcamio";
+				regulator-name = "vddcamio";
 				regulator-min-microvolt = <1200000>;
-				regulator-max-microvolt = <3750000>;
+				regulator-max-microvolt = <1830000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcama1: LDO_CAMA1 {
-				/* DTB stok: LDO_VDDCAMA1 */
-				regulator-name = "vddcama1";
-				regulator-min-microvolt = <1200000>;
-				regulator-max-microvolt = <3750000>;
+			vddwcn: LDO_VDDWCN {
+				regulator-compatible = "ldo-vddwcn";
+				regulator-name = "vddwcn";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <1845000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcamd0: LDO_CAMD0 {
-				/* DTB stok: LDO_VDDCAMD0 */
+			vddcamd1: LDO_VDDCAMD1 {
+				regulator-compatible = "ldo-vddcamd1";
+				regulator-name = "vddcamd1";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <1365000>;
+				regulator-ramp-delay = <25000>;
+			};
+
+			vddcamd0: LDO_VDDCAMD0 {
+				regulator-compatible = "ldo-vddcamd0";
 				regulator-name = "vddcamd0";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <1200000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcamd1: LDO_CAMD1 {
-				/* DTB stok: LDO_VDDCAMD1 (min vendor 900000 di-clip ke min driver) */
-				regulator-name = "vddcamd1";
-				regulator-min-microvolt = <1000000>;
+			vddrf1v25: LDO_VDDRF1V25 {
+				regulator-compatible = "ldo-vddrf1v25";
+				regulator-name = "vddrf1v25";
+				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1365000>;
 				regulator-ramp-delay = <25000>;
+				regulator-always-on;
 			};
 
-			vddcamio: LDO_CAMIO {
-				/* DTB stok: LDO_VDDCAMIO (max vendor 1830000 di-clip ke max driver) */
-				regulator-name = "vddcamio";
+			avdd12: LDO_AVDD12 {
+				regulator-compatible = "ldo-avdd12";
+				regulator-name = "avdd12";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <1365000>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddcama0: LDO_VDDCAMA0 {
+				regulator-compatible = "ldo-vddcama0";
+				regulator-name = "vddcama0";
 				regulator-min-microvolt = <1200000>;
-				regulator-max-microvolt = <1793750>;
+				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			vddcammot: LDO_CAMMOT {
-				/* DTB stok: LDO_VDDCAMMOT (rail fixed-voltage) */
+			vddcama1: LDO_VDDCAMA1 {
+				regulator-compatible = "ldo-vddcama1";
+				regulator-name = "vddcama1";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+			};
+
+			vddcammot: LDO_VDDCAMMOT {
+				regulator-compatible = "ldo-vddcammot";
 				regulator-name = "vddcammot";
 				regulator-min-microvolt = <2800000>;
 				regulator-max-microvolt = <2800000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_CON {
-				/* padanan rail vendor belum terbukti */
+			vddsim2: LDO_VDDSIM2 {
+				regulator-compatible = "ldo-vddsim2";
+				regulator-name = "vddsim2";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_EMMCCORE {
-				/* DTB stok: LDO_VDDEMMCCORE */
+			vddemmccore: LDO_VDDEMMCCORE {
+				regulator-compatible = "ldo-vddemmccore";
 				regulator-name = "vddemmccore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
-				regulator-boot-on;
 				regulator-always-on;
 			};
 
-			LDO_SDCORE {
-				/* DTB stok: LDO_VDDSDCORE */
+			vddsdcore: LDO_VDDSDCORE {
+				regulator-compatible = "ldo-vddsdcore";
 				regulator-name = "vddsdcore";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_SDIO {
-				/* DTB stok: LDO_VDDSDIO */
+			vddsdio: LDO_VDDSDIO {
+				regulator-compatible = "ldo-vddsdio";
 				regulator-name = "vddsdio";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_SRAM {
-				/* always-on: preseden sc2731.dtsi upstream */
+			vdd28: LDO_VDD28 {
+				regulator-compatible = "ldo-vdd28";
+				regulator-name = "vdd28";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
 				regulator-always-on;
 			};
 
-			/* Label `vddusb33` ditambahkan 2026-09-25 (F3): node hsphy USB
-			 * menunjuk rail ini lewat vdd-supply = <&vddusb33> (stok: phandle
-			 * 0x126 = LDO_VDDUSB33). Label tidak mengubah binding apa pun —
-			 * driver SC27xx regulator mencocokkan lewat nama node/rail. */
-			vddusb33: LDO_USB33 {
-				/* DTB stok: LDO_VDDUSB33 */
+			vddwifipa: LDO_VDDWIFIPA {
+				regulator-compatible = "ldo-vddwifipa";
+				regulator-name = "vddwifipa";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+			};
+
+			vdd18_dcxo: LDO_VDD18_DCXO {
+				regulator-compatible = "ldo-vdd18-dcxo";
+				regulator-name = "vdd18_dcxo";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
+			};
+
+			vddusb33: LDO_VDDUSB33 {
+				regulator-compatible = "ldo-vddusb33";
 				regulator-name = "vddusb33";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
 
-			LDO_VLDO {
-				/* padanan rail vendor belum terbukti */
+			vddldo0: LDO_VDDLDO0 {
+				regulator-compatible = "ldo-vddldo0";
+				regulator-name = "vddldo0";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+				regulator-always-on;
 			};
 
-			LDO_WIFIPA {
-				/* DTB stok: LDO_VDDWIFIPA */
-				regulator-name = "vddwifipa";
+			vddldo1: LDO_VDDLDO1 {
+				regulator-compatible = "ldo-vddldo1";
+				regulator-name = "vddldo1";
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3750000>;
 				regulator-ramp-delay = <25000>;
 			};
+
+			vddldo2: LDO_VDDLDO2 {
+				regulator-compatible = "ldo-vddldo2";
+				regulator-name = "vddldo2";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+			};
+
+			vddkpled: LDO_VDDKPLED {
+				regulator-compatible = "ldo-vddkpled";
+				regulator-name = "vddkpled";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3750000>;
+				regulator-ramp-delay = <25000>;
+			};
+
 		};
 
 		/*

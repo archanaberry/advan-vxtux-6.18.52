@@ -4488,6 +4488,10 @@ static void sprd_codec_remove(struct platform_device *pdev)
 #ifdef CONFIG_OF
 static const struct of_device_id codec_of_match[] = {
 	{.compatible = "sprd,sc2730-audio-codec",},
+	/* FDT stok: audio-codec@1000 memakai prefiks rebrand "unisoc,"
+	 * ("unisoc,sc2730-audio-codec", "unisoc,sc2731-audio-codec"). */
+	{.compatible = "unisoc,sc2730-audio-codec",},
+	{.compatible = "unisoc,sc2731-audio-codec",},
 	{},
 };
 

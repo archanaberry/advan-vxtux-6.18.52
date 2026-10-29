@@ -635,6 +635,11 @@ static const struct dev_pm_ops sprd_i2c_pm_ops = {
 
 static const struct of_device_id sprd_i2c_of_match[] = {
 	{ .compatible = "sprd,sc9860-i2c", },
+	/* FDT stok UMS512 (vendor_boot, dtc -I dtb): node i2c@32060000 dst
+	 * memakai "sprd,sharkl5pro-hw-i2c" dengan clock-names
+	 * "source","enable","i2c","clk_hw_i2c" -- tiga nama pertama sudah
+	 * persis yang diminta sprd_i2c_probe(), jadi cukup pasang alias ini. */
+	{ .compatible = "sprd,sharkl5pro-hw-i2c", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, sprd_i2c_of_match);

@@ -75,4 +75,4 @@ EXPORT_SYMBOL(cfg80211_get_bss);
  * (lihat Kconfig VXTUX_VENDOR_ABI_CFG80211). Tanpa lisensi, memuat modul
  * menandai kernel TAINTED — tidak boleh untuk sesi bukti RE. */
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Shim cfg80211_get_bss() 5.4 untuk modul blob vendor (VXTux)");
+MODULE_DESCRIPTION("Shim cfg80211_get_bss() 5.4 for vendor blob modules (VXTux)");

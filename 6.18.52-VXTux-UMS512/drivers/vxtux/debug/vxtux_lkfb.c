@@ -55,6 +55,7 @@
 #include <linux/init.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
+#include <linux/kmsg_dump.h>
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/printk.h>
@@ -66,6 +67,11 @@
 #include <asm/cacheflush.h>
 #include <asm/memory.h>
 
+#ifdef CONFIG_VXTUX_INITTRACE
+/* vxtux_inittrace.c - initcall panel tracer; fbcon owns the screen now. */
+extern void vxtux_itrace_stop(void);
+#endif
+
 #define LKFB_PHYS	0x9e000000UL	/* lcd_base= bootargs LK */
 #define LKFB_WIDTH	1200U
 #define LKFB_HEIGHT	2000U
@@ -76,6 +82,55 @@
 struct lkfb_par {
 	u32 palette[16];
 };
+
+/*
+ * Sinkronisasi D-cache (2026-10-27)
+ * ----------------------------------
+ * Bila memremap(MEMREMAP_WC) ditolak (0x9e000000 berada di dalam /memory),
+ * kita jatuh ke __va() yang CACHEABLE: fbcon menulis lewat screen_base ke
+ * D-cache, DISPC membaca DRAM -> tulisan lama/sampah yang tak pernah
+ * ter-flush muncul sebagai garis-garis, kolom kotor dan teks pecah.
+ *
+ * Perbaikan: setiap gambar fbcon (imageblit/fillrect/copyarea) dibersihkan
+ * sampai PoC untuk baris-baris yang disentuh.  flush_dcache_page() tidak
+ * dipakai karena fbcon tidak menandai halaman; kita flush rentang barisnya
+ * langsung.
+ */
+static bool lkfb_need_flush;
+
+static void lkfb_flush_rows(struct fb_info *info, unsigned int dy,
+			    unsigned int height)
+{
+	unsigned long start, end;
+	unsigned long base = (unsigned long)info->screen_base;
+
+	if (!lkfb_need_flush || height == 0)
+		return;
+	start = base + (unsigned long)dy * info->fix.line_length;
+	end = base + (unsigned long)(dy + height) * info->fix.line_length;
+	if (end > base + LKFB_SIZE)
+		end = base + LKFB_SIZE;
+	dcache_clean_poc(start, end);
+}
+
+static void lkfb_imageblit(struct fb_info *info, const struct fb_image *image)
+{
+	cfb_imageblit(info, image);
+	lkfb_flush_rows(info, image->dy, image->height);
+}
+
+static void lkfb_fillrect(struct fb_info *info, const struct fb_fillrect *rect)
+{
+	cfb_fillrect(info, rect);
+	lkfb_flush_rows(info, rect->dy, rect->height);
+}
+
+static void lkfb_copyarea(struct fb_info *info, const struct fb_copyarea *area)
+{
+	cfb_copyarea(info, area);
+	/* sumber maupun tujuan baris yang sama dibersihkan */
+	lkfb_flush_rows(info, area->dy, area->height);
+}
 
 static int lkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 {
@@ -146,11 +201,66 @@ static int lkfb_setcolreg(unsigned int regno, unsigned int red,
 
 static const struct fb_ops lkfb_ops = {
 	.owner		= THIS_MODULE,
-	FB_DEFAULT_IOMEM_OPS,
+	/* I/O + mmap sama dengan FB_DEFAULT_IOMEM_OPS; hanya tiga operasi
+	 * gambar diganti wrapper agar hasilnya di-flush ke PoC. */
+	.fb_read	= fb_io_read,
+	.fb_write	= fb_io_write,
+	.fb_mmap	= fb_io_mmap,
+	.fb_fillrect	= lkfb_fillrect,
+	.fb_copyarea	= lkfb_copyarea,
+	.fb_imageblit	= lkfb_imageblit,
 	.fb_check_var	= lkfb_check_var,
 	.fb_set_par	= lkfb_set_par,
 	.fb_setcolreg	= lkfb_setcolreg,
 };
+
+/*
+ * Putar ulang riwayat dmesg ke fbcon (2026-10-27)
+ * ------------------------------------------------
+ * Sejak lkfb_init dipindah ke device_initcall (setelah fb_console_init di
+ * subsys_initcall), framebuffer baru terdaftar di level 6 -- semua printk
+ * level 1..5 sudah terkirim ke konsol DUMMY dan TIDAK otomatis muncul lagi
+ * di konsol baru (hanya console ber-flag CON_PRINTBUFFER yang di-replay,
+ * lihat console_try_replay_all()).
+ *
+ * Karena layar adalah SATU-SATUNYA kanal diagnostik tablet ini (tanpa UART),
+ * riwayat ring buffer dicetak ulang di sini -- 200 baris terakhir saja,
+ * supaya layar langsung menunjukkan apa yang terjadi sebelum fbcon aktif
+ * (termasuk baris terakhir sebelum kemacetan bila ada).
+ */
+#define LKFB_REPLAY_LINES	200
+
+static void lkfb_replay_dmesg(void)
+{
+	struct kmsg_dump_iter iter = { };
+	char line[1024];
+	size_t len;
+	int total = 0, skip, n = 0;
+
+	/* 1. hitung jumlah baris (kmsg_dump_get_line dgn line = NULL) */
+	kmsg_dump_rewind(&iter);
+	while (kmsg_dump_get_line(&iter, true, NULL, 0, NULL))
+		total++;
+
+	/* 2. lewati yang lebih tua dari LKFB_REPLAY_LINES terakhir */
+	skip = total - LKFB_REPLAY_LINES;
+	kmsg_dump_rewind(&iter);
+	while (skip-- > 0) {
+		if (!kmsg_dump_get_line(&iter, true, NULL, 0, NULL))
+			break;
+	}
+
+	/* 3. cetak sisa baris ke printk -> fbcon */
+	while (kmsg_dump_get_line(&iter, true, line, sizeof(line), &len)) {
+		if (!len)
+			continue;
+		printk("%.*s%s", (int)len, line,
+		       (len && line[len - 1] == '\n') ? "" : "\n");
+		if (++n >= LKFB_REPLAY_LINES)
+			break;
+	}
+	pr_info("replayed %d/%d dmesg lines to fbcon\n", n, total);
+}
 
 static int __init lkfb_init(void)
 {
@@ -173,16 +283,18 @@ static int __init lkfb_init(void)
 	 * foto layar.  WC menulis langsung ke DRAM tanpa cache, jadi DISPC
 	 * selalu membaca isi terkini -> teks bersih, tanpa glitch.
 	 */
-	mem = (void __iomem *)memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);
-	if (!mem) {
-		/* fallback: __va cacheable + bersihkan seluruh region fb dari
-		 * D-cache sekali di sini.  fbcon menulis via kmap halaman (sudah
-		 * non-kacheable per-baris), jadi flush sekali di awal cukup untuk
-		 * membersihkan sisa logo LK yang tinggal di cache. */
-		pr_warn("memremap(WC) gagal, pakai __va + clean dcache\n");
+	mem = (void __iomem *)memremap(LKFB_PHYS, LKFB_SIZE, MEMREMAP_WC);	if (!mem) {
+		/*
+		 * Fallback: __va cacheable.  flush sekali di awal HANYA
+		 * membersihkan sisa logo LK; tulisan fbcon berikutnya tetap
+		 * masuk cache, jadi tiap gambar wajib di-flush juga
+		 * (lkfb_need_flush -> lkfb_flush_rows).
+		 */
+		pr_warn("memremap(WC) failed, using __va + per-blit flush\n");
 		mem = (void __iomem *)__va(LKFB_PHYS);
 		dcache_clean_inval_poc((unsigned long)mem,
 				       (unsigned long)mem + LKFB_SIZE);
+		lkfb_need_flush = true;
 	}
 
 	info = framebuffer_alloc(sizeof(*par), NULL);
@@ -202,14 +314,73 @@ static int __init lkfb_init(void)
 	info->fix.smem_len = LKFB_SIZE;
 	lkfb_set_par(info);
 
+	/*
+	 * Clean the panel before fbcon binds to it.  The bootloader left its own
+	 * status text in this buffer and the display controller keeps scanning
+	 * from it, so without this wipe the LK text stays visible behind the
+	 * first kernel messages.  After the clear the panel shows kernel output
+	 * only, exactly like any other Linux machine.
+	 *
+	 * memset_io() writes reach DRAM directly for the MEMREMAP_WC mapping; on
+	 * the __va fallback they sit in the D-cache, so the range is flushed to
+	 * the point of coherency here.
+	 */
+	memset_io(info->screen_base, 0, LKFB_SIZE);
+	if (lkfb_need_flush)
+		dcache_clean_inval_poc((unsigned long)info->screen_base,
+				       (unsigned long)info->screen_base +
+				       LKFB_SIZE);
+#ifdef CONFIG_VXTUX_INITTRACE
+	/* The initcall tracer must stop before fbcon uses this buffer. */
+	vxtux_itrace_stop();
+#endif
+
 	if (register_framebuffer(info)) {
-		pr_err("register_framebuffer gagal\n");
+		pr_err("register_framebuffer failed\n");
 		framebuffer_release(info);
 		return -ENODEV;
 	}
 
-	pr_info("fb LK %#lx %ux%u/%ubu terdaftar -> fbcon aktif\n",
+	pr_info("LK fb %#lx %ux%u/%ubpp registered, fbcon active\n",
 		LKFB_PHYS, LKFB_WIDTH, LKFB_HEIGHT, LKFB_BPP);
+
+	/* riwayat dmesg level 1..5 dicetak ulang ke layar (lihat di atas) */
+	lkfb_replay_dmesg();
 	return 0;
 }
-core_initcall(lkfb_init);
+/*
+ * fs_initcall (level 5), BUKAN core_initcall (level 1) dan bukan
+ * device_initcall (level 6) -- 2026-10-29.
+ *
+ * Kenapa dinaikkan dari 6 ke 5:
+ *   fb_console_init() adalah subsys_initcall (level 4) dan tetap harus jalan
+ *   lebih dulu (alasan lengkap di bawah), tetapi level 6 di tree ini berisi
+ *   drivers/mmc (baris 134 drivers/Makefile) dan baru sesudahnya drivers/
+ *   vxtux (baris 203).  Artinya dengan device_initcall layar baru menyala
+ *   SETELAH sdhci-sprd probe; kalau probe eMMC/clock menggantung senyap
+ *   (gejala artix35/36/44: layar beku di teks LK, tanpa panic, tanpa tulisan
+ *   ke cache), konsol tidak pernah lahir dan tidak ada satu pun petunjuk.
+ *   Level 5 berada setelah fbcon (4) dan sebelum seluruh driver perangkat
+ *   (6), jadi fbcon sudah punya pemilik sah dan teks kernel tetap tampil
+ *   sebelum driver yang dicurigai.
+ *
+ * Alasan asli tetap berlaku: level 1 (core) membuat register_framebuffer()
+ * mengambil alih konsol sebelum fb_console_init() mereset con2fb_map -> boot
+ * artix30 beku di "calling fbmem_init".
+ *
+ * PENYEBAB MACET artix30 di "calling fbmem_init": fb_console_init() (yang
+ * menjalankan subsys_initcall / level 4) adalah PEMILIK sah fbcon -- dia
+ * mengunci console_lock(), membuat device "fbcon" dan mereset
+ * con2fb_map[MAX_NR_CONSOLES] = -1.  Dengan lkfb mendaftar di level 1,
+ * register_framebuffer() -> fbcon_fb_registered() sudah mengambil alih
+ * konsol SEBELUM fb_console_init jalan, sehingga saat level 4 konsol direset
+ * / dikunci dalam keadaan sudah-aktif -> layar berhenti tepat di situ dan
+ * (bila deadlock) seluruh initcall berikutnya tak pernah jalan: eMMC (6),
+ * ramoops (6), pstore_blk (7) dan init userspace tak pernah mengeksekusi
+ * apa pun -> partisi cache tak tersentuh, persis seperti dump artix31.
+ *
+ * Urutan kanonik upstream: fb_class + fb_console_init (subsys/4) dulu,
+ * baru driver fb mendaftar (device_initcall/6, seperti hampir semua fbdev
+ * upstream).  fbcon diambil alih dengan con2fb_map yang sudah sah.
+ */
+fs_initcall(lkfb_init);

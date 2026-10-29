@@ -9,7 +9,7 @@ obj-y += disp_notify.o
 # debug/ menampung FLIGHTREC + BEACON + LKFB; turunkan direktorinya bila
 # SALAH SATU saja aktif, supaya mematikan perekam tidak ikut mematikan
 # kanal layar (kelas DIR-TAKDIRUJUK yang sama seperti temuan audit 2026-09-18).
-ifneq ($(filter y,$(CONFIG_VXTUX_FLIGHTREC) $(CONFIG_VXTUX_BEACON) $(CONFIG_VXTUX_LKFB)),)
+ifneq ($(filter y,$(CONFIG_VXTUX_FLIGHTREC) $(CONFIG_VXTUX_BEACON) $(CONFIG_VXTUX_LKFB) $(CONFIG_VXTUX_BLDB)),)
 obj-y += debug/
 endif
 
