@@ -95,33 +95,39 @@ menambahkan 4 simbol ORI kembali ke =y.
 
 ORI ter-build: **109 → 113** (+4 modul baru dari fix config).
 
-## 8 DRIVER ORI YANG BENAR-BENAR HILANG DARI TREE 6.18.52 (perlu porting manual)
-1. **i2c_sprd_hw** — I2C HW controller (`sprd,sc9860-hw-i2c`). Hanya i2c-sprd.c (versi standard)
-   yang ada; versi HW tidak di-port. Kconfig I2C_SPRD_HW TIDAK ADA di tree (config `=m` itu
-   phantom — olddefconfig akan buang).
-2. **phy_sprd_sharkl5Pro** — PHY UMS512 ada (`phy-sprd-ums512.c`), tapi compatible
-   `sprd,sharkl5pro`/`sprd,pike2` tidak di-handle → hanya `sprd,ums512` saja.
-3. **pinctrl_sprd_sharkl5Pro** — `pinctrl-sprd-sharkl5pro.c` ADA di tree; perlu cek apakah
-   di-descend (Makefile/Kconfig pinctrl/sprd). (kemungkinan RENAME, bukan hilang)
-4. **sha1_ce** — `CONFIG_CRYPTO_SHA1_ARM64_CE=m` ADA; perlu cek apakah sumber `sha1-ce-glue.c`
-   ada di arch/arm64/crypto. (kemungkinan RENAME)
-5. **snd_soc_sprd_card / codec_sc2730_power(-dev) / dummy_codec / vbc_fe** — SEMUA ADA di
-   `drivers/vxtux/sound/asoc/` (card/, codec/, dai_v4/) dengan nama target beda
-   (sprd-asoc-card-utils.ko, sprd-audio-power.ko, dummy-codec.ko, sprd-fe-dai.ko). RENAME.
-6. **sprd_7sreset** — reset controller (`sprd,sc2730-7sreset`). TIDAK ADA padanan.
-7. **sprd_cpufreq_public / sprd_cpufreq_v2** — cpufreq vendor. TIDAK ADA di drivers/cpufreq.
-   (cpufreq di port pakai ARM_SCMI_CPUFREQ=y + ARM_SCPI_CPUFREQ=y — jalur SCMI mainline,
-   bukan sprd-cpufreq-v2. Perlu verifikasi DT menyuplai SCMI cpufreq, jika tidak cpufreq mati.)
-8. **sprd_ddr_dvfs** — DDR DVFS. Hanya apsys dvfs (`sprd_dvfs_apsys.c`) yang ada; ddr dvfs terpisah
-   tidak di-port.
-9. **sprd_manufacturer_model** — TIDAK ADA padanan.
-10. **sprd_pdbg** — debug logger. TIDAK ADA padanan.
-11. **sprd_compr_2stage_dma** — audio 2-stage DMA. TIDAK ADA padanan (sprd-dma ada, tapi bukan 2stage).
+## DRIVER ORI YANG BENAR-BENAR BELUM TER-BUILD (verifikasi build final run 41288388110)
 
-Catatan: item 2,3,4,5 kemungkinan besar RENAME (padanan fungsional ada di tree, tinggal dipastikan
-target ter-descend). Yang PASTI hilang dan butuh porting: **i2c_sprd_hw, sprd_7sreset,
-sprd_cpufreq_public, sprd_cpufreq_v2, sprd_ddr_dvfs, sprd_manufacturer_model, sprd_pdbg,
-sprd_compr_2stage_dma**.
+Build final menghasilkan **234 .ko**. Semua driver ORI dengan padanan fungsional di tree
+**sudah ter-build**. Sisa 4 driver yang benar-benar belum ada di build (perlu porting/backport):
+
+1. **i2c_sprd_hw** — I2C HW controller (`sprd,sc9860-hw-i2c`). Tree hanya punya `i2c-sprd.c`
+   (versi standard); versi HW tidak di-port, Kconfig `I2C_SPRD_HW` TIDAK ADA (config `=m`
+   itu phantom — olddefconfig membuangnya, terkonfirmasi: `I2C_SPRD_HW` ABSEN di
+   effective.config).
+2. **sprd_ddr_dvfs** — DDR DVFS. Tidak ada source di tree (hanya apsys/top dvfs yang ada:
+   `sprd-top-dvfs.ko`, `apsys-dvfs.ko` ter-build, tapi ddr dvfs terpisah tidak ada).
+3. **sprd_compr_2stage_dma** — audio 2-stage DMA. Tidak ada di tree; sumber vendor ADA di
+   `vendor_src/sprd-kernel-modules-audio__a14/sprd/platform/compr_2stage_dma/`
+   (`sprd-compr-2stage-dma.c` 61KB + Makefile) — kandidat backport paling feasible.
+4. **sha1_ce** — `sha1-ce-glue.c` TIDAK ADA di `arch/arm64/crypto` tree 6.18;
+   `CRYPTO_SHA1_ARM64_CE` tidak ada di config efektif.
+
+### Yang ternyata SUDAH ter-build (koreksi dari analisis awal — build mengoreksi)
+Analisis awal menyebut 8-9 driver "hilang"; build final membuktikan banyak yang sebenarnya
+SUDAH ada:
+- `sprd_wlan_combo` (WiFi) → **`sprdwl.ko`** ✓ (WCN_WLAN=m)
+- `sprd_7sreset` → **`sprd_7sreset.ko`** ✓
+- `sprd_cpufreq_public` / `sprd_cpufreq_v2` → **`sprd-cpufreq-public.ko` / `sprd-cpufreq-v2.ko`** ✓
+- `sprd_manufacturer_model` → **`sprd_manufacturer_model.ko`** ✓
+- `sprd_pdbg` → **`sprd_pdbg.ko`** ✓
+- `sprd_vdsp` → **`sprd_vdsp.ko`** ✓
+- `snd_soc_sprd_vbc_fe` → **`snd-soc-sprd-vbc-v4.ko`** ✓ (rename)
+- phy/pinctrl sharkl5Pro → `phy-sprd-ums512.ko` ✓
+
+### Modul tambahan port (built tapi tidak ada di stok) — 11
+`phy-sprd-ums512`, `sprd-systimer`, `sprd_autotest_core`, `sprd_autotest_gpio`,
+`sprd_debugstat`, `sprdwl`, `wcn_core`, `wcn_integrate`, `wcn_integrate_boot`,
+`wcn_integrate_dev`, `wcn_sipc`.
 
 ## Dampak fungsional (yang paling penting untuk boot/performa)
 - **WiFi SC2355 (sprdwl.ko)** — SEBELUMNYA MATI karena WCN_WLAN off. Sekarang =m → akan dibangun.
