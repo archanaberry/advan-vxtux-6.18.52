@@ -1,0 +1,250 @@
+name: QEMU BFKRT Runtime Diff
+on:
+  workflow_dispatch:
+  push:
+    branches: [test1]
+    paths:
+      - '.github/workflows/qemu-bfkrt-diff.yml'
+      - '6.18.52-VXTux-UMS512/bfkrt_ko/**'
+
+jobs:
+  bfkrt:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu flex bison bc \
+            libssl-dev libelf-dev qemu-system-arm cpio xz-utils
+
+      - name: Config (device + enhanced + fragmen QEMU)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          find scripts/ -type f -exec chmod +x {} +
+          cp .config .config.device
+          sed -i 's/\r$//' .config.device ../enhanced_config.cfg arch/arm64/configs/vxtux_618_qemu.defconfig
+          scripts/kconfig/merge_config.sh -m -O . .config.device \
+            ../enhanced_config.cfg arch/arm64/configs/vxtux_618_qemu.defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          for s in CONFIG_VIRTIO=y CONFIG_VIRTIO_PCI=y CONFIG_VIRTIO_CONSOLE=y \
+                   CONFIG_BLK_DEV_INITRD=y CONFIG_RD_GZIP=y CONFIG_BINFMT_SCRIPT=y \
+                   CONFIG_DEVTMPFS=y CONFIG_ARCH_SPRD=y CONFIG_ARM_GIC_V3=y \
+                   CONFIG_MODULES=y CONFIG_MODULE_UNLOAD=y; do
+            grep -qx "$s" .config || { echo "::error::HILANG: $s"; exit 1; }
+          done
+          echo "config OK, LOCALVERSION=$(grep '^CONFIG_LOCALVERSION=' .config)"
+
+      - name: Build DTB QEMU
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- sprd/qemu-ums512-t1030.dtb -j$(nproc)
+          ls -l arch/arm64/boot/dts/sprd/qemu-ums512-t1030.dtb
+
+      - name: Build Image
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image
+          ls -l arch/arm64/boot/Image
+
+      # Modul BFKRT dibangun thd pohon kernel PERSIS yang akan di-boot
+      # (config QEMU + LOCALVERSION sama) -> vermagic/modversions/layout identik.
+      - name: Build BFKRT modules (terhadap tree QEMU yg sama)
+        run: |
+          cd 6.18.52-VXTux-UMS512
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules_prepare
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- M=bfkrt_ko modules
+          ls -l bfkrt_ko/*.ko
+          for m in berryfetcher_kernel berry_trig_all berry_m_virtkrn_obs; do
+            vm=$(strings bfkrt_ko/$m.ko | grep -m1 '^vermagic=')
+            echo "  $m: $vm"
+          done
+
+      - name: Initramfs (init C statis — insmod BFKRT + rekam, tanpa sh)
+        run: |
+          set -e
+          mkdir -p /tmp/src
+          cat > /tmp/src/init.c <<'EOFC'
+          // SPDX-License-Identifier: GPL-2.0
+          // init statis QEMU VXTux 6.18.52: mount, insmod 3 modul BFKRT,
+          // resolve simbol + rekam trig/obs, dump ke serial (hvc0), poweroff.
+          #define _GNU_SOURCE
+          #include <dirent.h>
+          #include <errno.h>
+          #include <fcntl.h>
+          #include <stdarg.h>
+          #include <stdio.h>
+          #include <stdlib.h>
+          #include <string.h>
+          #include <sys/mount.h>
+          #include <sys/reboot.h>
+          #include <sys/stat.h>
+          #include <sys/syscall.h>
+          #include <sys/wait.h>
+          #include <unistd.h>
+
+          static void ser_raw(const char *s, int n) {
+            int fd = open("/dev/hvc0", O_WRONLY | O_NOCTTY);
+            if (fd < 0) fd = open("/dev/console", O_WRONLY | O_NOCTTY);
+            if (fd >= 0) { write(fd, s, n); close(fd); }
+          }
+          static void ser(const char *s) { ser_raw(s, (int)strlen(s)); }
+          static void serf(const char *fmt, ...) {
+            char b[1024]; va_list ap; va_start(ap, fmt);
+            int n = vsnprintf(b, sizeof b, fmt, ap); va_end(ap);
+            ser_raw(b, n);
+          }
+          static void out(const char *s) {
+            write(1, s, (int)strlen(s)); ser(s);
+          }
+
+          static int insmod_file(const char *path) {
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) return -ENOENT;
+            struct stat st; fstat(fd, &st);
+            void *buf = malloc((size_t)st.st_size);
+            ssize_t r = read(fd, buf, st.st_size);
+            close(fd);
+            if (r != st.st_size) return -EIO;
+            long rc = syscall(SYS_init_module, buf, st.st_size, "");
+            free(buf);
+            return (int)rc;
+          }
+          static int pw(const char *path, const char *s) {
+            int fd = open(path, O_WRONLY);
+            if (fd < 0) return -1;
+            write(fd, s, (int)strlen(s)); close(fd); return 0;
+          }
+          static void dump(const char *path) {
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) { serf("[err] %s: %s\n", path, strerror(errno)); return; }
+            char buf[4096]; ssize_t n;
+            while ((n = read(fd, buf, sizeof buf)) > 0) { write(1, buf, n); ser_raw(buf, n); }
+            close(fd);
+          }
+
+          int main(void) {
+            mount("none", "/proc", "proc", 0, 0);
+            mount("none", "/sys", "sysfs", 0, 0);
+            mount("none", "/dev", "devtmpfs", 0, 0);
+
+            ser("=== VXTUX-BFKRT-INIT ===\n");
+            out("=== VXTUX-QEMU-BOOT-OK ===\n");
+
+            // ---- 1. insmod 3 modul BFKRT ----
+            static const char *mods[] = {
+              "/m/berryfetcher_kernel.ko",
+              "/m/berry_trig_all.ko",
+              "/m/berry_m_virtkrn_obs.ko",
+            };
+            for (int i = 0; i < 3; i++) {
+              int rc = insmod_file(mods[i]);
+              const char *base = strrchr(mods[i], '/') + 1;
+              serf("INSMOD %-32s rc=%d %s\n", base, rc, rc == 0 ? "OK" : strerror(-rc));
+            }
+
+            // ---- 2. info + resolver simbol ----
+            out("=== /proc/bfkrt_info ===\n");
+            dump("/proc/bfkrt_info");
+            out("=== /proc/bfkrt_sym (resolve) ===\n");
+            pw("/proc/bfkrt_sym", "kallsyms_lookup_name\n"); dump("/proc/bfkrt_sym");
+            pw("/proc/bfkrt_sym", "sprd_pmic_wdt_probe\n"); dump("/proc/bfkrt_sym");
+            pw("/proc/bfkrt_sym", "i2c_transfer\n"); dump("/proc/bfkrt_sym");
+            pw("/proc/bfkrt_sym", "regulator_enable\n"); dump("/proc/bfkrt_sym");
+
+            // ---- 3. trig: clr on, aktivitas 10s, off, dump ----
+            out("=== TRIG on (10s aktivitas) ===\n");
+            pw("/proc/bfkrt_trig", "clr\n");
+            pw("/proc/bfkrt_trig", "on\n");
+            sleep(10);
+            pw("/proc/bfkrt_trig", "off\n");
+            out("=== TRIG dump ===\n");
+            dump("/proc/bfkrt_trig");
+
+            // ---- 4. obs: clr on, 10s, off, dump ----
+            out("=== OBS on (10s) ===\n");
+            pw("/proc/bfkrt_obs", "clr\n");
+            pw("/proc/bfkrt_obs", "on\n");
+            sleep(10);
+            pw("/proc/bfkrt_obs", "off\n");
+            out("=== OBS dump ===\n");
+            dump("/proc/bfkrt_obs");
+
+            // ---- 5. rmmod ----
+            out("=== RMMOD ===\n");
+            serf("rmmod berry_m_virtkrn_obs rc=%d\n", syscall(SYS_delete_module, "berry_m_virtkrn_obs", 0));
+            serf("rmmod berry_trig_all rc=%d\n", syscall(SYS_delete_module, "berry_trig_all", 0));
+            serf("rmmod berryfetcher_kernel rc=%d\n", syscall(SYS_delete_module, "berryfetcher_kernel", 0));
+
+            out("=== VXTUX-BFKRT-DONE ===\n");
+            sync();
+            reboot(RB_POWER_OFF);
+            for (;;) sleep(1);
+          }
+          EOFC
+          aarch64-linux-gnu-gcc -static -O2 -march=armv8-a -mabi=lp64 \
+            -o /tmp/init /tmp/src/init.c
+          file /tmp/init | grep -q 'ARM aarch64' || { echo "::error::init bukan aarch64"; exit 1; }
+
+          rm -rf /tmp/initramfs
+          mkdir -p /tmp/initramfs/proc /tmp/initramfs/sys /tmp/initramfs/dev /tmp/initramfs/m
+          cp /tmp/init /tmp/initramfs/init
+          chmod 755 /tmp/initramfs/init
+          cp 6.18.52-VXTux-UMS512/bfkrt_ko/berryfetcher_kernel.ko \
+             6.18.52-VXTux-UMS512/bfkrt_ko/berry_trig_all.ko \
+             6.18.52-VXTux-UMS512/bfkrt_ko/berry_m_virtkrn_obs.ko /tmp/initramfs/m/
+          ls -l /tmp/initramfs/m/
+          (cd /tmp/initramfs && find . | cpio -o -H newc --owner root:root | gzip -9) > /tmp/initramfs.cpio.gz
+          ls -lh /tmp/initramfs.cpio.gz
+          gzip -t /tmp/initramfs.cpio.gz
+
+      - name: Boot QEMU — BFKRT runtime diff
+        run: |
+          set +e
+          timeout --signal=KILL 240 qemu-system-aarch64 \
+            -machine virt,gic-version=3,highmem=off \
+            -cpu cortex-a72 -smp 8 -m 2G \
+            -kernel 6.18.52-VXTux-UMS512/arch/arm64/boot/Image \
+            -initrd /tmp/initramfs.cpio.gz \
+            -append "console=hvc0 rdinit=/init panic=-1 oops=panic loglevel=6" \
+            -device virtio-serial-pci \
+            -device virtconsole,chardev=vc0 \
+            -chardev stdio,id=vc0,signal=off,logfile=/tmp/serial-bfkrt.log \
+            -display none -monitor none -no-reboot \
+            -d guest_errors,unimp,cpu_reset -D /tmp/qemu-bfkrt.debug.log \
+            > /tmp/qemu-bfkrt-stdout.log 2>&1
+          echo "qemu exit=$?"
+          echo "serial bytes: $(wc -c < /tmp/serial-bfkrt.log 2>/dev/null)"
+          echo '--- jejak BFKRT ---'
+          grep -nE 'VXTUX-|INSMOD|RMMOD|\[err\]' /tmp/serial-bfkrt.log | head -120
+
+      - name: Gate
+        if: always()
+        run: |
+          ok=0; grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-bfkrt.log && ok=1
+          ins=0
+          for m in berryfetcher_kernel berry_trig_all berry_m_virtkrn_obs; do
+            grep -q "INSMOD $m.ko rc=0" /tmp/serial-bfkrt.log && ins=1
+          done
+          done1=0; grep -q 'VXTUX-BFKRT-DONE' /tmp/serial-bfkrt.log && done1=1
+          echo "marker=$ok insmod=$ins done=$done1"
+          if [ "$ok" = 1 ] && [ "$ins" = 1 ] && [ "$done1" = 1 ]; then
+            echo '::notice::BFKRT 6.18 boot+insmod+dump OK — artefak qemu-bfkrt-serial'
+            exit 0
+          fi
+          echo "::error::gate gagal (butuh boot OK + 3 insmod + done)"
+          exit 1
+
+      - name: Upload serial log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-bfkrt-serial
+          path: /tmp/serial-bfkrt.log
+          if-no-files-found: warn
