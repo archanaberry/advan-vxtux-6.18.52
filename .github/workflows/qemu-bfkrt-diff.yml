@@ -55,10 +55,14 @@ jobs:
 
       # Modul BFKRT dibangun thd pohon kernel PERSIS yang akan di-boot
       # (config QEMU + LOCALVERSION sama) -> vermagic/modversions/layout identik.
+      # Module.symvers WAJIB terisi (ekspor simbol kernel) sebelum M=bfkrt_ko,
+      # kalau tidak modpost menolak SEMUA simbol ekspor sebagai "undefined".
       - name: Build BFKRT modules (terhadap tree QEMU yg sama)
         run: |
           cd 6.18.52-VXTux-UMS512
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules_prepare
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
+          ls -l Module.symvers
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- M=bfkrt_ko modules
           ls -l bfkrt_ko/*.ko
           for m in berryfetcher_kernel berry_trig_all berry_m_virtkrn_obs; do
