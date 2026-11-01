@@ -264,11 +264,23 @@ config SPRD_WDF
 	  Detects a stuck CPU by watching whether the running task feeds the
 	  watchdog, rather than registering a watchdog of its own. Replaces the
 	  sprd_wdf vendor blob.
-	
+
 	  Ported from the marohinmark_ums512 tree. It lives here rather than under
 	  drivers/soc/sprd/debug/hang_debug because that whole subdirectory chain
 	  has no Makefile in this tree and could never have been built there.
-	
+
+config SPRD_WATCHDOG_PMIC
+	tristate "Unisoc PMIC watchdog control via SIPC (sprd,sc27xx-wdt)"
+	depends on MFD_SC27XX_PMIC && SPRD_SIPC
+	help
+	  SC27xx PMIC watchdog control, reconstructed by deblob (radare2) from
+	  the binary-only vendor module sprd_pmic_wdt.ko.  This is not an
+	  AP-side rebooting watchdog: it tells the PM subsystem (SIPC dst
+	  SIPC_ID_PM_SYS, the "cm4") to switch its watchdog on or off, based on
+	  the "androidboot.wdten" boot argument from the bootloader (enabled
+	  only for the magic value "e551").  Without that bootarg it sends
+	  "watchdog rstoff", the safe default for a pure-Linux boot.
+
 config SPRD_WATCHDOG
 	tristate "Unisoc SP9860 watchdog (sprd,sp9860-wdt)"
 	depends on HAS_IOMEM

@@ -33,6 +33,8 @@ obj-$(CONFIG_DW_WATCHDOG) += dw_wdt.o
 obj-$(CONFIG_SPRD_WATCHDOG) += sprd_wdt.o
 # Unisoc watchdog FIQ helper: supplies sprd_wdt_fiq_get_dev() to sprd_wdf.
 obj-$(CONFIG_SPRD_WATCHDOG_FIQ) += sprd_wdt_fiq.o
+# PMIC watchdog control (deblob reconstruction, see drivers/watchdog/sprd_pmic_wdt.c)
+obj-$(CONFIG_SPRD_WATCHDOG_PMIC) += sprd_pmic_wdt.o
 # Unisoc watchdog feed detector. Ported from marohinmark_ums512; it lived under
 # drivers/soc/sprd/debug/hang_debug in 5.4, but that whole subdirectory chain has
 # no Makefile in this tree, so it would never have been built there.
