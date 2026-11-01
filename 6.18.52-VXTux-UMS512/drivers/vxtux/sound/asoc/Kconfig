@@ -74,6 +74,18 @@ config VXTUX_SND_SPRD_DMAENGINE_PCM
 	  pointer, mmap, PM notifier, dan proc ALSA "sprd-dmaengine".
 	  Modul harus tetap bernama sprd-dmaengine-pcm.ko.
 	
+config VXTUX_SND_SPRD_COMPR_2STAGE
+	tristate "Unisoc ASoC 2-stage compress platform (sprd-compr-2stage-dma)"
+	depends on VXTUX_SND_SPRD_CARD
+	depends on SPRD_AUDIO_MCDT && SPRD_AUDIO_SIPC
+	default n
+	help
+	  Pengganti blob sprd-compr-2stage-dma.ko (5.4.210). Compress
+	  platform Unisoc untuk offload MP3/AAC: snd_soc_component_driver
+	  dengan compress_ops (open/free/set_params/trigger/pointer/copy/ack)
+	  di atas MCDT + aud IPC (AMSG_CH_MP3_OFFLOAD). Sumber sudah
+	  dimodernisasi ke API component 6.18 (.compress_ops, pcm_construct).
+
 config VXTUX_SND_SPRD_SC2730
 	bool "Unisoc SC2730 audio codec + headset"
 	depends on VXTUX_SND_SPRD_CARD

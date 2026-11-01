@@ -18,3 +18,6 @@ obj-$(CONFIG_VXTUX_SND_SPRD_PCM_ROUTING) += sprd-platform-pcm-routing.o
 # sprd-dmaengine-pcm.ko — the module MUST be named exactly like the stock blob
 # so that the vermagic/alias/modprobe path stays identical.
 obj-$(CONFIG_VXTUX_SND_SPRD_DMAENGINE_PCM) += sprd-dmaengine-pcm.o
+
+# sprd-compr-2stage-dma.ko — offload MP3/AAC compress platform (Unisoc).
+obj-$(CONFIG_VXTUX_SND_SPRD_COMPR_2STAGE) += sprd-compr-2stage-dma.o
