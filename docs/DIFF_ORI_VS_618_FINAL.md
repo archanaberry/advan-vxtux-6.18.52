@@ -18,10 +18,18 @@ padanan fungsional).
 | Kategori | Jumlah |
 |---|---|
 | Modul ORI total (stock) | 155 |
-| **Ter-build di port** (target+config on) | **109** |
-| Belum ter-build | 46 |
-| — yang HILANG dari tree (tidak ada padanan) | 8 |
-| — yang RENAME/padanan ada tapi target nama beda / config off | 38 |
+| **Ter-build di port** (target+config on) | **110** |
+| Built-in / ter-merge (CONFIG=y, rename, merge driver, mainline) | 44 |
+| **Deblob port via RE (sprd_pmic_wdt)** | **1** |
+| Masih gap | **0** |
+| **TOTAL TER-COVER** | **155/155** |
+
+### Verifikasi final 155 modul ORI (build `41305257804`, fork/test1 `d1066c168`)
+Coverage union = System.map (built-in) + `.ko` ter-build + rename/merge terverifikasi +
+deblob port. Satu-satunya modul binary-only tanpa source di tree = `sprd_pmic_wdt`
+(PMIC WDT SC27xx via SIPC sbuf, dipakai perangkat — node `watchdog@40` ada di DTB hidup),
+direkonstruksi penuh dari `.ko` stok via radare2 (probe/worker/notifier/init/remove,
+bootargs magic `e551`, sbuf chan 6 = SIPC_ID_PM_SYS) dan ter-compile 0 error vs header 6.18.
 
 ## BUG CONFIG YANG DITEMUKAN & DIPERBAIKI (patch enhanced_config.cfg)
 ### A. Modul ORI yang TER-ENABLE tapi config OFF (nyala salah → modul tidak dibangun)
