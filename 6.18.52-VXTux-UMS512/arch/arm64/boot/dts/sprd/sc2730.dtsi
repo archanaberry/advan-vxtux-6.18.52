@@ -53,6 +53,15 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
+		/* PMIC watchdog control (deblob, sprd_pmic_wdt.c). The FDT stok
+		 * (blobs/fdt_live.dtb) binds sprd_pmic_wdt.ko here via
+		 * "sprd,sc2730-wdt","sprd,sc27xx-wdt"; it drives the cm4 (PM_SYS)
+		 * watchdog through SIPC sbuf ch6, not through this regmap. */
+		watchdog@40 {
+			compatible = "sprd,sc2730-wdt", "sprd,sc27xx-wdt";
+			reg = <0x40>;
+		};
+
 		pmic_adc: adc@504 {
 			compatible = "sprd,sc2730-adc";
 			reg = <0x504>;
