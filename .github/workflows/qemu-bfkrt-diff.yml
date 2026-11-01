@@ -232,12 +232,11 @@ jobs:
         if: always()
         run: |
           ok=0; grep -q 'VXTUX-QEMU-BOOT-OK' /tmp/serial-bfkrt.log && ok=1
-          ins=0
-          for m in berryfetcher_kernel berry_trig_all berry_m_virtkrn_obs; do
-            grep -q "INSMOD $m.ko rc=0" /tmp/serial-bfkrt.log && ins=1
-          done
+          # hitung baris "INSMOD <mod> rc=0 OK" (toleran padding %-32s)
+          nins=$(grep -c 'INSMOD .* rc=0 OK' /tmp/serial-bfkrt.log 2>/dev/null || echo 0)
+          ins=0; [ "$nins" -ge 3 ] && ins=1
           done1=0; grep -q 'VXTUX-BFKRT-DONE' /tmp/serial-bfkrt.log && done1=1
-          echo "marker=$ok insmod=$ins done=$done1"
+          echo "marker=$ok insmod=$ins (n=$nins) done=$done1"
           if [ "$ok" = 1 ] && [ "$ins" = 1 ] && [ "$done1" = 1 ]; then
             echo '::notice::BFKRT 6.18 boot+insmod+dump OK — artefak qemu-bfkrt-serial'
             exit 0
