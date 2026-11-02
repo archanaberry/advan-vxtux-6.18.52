@@ -574,6 +574,15 @@ static struct genl_family imsbr_genl_family = {
 	.name		= IMSBR_GENL_NAME,
 	.version	= IMSBR_GENL_VERSION,
 	.maxattr	= IMSBR_A_MAX,
+	/* Semua op di bawah ini legacy (diport dari 5.4) dan sengaja memakai
+	 * GENL_DONT_VALIDATE_STRICT agar perilaku userspace IMS tidak berubah.
+	 * Sejak 6.18 genetlink.c:genl_validate_ops() me-WARN bila op dengan
+	 * cmd >= resv_start_op memasang .validate; resv_start_op default 0,
+	 * jadi tandai seluruh ruang cmd sebagai legacy supaya registrasi
+	 * tidak ditolak -EINVAL. Setelah __IMSBR_C_MAX (=10) semua op tetap
+	 * legacy dan validation ketat hanya berlaku utk op baru yg belum ada.
+	 */
+	.resv_start_op	= __IMSBR_C_MAX,
 	.ops		= imsbr_genl_ops,
 	.n_ops		= ARRAY_SIZE(imsbr_genl_ops),
 	.policy		= imsbr_genl_policy,
