@@ -32,18 +32,6 @@ int ip_tunnel_limit_headroom(struct net_device *dev, unsigned int headroom)
 }
 EXPORT_SYMBOL_GPL(ip_tunnel_limit_headroom);
 
-/* ====== tcp_chrono_start ======
- * tcp_chrono_stop() has a real implementation in net/ipv4/tcp_output.c,
- * but tcp_chrono_start() was dropped upstream: it is still declared in
- * include/net/tcp.h and called from tcp_output.c, so it needs a body.
- */
-void tcp_chrono_start(struct sock *sk, const enum tcp_chrono type)
-{
-	(void)sk;
-	(void)type;
-}
-EXPORT_SYMBOL_GPL(tcp_chrono_start);
-
 
 /* ====== kzalloc_flex: upstream 6.18 helper, missing here ====== */
 void *kzalloc_flex(size_t size, gfp_t flags)

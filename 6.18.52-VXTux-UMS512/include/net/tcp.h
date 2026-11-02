@@ -2106,10 +2106,14 @@ static inline unsigned int tcp_dst_advmss(const struct dst_entry *dst)
 	return dst_metric_raw(dst, RTAX_ADVMSS);
 }
 
-static inline void tcp_chrono_set(struct tcp_sock *tp, enum tcp_chrono c)
-{
-	tcp_chrono_stop((struct sock *)tp, c);
-}
+/* VXTux 6.18 backport fix: this header previously carried a
+ * `tcp_chrono_set()` inline whose body was a copy of the *stop* call,
+ * producing an unbounded tcp_chrono_stop -> tcp_chrono_set ->
+ * tcp_chrono_stop recursion (kernel stack overflow, panic in softirq)
+ * for every tcp_chrono_stop() with pending data. Upstream keeps
+ * tcp_chrono_set() as a static setter in net/ipv4/tcp_output.c; it
+ * lives there in this tree as well, next to tcp_chrono_start/stop.
+ */
 
 /* This helper is needed, because skb->tcp_tsorted_anchor uses
  * the same memory storage than skb->destructor/_skb_refdst
