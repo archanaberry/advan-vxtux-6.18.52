@@ -118,6 +118,26 @@ tcp_v4_init_seq_and_ts_off(const struct net *net, const struct sk_buff *skb)
 					 tcp_hdr(skb)->source);
 }
 
+/* VXTux 6.18 backport fix: init_seq / init_ts_off are per-af function
+ * pointers required by tcp_conn_request() (net/ipv4/tcp_input.c). The
+ * original backport dropped them from tcp_request_sock_ipv4_ops, leaving
+ * them NULL. Any incoming SYN with TCP timestamps (default for all
+ * Linux/OpenSSH/Android clients) dereferences af_ops->init_ts_off() == 0
+ * in interrupt context -> kernel panic (pc:0x0, lr:tcp_conn_request+0x230).
+ * Add the two wrappers mirroring net/ipv6/tcp_ipv6.c.
+ */
+static u32 tcp_v4_init_seq(const struct sk_buff *skb)
+{
+	return tcp_v4_init_seq_and_ts_off(&init_net, skb).off.seq;
+}
+
+static u32 tcp_v4_init_ts_off(const struct net *net, const struct sk_buff *skb)
+{
+	if (READ_ONCE(net->ipv4.sysctl_tcp_timestamps) != 1)
+		return 0;
+	return tcp_v4_init_seq_and_ts_off(net, skb).off.ts_off;
+}
+
 int tcp_twsk_unique(struct sock *sk, struct sock *sktw, void *twp)
 {
 	int reuse = READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_tw_reuse);
@@ -1731,7 +1751,8 @@ const struct tcp_request_sock_ops tcp_request_sock_ipv4_ops = {
 	.cookie_init_seq =	cookie_v4_init_sequence,
 #endif
 	.route_req	=	tcp_v4_route_req,
-	/* VXTux 6.18 backport: init_seq_and_ts_off is vendor-only field */
+	.init_seq	=	tcp_v4_init_seq,
+	.init_ts_off	=	tcp_v4_init_ts_off,
 	.send_synack	=	tcp_v4_send_synack,
 };
 
